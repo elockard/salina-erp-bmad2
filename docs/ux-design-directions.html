@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salina ERP - Design Direction Mockups</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a5f;
+            --primary-light: rgba(30, 58, 95, 0.1);
+            --secondary: #5b7c99;
+            --accent: #c17d4a;
+            --success: #2d7d3e;
+            --warning: #d97706;
+            --error: #b91c1c;
+            --neutral-50: #f8fafc;
+            --neutral-100: #f1f5f9;
+            --neutral-200: #e2e8f0;
+            --neutral-700: #334155;
+            --neutral-900: #0f172a;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .header {
+            background: #2a2a2a;
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 2px solid #3a3a3a;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #999;
+            font-size: 1rem;
+        }
+
+        .controls {
+            background: #2a2a2a;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3a3a3a;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: 1px solid #555;
+            background: #3a3a3a;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #4a4a4a;
+            border-color: #777;
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn.primary:hover {
+            background: #2a4a75;
+        }
+
+        .direction-info {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .mockup-container {
+            display: none;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .mockup-container.active {
+            display: block;
+        }
+
+        .mockup-header {
+            margin-bottom: 2rem;
+            background: #2a2a2a;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .direction-number {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .direction-name {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .direction-personality {
+            color: #999;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .characteristics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .char-item {
+            background: #1a1a1a;
+            padding: 0.75rem;
+            border-radius: 4px;
+        }
+
+        .char-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .char-value {
+            font-size: 0.9rem;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .mockup-frame {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            margin-bottom: 2rem;
+        }
+
+        .mockup-screen {
+            min-height: 700px;
+            background: var(--neutral-50);
+        }
+
+        /* Direction 1: Dense Data Dashboard */
+        .dense-dashboard {
+            display: flex;
+            height: 700px;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: var(--neutral-900);
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1rem;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border-left: 3px solid var(--accent);
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--neutral-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--neutral-900);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--neutral-200);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--neutral-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--neutral-900);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-change {
+            font-size: 0.8rem;
+            color: var(--success);
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--neutral-200);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--neutral-900);
+        }
+
+        .card-action {
+            font-size: 0.85rem;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 2px solid var(--neutral-200);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--neutral-700);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--neutral-200);
+            color: var(--neutral-900);
+            font-size: 0.9rem;
+        }
+
+        .table tr:hover {
+            background: var(--neutral-50);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-warning {
+            background: rgba(217, 119, 6, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-success {
+            background: rgba(45, 125, 62, 0.1);
+            color: var(--success);
+        }
+
+        .button {
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .button-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: #2a4a75;
+        }
+
+        .button-secondary {
+            background: var(--neutral-200);
+            color: var(--neutral-900);
+        }
+
+        .button-secondary:hover {
+            background: var(--neutral-300);
+        }
+
+        /* Direction 2: Spacious Guided */
+        .spacious-guided {
+            height: 700px;
+            overflow-y: auto;
+        }
+
+        .top-nav {
+            background: white;
+            border-bottom: 1px solid var(--neutral-200);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+            height: 64px;
+        }
+
+        .top-nav-logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .top-nav-menu {
+            display: flex;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        .top-nav-item {
+            padding: 1.2rem 0;
+            color: var(--neutral-700);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .top-nav-item:hover {
+            color: var(--primary);
+        }
+
+        .top-nav-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .centered-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.25rem;
+            color: var(--neutral-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--neutral-700);
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--neutral-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--neutral-200);
+            border-radius: 6px;
+            font-size: 1rem;
+            color: var(--neutral-900);
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .form-help {
+            font-size: 0.85rem;
+            color: var(--neutral-700);
+            margin-top: 0.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        /* Direction 3: Split View */
+        .split-view {
+            display: flex;
+            height: 700px;
+        }
+
+        .left-panel {
+            width: 320px;
+            background: var(--neutral-100);
+            border-right: 1px solid var(--neutral-200);
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            padding: 1.5rem 1rem;
+            background: white;
+            border-bottom: 1px solid var(--neutral-200);
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--neutral-200);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .list-item {
+            padding: 1rem;
+            background: white;
+            border-bottom: 1px solid var(--neutral-200);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .list-item:hover {
+            background: var(--neutral-50);
+        }
+
+        .list-item.active {
+            background: var(--primary-light);
+            border-left: 3px solid var(--primary);
+        }
+
+        .list-item-title {
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .list-item-meta {
+            font-size: 0.8rem;
+            color: var(--neutral-700);
+        }
+
+        .right-panel {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .detail-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--neutral-200);
+        }
+
+        .detail-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin-bottom: 1rem;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+            color: var(--neutral-700);
+        }
+
+        .detail-body {
+            padding: 2rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-item-label {
+            font-size: 0.85rem;
+            color: var(--neutral-700);
+            margin-bottom: 0.25rem;
+        }
+
+        .info-item-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--neutral-900);
+        }
+
+        /* Direction 4: Card-Based */
+        .card-based {
+            height: 700px;
+            overflow-y: auto;
+            background: var(--neutral-100);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            border: 2px solid var(--neutral-200);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(30, 58, 95, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .action-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .action-description {
+            font-size: 0.9rem;
+            color: var(--neutral-700);
+            line-height: 1.5;
+        }
+
+        /* Direction 5: Dashboard Grid */
+        .dashboard-grid-layout {
+            padding: 2rem;
+            height: 700px;
+            overflow-y: auto;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+
+        .grid-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--neutral-200);
+        }
+
+        .grid-item-1 { grid-column: span 3; }
+        .grid-item-2 { grid-column: span 3; }
+        .grid-item-3 { grid-column: span 3; }
+        .grid-item-4 { grid-column: span 3; }
+        .grid-item-5 { grid-column: span 8; }
+        .grid-item-6 { grid-column: span 4; }
+
+        /* Direction 6: Modal Workflow */
+        .modal-workflow {
+            height: 700px;
+            position: relative;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--neutral-200);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--neutral-900);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--neutral-200);
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .wizard-steps {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .wizard-step {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: var(--neutral-100);
+            color: var(--neutral-700);
+        }
+
+        .wizard-step.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .wizard-step.completed {
+            background: var(--success);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Salina ERP Design Direction Mockups</h1>
+        <p>6 different design approaches for your publishing ERP platform</p>
+    </div>
+
+    <div class="controls">
+        <div class="nav-buttons">
+            <button class="btn" onclick="previousDirection()">← Previous</button>
+            <button class="btn" onclick="nextDirection()">Next →</button>
+        </div>
+        <div class="direction-info">
+            Direction <span id="currentDirection">1</span> of 6
+        </div>
+        <div class="nav-buttons">
+            <button class="btn" onclick="showDirection(1)">1</button>
+            <button class="btn" onclick="showDirection(2)">2</button>
+            <button class="btn" onclick="showDirection(3)">3</button>
+            <button class="btn" onclick="showDirection(4)">4</button>
+            <button class="btn" onclick="showDirection(5)">5</button>
+            <button class="btn" onclick="showDirection(6)">6</button>
+        </div>
+    </div>
+
+    <!-- Direction 1: Dense Data Dashboard -->
+    <div class="mockup-container active" id="direction1">
+        <div class="mockup-header">
+            <div class="direction-number">Direction 1</div>
+            <h2 class="direction-name">Dense Data Dashboard</h2>
+            <p class="direction-personality">Information-Rich • SAP-Inspired • Power User Focused</p>
+
+            <div class="characteristics">
+                <div class="char-item">
+                    <div class="char-label">Layout</div>
+                    <div class="char-value">Sidebar Navigation</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Density</div>
+                    <div class="char-value">High (Tables & Stats)</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Hierarchy</div>
+                    <div class="char-value">Data-Driven</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Best For</div>
+                    <div class="char-value">Finance/Admin Users</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="mockup-screen dense-dashboard">
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <div class="logo">Salina ERP</div>
+                    </div>
+                    <div class="nav-menu">
+                        <div class="nav-item active">📊 Dashboard</div>
+                        <div class="nav-item">📚 Titles</div>
+                        <div class="nav-item">✍️ Authors</div>
+                        <div class="nav-item">💰 Sales</div>
+                        <div class="nav-item">↩️ Returns</div>
+                        <div class="nav-item">📄 Statements</div>
+                        <div class="nav-item">🔢 ISBNs</div>
+                        <div class="nav-item">📈 Reports</div>
+                        <div class="nav-item">⚙️ Settings</div>
+                    </div>
+                </div>
+                <div class="main-content">
+                    <div class="top-bar">
+                        <div class="page-title">Finance Dashboard</div>
+                        <div class="user-info">
+                            <span style="color: var(--neutral-700); font-size: 0.9rem;">Finance Manager</span>
+                            <div class="avatar">FM</div>
+                        </div>
+                    </div>
+                    <div class="content-area">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">Pending Returns</div>
+                                <div class="stat-value">12</div>
+                                <div class="stat-change">⚠️ Needs Approval</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Royalty Liability</div>
+                                <div class="stat-value">$47,320</div>
+                                <div class="stat-change">+8.2% from Q3</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Q4 Sales</div>
+                                <div class="stat-value">$182K</div>
+                                <div class="stat-change">+12.5% from Q3</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Statements Due</div>
+                                <div class="stat-value">32</div>
+                                <div class="stat-change">Due by Jan 15</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Pending Return Approvals</div>
+                                <div class="card-action">View All →</div>
+                            </div>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Quantity</th>
+                                        <th>Amount</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>The Great Novel</td>
+                                        <td>-25</td>
+                                        <td>$312.50</td>
+                                        <td>Damaged</td>
+                                        <td><span class="badge badge-warning">Pending</span></td>
+                                        <td><button class="button button-primary">Review</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Poetry Collection Vol 2</td>
+                                        <td>-10</td>
+                                        <td>$149.90</td>
+                                        <td>Overstock</td>
+                                        <td><span class="badge badge-warning">Pending</span></td>
+                                        <td><button class="button button-primary">Review</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Marketing for Authors</td>
+                                        <td>-5</td>
+                                        <td>$99.75</td>
+                                        <td>Wrong Edition</td>
+                                        <td><span class="badge badge-warning">Pending</span></td>
+                                        <td><button class="button button-primary">Review</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Direction 2: Spacious Guided -->
+    <div class="mockup-container" id="direction2">
+        <div class="mockup-header">
+            <div class="direction-number">Direction 2</div>
+            <h2 class="direction-name">Spacious Guided Flow</h2>
+            <p class="direction-personality">Clean • Step-by-Step • Approachable</p>
+
+            <div class="characteristics">
+                <div class="char-item">
+                    <div class="char-label">Layout</div>
+                    <div class="char-value">Top Navigation</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Density</div>
+                    <div class="char-value">Spacious</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Hierarchy</div>
+                    <div class="char-value">Task-Focused</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Best For</div>
+                    <div class="char-value">Sales Entry / Editors</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="mockup-screen spacious-guided">
+                <div class="top-nav">
+                    <div class="top-nav-logo">Salina ERP</div>
+                    <div class="top-nav-menu">
+                        <div class="top-nav-item">Dashboard</div>
+                        <div class="top-nav-item">Titles</div>
+                        <div class="top-nav-item">Authors</div>
+                        <div class="top-nav-item active">Sales</div>
+                        <div class="top-nav-item">Statements</div>
+                        <div class="top-nav-item">Reports</div>
+                    </div>
+                    <div class="user-info">
+                        <div class="avatar">ED</div>
+                    </div>
+                </div>
+
+                <div class="centered-content">
+                    <div class="page-header">
+                        <h1>Record Sales Transaction</h1>
+                        <p>Enter sales data for accurate royalty calculations</p>
+                    </div>
+
+                    <div class="form-card">
+                        <div class="form-section">
+                            <div class="form-section-title">Title Information</div>
+                            <div class="form-group">
+                                <label class="form-label">Title *</label>
+                                <input type="text" class="form-input" placeholder="Search for a title..." value="The Great Novel">
+                                <div class="form-help">Start typing to search your title catalog</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Format *</label>
+                                <select class="form-input">
+                                    <option>Physical Book</option>
+                                    <option>Ebook</option>
+                                    <option>Audiobook</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title">Sale Details</div>
+                            <div class="form-group">
+                                <label class="form-label">Quantity *</label>
+                                <input type="number" class="form-input" placeholder="0" value="150">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Unit Price *</label>
+                                <input type="text" class="form-input" placeholder="$0.00" value="$24.99">
+                                <div class="form-help">Price per unit sold</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sale Date *</label>
+                                <input type="date" class="form-input" value="2025-11-21">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sales Channel *</label>
+                                <select class="form-input">
+                                    <option>Retail</option>
+                                    <option>Wholesale</option>
+                                    <option>Direct</option>
+                                    <option>Distributor</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button class="button button-secondary">Cancel</button>
+                            <button class="button button-primary">Record Sale ($3,748.50)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Direction 3: Split View Explorer -->
+    <div class="mockup-container" id="direction3">
+        <div class="mockup-header">
+            <div class="direction-number">Direction 3</div>
+            <h2 class="direction-name">Split View Explorer</h2>
+            <p class="direction-personality">Master-Detail • Efficient • Context-Rich</p>
+
+            <div class="characteristics">
+                <div class="char-item">
+                    <div class="char-label">Layout</div>
+                    <div class="char-value">Two-Panel Split</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Density</div>
+                    <div class="char-value">Balanced</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Hierarchy</div>
+                    <div class="char-value">Browse + Detail</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Best For</div>
+                    <div class="char-value">Author/Title Management</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="mockup-screen split-view">
+                <div class="left-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Authors (47)</div>
+                        <input type="text" class="search-box" placeholder="Search authors...">
+                    </div>
+                    <div class="list-item active">
+                        <div class="list-item-title">Jane Mitchell</div>
+                        <div class="list-item-meta">3 titles • $12,450 pending</div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-title">Robert Chen</div>
+                        <div class="list-item-meta">1 title • $4,200 pending</div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-title">Maria Rodriguez</div>
+                        <div class="list-item-meta">5 titles • $28,900 pending</div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-title">David Park</div>
+                        <div class="list-item-meta">2 titles • $8,100 pending</div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-title">Sarah Johnson</div>
+                        <div class="list-item-meta">4 titles • $15,600 pending</div>
+                    </div>
+                </div>
+                <div class="right-panel">
+                    <div class="detail-header">
+                        <div class="detail-title">Jane Mitchell</div>
+                        <div class="detail-meta">
+                            <span>Member since 2022</span>
+                            <span>•</span>
+                            <span>jane.mitchell@email.com</span>
+                            <span>•</span>
+                            <span class="badge badge-success">Active</span>
+                        </div>
+                    </div>
+                    <div class="detail-body">
+                        <div class="info-grid">
+                            <div>
+                                <div class="info-item-label">Total Titles</div>
+                                <div class="info-item-value">3</div>
+                            </div>
+                            <div>
+                                <div class="info-item-label">Lifetime Sales</div>
+                                <div class="info-item-value">$124,580</div>
+                            </div>
+                            <div>
+                                <div class="info-item-label">Pending Royalties</div>
+                                <div class="info-item-value">$12,450</div>
+                            </div>
+                            <div>
+                                <div class="info-item-label">Last Statement</div>
+                                <div class="info-item-value">Oct 15, 2025</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Published Titles</div>
+                                <button class="button button-primary">Add Title</button>
+                            </div>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Publication Date</th>
+                                        <th>Format</th>
+                                        <th>Sales (YTD)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>The Great Novel</td>
+                                        <td>Mar 2023</td>
+                                        <td>Physical, Ebook</td>
+                                        <td>$42,300</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Poetry Collection Vol 1</td>
+                                        <td>Jul 2023</td>
+                                        <td>Physical</td>
+                                        <td>$18,200</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Short Stories: Winter</td>
+                                        <td>Jan 2025</td>
+                                        <td>Physical, Ebook, Audio</td>
+                                        <td>$64,080</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Direction 4: Card-Based Actions -->
+    <div class="mockup-container" id="direction4">
+        <div class="mockup-header">
+            <div class="direction-number">Direction 4</div>
+            <h2 class="direction-name">Card-Based Action Hub</h2>
+            <p class="direction-personality">Visual • Action-Oriented • Discoverable</p>
+
+            <div class="characteristics">
+                <div class="char-item">
+                    <div class="char-label">Layout</div>
+                    <div class="char-value">Grid of Cards</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Density</div>
+                    <div class="char-value">Spacious</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Hierarchy</div>
+                    <div class="char-value">Action-Focused</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Best For</div>
+                    <div class="char-value">Dashboard / Quick Actions</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="mockup-screen card-based">
+                <div class="top-nav">
+                    <div class="top-nav-logo">Salina ERP</div>
+                    <div class="top-nav-menu">
+                        <div class="top-nav-item active">Dashboard</div>
+                        <div class="top-nav-item">Catalog</div>
+                        <div class="top-nav-item">Finance</div>
+                        <div class="top-nav-item">Reports</div>
+                    </div>
+                    <div class="user-info">
+                        <div class="avatar">AD</div>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="action-card">
+                        <div class="action-icon">💰</div>
+                        <div class="action-title">Record Sale</div>
+                        <div class="action-description">Enter individual sales transactions for accurate royalty tracking</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon">↩️</div>
+                        <div class="action-title">Approve Returns</div>
+                        <div class="action-description">Review and approve pending return requests (12 pending)</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon">📄</div>
+                        <div class="action-title">Generate Statements</div>
+                        <div class="action-description">Create quarterly royalty statements for authors</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon">📚</div>
+                        <div class="action-title">Add New Title</div>
+                        <div class="action-description">Create a title record and assign ISBN from pool</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon">✍️</div>
+                        <div class="action-title">Manage Authors</div>
+                        <div class="action-description">View and edit author profiles, contracts, and royalty rates</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon">🔢</div>
+                        <div class="action-title">ISBN Pool</div>
+                        <div class="action-description">Import and manage ISBN blocks (42 available)</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon">📈</div>
+                        <div class="action-title">Sales Reports</div>
+                        <div class="action-description">View sales by title, format, channel, and time period</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon">⚙️</div>
+                        <div class="action-title">Settings</div>
+                        <div class="action-description">Configure tenant settings, users, and permissions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Direction 5: Dashboard Grid -->
+    <div class="mockup-container" id="direction5">
+        <div class="mockup-header">
+            <div class="direction-number">Direction 5</div>
+            <h2 class="direction-name">Modular Dashboard Grid</h2>
+            <p class="direction-personality">Customizable • Data-Rich • Widget-Based</p>
+
+            <div class="characteristics">
+                <div class="char-item">
+                    <div class="char-label">Layout</div>
+                    <div class="char-value">Grid System</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Density</div>
+                    <div class="char-value">High (Metrics Focus)</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Hierarchy</div>
+                    <div class="char-value">Metrics + Quick Actions</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Best For</div>
+                    <div class="char-value">Executive Dashboard</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="mockup-screen dashboard-grid-layout">
+                <div class="dashboard-grid">
+                    <div class="grid-item grid-item-1">
+                        <div class="stat-label">Total Revenue (Q4)</div>
+                        <div class="stat-value" style="font-size: 1.8rem;">$182K</div>
+                        <div class="stat-change">+12.5% vs Q3</div>
+                    </div>
+                    <div class="grid-item grid-item-2">
+                        <div class="stat-label">Active Titles</div>
+                        <div class="stat-value" style="font-size: 1.8rem;">127</div>
+                        <div class="stat-change">8 new this quarter</div>
+                    </div>
+                    <div class="grid-item grid-item-3">
+                        <div class="stat-label">Royalty Liability</div>
+                        <div class="stat-value" style="font-size: 1.8rem;">$47.3K</div>
+                        <div class="stat-change">32 statements due</div>
+                    </div>
+                    <div class="grid-item grid-item-4">
+                        <div class="stat-label">ISBN Pool</div>
+                        <div class="stat-value" style="font-size: 1.8rem;">42</div>
+                        <div class="stat-change">Available ISBNs</div>
+                    </div>
+
+                    <div class="grid-item grid-item-5">
+                        <div class="card-header">
+                            <div class="card-title">Recent Transactions</div>
+                            <div class="card-action">View All →</div>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Quantity</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Nov 21</td>
+                                    <td>The Great Novel</td>
+                                    <td>Sale</td>
+                                    <td>150</td>
+                                    <td>$3,748.50</td>
+                                </tr>
+                                <tr>
+                                    <td>Nov 21</td>
+                                    <td>Poetry Collection</td>
+                                    <td>Sale</td>
+                                    <td>42</td>
+                                    <td>$629.58</td>
+                                </tr>
+                                <tr>
+                                    <td>Nov 20</td>
+                                    <td>Marketing Guide</td>
+                                    <td>Return</td>
+                                    <td>-5</td>
+                                    <td>-$99.75</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid-item grid-item-6">
+                        <div class="card-header">
+                            <div class="card-title">Quick Actions</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+                            <button class="button button-primary" style="width: 100%;">Record Sale</button>
+                            <button class="button button-primary" style="width: 100%;">Generate Statements</button>
+                            <button class="button button-secondary" style="width: 100%;">Add Title</button>
+                            <button class="button button-secondary" style="width: 100%;">View Reports</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Direction 6: Modal Workflow -->
+    <div class="mockup-container" id="direction6">
+        <div class="mockup-header">
+            <div class="direction-number">Direction 6</div>
+            <h2 class="direction-name">Wizard-Guided Modal</h2>
+            <p class="direction-personality">Step-by-Step • Focused • Progressive</p>
+
+            <div class="characteristics">
+                <div class="char-item">
+                    <div class="char-label">Layout</div>
+                    <div class="char-value">Modal Overlay</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Density</div>
+                    <div class="char-value">Focused (One Task)</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Hierarchy</div>
+                    <div class="char-value">Wizard Steps</div>
+                </div>
+                <div class="char-item">
+                    <div class="char-label">Best For</div>
+                    <div class="char-value">Statement Generation</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="mockup-screen modal-workflow" style="background: var(--neutral-100);">
+                <div class="top-nav">
+                    <div class="top-nav-logo">Salina ERP</div>
+                    <div class="top-nav-menu">
+                        <div class="top-nav-item">Dashboard</div>
+                        <div class="top-nav-item">Titles</div>
+                        <div class="top-nav-item">Authors</div>
+                        <div class="top-nav-item">Sales</div>
+                        <div class="top-nav-item active">Statements</div>
+                    </div>
+                    <div class="user-info">
+                        <div class="avatar">FM</div>
+                    </div>
+                </div>
+
+                <div class="modal-overlay">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <div class="modal-title">Generate Royalty Statements</div>
+                        </div>
+                        <div class="modal-body">
+                            <div class="wizard-steps">
+                                <div class="wizard-step completed">1. Period</div>
+                                <div class="wizard-step active">2. Authors</div>
+                                <div class="wizard-step">3. Preview</div>
+                                <div class="wizard-step">4. Generate</div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-title">Select Authors</div>
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <input type="checkbox" checked> Select All Authors (47)
+                                    </label>
+                                </div>
+                                <div style="max-height: 250px; overflow-y: auto; margin-top: 1rem; border: 1px solid var(--neutral-200); border-radius: 6px; padding: 1rem;">
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" checked> Jane Mitchell (3 titles, $12,450 pending)
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" checked> Robert Chen (1 title, $4,200 pending)
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" checked> Maria Rodriguez (5 titles, $28,900 pending)
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" checked> David Park (2 titles, $8,100 pending)
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" checked> Sarah Johnson (4 titles, $15,600 pending)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="button button-secondary">← Back</button>
+                            <button class="button button-secondary">Cancel</button>
+                            <button class="button button-primary">Next: Preview →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDirection = 1;
+
+        function showDirection(n) {
+            document.querySelectorAll('.mockup-container').forEach(el => el.classList.remove('active'));
+            document.getElementById('direction' + n).classList.add('active');
+            currentDirection = n;
+            document.getElementById('currentDirection').textContent = n;
+        }
+
+        function nextDirection() {
+            if (currentDirection < 6) {
+                showDirection(currentDirection + 1);
+            }
+        }
+
+        function previousDirection() {
+            if (currentDirection > 1) {
+                showDirection(currentDirection - 1);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') nextDirection();
+            if (e.key === 'ArrowLeft') previousDirection();
+        });
+    </script>
+</body>
+</html>

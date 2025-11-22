@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salina ERP - Color Theme Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .theme-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .theme-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .theme-number {
+            display: inline-block;
+            background: #000;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-personality {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-best-for {
+            color: #888;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .color-palette {
+            margin: 1.5rem 0;
+        }
+
+        .palette-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .palette-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .color-swatches {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .swatch {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .swatch-label {
+            position: absolute;
+            bottom: -24px;
+            left: 0;
+            font-size: 0.7rem;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .swatch-hex {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            font-size: 0.65rem;
+            color: #999;
+            font-family: monospace;
+        }
+
+        .components-preview {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .preview-label {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .card {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        /* Theme 1: Editorial Navy - Professional Publishing */
+        .theme-1 {
+            --primary: #1e3a5f;
+            --primary-light: rgba(30, 58, 95, 0.1);
+            --secondary: #5b7c99;
+            --accent: #c17d4a;
+            --success: #2d7d3e;
+            --warning: #d97706;
+            --error: #b91c1c;
+            --neutral-50: #f8fafc;
+            --neutral-100: #f1f5f9;
+            --neutral-200: #e2e8f0;
+            --neutral-700: #334155;
+            --neutral-900: #0f172a;
+        }
+
+        /* Theme 2: Sage Green - Calm Productivity */
+        .theme-2 {
+            --primary: #2f5845;
+            --primary-light: rgba(47, 88, 69, 0.1);
+            --secondary: #6b8e7d;
+            --accent: #8b6f47;
+            --success: #2d7d3e;
+            --warning: #d97706;
+            --error: #b91c1c;
+            --neutral-50: #f9fafb;
+            --neutral-100: #f3f4f6;
+            --neutral-200: #e5e7eb;
+            --neutral-700: #374151;
+            --neutral-900: #111827;
+        }
+
+        /* Theme 3: Slate Gray - Enterprise Precision */
+        .theme-3 {
+            --primary: #334155;
+            --primary-light: rgba(51, 65, 85, 0.1);
+            --secondary: #64748b;
+            --accent: #0891b2;
+            --success: #059669;
+            --warning: #d97706;
+            --error: #dc2626;
+            --neutral-50: #f8fafc;
+            --neutral-100: #f1f5f9;
+            --neutral-200: #e2e8f0;
+            --neutral-700: #334155;
+            --neutral-900: #0f172a;
+        }
+
+        /* Theme 4: Deep Purple - Creative Authority */
+        .theme-4 {
+            --primary: #4c1d95;
+            --primary-light: rgba(76, 29, 149, 0.1);
+            --secondary: #7c3aed;
+            --accent: #ec4899;
+            --success: #059669;
+            --warning: #d97706;
+            --error: #dc2626;
+            --neutral-50: #faf5ff;
+            --neutral-100: #f3e8ff;
+            --neutral-200: #e9d5ff;
+            --neutral-700: #4c1d95;
+            --neutral-900: #1e1b4b;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Salina ERP Color Theme Explorer</h1>
+        <p>4 professional theme options for your publishing ERP platform</p>
+    </div>
+
+    <div class="themes-grid">
+        <!-- Theme 1: Editorial Navy -->
+        <div class="theme-card theme-1">
+            <div class="theme-header">
+                <div class="theme-number">Theme 1</div>
+                <h2 class="theme-name">Editorial Navy</h2>
+                <p class="theme-personality">Professional • Trustworthy • Refined</p>
+                <p class="theme-best-for">Best for: Traditional publishers, financial accuracy emphasis</p>
+            </div>
+
+            <div class="color-palette">
+                <div class="palette-section">
+                    <div class="palette-label">Primary Colors</div>
+                    <div class="color-swatches">
+                        <div class="swatch" style="background: #1e3a5f;">
+                            <span class="swatch-label">Primary</span>
+                            <span class="swatch-hex">#1e3a5f</span>
+                        </div>
+                        <div class="swatch" style="background: #5b7c99;">
+                            <span class="swatch-label">Secondary</span>
+                            <span class="swatch-hex">#5b7c99</span>
+                        </div>
+                        <div class="swatch" style="background: #c17d4a;">
+                            <span class="swatch-label">Accent</span>
+                            <span class="swatch-hex">#c17d4a</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="palette-section" style="margin-top: 3rem;">
+                    <div class="palette-label">Semantic Colors</div>
+                    <div class="color-swatches">
+                        <div class="swatch" style="background: #2d7d3e;">
+                            <span class="swatch-label">Success</span>
+                            <span class="swatch-hex">#2d7d3e</span>
+                        </div>
+                        <div class="swatch" style="background: #d97706;">
+                            <span class="swatch-label">Warning</span>
+                            <span class="swatch-hex">#d97706</span>
+                        </div>
+                        <div class="swatch" style="background: #b91c1c;">
+                            <span class="swatch-label">Error</span>
+                            <span class="swatch-hex">#b91c1c</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="components-preview">
+                <div class="preview-label">Component Examples</div>
+
+                <div class="button-group">
+                    <button class="btn" style="background: #1e3a5f; color: white;">Primary Action</button>
+                    <button class="btn" style="background: #5b7c99; color: white;">Secondary</button>
+                    <button class="btn" style="border: 1px solid #d1d5db; background: white; color: #334155;">Tertiary</button>
+                </div>
+
+                <div class="form-group">
+                    <label style="color: #334155;">Email Address</label>
+                    <input type="email" placeholder="user@publisher.com" style="border-color: #e2e8f0;">
+                </div>
+
+                <div class="card" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                    <strong style="color: #0f172a;">Sales Transaction</strong>
+                    <p style="color: #334155; font-size: 0.9rem; margin-top: 0.5rem;">Title: The Great Novel | Format: Physical | Qty: 150</p>
+                </div>
+
+                <div class="alert" style="background: rgba(30, 58, 95, 0.1); color: #1e3a5f; border-left: 3px solid #1e3a5f;">
+                    <strong>Info:</strong> Royalty calculation completed successfully.
+                </div>
+
+                <div class="alert" style="background: rgba(45, 125, 62, 0.1); color: #2d7d3e; border-left: 3px solid #2d7d3e;">
+                    <strong>Success:</strong> Statement generated and sent to author.
+                </div>
+            </div>
+        </div>
+
+        <!-- Theme 2: Sage Green -->
+        <div class="theme-card theme-2">
+            <div class="theme-header">
+                <div class="theme-number">Theme 2</div>
+                <h2 class="theme-name">Sage Green</h2>
+                <p class="theme-personality">Calm • Productive • Approachable</p>
+                <p class="theme-best-for">Best for: Modern publishers, author-centric culture</p>
+            </div>
+
+            <div class="color-palette">
+                <div class="palette-section">
+                    <div class="palette-label">Primary Colors</div>
+                    <div class="color-swatches">
+                        <div class="swatch" style="background: #2f5845;">
+                            <span class="swatch-label">Primary</span>
+                            <span class="swatch-hex">#2f5845</span>
+                        </div>
+                        <div class="swatch" style="background: #6b8e7d;">
+                            <span class="swatch-label">Secondary</span>
+                            <span class="swatch-hex">#6b8e7d</span>
+                        </div>
+                        <div class="swatch" style="background: #8b6f47;">
+                            <span class="swatch-label">Accent</span>
+                            <span class="swatch-hex">#8b6f47</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="palette-section" style="margin-top: 3rem;">
+                    <div class="palette-label">Semantic Colors</div>
+                    <div class="color-swatches">
+                        <div class="swatch" style="background: #2d7d3e;">
+                            <span class="swatch-label">Success</span>
+                            <span class="swatch-hex">#2d7d3e</span>
+                        </div>
+                        <div class="swatch" style="background: #d97706;">
+                            <span class="swatch-label">Warning</span>
+                            <span class="swatch-hex">#d97706</span>
+                        </div>
+                        <div class="swatch" style="background: #b91c1c;">
+                            <span class="swatch-label">Error</span>
+                            <span class="swatch-hex">#b91c1c</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="components-preview">
+                <div class="preview-label">Component Examples</div>
+
+                <div class="button-group">
+                    <button class="btn" style="background: #2f5845; color: white;">Primary Action</button>
+                    <button class="btn" style="background: #6b8e7d; color: white;">Secondary</button>
+                    <button class="btn" style="border: 1px solid #d1d5db; background: white; color: #374151;">Tertiary</button>
+                </div>
+
+                <div class="form-group">
+                    <label style="color: #374151;">Email Address</label>
+                    <input type="email" placeholder="user@publisher.com" style="border-color: #e5e7eb;">
+                </div>
+
+                <div class="card" style="background: #f9fafb; border: 1px solid #e5e7eb;">
+                    <strong style="color: #111827;">Sales Transaction</strong>
+                    <p style="color: #374151; font-size: 0.9rem; margin-top: 0.5rem;">Title: The Great Novel | Format: Physical | Qty: 150</p>
+                </div>
+
+                <div class="alert" style="background: rgba(47, 88, 69, 0.1); color: #2f5845; border-left: 3px solid #2f5845;">
+                    <strong>Info:</strong> Royalty calculation completed successfully.
+                </div>
+
+                <div class="alert" style="background: rgba(45, 125, 62, 0.1); color: #2d7d3e; border-left: 3px solid #2d7d3e;">
+                    <strong>Success:</strong> Statement generated and sent to author.
+                </div>
+            </div>
+        </div>
+
+        <!-- Theme 3: Slate Gray -->
+        <div class="theme-card theme-3">
+            <div class="theme-header">
+                <div class="theme-number">Theme 3</div>
+                <h2 class="theme-name">Slate Gray</h2>
+                <p class="theme-personality">Precise • Enterprise • Data-Focused</p>
+                <p class="theme-best-for">Best for: SAP-inspired feel, financial emphasis, power users</p>
+            </div>
+
+            <div class="color-palette">
+                <div class="palette-section">
+                    <div class="palette-label">Primary Colors</div>
+                    <div class="color-swatches">
+                        <div class="swatch" style="background: #334155;">
+                            <span class="swatch-label">Primary</span>
+                            <span class="swatch-hex">#334155</span>
+                        </div>
+                        <div class="swatch" style="background: #64748b;">
+                            <span class="swatch-label">Secondary</span>
+                            <span class="swatch-hex">#64748b</span>
+                        </div>
+                        <div class="swatch" style="background: #0891b2;">
+                            <span class="swatch-label">Accent</span>
+                            <span class="swatch-hex">#0891b2</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="palette-section" style="margin-top: 3rem;">
+                    <div class="palette-label">Semantic Colors</div>
+                    <div class="color-swatches">
+                        <div class="swatch" style="background: #059669;">
+                            <span class="swatch-label">Success</span>
+                            <span class="swatch-hex">#059669</span>
+                        </div>
+                        <div class="swatch" style="background: #d97706;">
+                            <span class="swatch-label">Warning</span>
+                            <span class="swatch-hex">#d97706</span>
+                        </div>
+                        <div class="swatch" style="background: #dc2626;">
+                            <span class="swatch-label">Error</span>
+                            <span class="swatch-hex">#dc2626</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="components-preview">
+                <div class="preview-label">Component Examples</div>
+
+                <div class="button-group">
+                    <button class="btn" style="background: #334155; color: white;">Primary Action</button>
+                    <button class="btn" style="background: #64748b; color: white;">Secondary</button>
+                    <button class="btn" style="border: 1px solid #d1d5db; background: white; color: #334155;">Tertiary</button>
+                </div>
+
+                <div class="form-group">
+                    <label style="color: #334155;">Email Address</label>
+                    <input type="email" placeholder="user@publisher.com" style="border-color: #e2e8f0;">
+                </div>
+
+                <div class="card" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                    <strong style="color: #0f172a;">Sales Transaction</strong>
+                    <p style="color: #334155; font-size: 0.9rem; margin-top: 0.5rem;">Title: The Great Novel | Format: Physical | Qty: 150</p>
+                </div>
+
+                <div class="alert" style="background: rgba(51, 65, 85, 0.1); color: #334155; border-left: 3px solid #334155;">
+                    <strong>Info:</strong> Royalty calculation completed successfully.
+                </div>
+
+                <div class="alert" style="background: rgba(5, 150, 105, 0.1); color: #059669; border-left: 3px solid #059669;">
+                    <strong>Success:</strong> Statement generated and sent to author.
+                </div>
+            </div>
+        </div>
+
+        <!-- Theme 4: Deep Purple -->
+        <div class="theme-card theme-4">
+            <div class="theme-header">
+                <div class="theme-number">Theme 4</div>
+                <h2 class="theme-name">Deep Purple</h2>
+                <p class="theme-personality">Creative • Authoritative • Distinctive</p>
+                <p class="theme-best-for">Best for: Indie publishers, creative-forward brands</p>
+            </div>
+
+            <div class="color-palette">
+                <div class="palette-section">
+                    <div class="palette-label">Primary Colors</div>
+                    <div class="color-swatches">
+                        <div class="swatch" style="background: #4c1d95;">
+                            <span class="swatch-label">Primary</span>
+                            <span class="swatch-hex">#4c1d95</span>
+                        </div>
+                        <div class="swatch" style="background: #7c3aed;">
+                            <span class="swatch-label">Secondary</span>
+                            <span class="swatch-hex">#7c3aed</span>
+                        </div>
+                        <div class="swatch" style="background: #ec4899;">
+                            <span class="swatch-label">Accent</span>
+                            <span class="swatch-hex">#ec4899</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="palette-section" style="margin-top: 3rem;">
+                    <div class="palette-label">Semantic Colors</div>
+                    <div class="color-swatches">
+                        <div class="swatch" style="background: #059669;">
+                            <span class="swatch-label">Success</span>
+                            <span class="swatch-hex">#059669</span>
+                        </div>
+                        <div class="swatch" style="background: #d97706;">
+                            <span class="swatch-label">Warning</span>
+                            <span class="swatch-hex">#d97706</span>
+                        </div>
+                        <div class="swatch" style="background: #dc2626;">
+                            <span class="swatch-label">Error</span>
+                            <span class="swatch-hex">#dc2626</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="components-preview">
+                <div class="preview-label">Component Examples</div>
+
+                <div class="button-group">
+                    <button class="btn" style="background: #4c1d95; color: white;">Primary Action</button>
+                    <button class="btn" style="background: #7c3aed; color: white;">Secondary</button>
+                    <button class="btn" style="border: 1px solid #d1d5db; background: white; color: #4c1d95;">Tertiary</button>
+                </div>
+
+                <div class="form-group">
+                    <label style="color: #4c1d95;">Email Address</label>
+                    <input type="email" placeholder="user@publisher.com" style="border-color: #e9d5ff;">
+                </div>
+
+                <div class="card" style="background: #faf5ff; border: 1px solid #e9d5ff;">
+                    <strong style="color: #1e1b4b;">Sales Transaction</strong>
+                    <p style="color: #4c1d95; font-size: 0.9rem; margin-top: 0.5rem;">Title: The Great Novel | Format: Physical | Qty: 150</p>
+                </div>
+
+                <div class="alert" style="background: rgba(76, 29, 149, 0.1); color: #4c1d95; border-left: 3px solid #4c1d95;">
+                    <strong>Info:</strong> Royalty calculation completed successfully.
+                </div>
+
+                <div class="alert" style="background: rgba(5, 150, 105, 0.1); color: #059669; border-left: 3px solid #059669;">
+                    <strong>Success:</strong> Statement generated and sent to author.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="max-width: 800px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom: 1rem; color: #1a1a1a;">Design Notes</h3>
+        <ul style="line-height: 1.8; color: #666;">
+            <li><strong>Theme 1 (Editorial Navy):</strong> Most traditional, trustworthy feel. Navy conveys financial accuracy and professionalism. Closest to classic ERP aesthetic.</li>
+            <li><strong>Theme 2 (Sage Green):</strong> Balanced and calm. Green suggests growth and productivity without being too bold. Good for author-friendly publishers.</li>
+            <li><strong>Theme 3 (Slate Gray):</strong> Closest to SAP Business One's enterprise precision. Neutral, data-focused, perfect for power users who prioritize function over style.</li>
+            <li><strong>Theme 4 (Deep Purple):</strong> Most distinctive and creative. Purple suggests creativity and literary heritage. Best for publishers with strong brand identity.</li>
+        </ul>
+    </div>
+</body>
+</html>

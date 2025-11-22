@@ -1,0 +1,201 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1</storyId>
+    <title>Initialize Next.js Project with Tech Stack</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-1-initialize-nextjs-project-with-tech-stack.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>development team</asA>
+    <iWant>to initialize the Next.js 16 project with all core dependencies and configuration</iWant>
+    <soThat>we have a working foundation for all subsequent development</soThat>
+    <tasks>
+- [ ] Initialize Next.js 16 project with create-next-app (AC: #1)
+  - [ ] Run create-next-app command with all required flags
+  - [ ] Verify TypeScript, Tailwind, Biome, App Router, src/ directory are configured
+  - [ ] Verify import alias @/* is working
+- [ ] Configure TypeScript strict mode (AC: #2)
+  - [ ] Update tsconfig.json with strict: true
+  - [ ] Verify no compilation errors
+- [ ] Configure Tailwind CSS with Editorial Navy theme (AC: #3)
+  - [ ] Update tailwind.config.ts with custom colors from UX spec
+  - [ ] Add primary (#1e3a5f), secondary (#5b7c99), accent (#c17d4a) colors
+  - [ ] Configure semantic colors (success, warning, error, info)
+  - [ ] Test theme colors render correctly
+- [ ] Initialize shadcn/ui (AC: #5)
+  - [ ] Run `npx shadcn@latest init`
+  - [ ] Configure Editorial Navy theme during init
+  - [ ] Set Inter font as primary typeface
+  - [ ] Install base components: Button, Card, Input, Label, Form
+  - [ ] Verify components render with Editorial Navy theme
+- [ ] Install core dependencies (AC: #6)
+  - [ ] Install drizzle-orm and @neondatabase/serverless
+  - [ ] Install react-hook-form, zod, @hookform/resolvers
+  - [ ] Install date-fns and @date-fns/tz
+  - [ ] Install decimal.js for financial calculations
+  - [ ] Verify all dependencies are in package.json
+- [ ] Create project structure directories (AC: #7)
+  - [ ] Create src/app/, src/components/, src/modules/, src/db/, src/lib/
+  - [ ] Verify directory structure matches Architecture pattern
+- [ ] Create environment variables template (AC: #8)
+  - [ ] Create .env.example with placeholders
+  - [ ] Add DATABASE_URL, CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  - [ ] Add .env.local to .gitignore
+- [ ] Test development and production builds (AC: #9, #10)
+  - [ ] Run `npm run dev` and verify server starts on localhost:3000
+  - [ ] Run `npm run build` and verify build succeeds
+  - [ ] Run `npm run start` and verify production server works
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Next.js 16 with App Router is initialized via `npx create-next-app@latest salina-erp --typescript --tailwind --biome --app --src-dir --import-alias "@/*"`
+2. TypeScript 5.x is configured with strict mode enabled
+3. Tailwind CSS 3.x is installed with Editorial Navy theme colors configured:
+   - Primary: `#1e3a5f` (Editorial Navy)
+   - Secondary: `#5b7c99` (Slate Blue)
+   - Accent: `#c17d4a` (Warm Bronze)
+   - Semantic colors (success, warning, error) per UX spec
+4. Biome is configured for linting and formatting (replaces ESLint + Prettier)
+5. shadcn/ui is initialized via `npx shadcn@latest init` with:
+   - Base components: Button, Card, Input, Label, Form
+   - Editorial Navy theme applied
+   - Inter font configured as primary typeface
+6. Drizzle ORM is installed with @neondatabase/serverless driver
+7. Project structure follows Architecture pattern:
+   ```
+   src/
+   ├── app/          # Next.js App Router
+   ├── components/   # Shared components
+   ├── modules/      # Feature modules
+   ├── db/           # Database schemas
+   └── lib/          # Shared utilities
+   ```
+8. Environment variables template (.env.example) is created with placeholders for:
+   - DATABASE_URL
+   - CLERK_SECRET_KEY
+   - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+9. Development server runs successfully on `npm run dev`
+10. Build succeeds with `npm run build`
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Project Initialization</section>
+        <snippet>Execute the following command to initialize the base architecture: `npx create-next-app@latest salina-erp --typescript --tailwind --biome --app --src-dir --import-alias "@/*"`. This provides Next.js 16 with Turbopack, TypeScript, Tailwind CSS, Biome for linting + formatting, App Router, src/ directory structure, and import alias @/* for clean imports.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Project Structure</section>
+        <snippet>Feature-based module organization with src/app/ (Next.js App Router), src/components/ (Shared UI components), src/modules/ (Feature modules by domain), src/db/ (Database schemas), and src/lib/ (Shared utilities).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Technology Stack Details</section>
+        <snippet>Next.js 16 with App Router, React 19, TypeScript 5.x, Tailwind CSS 3.x, shadcn/ui, Drizzle ORM, @neondatabase/serverless driver, Biome for linting/formatting, React Hook Form + Zod for forms, date-fns for date handling, Decimal.js for financial calculations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>Salina Bookshelf ERP - UX Design Specification</title>
+        <section>Design System Foundation</section>
+        <snippet>Selected shadcn/ui + Tanstack Table with Next.js 16 native integration, full code ownership, modern professional aesthetic, accessibility by default (WCAG 2.1 AA), MIT licensed. Components require assembly but provide maximum control.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>Salina Bookshelf ERP - UX Design Specification</title>
+        <section>Color System - Editorial Navy Theme</section>
+        <snippet>Primary: #1e3a5f (Editorial Navy), Secondary: #5b7c99 (Slate Blue), Accent: #c17d4a (Warm Bronze), Success: #2d7d3e (Forest Green), Warning: #d97706 (Amber), Error: #b91c1c (Deep Red). Professional publishing aesthetic, high contrast ratios for WCAG 2.1 AA compliance.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>Salina Bookshelf ERP - UX Design Specification</title>
+        <section>Typography System</section>
+        <snippet>Font Families: Inter font for headings and body. Type Scale: h1 (36px), h2 (30px), h3 (24px), h4 (20px), Body (16px), Body Small (14px), Tiny (12px). Font Weights: Regular (400), Medium (500), Semibold (600), Bold (700). Load from Google Fonts or bundle locally for performance.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Salina ERP - Product Requirements Document</title>
+        <section>Technology Foundation</section>
+        <snippet>Next.js 16 (App Router, Server Components, Server Actions), Neon PostgreSQL with Row-Level Security, Drizzle ORM for type-safe queries, Clerk for authentication and user management, Docker + Fly.io deployment.</snippet>
+      </doc>
+    </docs>
+    <code></code>
+    <dependencies>
+      <node>
+        <package name="next" version="^16.0.3" />
+        <package name="react" version="^19.2.0" />
+        <package name="react-dom" version="^19.2.0" />
+        <package name="@clerk/nextjs" version="^6.35.3" />
+        <package name="@neondatabase/serverless" version="^1.0.2" />
+        <package name="drizzle-orm" version="^0.44.7" />
+        <package name="@tanstack/react-query" version="^5.62.12" />
+        <package name="react-hook-form" version="^7.54.2" />
+        <package name="zod" version="^4.1.12" />
+        <package name="@hookform/resolvers" version="^3.9.1" />
+        <package name="decimal.js" version="^10.4.3" />
+        <package name="date-fns" version="^4.1.0" />
+        <package name="inngest" version="^3.26.0" />
+        <package name="resend" version="^4.0.2" />
+        <package name="react-email" version="^3.0.3" />
+        <package name="@aws-sdk/client-s3" version="^3.716.0" />
+        <package name="@aws-sdk/s3-request-presigner" version="^3.716.0" />
+        <package name="typescript" version="^5.9.3" />
+        <package name="tailwindcss" version="^4.1.17" />
+        <package name="drizzle-kit" version="^0.31.6" />
+        <package name="@biomejs/biome" version="^2.3.7" />
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Use exact command from architecture.md Section "Project Initialization"
+- Follow architecture.md "Project Structure" for directory layout
+- Configure tailwind.config.ts with UX color system from ux-design-specification.md
+- Install dependencies per architecture.md "Technology Stack Details"
+- Next.js 16 with App Router, React Server Components, Server Actions, Turbopack bundler
+- TypeScript 5.x with strict mode
+- Tailwind CSS 3.x utility-first styling
+- shadcn/ui component library (accessible, customizable, Radix UI primitives)
+- Biome for linting and formatting (faster than ESLint + Prettier)
+- Dependencies: drizzle-orm + @neondatabase/serverless (database), react-hook-form + zod + @hookform/resolvers (forms), date-fns + @date-fns/tz (date handling), decimal.js (financial calculations)
+- Feature-based module organization (src/modules/)
+- Shared components in src/components/ui/
+- Database schemas in src/db/schema/
+- Utilities in src/lib/
+  </constraints>
+
+  <interfaces></interfaces>
+
+  <tests>
+    <standards>
+Verify development server runs (`npm run dev`)
+Verify production build succeeds (`npm run build`)
+No compilation errors
+All TypeScript strict checks pass
+    </standards>
+    <locations>
+No test files for this foundational story - testing is manual verification of builds and dev server
+    </locations>
+    <ideas>
+- AC1: Verify create-next-app command executes successfully and all required flags are applied
+- AC2: Verify tsconfig.json contains "strict": true and no TypeScript errors
+- AC3: Verify tailwind.config.ts contains Editorial Navy color theme (#1e3a5f, #5b7c99, #c17d4a)
+- AC4: Verify biome.json exists and Biome commands work
+- AC5: Verify shadcn/ui components are installed and render with Editorial Navy theme
+- AC6: Verify all core dependencies are present in package.json with correct versions
+- AC7: Verify directory structure exists (src/app/, src/components/, src/modules/, src/db/, src/lib/)
+- AC8: Verify .env.example exists with required environment variable placeholders
+- AC9: Verify `npm run dev` starts successfully on localhost:3000
+- AC10: Verify `npm run build` completes without errors
+    </ideas>
+  </tests>
+</story-context>
