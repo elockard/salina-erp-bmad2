@@ -4,15 +4,15 @@
  * Manages ISBN pools for testing (physical and ebook)
  */
 
-import { faker } from '@faker-js/faker';
-import { TenantFactory, type Tenant } from './tenant-factory';
+import { faker } from "@faker-js/faker";
+import type { Tenant, TenantFactory } from "./tenant-factory";
 
 export interface ISBN {
   id: string;
   tenant_id: string;
   isbn_13: string;
-  type: 'physical' | 'ebook';
-  status: 'available' | 'assigned' | 'registered' | 'retired';
+  type: "physical" | "ebook";
+  status: "available" | "assigned" | "registered" | "retired";
   assigned_to_title_id?: string;
 }
 
@@ -27,7 +27,7 @@ export class ISBNFactory {
    */
   private generateISBN13(): string {
     // Prefix: 978 or 979
-    const prefix = '978';
+    const prefix = "978";
 
     // Random digits (9 digits)
     const group = faker.string.numeric(1);
@@ -45,7 +45,7 @@ export class ISBNFactory {
    * Calculate ISBN-13 check digit
    */
   private calculateISBN13CheckDigit(partial: string): string {
-    const digits = partial.replace(/-/g, '').split('').map(Number);
+    const digits = partial.replace(/-/g, "").split("").map(Number);
     let sum = 0;
 
     for (let i = 0; i < digits.length; i++) {
@@ -65,25 +65,25 @@ export class ISBNFactory {
    * @returns Created ISBN object
    */
   async createISBN(
-    type: 'physical' | 'ebook',
+    type: "physical" | "ebook",
     tenant?: Tenant,
-    overrides: Partial<ISBN> = {}
+    overrides: Partial<ISBN> = {},
   ): Promise<ISBN> {
     if (!tenant) {
       tenant = await this.tenantFactory.createTenant();
     }
 
-    const isbn: Omit<ISBN, 'id'> = {
+    const isbn: Omit<ISBN, "id"> = {
       tenant_id: tenant.id,
       isbn_13: overrides.isbn_13 || this.generateISBN13(),
       type,
-      status: overrides.status || 'available',
+      status: overrides.status || "available",
       assigned_to_title_id: overrides.assigned_to_title_id,
     };
 
     const response = await fetch(`${process.env.API_URL}/isbns`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(isbn),
     });
 
@@ -106,7 +106,11 @@ export class ISBNFactory {
    * @param tenant - Tenant object
    * @returns Array of created ISBNs
    */
-  async createISBNPool(count: number, type: 'physical' | 'ebook', tenant?: Tenant): Promise<ISBN[]> {
+  async createISBNPool(
+    count: number,
+    type: "physical" | "ebook",
+    tenant?: Tenant,
+  ): Promise<ISBN[]> {
     const isbns: ISBN[] = [];
 
     for (let i = 0; i < count; i++) {
@@ -124,7 +128,7 @@ export class ISBNFactory {
     for (const isbnId of this.createdISBNs) {
       try {
         await fetch(`${process.env.API_URL}/isbns/${isbnId}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
       } catch (error) {
         console.error(`Failed to cleanup ISBN ${isbnId}:`, error);

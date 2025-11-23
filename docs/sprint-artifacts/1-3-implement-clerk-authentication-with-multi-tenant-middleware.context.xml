@@ -1,0 +1,210 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.3</storyId>
+    <title>Implement Clerk Authentication UI and User Flow</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-3-implement-clerk-authentication-with-multi-tenant-middleware.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform user</asA>
+    <iWant>to sign in and sign up through a secure authentication interface</iWant>
+    <soThat>I can access the Salina ERP platform with my tenant-scoped account</soThat>
+    <tasks>
+      - Install and configure Clerk (verify @clerk/nextjs 6.35.4+, create Clerk account, configure environment variables)
+      - Configure Clerk provider in root layout with Editorial Navy theme
+      - Create sign-in page at src/app/(auth)/sign-in/page.tsx
+      - Create sign-up page at src/app/(auth)/sign-up/page.tsx
+      - Create Clerk webhook for user creation sync at src/app/api/webhooks/clerk/route.ts
+      - Implement post-signup tenant linking logic
+      - Configure middleware redirect logic (extends Story 1.2)
+      - Style auth pages per UX spec (Editorial Navy, Inter font, 8px radius)
+      - Test end-to-end auth flow
+      - (Optional) Configure social login (Google/GitHub)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Clerk provider wraps application in src/app/layout.tsx</criterion>
+    <criterion id="2">Sign-in page created at src/app/(auth)/sign-in/page.tsx using Clerk's SignIn component</criterion>
+    <criterion id="3">Sign-up page created at src/app/(auth)/sign-up/page.tsx using Clerk's SignUp component</criterion>
+    <criterion id="4">Root layout includes Clerk provider with appearance customization (Editorial Navy theme)</criterion>
+    <criterion id="5">Environment variables configured: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY</criterion>
+    <criterion id="6">Unauthenticated users accessing /dashboard are redirected to /sign-in (via middleware from Story 1.2)</criterion>
+    <criterion id="7">Authenticated users are redirected to /dashboard after sign-in</criterion>
+    <criterion id="8">Sign-up flow creates both Clerk user account AND users table record with proper tenant_id linkage</criterion>
+    <criterion id="9">Auth pages follow UX spec: Editorial Navy theme (#1E3A5F), clean minimal design</criterion>
+    <criterion id="10">Session persists across page refreshes (handled by Clerk automatically)</criterion>
+    <criterion id="11">Test user can successfully sign up with email/password</criterion>
+    <criterion id="12">Test user can successfully sign in with existing credentials</criterion>
+    <criterion id="13">Clerk dashboard configured with email/password authentication enabled</criterion>
+    <criterion id="14">(Optional) Google/GitHub social login configured in Clerk dashboard</criterion>
+    <criterion id="15">Error handling: Display clear error messages for invalid credentials or signup failures</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Authentication & Authorization</section>
+        <snippet>Clerk v5.x for authentication with MFA support. Application-level RBAC enforcement in Server Actions. Session management via HTTP-only secure cookies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Project Structure</section>
+        <snippet>Auth routes in (auth) route group: sign-in, sign-up. Webhook in api/webhooks/ following Next.js API conventions. ClerkProvider in root layout for global availability.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation & Multi-Tenant Infrastructure</title>
+        <section>Authentication & Authorization</section>
+        <snippet>Clerk authentication integration with multi-factor authentication support. Five-role RBAC system: Owner, Admin, Editor, Finance, Author. Clerk webhook syncs user.created events to users table.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation & Multi-Tenant Infrastructure</title>
+        <section>Multi-Tenancy Pattern</section>
+        <snippet>Three-layer security: Middleware (tenant context), Application (query injection), Database (RLS policies). Subdomain routing with automatic tenant_id injection.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Salina ERP - Product Requirements Document</title>
+        <section>Multi-Tenant Infrastructure</section>
+        <snippet>User authentication via Clerk with role-based access control (Owner, Admin, Editor, Finance, Author). Row-Level Security for complete tenant data isolation.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/app/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>RootLayout</symbol>
+        <lines>1-26</lines>
+        <reason>Root layout component where ClerkProvider needs to be added. Currently has Inter font and metadata configured.</reason>
+      </artifact>
+      <artifact>
+        <path>middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>clerkMiddleware</symbol>
+        <lines>1-71</lines>
+        <reason>Existing middleware from Story 1.2 that handles subdomain extraction, tenant lookup, JWT forwarding, and protected route enforcement. Story 1.3 builds on this by ensuring Clerk redirects are properly configured.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>lib</kind>
+        <symbol>getCurrentUser, getCurrentTenantId, checkPermission, getDb</symbol>
+        <lines>1-81</lines>
+        <reason>Auth helper functions from Story 1.2. getCurrentUser() uses Clerk's currentUser() and queries users table. These helpers will be used in webhook handler and Server Actions.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/users.ts</path>
+        <kind>schema</kind>
+        <symbol>users</symbol>
+        <lines>1-22</lines>
+        <reason>Users table schema with clerk_user_id, tenant_id, email, role columns. Webhook handler will insert records here after Clerk user.created event.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/tenants.ts</path>
+        <kind>schema</kind>
+        <symbol>tenants</symbol>
+        <lines>1-13</lines>
+        <reason>Tenants table schema. May need to create tenant record for first user (owner) during signup flow.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/tenant-not-found/page.tsx</path>
+        <kind>page</kind>
+        <symbol>TenantNotFoundPage</symbol>
+        <lines>1-20</lines>
+        <reason>Error page shown when subdomain doesn't match a tenant. Reference for error handling patterns.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package name="@clerk/nextjs" version="^6.35.4" type="production" />
+        <package name="next" version="^16.0.3" type="production" />
+        <package name="react" version="^19.2.0" type="production" />
+        <package name="react-dom" version="^19.2.0" type="production" />
+        <package name="drizzle-orm" version="^0.44.7" type="production" />
+        <package name="@neondatabase/serverless" version="^1.0.2" type="production" />
+        <package name="zod" version="^4.1.12" type="production" />
+        <package name="svix" version="(not installed - needed for webhook verification)" type="production" />
+        <package name="typescript" version="^5.9.3" type="development" />
+        <package name="@types/node" version="^24.10.1" type="development" />
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>ClerkProvider must wrap all children in root layout for global auth availability</constraint>
+    <constraint>Editorial Navy theme (#1E3A5F) required per UX spec - apply to Clerk appearance config</constraint>
+    <constraint>Inter font family required - already configured in layout.tsx</constraint>
+    <constraint>8px border radius on form inputs and buttons per UX spec</constraint>
+    <constraint>Webhook must verify signature using svix library for security</constraint>
+    <constraint>User sync must create users table record with clerk_user_id and tenant_id</constraint>
+    <constraint>First user signup requires tenant creation (owner role default)</constraint>
+    <constraint>Invited users link to existing tenant via invitation token or metadata</constraint>
+    <constraint>Middleware redirect logic already exists (Story 1.2) - do not duplicate</constraint>
+    <constraint>Use Clerk's prebuilt SignIn and SignUp components - do not create custom forms</constraint>
+    <constraint>Auth pages must be responsive (mobile, tablet, desktop)</constraint>
+    <constraint>Session persistence handled automatically by Clerk - no custom code needed</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ClerkProvider appearance config</name>
+      <kind>react-component-prop</kind>
+      <signature>appearance={{ variables: { colorPrimary, colorBackground, fontSize, fontFamily, borderRadius }, elements: { card, formButtonPrimary } }}</signature>
+      <path>src/app/layout.tsx</path>
+    </interface>
+    <interface>
+      <name>Clerk SignIn component</name>
+      <kind>react-component</kind>
+      <signature>&lt;SignIn routing="path" path="/sign-in" /&gt;</signature>
+      <path>src/app/(auth)/sign-in/page.tsx</path>
+    </interface>
+    <interface>
+      <name>Clerk SignUp component</name>
+      <kind>react-component</kind>
+      <signature>&lt;SignUp routing="path" path="/sign-up" /&gt;</signature>
+      <path>src/app/(auth)/sign-up/page.tsx</path>
+    </interface>
+    <interface>
+      <name>Clerk webhook event</name>
+      <kind>webhook-payload</kind>
+      <signature>{ type: "user.created", data: { id: string, email_addresses: [{ email_address: string }] } }</signature>
+      <path>src/app/api/webhooks/clerk/route.ts</path>
+    </interface>
+    <interface>
+      <name>users table insert</name>
+      <kind>database-operation</kind>
+      <signature>db.insert(users).values({ clerk_user_id, email, tenant_id, role, is_active })</signature>
+      <path>src/app/api/webhooks/clerk/route.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing approach uses Playwright for E2E tests (@playwright/test installed). Auth flow should be tested end-to-end: signup → database record creation → signin → redirect to dashboard → session persistence. Use @faker-js/faker for realistic test data. Webhook handler should be tested with mock Clerk payloads.
+    </standards>
+    <locations>
+      <location>tests/e2e/*.spec.ts</location>
+      <location>tests/integration/*.test.ts</location>
+      <location>tests/unit/*.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="2,3,4">E2E test: Navigate to /sign-in and /sign-up, verify Clerk UI renders correctly</idea>
+      <idea ac="5">Unit test: Verify environment variables are loaded correctly</idea>
+      <idea ac="6,7">E2E test: Access /dashboard unauthenticated → redirected to /sign-in. Sign in → redirected to /dashboard</idea>
+      <idea ac="8">Integration test: Trigger webhook with user.created payload, verify users table record created with correct clerk_user_id and tenant_id</idea>
+      <idea ac="9">Visual test: Verify Editorial Navy theme applied to Clerk components</idea>
+      <idea ac="10">E2E test: Sign in, refresh page, verify session persists and user remains authenticated</idea>
+      <idea ac="11,12">E2E test: Complete signup flow, sign out, sign in with same credentials, verify success</idea>
+      <idea ac="15">E2E test: Submit invalid credentials, verify error message displayed clearly</idea>
+      <idea ac="webhook">Unit test: Mock svix webhook verification, test both valid and invalid signatures</idea>
+    </ideas>
+  </tests>
+</story-context>

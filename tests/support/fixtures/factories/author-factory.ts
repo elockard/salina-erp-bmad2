@@ -4,8 +4,8 @@
  * Creates publishing authors with optional royalty contracts
  */
 
-import { faker } from '@faker-js/faker';
-import { TenantFactory, type Tenant } from './tenant-factory';
+import { faker } from "@faker-js/faker";
+import type { Tenant, TenantFactory } from "./tenant-factory";
 
 export interface Author {
   id: string;
@@ -31,25 +31,28 @@ export class AuthorFactory {
    * @param overrides - Override default author properties
    * @returns Created author object
    */
-  async createAuthor(tenant?: Tenant, overrides: Partial<Author> = {}): Promise<Author> {
+  async createAuthor(
+    tenant?: Tenant,
+    overrides: Partial<Author> = {},
+  ): Promise<Author> {
     if (!tenant) {
       tenant = await this.tenantFactory.createTenant();
     }
 
-    const author: Omit<Author, 'id'> = {
+    const author: Omit<Author, "id"> = {
       tenant_id: tenant.id,
       name: overrides.name || faker.person.fullName(),
       email: overrides.email || faker.internet.email(),
       phone: overrides.phone || faker.phone.number(),
       address: overrides.address || faker.location.streetAddress(true),
       tax_id: overrides.tax_id || faker.string.numeric(9), // SSN-like
-      payment_method: overrides.payment_method || 'direct_deposit',
+      payment_method: overrides.payment_method || "direct_deposit",
       is_active: overrides.is_active ?? true,
     };
 
     const response = await fetch(`${process.env.API_URL}/authors`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(author),
     });
 
@@ -70,7 +73,7 @@ export class AuthorFactory {
     for (const authorId of this.createdAuthors) {
       try {
         await fetch(`${process.env.API_URL}/authors/${authorId}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
       } catch (error) {
         console.error(`Failed to cleanup author ${authorId}:`, error);

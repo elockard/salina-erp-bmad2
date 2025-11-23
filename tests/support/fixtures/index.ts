@@ -7,13 +7,13 @@
  * Architecture follows TEA knowledge base: fixture-architecture.md
  */
 
-import { test as base, expect } from '@playwright/test';
-import { TenantFactory } from './factories/tenant-factory';
-import { UserFactory } from './factories/user-factory';
-import { AuthorFactory } from './factories/author-factory';
-import { TitleFactory } from './factories/title-factory';
-import { ISBNFactory } from './factories/isbn-factory';
-import { SalesFactory } from './factories/sales-factory';
+import { test as base, expect } from "@playwright/test";
+import { AuthorFactory } from "./factories/author-factory";
+import { ISBNFactory } from "./factories/isbn-factory";
+import { SalesFactory } from "./factories/sales-factory";
+import { TenantFactory } from "./factories/tenant-factory";
+import { TitleFactory } from "./factories/title-factory";
+import { UserFactory } from "./factories/user-factory";
 
 /**
  * Test Fixture Types

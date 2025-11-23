@@ -1,4 +1,10 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
+import { config as loadEnv } from "dotenv";
+
+// Load environment variables for test execution
+// Playwright doesn't auto-load .env like Next.js does
+loadEnv({ path: ".env.local" });
+loadEnv({ path: ".env" });
 
 /**
  * Playwright Configuration for Salina Bookshelf ERP
@@ -9,7 +15,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: "./tests/e2e",
 
   /**
    * Parallel Execution Strategy
@@ -38,12 +44,12 @@ export default defineConfig({
    */
   use: {
     // Base URL from environment (supports multi-tenant subdomains)
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.BASE_URL || "http://localhost:3000",
 
     // Debugging artifacts (failure-only to reduce storage)
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
 
     // Timeout overrides
     actionTimeout: 15 * 1000,
@@ -54,8 +60,8 @@ export default defineConfig({
     ignoreHTTPSErrors: false,
 
     // Locale and timezone (US publishing market)
-    locale: 'en-US',
-    timezoneId: 'America/New_York',
+    locale: "en-US",
+    timezoneId: "America/New_York",
   },
 
   /**
@@ -65,9 +71,9 @@ export default defineConfig({
    * - List: Console output during test runs
    */
   reporter: [
-    ['html', { outputFolder: 'test-results/html', open: 'never' }],
-    ['junit', { outputFile: 'test-results/junit.xml' }],
-    ['list'],
+    ["html", { outputFolder: "playwright-report", open: "never" }],
+    ["junit", { outputFile: "test-results/junit.xml" }],
+    ["list"],
   ],
 
   /**
@@ -79,19 +85,19 @@ export default defineConfig({
    */
   projects: [
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
         // Clerk authentication requires Chrome-like browser
       },
     },
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
     /**
@@ -99,12 +105,12 @@ export default defineConfig({
      * Authors access statements on mobile devices
      */
     {
-      name: 'mobile-chrome',
-      use: { ...devices['Pixel 5'] },
+      name: "mobile-chrome",
+      use: { ...devices["Pixel 5"] },
     },
     {
-      name: 'mobile-safari',
-      use: { ...devices['iPhone 13'] },
+      name: "mobile-safari",
+      use: { ...devices["iPhone 13"] },
     },
   ],
 
@@ -113,8 +119,8 @@ export default defineConfig({
    * Auto-start Next.js dev server if not running
    */
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: "npm run dev",
+    url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes for Next.js cold start
   },

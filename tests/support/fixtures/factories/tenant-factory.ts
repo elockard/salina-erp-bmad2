@@ -5,7 +5,7 @@
  * Auto-cleanup ensures no cross-tenant data pollution
  */
 
-import { faker } from '@faker-js/faker';
+import { faker } from "@faker-js/faker";
 
 export interface Tenant {
   id: string;
@@ -13,7 +13,7 @@ export interface Tenant {
   name: string;
   timezone: string;
   default_currency: string;
-  statement_frequency: 'monthly' | 'quarterly' | 'annual';
+  statement_frequency: "monthly" | "quarterly" | "annual";
 }
 
 export class TenantFactory {
@@ -26,20 +26,22 @@ export class TenantFactory {
    * @returns Created tenant object
    */
   async createTenant(overrides: Partial<Tenant> = {}): Promise<Tenant> {
-    const subdomain = overrides.subdomain || `test${faker.string.alphanumeric(8).toLowerCase()}`;
+    const subdomain =
+      overrides.subdomain ||
+      `test${faker.string.alphanumeric(8).toLowerCase()}`;
 
-    const tenant: Omit<Tenant, 'id'> = {
+    const tenant: Omit<Tenant, "id"> = {
       subdomain,
       name: overrides.name || `${faker.company.name()} Publishing`,
-      timezone: overrides.timezone || 'America/New_York',
-      default_currency: overrides.default_currency || 'USD',
-      statement_frequency: overrides.statement_frequency || 'quarterly',
+      timezone: overrides.timezone || "America/New_York",
+      default_currency: overrides.default_currency || "USD",
+      statement_frequency: overrides.statement_frequency || "quarterly",
     };
 
     // API call to create tenant
     const response = await fetch(`${process.env.API_URL}/tenants`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(tenant),
     });
 
@@ -60,7 +62,7 @@ export class TenantFactory {
    * @returns Full URL with subdomain (e.g., http://acmepublishing.localhost:3000)
    */
   getTenantURL(subdomain: string): string {
-    const baseURL = process.env.BASE_URL || 'http://localhost:3000';
+    const baseURL = process.env.BASE_URL || "http://localhost:3000";
     const url = new URL(baseURL);
 
     // Multi-tenant subdomain routing
@@ -77,7 +79,7 @@ export class TenantFactory {
     for (const tenantId of this.createdTenants) {
       try {
         await fetch(`${process.env.API_URL}/tenants/${tenantId}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
       } catch (error) {
         console.error(`Failed to cleanup tenant ${tenantId}:`, error);

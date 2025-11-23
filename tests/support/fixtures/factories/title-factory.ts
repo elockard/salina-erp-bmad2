@@ -4,9 +4,9 @@
  * Creates book titles with optional ISBN assignments
  */
 
-import { faker } from '@faker-js/faker';
-import { TenantFactory, type Tenant } from './tenant-factory';
-import { AuthorFactory, type Author } from './author-factory';
+import { faker } from "@faker-js/faker";
+import type { Author, AuthorFactory } from "./author-factory";
+import type { Tenant, TenantFactory } from "./tenant-factory";
 
 export interface Title {
   id: string;
@@ -15,7 +15,7 @@ export interface Title {
   subtitle?: string;
   genre?: string;
   word_count?: number;
-  publication_status: 'draft' | 'published' | 'archived';
+  publication_status: "draft" | "published" | "archived";
   isbn?: string; // Physical book ISBN
   eisbn?: string; // Ebook ISBN
   publication_date?: string;
@@ -26,7 +26,7 @@ export class TitleFactory {
 
   constructor(
     private tenantFactory: TenantFactory,
-    private authorFactory: AuthorFactory
+    private authorFactory: AuthorFactory,
   ) {}
 
   /**
@@ -40,7 +40,7 @@ export class TitleFactory {
   async createTitle(
     tenant?: Tenant,
     author?: Author,
-    overrides: Partial<Title> = {}
+    overrides: Partial<Title> = {},
   ): Promise<Title> {
     if (!tenant) {
       tenant = await this.tenantFactory.createTenant();
@@ -50,21 +50,30 @@ export class TitleFactory {
       author = await this.authorFactory.createAuthor(tenant);
     }
 
-    const title: Omit<Title, 'id'> = {
+    const title: Omit<Title, "id"> = {
       tenant_id: tenant.id,
       title: overrides.title || faker.lorem.words(3),
       subtitle: overrides.subtitle || faker.lorem.words(5),
-      genre: overrides.genre || faker.helpers.arrayElement(['Fiction', 'Non-Fiction', 'Mystery', 'Romance', 'Sci-Fi']),
-      word_count: overrides.word_count || faker.number.int({ min: 50000, max: 150000 }),
-      publication_status: overrides.publication_status || 'draft',
+      genre:
+        overrides.genre ||
+        faker.helpers.arrayElement([
+          "Fiction",
+          "Non-Fiction",
+          "Mystery",
+          "Romance",
+          "Sci-Fi",
+        ]),
+      word_count:
+        overrides.word_count || faker.number.int({ min: 50000, max: 150000 }),
+      publication_status: overrides.publication_status || "draft",
       isbn: overrides.isbn,
       eisbn: overrides.eisbn,
       publication_date: overrides.publication_date,
     };
 
     const response = await fetch(`${process.env.API_URL}/titles`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(title),
     });
 
@@ -85,7 +94,7 @@ export class TitleFactory {
     for (const titleId of this.createdTitles) {
       try {
         await fetch(`${process.env.API_URL}/titles/${titleId}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
       } catch (error) {
         console.error(`Failed to cleanup title ${titleId}:`, error);

@@ -1,0 +1,231 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>4</storyId>
+    <title>Create Tenant Registration Flow with Subdomain Validation</title>
+    <status>pending</status>
+    <generatedAt>2025-11-23</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/elockard/office/salina-erp-bmad2/docs/sprint-artifacts/1-4-create-tenant-registration-flow-with-subdomain-validation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>publishing company owner</asA>
+    <iWant>to register my company as a new tenant with a unique subdomain</iWant>
+    <soThat>my team has a dedicated workspace at mycorp.salina-erp.com</soThat>
+    <tasks>
+- Create tenant registration module structure (src/modules/tenant/)
+- Implement Zod validation schemas (schema.ts)
+- Create registration form component (TenantRegistrationForm.tsx)
+- Create registration page (app/(auth)/register/page.tsx)
+- Implement subdomain availability check Server Action
+- Implement main registration Server Action with transaction pattern
+- Handle Clerk user account creation
+- Handle post-registration authentication and redirect
+- Create welcome/onboarding page placeholder
+- Implement error handling and validation
+- Create E2E tests for registration flow
+- Integrate with Story 1.3 Clerk webhook
+- Update environment variables
+- Styling and UX compliance
+- Final validation and testing
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Registration page displays form with all required fields: Company Name, Subdomain, Owner Email, Owner Name, Password
+2. Company Name field accepts text input (required, max 100 characters) with validation feedback
+3. Subdomain field accepts text input (required, 3-30 characters, lowercase a-z 0-9 hyphens only)
+4. Subdomain field shows live preview of full URL: "[subdomain].salina-erp.com" (updated as user types)
+5. Subdomain validation checks availability in real-time (debounced 500ms) without form submission
+6. Unavailable subdomain displays error: "This subdomain is already taken. Try another."
+7. Owner Email field accepts valid email address (required, with email format validation)
+8. Owner Name field accepts text input (required, max 100 characters)
+9. Password field accepts password input (required, minimum 8 characters per Clerk requirements)
+10. Form validation uses Zod schema per architecture.md pattern
+11. Subdomain field prevents invalid format with inline validation (no leading/trailing hyphens)
+12. Subdomain availability check Server Action validates uniqueness in database
+13. Registration Server Action creates: (1) Clerk user account, (2) Tenant record, (3) User record with role="owner"
+14. Tenant record includes default settings: timezone="America/New_York", currency="USD", statement_frequency="quarterly"
+15. User record created with: clerk_user_id, email, role="owner", is_active=true
+16. After successful registration, user is automatically authenticated (Clerk session created)
+17. Successful registration redirects user to /welcome page at tenant's subdomain (e.g., [subdomain].salina-erp.com/welcome)
+18. Success notification displays: "Welcome to Salina ERP! Your workspace is ready." (toast message)
+19. Error handling displays: Duplicate subdomain → "This subdomain is already taken"
+20. Error handling displays: Clerk user creation failure → "Unable to create account. Please try again."
+21. Registration form is styled per UX spec: Editorial Navy theme (#1E3A5F), Inter font, 8px border radius
+22. Form follows "Spacious Guided Flow" UX pattern with clear field labels and helpful hints
+23. All form inputs are responsive and work on mobile, tablet, and desktop viewports
+24. Transaction pattern: if any step fails (Clerk, tenant creation, or user creation), entire registration rolls back cleanly
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Multi-Tenancy Architecture (FR1-8)</section>
+        <snippet>Tenant registration with subdomain selection, subdomain availability validation, automatic tenant record creation with default settings (timezone="America/New_York", currency="USD", statement_frequency="quarterly"), owner user creation and linking to tenant</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 2: Multi-Tenant Row-Level Security</section>
+        <snippet>Three-layer tenant isolation: (1) Middleware extracts subdomain and validates tenant exists, (2) Application auto-injects tenant_id in queries, (3) Database RLS policies enforce isolation. Middleware stores tenant_id in session for all Server Actions.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Form Handling Pattern</section>
+        <snippet>Use React Hook Form + Zod validation. Client-side validation with zodResolver, server-side re-validation in Server Actions. ActionResult&lt;T&gt; pattern for responses: { success: true, data: T } or { success: false, error: string, fields?: Record&lt;string, string&gt; }</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Visual Foundation - Editorial Navy Theme</section>
+        <snippet>Primary color: #1E3A5F (Editorial Navy), Inter font for all typography, 8px border radius for inputs/buttons (md), Professional publishing aesthetic with accessibility (WCAG 2.1 AA)</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Design Direction - Spacious Guided Flow</section>
+        <snippet>Centered form with generous spacing, clear field progression, focused data entry pattern. Used for sales entry, create title, add author - applies to tenant registration form as well.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Epic 1: Foundation & Multi-Tenant Infrastructure</section>
+        <snippet>Story 1.4 creates tenant registration flow with subdomain validation, complementing Story 1.2 (database) and Story 1.3 (Clerk auth). Coordinates with webhook to prevent duplicate tenant creation.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/db/schema/tenants.ts</path>
+        <kind>database schema</kind>
+        <symbol>tenants</symbol>
+        <lines>1-16</lines>
+        <reason>Tenant table schema shows required fields (subdomain unique constraint, default settings). Registration must create record with these defaults.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/users.ts</path>
+        <kind>database schema</kind>
+        <symbol>users</symbol>
+        <lines>11-32</lines>
+        <reason>User table schema shows clerk_user_id foreign key, role enum (owner/admin/editor/finance/author), tenant_id foreign key. Registration creates owner user linked to new tenant.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/api/webhooks/clerk/route.ts</path>
+        <kind>api route</kind>
+        <symbol>POST (user.created event)</symbol>
+        <lines>46-110</lines>
+        <reason>Webhook creates tenant for first users with auto-generated subdomain. Story 1.4 must coordinate: registration form should pass tenant_id in public_metadata to prevent webhook from creating duplicate tenant.</reason>
+      </artifact>
+      <artifact>
+        <path>middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>clerkMiddleware</symbol>
+        <lines>12-64</lines>
+        <reason>Middleware extracts subdomain, queries tenants table, stores tenant_id in x-tenant-id header. Registration form must create tenant with valid subdomain before user can access tenant-specific routes.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>library utility</kind>
+        <symbol>getCurrentTenantId, getCurrentUser, checkPermission</symbol>
+        <lines>12-81</lines>
+        <reason>Auth helpers used in Server Actions. Registration Server Action will use similar patterns but must handle unauthenticated context (user doesn't exist yet).</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(auth)/sign-up/page.tsx</path>
+        <kind>page component</kind>
+        <symbol>SignUpPage</symbol>
+        <lines>all</lines>
+        <reason>Existing Clerk sign-up page from Story 1.3. Registration form provides alternative path with explicit tenant creation (vs webhook auto-creation).</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/form.tsx</path>
+        <kind>ui component</kind>
+        <symbol>Form components (shadcn/ui)</symbol>
+        <lines>all</lines>
+        <reason>shadcn/ui Form components integrate with React Hook Form + Zod. Registration form uses these for validation and styling.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package name="@clerk/nextjs" version="^6.35.4">Clerk authentication - provides clerkClient.users.createUser() API for programmatic user creation in registration Server Action</package>
+        <package name="react-hook-form" version="^7.66.1">Form state management with useForm hook, integrates with Zod via zodResolver</package>
+        <package name="@hookform/resolvers" version="^5.2.2">Connects React Hook Form with Zod validation schemas</package>
+        <package name="zod" version="^4.1.12">Schema validation for form inputs (client + server side), defines createTenantSchema with subdomain format rules</package>
+        <package name="drizzle-orm" version="^0.44.7">Type-safe ORM for database operations - insert tenants, insert users, query subdomain uniqueness</package>
+        <package name="@neondatabase/serverless" version="^1.0.2">Neon PostgreSQL driver for serverless environments, used by Drizzle</package>
+        <package name="lucide-react" version="0.554.0">Icon library for form field icons (e.g., building icon for company name, link icon for subdomain preview)</package>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Use Server Actions (not API routes) for all registration logic per architecture.md
+- Client-side AND server-side validation required (Zod schema) - never trust client
+- Transaction pattern: if Clerk user creation succeeds but DB fails, delete Clerk user to prevent orphaned accounts
+- Subdomain format: 3-30 characters, lowercase a-z 0-9 hyphens, no leading/trailing hyphens (regex: ^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$)
+- Subdomain uniqueness: check database constraint AND application validation (defense in depth)
+- Coordinate with Story 1.3 webhook: pass tenant_id and subdomain via Clerk public_metadata during user creation to prevent duplicate tenant creation
+- Redirect after registration: [subdomain].salina-erp.com/welcome (not localhost:3000/welcome)
+- Default tenant settings must match database defaults: timezone="America/New_York", currency="USD", statement_frequency="quarterly"
+- Use ActionResult&lt;T&gt; pattern for all Server Actions: { success: true, data: T } | { success: false, error: string, fields?: Record&lt;string,string&gt; }
+- Real-time subdomain validation: debounce 500ms on field blur/change to avoid excessive DB queries
+- Apply Editorial Navy theme (#1E3A5F), Inter font, 8px border radius per UX spec
+- Follow "Spacious Guided Flow" UX pattern: centered form (400-500px max-width), generous spacing, clear progression
+- Responsive design: mobile (375px), tablet (768px), desktop (1024px)
+- E2E tests required: use Playwright per existing test pattern (tests/e2e/*.spec.ts)
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>registerTenant</name>
+      <kind>Server Action</kind>
+      <signature>async function registerTenant(input: { companyName: string, subdomain: string, ownerEmail: string, ownerName: string, password: string }): Promise&lt;ActionResult&lt;{ tenantId: string, userId: string, subdomain: string }&gt;&gt;</signature>
+      <path>src/modules/tenant/actions.ts</path>
+    </interface>
+    <interface>
+      <name>checkSubdomainAvailability</name>
+      <kind>Server Action</kind>
+      <signature>async function checkSubdomainAvailability(subdomain: string): Promise&lt;ActionResult&lt;{ available: boolean, message?: string }&gt;&gt;</signature>
+      <path>src/modules/tenant/actions.ts</path>
+    </interface>
+    <interface>
+      <name>clerkClient.users.createUser()</name>
+      <kind>Clerk Admin API</kind>
+      <signature>createUser({ emailAddress: string[], password: string, publicMetadata?: Record&lt;string,any&gt; }): Promise&lt;{ id: string, ... }&gt;</signature>
+      <path>@clerk/nextjs</path>
+    </interface>
+    <interface>
+      <name>createTenantSchema</name>
+      <kind>Zod validation schema</kind>
+      <signature>z.object({ companyName: z.string().min(2).max(100), subdomain: z.string().regex(/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/), ownerEmail: z.string().email(), ownerName: z.string().min(1).max(100), password: z.string().min(8) })</signature>
+      <path>src/modules/tenant/schema.ts</path>
+    </interface>
+    <interface>
+      <name>TenantRegistrationForm</name>
+      <kind>React component</kind>
+      <signature>function TenantRegistrationForm(): JSX.Element</signature>
+      <path>src/modules/tenant/components/TenantRegistrationForm.tsx</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Playwright E2E tests following existing pattern in tests/e2e/*.spec.ts. Use @playwright/test framework with test fixtures for database setup/teardown. Tests must create real database records (tenants, users) and verify Clerk integration. Clean up after each test to prevent pollution.</standards>
+    <locations>tests/e2e/tenant-registration.spec.ts</locations>
+    <ideas>
+- Test 1: Navigate to /register page renders form with all fields
+- Test 2: Subdomain live preview updates as user types (e.g., typing "acme" shows "acme.salina-erp.com")
+- Test 3: Subdomain availability check shows error for taken subdomain (seed existing tenant first)
+- Test 4: Subdomain availability check shows success for available subdomain
+- Test 5: Invalid subdomain format shows validation error (uppercase, special chars, too short, leading hyphen)
+- Test 6: Complete registration successfully creates tenant + user in database
+- Test 7: After registration, user redirected to /welcome page
+- Test 8: Success toast displays "Welcome to Salina ERP! Your workspace is ready."
+- Test 9: Duplicate subdomain submission shows error "This subdomain is already taken"
+- Test 10: Clerk user creation failure shows error "Unable to create account"
+- Test 11: Responsive design on mobile viewport (375px) - form renders correctly
+- Test 12: Webhook doesn't create duplicate tenant when registration form already created it (verify tenant_id in public_metadata prevents duplicate)
+    </ideas>
+  </tests>
+</story-context>
