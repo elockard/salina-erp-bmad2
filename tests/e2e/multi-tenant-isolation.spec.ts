@@ -7,7 +7,10 @@ import * as schema from "../../src/db/schema";
 
 config({ path: ".env.local" });
 
-const sql = neon(process.env.DATABASE_URL!);
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
+const sql = neon(process.env.DATABASE_URL);
 const db = drizzle(sql, { schema });
 
 /**
@@ -74,7 +77,7 @@ test.describe("Multi-Tenant Isolation (Application-Level)", () => {
     const tenantADataFromBContext = await db.query.tenants.findMany({
       where: and(
         eq(schema.tenants.id, tenantAId),
-        eq(schema.tenants.id, tenantBId), // This AND condition ensures no results
+        eq(schema.tenants.id, tenantBId) // This AND condition ensures no results
       ),
     });
 
@@ -94,7 +97,7 @@ test.describe("Multi-Tenant Isolation (Application-Level)", () => {
     const tenantAUsersFromBContext = await db.query.users.findMany({
       where: and(
         eq(schema.users.tenant_id, tenantAId),
-        eq(schema.users.tenant_id, tenantBId), // Contradictory filter ensures no results
+        eq(schema.users.tenant_id, tenantBId) // Contradictory filter ensures no results
       ),
     });
 
@@ -127,11 +130,12 @@ test.describe("Multi-Tenant Isolation (Application-Level)", () => {
     });
 
     expect(tenantBySubdomain).toBeTruthy();
+    if (!tenantBySubdomain) throw new Error("Expected tenant to exist");
     expect(tenantBySubdomain?.id).toBe(tenantAId);
 
     // Verify that all subsequent queries would use this tenant_id for filtering
     const usersForTenant = await db.query.users.findMany({
-      where: eq(schema.users.tenant_id, tenantBySubdomain!.id),
+      where: eq(schema.users.tenant_id, tenantBySubdomain.id),
     });
 
     expect(usersForTenant.length).toBe(1);

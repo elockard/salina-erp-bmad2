@@ -7,6 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
+
     "includes": [
       "**",
       "!**/.next",
@@ -14,7 +15,8 @@
       "!**/.git",
       "!**/.bmad",
       "!**/.claude",
-      "!**/docs"
+      "!**/docs",
+      "!**/*.css"
     ]
   },
   "formatter": {

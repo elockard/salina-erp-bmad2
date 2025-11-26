@@ -1,0 +1,196 @@
+<story-context id="2-4-create-title-database-schema-and-multi-format-support" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>4</storyId>
+    <title>Create Title Database Schema and Multi-Format Support</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-4-create-title-database-schema-and-multi-format-support.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform architect</asA>
+    <iWant>to establish the title data model supporting multiple formats</iWant>
+    <soThat>publishers can track physical books, ebooks, and audiobooks</soThat>
+    <tasks>
+      <task id="1" status="pending">Create Drizzle title schema (AC: 1, 2, 3, 4, 8)</task>
+      <task id="2" status="pending">Create database indexes (AC: 6, 7)</task>
+      <task id="3" status="pending">Define Drizzle relations (AC: 9, 10)</task>
+      <task id="4" status="pending">Export schema from index (AC: 11)</task>
+      <task id="5" status="pending">Create RLS migration (AC: 5)</task>
+      <task id="6" status="pending">Generate and apply migration (AC: 12, 13)</task>
+      <task id="7" status="pending">Create types and Zod schemas (AC: 1, 2)</task>
+      <task id="8" status="pending">Write unit tests (AC: 15)</task>
+      <task id="9" status="pending">Document multi-format architecture (AC: 14)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">titles table created with all required fields per architecture.md schema</ac>
+    <ac id="2">Publication status enum enforced at database level with values: draft, pending, published, out_of_print</ac>
+    <ac id="3">Unique constraints created on isbn and eisbn columns (globally unique across ALL tenants)</ac>
+    <ac id="4">author_id foreign key references authors.id (cascade on delete not applied - titles preserve on author soft delete)</ac>
+    <ac id="5">RLS policy enabled on titles table for tenant isolation</ac>
+    <ac id="6">Indexes created on: tenant_id, publication_status, isbn, eisbn, author_id</ac>
+    <ac id="7">Composite index on (tenant_id, is_active) for efficient filtered queries (if is_active added)</ac>
+    <ac id="8">Drizzle schema file created at src/db/schema/titles.ts</ac>
+    <ac id="9">Drizzle relations defined: titles to tenant (many-to-one), titles to author (many-to-one)</ac>
+    <ac id="10">Relations added to src/db/schema/relations.ts for title relationships</ac>
+    <ac id="11">Schema exported from src/db/schema/index.ts</ac>
+    <ac id="12">Migration generated via npm run db:generate</ac>
+    <ac id="13">Migration applied via npm run db:push (development) or npm run db:migrate (production)</ac>
+    <ac id="14">Multi-format support architecture documented: Physical (isbn), Ebook (eisbn), Audiobook (future)</ac>
+    <ac id="15">Unit test validates schema constraints (unique ISBN, required fields, valid enum values)</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Database Schema - titles table (lines 1591-1611)</section>
+        <snippet>Title schema specification with isbn/eisbn fields, publication_status enum, multi-tenant tenant_id. Soft delete via is_active flag. All timestamps with timezone.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Author and Title Catalog Management</title>
+        <section>Story 2.4: Title Schema (lines 111-138)</section>
+        <snippet>Titles table with author_id FK, publication_status enum, isbn/eisbn globally unique, indexes on tenant_id, status, isbn, eisbn, author_id.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Salina ERP - Product Requirements Document</title>
+        <section>Title and ISBN Management (FR14-23)</section>
+        <snippet>FR14: Create title records with metadata. FR15: Track multiple formats (physical, ebook, audiobook). FR22: Update title metadata and publication status.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/db/schema/authors.ts</path>
+        <kind>schema</kind>
+        <symbol>authors</symbol>
+        <lines>53-136</lines>
+        <reason>Reference pattern for Drizzle schema with tenant_id, indexes, unique constraints, timestamps. Title schema follows same structure.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/tenants.ts</path>
+        <kind>schema</kind>
+        <symbol>tenants</symbol>
+        <lines>1-16</lines>
+        <reason>Parent table for tenant_id foreign key reference. Titles will reference tenants.id with onDelete cascade.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/relations.ts</path>
+        <kind>relations</kind>
+        <symbol>authorsRelations, tenantsRelations, usersRelations</symbol>
+        <lines>1-50</lines>
+        <reason>Existing relation patterns. Must add titlesRelations and update authorsRelations to include titles (one-to-many).</reason>
+      </file>
+      <file>
+        <path>src/db/schema/index.ts</path>
+        <kind>barrel-export</kind>
+        <symbol>exports</symbol>
+        <lines>1-14</lines>
+        <reason>Must add titles export and Title type export. Follow existing pattern for tenants, users, authors.</reason>
+      </file>
+      <file>
+        <path>drizzle/migrations/0003_authors_rls_portal.sql</path>
+        <kind>migration</kind>
+        <symbol>RLS policies</symbol>
+        <lines>1-115</lines>
+        <reason>Reference for RLS policy pattern. Titles RLS will follow same pattern: tenant SELECT/INSERT/UPDATE for internal users.</reason>
+      </file>
+      <file>
+        <path>src/modules/authors/schema.ts</path>
+        <kind>validation</kind>
+        <symbol>createAuthorSchema, updateAuthorSchema</symbol>
+        <reason>Reference Zod schema pattern. Create similar createTitleSchema, updateTitleSchema for titles module.</reason>
+      </file>
+      <file>
+        <path>tests/unit/authors.test.ts</path>
+        <kind>test</kind>
+        <symbol>describe, expect, it</symbol>
+        <lines>1-163</lines>
+        <reason>Reference test pattern using Vitest. Create similar tests for title Zod schemas.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <usage>Schema definition, relations, queries</usage>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.12</version>
+        <usage>Validation schemas for title input</usage>
+      </node>
+      <node>
+        <package>vitest</package>
+        <version>4.0.13</version>
+        <usage>Unit testing framework</usage>
+      </node>
+      <node>
+        <package>drizzle-kit</package>
+        <version>^0.31.7</version>
+        <usage>Migration generation and application</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface>
+      <name>pgTable</name>
+      <kind>function</kind>
+      <signature>pgTable(name: string, columns: Record, config?: TableConfig): PgTableWithColumns</signature>
+      <path>drizzle-orm/pg-core</path>
+    </interface>
+    <interface>
+      <name>relations</name>
+      <kind>function</kind>
+      <signature>relations(table, callback: (helpers) => RelationConfig): Relations</signature>
+      <path>drizzle-orm</path>
+    </interface>
+    <interface>
+      <name>uuid, text, integer, date, timestamp, boolean, index, unique</name>
+      <kind>column-builders</kind>
+      <signature>Column definition functions from drizzle-orm/pg-core</signature>
+      <path>drizzle-orm/pg-core</path>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint type="pattern">Follow authors.ts structure: JSDoc comments, tenant_id FK with cascade, timestamps with timezone, composite indexes</constraint>
+    <constraint type="pattern">Publication status as text with enum constraint (not pgEnum) per existing patterns</constraint>
+    <constraint type="security">RLS policies must enforce tenant isolation for SELECT, INSERT, UPDATE operations</constraint>
+    <constraint type="data">ISBNs globally unique across ALL tenants (industry standard identifiers)</constraint>
+    <constraint type="data">author_id is required (NOT NULL) - every title must have an author</constraint>
+    <constraint type="pattern">No physical DELETE - use is_active flag for soft delete if needed</constraint>
+    <constraint type="migration">Use separate SQL file for RLS policies (not Drizzle schema)</constraint>
+    <constraint type="testing">Use Vitest with Zod safeParse for schema validation tests</constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      Vitest framework with globals enabled. Tests use describe/it/expect pattern. Zod schemas tested via safeParse() with success/error assertions. Test files in tests/unit/ directory with .test.ts extension. Setup file at tests/setup.ts.
+    </standards>
+    <locations>
+      <location>tests/unit/*.test.ts</location>
+      <location>tests/integration/*.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="1,2">Test createTitleSchema accepts valid publication_status enum values (draft, pending, published, out_of_print)</idea>
+      <idea ac="1">Test createTitleSchema requires title field (non-empty string)</idea>
+      <idea ac="1">Test createTitleSchema requires author_id field (valid UUID format)</idea>
+      <idea ac="3">Test isbn field accepts valid ISBN-13 format or null</idea>
+      <idea ac="3">Test eisbn field accepts valid ISBN-13 format or null</idea>
+      <idea ac="2">Test createTitleSchema rejects invalid publication_status values</idea>
+      <idea ac="7">Test updateTitleSchema accepts partial updates</idea>
+      <idea ac="15">Integration test: unique ISBN constraint prevents duplicate physical ISBNs across tenants</idea>
+      <idea ac="15">Integration test: unique eISBN constraint prevents duplicate ebook ISBNs across tenants</idea>
+    </ideas>
+  </tests>
+</story-context>

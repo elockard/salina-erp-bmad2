@@ -78,3 +78,51 @@ export async function checkPermission(
 
   return allowedRoles.includes(user.role as UserRole);
 }
+
+/**
+ * Check if the current user has one of the allowed roles
+ * Also checks that the user is active
+ * @param allowedRoles Array of roles that are permitted
+ * @returns true if user has permission and is active, false otherwise
+ */
+export async function hasPermission(
+  allowedRoles: UserRole[],
+): Promise<boolean> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return false;
+  }
+
+  if (!user.is_active) {
+    return false;
+  }
+
+  return allowedRoles.includes(user.role as UserRole);
+}
+
+/**
+ * Require the current user to have one of the allowed roles
+ * Throws an error if permission is denied
+ * @param allowedRoles Array of roles that are permitted
+ * @throws Error with message "UNAUTHORIZED" if permission denied
+ */
+export async function requirePermission(
+  allowedRoles: UserRole[],
+): Promise<void> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (!user.is_active || !allowedRoles.includes(user.role as UserRole)) {
+    console.warn("Permission denied", {
+      userId: user.id,
+      role: user.role,
+      isActive: user.is_active,
+      allowedRoles,
+    });
+    throw new Error("UNAUTHORIZED");
+  }
+}

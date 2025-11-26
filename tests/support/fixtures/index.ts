@@ -48,7 +48,7 @@ export const test = base.extend<TestFixtures>({
    * Tenant Factory
    * Creates isolated test tenants with subdomain routing
    */
-  tenantFactory: async ({}, use) => {
+  tenantFactory: async (_, use) => {
     const factory = new TenantFactory();
     await use(factory);
     await factory.cleanup();

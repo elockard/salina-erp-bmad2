@@ -1,0 +1,1181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Story Context Document: 1-6-build-user-invitation-and-management-system
+Generated: 2025-11-23
+Type: Dynamic Technical Context
+Purpose: Comprehensive reference for AI-assisted development
+
+This XML document provides a complete technical context for implementing Story 1.6.
+It combines project documentation, existing code patterns, architecture decisions,
+and specific implementation guidance to ensure consistent, high-quality implementation.
+
+Document Structure:
+- story_summary: High-level overview and acceptance criteria
+- architecture_context: Relevant architectural patterns and decisions
+- existing_code: Code artifacts to reference and build upon
+- implementation_guidance: Specific patterns, examples, and best practices
+- validation_checklist: Verification steps for Definition of Done
+-->
+
+<story_context id="1.6" epic="1" title="Build User Invitation and Management System">
+
+  <!-- ==================== STORY SUMMARY ==================== -->
+  <story_summary>
+    <user_story>
+      As a tenant owner or administrator,
+      I want to invite team members with specific roles and manage their access,
+      So that my team can collaborate securely within our publishing company's tenant.
+    </user_story>
+
+    <objective>
+      Implement a complete user invitation and management system that enables Owner and Admin users to:
+      1. Invite users via email with role assignment (owner, admin, editor, finance, author)
+      2. View and manage all users within their tenant
+      3. Change user roles with business logic validations (owner lockout prevention, last owner protection)
+      4. Deactivate/reactivate users with self-protection
+      5. Integrate with Clerk for email delivery and user activation
+
+      This story completes FR3 (Invite Users), FR4 (Assign Roles), and FR6 (Deactivate Users) from the PRD.
+    </objective>
+
+    <epic_context>
+      Story 1.6 is part of Epic 1: Foundation & Multi-Tenant Infrastructure.
+
+      Dependencies (Completed):
+      - Story 1.2: Database schema (users table) created
+      - Story 1.3: Clerk authentication integrated, middleware configured
+      - Story 1.4: Tenant context available via getCurrentTenantId()
+      - Story 1.5: RBAC system (requirePermission, MANAGE_USERS, PermissionGate) implemented
+
+      Story 1.6 builds on this foundation to provide user management UI and workflows.
+    </epic_context>
+
+    <key_acceptance_criteria>
+      <ac id="1">Owner/Admin can access user management page at /dashboard/settings/users route</ac>
+      <ac id="2">User table displays all users in current tenant with Name, Email, Role, Status, Invite Date</ac>
+      <ac id="3">"Invite User" button visible only to Owner/Admin (uses PermissionGate from Story 1.5)</ac>
+      <ac id="7">Server Action inviteUser() checks permission using requirePermission(MANAGE_USERS)</ac>
+      <ac id="11">Server Action sends Clerk invitation email using Clerk API</ac>
+      <ac id="16">Clerk webhook updates user record when invited user completes registration</ac>
+      <ac id="17-20">Owner/Admin can change user role with validations (owner lockout, last owner protection)</ac>
+      <ac id="21-26">Owner/Admin can deactivate/reactivate users (self-protection enforced)</ac>
+      <ac id="27">All Server Actions enforce tenant isolation with tenant_id from session</ac>
+      <ac id="34-35">All UI elements keyboard navigable, ARIA labels present, error handling comprehensive</ac>
+
+      **Critical Business Logic Validations:**
+      1. **Owner Lockout Prevention** (AC19): Owners cannot demote themselves to non-owner role
+      2. **Last Owner Protection** (AC20): Tenant must have at least one active owner at all times
+      3. **Self-Deactivation Prevention** (AC31): Users cannot deactivate their own account
+    </key_acceptance_criteria>
+
+    <out_of_scope>
+      - Author portal (Epic 5)
+      - Email templates customization (use Clerk default)
+      - Bulk user operations (multi-select delete, bulk role change)
+      - User profile editing (users manage profiles via Clerk, not this UI)
+      - Advanced filtering beyond role + search (e.g., date ranges, activity status)
+    </out_of_scope>
+  </story_summary>
+
+  <!-- ==================== ARCHITECTURE CONTEXT ==================== -->
+  <architecture_context>
+    <architectural_patterns>
+      <pattern name="Permission-Protected Server Actions" source="Story 1.5">
+        <description>
+          All user management Server Actions must begin with requirePermission(MANAGE_USERS).
+          This pattern enforces authorization before executing any business logic.
+        </description>
+        <example>
+          <![CDATA[
+// src/modules/users/actions.ts
+"use server"
+
+import { requirePermission } from '@/lib/auth'
+import { MANAGE_USERS } from '@/lib/permissions'
+
+export async function inviteUser(data: unknown): Promise<ActionResult<User>> {
+  // Step 1: Check permission FIRST (before any other logic)
+  await requirePermission(MANAGE_USERS) // Throws if unauthorized
+
+  // Step 2: Validate input
+  const { email, role } = inviteUserSchema.parse(data)
+
+  // Step 3: Get tenant context
+  const tenantId = await getCurrentTenantId()
+
+  // Step 4: Execute business logic with tenant isolation
+  // ...
+}
+          ]]>
+        </example>
+        <integration_points>
+          - src/lib/auth.ts: requirePermission() function (lines 93-112)
+          - src/lib/permissions.ts: MANAGE_USERS constant (line 10)
+          - Returns error { success: false, error: "UNAUTHORIZED" } automatically
+        </integration_points>
+      </pattern>
+
+      <pattern name="Tenant Isolation" source="Architecture.md + Story 1.2-1.3">
+        <description>
+          Every database query MUST include tenant_id filter. This is Layer 2 of the three-layer
+          defense-in-depth security model. Layer 1 (middleware) sets tenant_id in session.
+          Layer 3 (RLS) enforces at database level.
+        </description>
+        <example>
+          <![CDATA[
+// CORRECT: Always include tenant_id in WHERE clause
+const tenantId = await getCurrentTenantId() // From middleware session
+
+const users = await db.query.users.findMany({
+  where: and(
+    eq(users.tenant_id, tenantId), // FIRST condition - MANDATORY
+    eq(users.is_active, true)      // Additional filters
+  )
+})
+
+// INCORRECT: Missing tenant_id filter (cross-tenant data leak!)
+const users = await db.query.users.findMany({
+  where: eq(users.is_active, true) // ⚠️ SECURITY VULNERABILITY
+})
+          ]]>
+        </example>
+        <integration_points>
+          - src/lib/auth.ts: getCurrentTenantId() helper (lines 12-21)
+          - middleware.ts: Sets x-tenant-id header from subdomain
+          - All queries must use and(eq(table.tenant_id, tenantId), ...)
+        </integration_points>
+      </pattern>
+
+      <pattern name="Clerk Integration" source="Architecture.md + Story 1.3">
+        <description>
+          Clerk handles authentication and user invitation emails. The application sends invitations
+          via Clerk API, and a webhook updates the database when users complete registration.
+        </description>
+        <workflow>
+          1. Server Action calls clerkClient.invitations.createInvitation({ emailAddress, redirectUrl })
+          2. Clerk sends email to user with registration link
+          3. User clicks link → Clerk sign-up flow → user.created webhook fires
+          4. Webhook handler receives event with clerk_user_id and email
+          5. Database updated: users.clerk_user_id set, is_active = true
+        </workflow>
+        <integration_points>
+          - Clerk API: clerkClient from @clerk/nextjs/server
+          - Webhook: src/app/api/webhooks/clerk/route.ts (may exist from Story 1.3)
+          - User record created with clerk_user_id=null, is_active=false until webhook
+        </integration_points>
+      </pattern>
+
+      <pattern name="Server Actions Pattern" source="Architecture.md ADR-006">
+        <description>
+          Server Actions are the primary API pattern for data mutations. All Server Actions
+          return ActionResult&lt;T&gt; for type-safe error handling and consistent response format.
+        </description>
+        <actionresult_type>
+          <![CDATA[
+// src/lib/types.ts (standard pattern)
+export type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string; fields?: Record<string, string> }
+          ]]>
+        </actionresult_type>
+        <usage_client_side>
+          <![CDATA[
+const result = await inviteUser({ email, role })
+
+if (result.success) {
+  toast.success(`Invitation sent to ${result.data.email}`)
+  router.refresh() // Revalidate server component
+} else {
+  toast.error(result.error)
+  // Display field-level errors if present
+  if (result.fields) {
+    form.setError('email', { message: result.fields.email })
+  }
+}
+          ]]>
+        </usage_client_side>
+      </pattern>
+
+      <pattern name="Business Logic Validations" source="Story 1.6 Requirements">
+        <description>
+          User management operations require complex business logic validations to prevent
+          tenant lockout scenarios and maintain data integrity.
+        </description>
+        <validation name="Owner Lockout Prevention" ac="19">
+          <rule>Owners cannot demote themselves to a non-owner role</rule>
+          <reason>Prevents scenario where owner accidentally removes their own access</reason>
+          <implementation>
+            Check: targetUser.id === currentUser.id AND currentUser.role === 'owner' AND newRole !== 'owner'
+            Error: "You cannot remove your own owner role"
+          </implementation>
+        </validation>
+        <validation name="Last Owner Protection" ac="20">
+          <rule>Tenant must have at least one active owner at all times</rule>
+          <reason>Prevents complete lockout if last owner is demoted or deactivated</reason>
+          <implementation>
+            Query: SELECT COUNT(*) FROM users WHERE tenant_id = ? AND role = 'owner' AND is_active = true
+            Check: If count &lt;= 1 AND operation would remove last owner
+            Error: "Tenant must have at least one active owner"
+          </implementation>
+        </validation>
+        <validation name="Self-Deactivation Prevention" ac="31">
+          <rule>Users cannot deactivate their own account</rule>
+          <reason>Prevents accidental self-lockout</reason>
+          <implementation>
+            Check: userId === currentUser.id
+            Error: "You cannot deactivate your own account"
+            UI: Deactivate button disabled with tooltip
+          </implementation>
+        </validation>
+      </pattern>
+    </architectural_patterns>
+
+    <project_structure>
+      <new_directories>
+        <directory path="src/app/(dashboard)/settings/users/">
+          <file name="page.tsx">User management page route (AC1-2)</file>
+          <purpose>Displays user list table, invite button (Owner/Admin only)</purpose>
+        </directory>
+        <directory path="src/modules/users/">
+          <file name="components/user-list.tsx">User table with pagination, search, filter (AC2, 28-30)</file>
+          <file name="components/invite-user-dialog.tsx">Invite user modal with form (AC3-6)</file>
+          <file name="components/role-badge.tsx">Role badge with color coding (AC32)</file>
+          <file name="components/user-actions.tsx">Deactivate/reactivate buttons (AC21-26)</file>
+          <file name="actions.ts">Server Actions (inviteUser, updateUserRole, deactivate/reactivate, getUsers)</file>
+          <file name="schema.ts">Zod schemas (inviteUserSchema, updateUserRoleSchema)</file>
+          <file name="types.ts">TypeScript types (InviteUserInput, UpdateUserRoleInput)</file>
+          <purpose>Feature module for user management (modular monolith pattern)</purpose>
+        </directory>
+        <directory path="tests/integration/">
+          <file name="user-management.test.ts">Integration tests for Server Actions</file>
+        </directory>
+        <directory path="tests/e2e/">
+          <file name="user-management.spec.ts">E2E tests for UI flows</file>
+        </directory>
+      </new_directories>
+
+      <modified_files>
+        <file path="src/app/api/webhooks/clerk/route.ts">
+          Add user.created event handler to update clerk_user_id and is_active (AC16)
+          May already exist from Story 1.3, extend with new logic
+        </file>
+        <file path="src/app/(dashboard)/layout.tsx or navigation component">
+          Add "User Management" link to settings menu, wrapped in PermissionGate (AC1)
+        </file>
+      </modified_files>
+
+      <existing_files_to_reference>
+        <file path="src/db/schema/users.ts" purpose="User table schema, fields, indexes">
+          - id: uuid, primary key
+          - tenant_id: uuid, foreign key to tenants.id
+          - clerk_user_id: text, unique (set by webhook)
+          - email: text
+          - role: enum ['owner', 'admin', 'editor', 'finance', 'author']
+          - is_active: boolean, default true
+          - created_at, updated_at: timestamps
+        </file>
+        <file path="src/lib/auth.ts" purpose="Permission helpers">
+          - getCurrentUser(): Returns current authenticated user with role
+          - getCurrentTenantId(): Returns tenant_id from middleware session
+          - requirePermission(allowedRoles): Throws if user lacks permission
+          - hasPermission(allowedRoles): Returns boolean
+        </file>
+        <file path="src/lib/permissions.ts" purpose="Permission constants">
+          - MANAGE_USERS: ['owner', 'admin'] (line 10)
+          - Use this constant in all requirePermission() calls
+        </file>
+        <file path="src/components/PermissionGate.tsx" purpose="Client-side permission rendering">
+          - Wrap "Invite User" button with &lt;PermissionGate allowedRoles={MANAGE_USERS}&gt;
+        </file>
+        <file path="src/lib/hooks/useHasPermission.ts" purpose="Client hook for permission checks">
+          - const canManage = useHasPermission(MANAGE_USERS)
+          - Use to disable inline role editors for unauthorized users
+        </file>
+      </existing_files_to_reference>
+    </project_structure>
+
+    <technology_stack>
+      <framework name="Next.js" version="16.0.3">
+        - App Router with React Server Components
+        - Server Actions for mutations
+        - Middleware for tenant context
+      </framework>
+      <database name="Neon PostgreSQL">
+        - Drizzle ORM for queries
+        - Row-Level Security enabled
+        - @neondatabase/serverless driver
+      </database>
+      <authentication name="Clerk" version="6.35.3">
+        - clerkClient for API calls
+        - Invitations API for user invites
+        - Webhook for user.created events
+      </authentication>
+      <validation name="Zod" version="4.1.12">
+        - Client-side with React Hook Form
+        - Server-side in Server Actions
+      </validation>
+      <ui_library name="shadcn/ui + Radix UI">
+        - Dialog for invite modal
+        - Table for user list
+        - Badge for role display
+        - Button, Input, Select components
+        - Skeleton for loading states
+        - Toast (sonner) for notifications
+      </ui_library>
+    </technology_stack>
+  </architecture_context>
+
+  <!-- ==================== EXISTING CODE REFERENCE ==================== -->
+  <existing_code>
+    <code_artifact path="src/db/schema/users.ts" type="database_schema">
+      <description>Users table schema created in Story 1.2</description>
+      <content>
+        <![CDATA[
+import { boolean, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { tenants } from './tenants'
+
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  clerk_user_id: text('clerk_user_id').notNull().unique(),
+  email: text('email').notNull(),
+  role: text('role', { enum: ['owner', 'admin', 'editor', 'finance', 'author'] }).notNull(),
+  is_active: boolean('is_active').notNull().default(true),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow(),
+}, (table) => [
+  index('users_tenant_id_idx').on(table.tenant_id),
+  index('users_email_idx').on(table.email),
+])
+        ]]>
+      </content>
+      <key_points>
+        - clerk_user_id unique constraint (one Clerk user = one app user)
+        - role enum enforced at database level
+        - is_active flag for soft deactivation
+        - tenant_id indexed for query performance
+        - ON DELETE CASCADE: deleting tenant deletes all users
+      </key_points>
+    </code_artifact>
+
+    <code_artifact path="src/lib/auth.ts" type="helper_functions">
+      <description>Permission checking functions from Story 1.5</description>
+      <function name="getCurrentTenantId" lines="12-21">
+        <purpose>Get tenant ID from middleware-set header</purpose>
+        <returns>string (tenant UUID)</returns>
+        <throws>Error if tenant ID not found</throws>
+      </function>
+      <function name="getCurrentUser" lines="44-63">
+        <purpose>Get authenticated user from database with role</purpose>
+        <returns>User object or null if not authenticated</returns>
+        <usage>const user = await getCurrentUser(); if (!user) return unauthorized</usage>
+      </function>
+      <function name="hasPermission" lines="70-85">
+        <purpose>Check if user has one of allowed roles</purpose>
+        <params>allowedRoles: UserRole[]</params>
+        <returns>boolean (true if permitted)</returns>
+        <checks>User authentication, is_active flag, role match</checks>
+      </function>
+      <function name="requirePermission" lines="93-112">
+        <purpose>Require permission, throw if denied (for Server Actions)</purpose>
+        <params>allowedRoles: UserRole[]</params>
+        <throws>Error with message "UNAUTHORIZED" if permission denied</throws>
+        <logging>Logs permission denials with user ID, role, timestamp</logging>
+        <usage>await requirePermission(MANAGE_USERS) // First line of Server Action</usage>
+      </function>
+    </code_artifact>
+
+    <code_artifact path="src/lib/permissions.ts" type="permission_constants">
+      <description>Permission matrix from Story 1.5</description>
+      <content>
+        <![CDATA[
+/** Users who can manage tenant users (invite, deactivate, change roles) */
+export const MANAGE_USERS: UserRole[] = ['owner', 'admin']
+
+/** Users who can modify tenant settings (timezone, currency, fiscal year, etc.) */
+export const MANAGE_SETTINGS: UserRole[] = ['owner', 'admin']
+
+/** Users who can create/edit authors and titles */
+export const CREATE_AUTHORS_TITLES: UserRole[] = ['owner', 'admin', 'editor']
+
+/** Users who can record sales transactions */
+export const RECORD_SALES: UserRole[] = ['owner', 'admin', 'editor', 'finance']
+
+/** Users who can approve/reject return requests */
+export const APPROVE_RETURNS: UserRole[] = ['owner', 'admin', 'finance']
+
+/** Users who can calculate royalties and generate statements */
+export const CALCULATE_ROYALTIES: UserRole[] = ['owner', 'admin', 'finance']
+        ]]>
+      </content>
+      <key_points>
+        - MANAGE_USERS = ['owner', 'admin'] is the permission for this story
+        - Import from '@/lib/permissions' in all Server Actions
+        - Consistent naming: SCREAMING_SNAKE_CASE for constants
+      </key_points>
+    </code_artifact>
+
+    <code_artifact path="src/components/PermissionGate.tsx" type="ui_component">
+      <description>Client-side permission-based rendering from Story 1.5</description>
+      <usage>
+        <![CDATA[
+import { PermissionGate } from '@/components/PermissionGate'
+import { MANAGE_USERS } from '@/lib/permissions'
+
+// Hide "Invite User" button from non-admin users
+<PermissionGate allowedRoles={MANAGE_USERS}>
+  <Button onClick={openInviteDialog}>Invite User</Button>
+</PermissionGate>
+        ]]>
+      </usage>
+      <props>
+        - allowedRoles: UserRole[] (required)
+        - fallback: ReactNode (optional, default: null)
+        - children: ReactNode (rendered if permitted)
+      </props>
+    </code_artifact>
+
+    <code_artifact path="src/lib/hooks/useHasPermission.ts" type="client_hook">
+      <description>Client hook for permission checks from Story 1.5</description>
+      <usage>
+        <![CDATA[
+import { useHasPermission } from '@/lib/hooks/useHasPermission'
+import { MANAGE_USERS } from '@/lib/permissions'
+
+function UserList() {
+  const canManageUsers = useHasPermission(MANAGE_USERS)
+
+  return (
+    <div>
+      {/* Disable role dropdown if user lacks permission */}
+      <Select disabled={!canManageUsers}>
+        {/* role options */}
+      </Select>
+    </div>
+  )
+}
+        ]]>
+      </usage>
+      <behavior>
+        - Calls server to verify permissions
+        - Returns false while loading (prevents unauthorized UI flash)
+        - Caches result in component state
+      </behavior>
+    </code_artifact>
+  </existing_code>
+
+  <!-- ==================== IMPLEMENTATION GUIDANCE ==================== -->
+  <implementation_guidance>
+    <server_actions_module path="src/modules/users/actions.ts">
+      <action name="inviteUser">
+        <signature>
+          export async function inviteUser(data: unknown): Promise&lt;ActionResult&lt;User&gt;&gt;
+        </signature>
+        <steps>
+          <step order="1">Add "use server" directive at top of file</step>
+          <step order="2">Validate input: inviteUserSchema.parse(data)</step>
+          <step order="3">Check permission: await requirePermission(MANAGE_USERS)</step>
+          <step order="4">Get tenant context: const tenantId = await getCurrentTenantId()</step>
+          <step order="5">Check duplicate email in tenant: db.query.users.findFirst WHERE email + tenant_id</step>
+          <step order="6">If duplicate, return { success: false, error: "A user with this email already exists in your organization" }</step>
+          <step order="7">Send Clerk invitation: await clerkClient.invitations.createInvitation({ emailAddress, redirectUrl })</step>
+          <step order="8">Create user record: db.insert(users).values({ tenant_id, email, role, clerk_user_id: null, is_active: false })</step>
+          <step order="9">Return { success: true, data: newUser }</step>
+          <step order="10">Catch errors: Clerk API errors, database errors, return user-friendly messages</step>
+        </steps>
+        <code_example>
+          <![CDATA[
+"use server"
+
+import { clerkClient } from '@clerk/nextjs/server'
+import { eq, and } from 'drizzle-orm'
+import { requirePermission } from '@/lib/auth'
+import { MANAGE_USERS } from '@/lib/permissions'
+import { getCurrentTenantId } from '@/lib/auth'
+import { db } from '@/db'
+import { users } from '@/db/schema/users'
+import { inviteUserSchema } from './schema'
+import type { ActionResult, User } from '@/lib/types'
+
+export async function inviteUser(data: unknown): Promise<ActionResult<User>> {
+  try {
+    // Validate input
+    const { email, role } = inviteUserSchema.parse(data)
+
+    // Check permission
+    await requirePermission(MANAGE_USERS)
+
+    // Get tenant context
+    const tenantId = await getCurrentTenantId()
+
+    // Check if user already exists
+    const existingUser = await db.query.users.findFirst({
+      where: and(
+        eq(users.tenant_id, tenantId),
+        eq(users.email, email)
+      )
+    })
+
+    if (existingUser) {
+      return {
+        success: false,
+        error: "A user with this email already exists in your organization"
+      }
+    }
+
+    // Get tenant subdomain for redirect URL
+    const tenant = await db.query.tenants.findFirst({
+      where: eq(tenants.id, tenantId)
+    })
+
+    // Send Clerk invitation
+    await clerkClient.invitations.createInvitation({
+      emailAddress: email,
+      redirectUrl: `https://${tenant.subdomain}.salina-erp.com/dashboard`,
+      publicMetadata: { tenant_id: tenantId, role }
+    })
+
+    // Create pending user record
+    const [newUser] = await db.insert(users).values({
+      tenant_id: tenantId,
+      email,
+      role,
+      clerk_user_id: null, // Set by webhook
+      is_active: false, // Activated by webhook
+      created_at: new Date(),
+      updated_at: new Date()
+    }).returning()
+
+    return { success: true, data: newUser }
+
+  } catch (error) {
+    if (error.message === 'UNAUTHORIZED') {
+      return { success: false, error: "You don't have permission to invite users" }
+    }
+
+    console.error('inviteUser error:', error)
+    return {
+      success: false,
+      error: 'Failed to send invitation. Please try again.'
+    }
+  }
+}
+          ]]>
+        </code_example>
+      </action>
+
+      <action name="updateUserRole">
+        <signature>
+          export async function updateUserRole(userId: string, newRole: UserRole): Promise&lt;ActionResult&lt;User&gt;&gt;
+        </signature>
+        <steps>
+          <step order="1">Check permission: await requirePermission(MANAGE_USERS)</step>
+          <step order="2">Get current user and tenant: getCurrentUser(), getCurrentTenantId()</step>
+          <step order="3">Query target user: db.query.users.findFirst WHERE id + tenant_id</step>
+          <step order="4">Validate: Owner Lockout Prevention (AC19)</step>
+          <step order="5">Validate: Last Owner Protection (AC20) - count active owners</step>
+          <step order="6">Update user: db.update(users).set({ role, updated_at }).where(id + tenant_id)</step>
+          <step order="7">Return { success: true, data: updatedUser }</step>
+        </steps>
+        <validation_code>
+          <![CDATA[
+// Owner Lockout Prevention (AC19)
+if (
+  targetUser.id === currentUser?.id &&
+  currentUser.role === 'owner' &&
+  newRole !== 'owner'
+) {
+  return {
+    success: false,
+    error: "You cannot remove your own owner role"
+  }
+}
+
+// Last Owner Protection (AC20)
+if (newRole !== 'owner' && targetUser.role === 'owner') {
+  const [ownerCount] = await db
+    .select({ count: count() })
+    .from(users)
+    .where(
+      and(
+        eq(users.tenant_id, tenantId),
+        eq(users.role, 'owner'),
+        eq(users.is_active, true)
+      )
+    )
+
+  if (ownerCount.count <= 1) {
+    return {
+      success: false,
+      error: "Tenant must have at least one active owner"
+    }
+  }
+}
+          ]]>
+        </validation_code>
+      </action>
+
+      <action name="deactivateUser">
+        <signature>
+          export async function deactivateUser(userId: string): Promise&lt;ActionResult&lt;User&gt;&gt;
+        </signature>
+        <steps>
+          <step order="1">Check permission: await requirePermission(MANAGE_USERS)</step>
+          <step order="2">Get current user and tenant</step>
+          <step order="3">Validate: Self-Deactivation Prevention (AC31)</step>
+          <step order="4">Query target user, validate exists and belongs to tenant</step>
+          <step order="5">Validate: Last Owner Protection (if target is owner)</step>
+          <step order="6">Update: db.update(users).set({ is_active: false, updated_at })</step>
+          <step order="7">Return { success: true, data: updatedUser }</step>
+        </steps>
+        <validation_code>
+          <![CDATA[
+// Self-Deactivation Prevention (AC31)
+if (userId === currentUser?.id) {
+  return {
+    success: false,
+    error: "You cannot deactivate your own account"
+  }
+}
+
+// Last Owner Protection (same logic as updateUserRole for owner deactivation)
+          ]]>
+        </validation_code>
+      </action>
+
+      <action name="reactivateUser">
+        <signature>
+          export async function reactivateUser(userId: string): Promise&lt;ActionResult&lt;User&gt;&gt;
+        </signature>
+        <steps>
+          <step order="1">Check permission: await requirePermission(MANAGE_USERS)</step>
+          <step order="2">Get tenant context</step>
+          <step order="3">Update: db.update(users).set({ is_active: true, updated_at }) WHERE id + tenant_id</step>
+          <step order="4">Return { success: true, data: updatedUser }</step>
+        </steps>
+        <note>Reactivation has no special validations (safe operation)</note>
+      </action>
+
+      <action name="getUsers">
+        <signature>
+          export async function getUsers(options?: { page?: number; pageSize?: number; roleFilter?: UserRole | 'all'; searchQuery?: string }): Promise&lt;ActionResult&lt;{ users: User[]; total: number; page: number; pageSize: number }&gt;&gt;
+        </signature>
+        <steps>
+          <step order="1">Check permission: await requirePermission(MANAGE_USERS)</step>
+          <step order="2">Get tenant context</step>
+          <step order="3">Build WHERE clause: tenant_id + optional role filter + optional search (email/name ILIKE)</step>
+          <step order="4">Query users: db.query.users.findMany with LIMIT/OFFSET pagination</step>
+          <step order="5">Query total count: SELECT COUNT(*) with same WHERE clause</step>
+          <step order="6">Return { success: true, data: { users, total, page, pageSize } }</step>
+        </steps>
+        <code_example>
+          <![CDATA[
+export async function getUsers(options?: {
+  page?: number
+  pageSize?: number
+  roleFilter?: UserRole | 'all'
+  searchQuery?: string
+}): Promise<ActionResult<{ users: User[]; total: number; page: number; pageSize: number }>> {
+  try {
+    await requirePermission(MANAGE_USERS)
+
+    const tenantId = await getCurrentTenantId()
+    const page = options?.page || 1
+    const pageSize = options?.pageSize || 20
+    const roleFilter = options?.roleFilter || 'all'
+    const searchQuery = options?.searchQuery || ''
+
+    // Build WHERE clause
+    let whereClause = eq(users.tenant_id, tenantId)
+
+    if (roleFilter !== 'all') {
+      whereClause = and(whereClause, eq(users.role, roleFilter))
+    }
+
+    if (searchQuery) {
+      whereClause = and(
+        whereClause,
+        or(
+          ilike(users.email, `%${searchQuery}%`),
+          ilike(users.name, `%${searchQuery}%`)
+        )
+      )
+    }
+
+    // Query users with pagination
+    const userList = await db.query.users.findMany({
+      where: whereClause,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+      orderBy: desc(users.created_at)
+    })
+
+    // Query total count
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(whereClause)
+
+    return {
+      success: true,
+      data: {
+        users: userList,
+        total: totalResult.count,
+        page,
+        pageSize
+      }
+    }
+
+  } catch (error) {
+    if (error.message === 'UNAUTHORIZED') {
+      return { success: false, error: "You don't have permission to view users" }
+    }
+
+    console.error('getUsers error:', error)
+    return { success: false, error: 'Failed to load users' }
+  }
+}
+          ]]>
+        </code_example>
+      </action>
+    </server_actions_module>
+
+    <zod_schemas path="src/modules/users/schema.ts">
+      <schema name="inviteUserSchema">
+        <![CDATA[
+import { z } from 'zod'
+
+export const inviteUserSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  role: z.enum(['owner', 'admin', 'editor', 'finance', 'author'])
+})
+
+export type InviteUserInput = z.infer<typeof inviteUserSchema>
+        ]]>
+      </schema>
+      <schema name="updateUserRoleSchema">
+        <![CDATA[
+export const updateUserRoleSchema = z.object({
+  role: z.enum(['owner', 'admin', 'editor', 'finance', 'author'])
+})
+
+export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>
+        ]]>
+      </schema>
+    </zod_schemas>
+
+    <clerk_webhook path="src/app/api/webhooks/clerk/route.ts">
+      <purpose>Handle user.created event to activate invited users</purpose>
+      <workflow>
+        1. Verify webhook signature with Svix
+        2. Parse user.created event
+        3. Extract: clerk_user_id, email, tenant_id (from publicMetadata)
+        4. Find user record: WHERE email + tenant_id
+        5. Update: clerk_user_id, is_active = true
+        6. Return 200 OK
+      </workflow>
+      <code_example>
+        <![CDATA[
+import { Webhook } from 'svix'
+import { headers } from 'next/headers'
+import { db } from '@/db'
+import { users } from '@/db/schema/users'
+import { eq, and } from 'drizzle-orm'
+
+export async function POST(req: Request) {
+  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
+
+  if (!WEBHOOK_SECRET) {
+    throw new Error('CLERK_WEBHOOK_SECRET is not set')
+  }
+
+  // Verify webhook signature
+  const headerPayload = headers()
+  const svix_id = headerPayload.get('svix-id')
+  const svix_timestamp = headerPayload.get('svix-timestamp')
+  const svix_signature = headerPayload.get('svix-signature')
+
+  if (!svix_id || !svix_timestamp || !svix_signature) {
+    return new Response('Missing svix headers', { status: 400 })
+  }
+
+  const payload = await req.json()
+  const body = JSON.stringify(payload)
+
+  const wh = new Webhook(WEBHOOK_SECRET)
+
+  let evt
+  try {
+    evt = wh.verify(body, {
+      'svix-id': svix_id,
+      'svix-timestamp': svix_timestamp,
+      'svix-signature': svix_signature,
+    }) as any
+  } catch (err) {
+    console.error('Webhook verification failed:', err)
+    return new Response('Invalid signature', { status: 400 })
+  }
+
+  // Handle user.created event
+  if (evt.type === 'user.created') {
+    const { id: clerkUserId, email_addresses, public_metadata } = evt.data
+
+    const email = email_addresses[0]?.email_address
+    const tenantId = public_metadata?.tenant_id
+
+    if (!email || !tenantId) {
+      console.warn('Webhook missing email or tenant_id:', evt.data)
+      return new Response('OK', { status: 200 })
+    }
+
+    // Find and activate pending user
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        clerk_user_id: clerkUserId,
+        is_active: true,
+        updated_at: new Date()
+      })
+      .where(
+        and(
+          eq(users.tenant_id, tenantId),
+          eq(users.email, email)
+        )
+      )
+      .returning()
+
+    if (updatedUser) {
+      console.log('User activated:', updatedUser.id, email)
+    } else {
+      console.warn('No matching user found for activation:', email, tenantId)
+    }
+  }
+
+  return new Response('OK', { status: 200 })
+}
+        ]]>
+      </code_example>
+      <environment_variable>
+        CLERK_WEBHOOK_SECRET=whsec_... (from Clerk dashboard)
+      </environment_variable>
+    </clerk_webhook>
+
+    <ui_components>
+      <component name="UserList" path="src/modules/users/components/user-list.tsx">
+        <purpose>Display users table with pagination, search, role filtering</purpose>
+        <features>
+          - Columns: Name, Email, Role (badge), Status (Active/Inactive badge), Actions
+          - Pagination: Previous, Next, page numbers (default 20 per page)
+          - Search: Email/name input with debounced onChange (300ms)
+          - Filter: Role dropdown (all, owner, admin, editor, finance, author)
+          - Actions: Inline role dropdown, Deactivate/Reactivate button
+          - Loading states: Skeleton loaders while fetching
+          - Empty state: "No users yet" with "Invite User" button
+        </features>
+        <shadcn_components>
+          - Table, TableHeader, TableBody, TableRow, TableCell
+          - Badge (role and status)
+          - Select (role filter and inline role editor)
+          - Input (search)
+          - Button (pagination, actions)
+          - Skeleton (loading state)
+        </shadcn_components>
+      </component>
+
+      <component name="InviteUserDialog" path="src/modules/users/components/invite-user-dialog.tsx">
+        <purpose>Modal dialog with form to invite new user</purpose>
+        <features>
+          - Email input (text, required, email validation)
+          - Role dropdown (owner, admin, editor, finance, author)
+          - Cancel button (closes dialog)
+          - Send Invitation button (submits form, disabled while submitting)
+          - Loading spinner on submit button during invitation
+          - Success: Toast notification "Invitation sent to [email]", close dialog
+          - Error: Toast error message, keep dialog open
+        </features>
+        <shadcn_components>
+          - Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter
+          - Form (react-hook-form + Zod)
+          - Input (email)
+          - Select (role)
+          - Button (Cancel, Send Invitation)
+        </shadcn_components>
+        <react_hook_form_integration>
+          <![CDATA[
+const form = useForm<InviteUserInput>({
+  resolver: zodResolver(inviteUserSchema),
+  defaultValues: {
+    email: '',
+    role: 'editor' // Default role
+  }
+})
+
+const onSubmit = async (data: InviteUserInput) => {
+  const result = await inviteUser(data)
+
+  if (result.success) {
+    toast.success(`Invitation sent to ${result.data.email}`)
+    form.reset()
+    onClose()
+  } else {
+    toast.error(result.error)
+  }
+}
+          ]]>
+        </react_hook_form_integration>
+      </component>
+
+      <component name="RoleBadge" path="src/modules/users/components/role-badge.tsx">
+        <purpose>Display role with color coding (AC32)</purpose>
+        <color_scheme>
+          - Owner: purple (variant="purple")
+          - Admin: blue (variant="blue")
+          - Editor: green (variant="green")
+          - Finance: orange (variant="orange")
+          - Author: gray (variant="secondary")
+        </color_scheme>
+        <shadcn_component>Badge</shadcn_component>
+      </component>
+    </ui_components>
+
+    <testing_guidance>
+      <unit_tests path="tests/unit/user-management.test.ts">
+        <test name="inviteUser validation">
+          - Invalid email format rejected
+          - Invalid role rejected
+          - Valid data passes
+        </test>
+        <test name="updateUserRole validation">
+          - Owner lockout prevention logic
+          - Last owner protection logic
+          - Valid role change succeeds
+        </test>
+        <test name="deactivateUser validation">
+          - Self-deactivation prevented
+          - Last owner protection logic
+          - Valid deactivation succeeds
+        </test>
+      </unit_tests>
+
+      <integration_tests path="tests/integration/user-management.test.ts">
+        <test name="inviteUser Server Action">
+          - Authorized user (owner/admin) succeeds
+          - Unauthorized user (editor) receives 403
+          - Duplicate email rejected
+          - Clerk API mocked
+          - User record created with clerk_user_id=null, is_active=false
+        </test>
+        <test name="updateUserRole Server Action">
+          - Authorized user succeeds
+          - Owner lockout prevented
+          - Last owner protection enforced
+        </test>
+        <test name="deactivateUser Server Action">
+          - Authorized user succeeds
+          - Self-deactivation blocked
+          - Last owner protection enforced
+        </test>
+        <test name="getUsers Server Action">
+          - Returns only current tenant's users
+          - Pagination works correctly
+          - Role filter works correctly
+          - Search works correctly
+        </test>
+      </integration_tests>
+
+      <e2e_tests path="tests/e2e/user-management.spec.ts">
+        <test name="Owner can access user management page">
+          - Login as owner
+          - Navigate to /dashboard/settings/users
+          - Verify table displays users
+        </test>
+        <test name="Editor cannot access user management page">
+          - Login as editor
+          - Navigate to /dashboard/settings/users
+          - Verify 403 or redirect
+        </test>
+        <test name="Owner can invite user">
+          - Open invite dialog
+          - Fill email + role
+          - Submit
+          - Verify toast "Invitation sent"
+          - Verify user appears in table with "Pending" status
+        </test>
+        <test name="Duplicate email invitation shows error">
+          - Invite user with email X
+          - Invite again with same email X
+          - Verify error toast "A user with this email already exists"
+        </test>
+        <test name="Owner can change user role">
+          - Select different role from dropdown
+          - Verify toast "Role updated successfully"
+          - Verify UI updates to show new role
+        </test>
+        <test name="Owner cannot demote themselves">
+          - Login as owner
+          - Attempt to change own role to admin
+          - Verify error toast "You cannot remove your own owner role"
+        </test>
+        <test name="Owner can deactivate user">
+          - Click "Deactivate" button
+          - Verify status changes to "Inactive"
+          - Verify button changes to "Reactivate"
+        </test>
+        <test name="Owner cannot deactivate themselves">
+          - Verify deactivate button disabled for own row
+          - Hover shows tooltip "You cannot deactivate your own account"
+        </test>
+        <test name="Search filters users">
+          - Type "john" in search
+          - Verify only users with "john" in email/name shown
+        </test>
+        <test name="Role filter works">
+          - Select "editor" from role filter
+          - Verify only editor role users shown
+        </test>
+        <test name="Pagination works">
+          - Seed 25 users
+          - Page 1 shows 20 users
+          - Click Next
+          - Page 2 shows 5 users
+        </test>
+      </e2e_tests>
+    </testing_guidance>
+  </implementation_guidance>
+
+  <!-- ==================== VALIDATION CHECKLIST ==================== -->
+  <validation_checklist>
+    <definition_of_done>
+      <criteria category="Functional Requirements">
+        <item ac="1">User management page accessible at /dashboard/settings/users for Owner/Admin</item>
+        <item ac="2">User table displays: Name, Email, Role (colored badge), Status (Active/Inactive badge), Invite Date</item>
+        <item ac="3">"Invite User" button visible only to Owner/Admin (uses PermissionGate)</item>
+        <item ac="7">Server Action inviteUser() checks permission using requirePermission(MANAGE_USERS)</item>
+        <item ac="11">Clerk invitation email sent successfully</item>
+        <item ac="12">User record created with clerk_user_id=null, is_active=false (pending)</item>
+        <item ac="16">Clerk webhook updates clerk_user_id and is_active=true on user.created event</item>
+        <item ac="17-20">Role change workflow works with validations (owner lockout, last owner protection)</item>
+        <item ac="21-26">Deactivate/reactivate workflow works with validations (self-protection)</item>
+        <item ac="27">All Server Actions enforce tenant isolation (tenant_id filter in queries)</item>
+        <item ac="28-30">Pagination, search, and role filtering work correctly</item>
+        <item ac="32">Role badges color-coded (purple, blue, green, orange, gray)</item>
+        <item ac="34-35">Keyboard navigation works, ARIA labels present, error handling comprehensive</item>
+      </criteria>
+
+      <criteria category="Code Quality">
+        <item>All Server Actions use requirePermission(MANAGE_USERS) as first line</item>
+        <item>All database queries include tenant_id filter</item>
+        <item>Zod validation on client (React Hook Form) and server (Server Actions)</item>
+        <item>ActionResult&lt;T&gt; return type used consistently</item>
+        <item>User-friendly error messages (no stack traces, technical jargon)</item>
+        <item>Logging: permission denials, invitation sends, role changes, errors</item>
+        <item>TypeScript: No 'any' types, all types properly inferred or defined</item>
+      </criteria>
+
+      <criteria category="Testing">
+        <item>Unit tests: Validation logic tested (owner lockout, last owner, self-deactivation)</item>
+        <item>Integration tests: All Server Actions tested with mocked dependencies</item>
+        <item>E2E tests: All user flows tested (invite, role change, deactivate, search, filter, pagination)</item>
+        <item>Manual testing: Keyboard navigation, screen reader compatibility (WCAG 2.1 AA)</item>
+        <item>Security testing: Cross-tenant isolation verified (cannot access other tenant's users)</item>
+      </criteria>
+
+      <criteria category="Performance">
+        <item>User table loads in &lt;2 seconds (with 50 users)</item>
+        <item>Invite user operation completes in &lt;500ms (excluding Clerk API latency)</item>
+        <item>Role change operation completes in &lt;500ms</item>
+        <item>Search/filter updates in &lt;300ms (debounced)</item>
+        <item>Database queries optimized (tenant_id index used)</item>
+      </criteria>
+
+      <criteria category="Security">
+        <item>Permission checks on all Server Actions (server-side enforcement)</item>
+        <item>Tenant isolation enforced (all queries filter by tenant_id)</item>
+        <item>Clerk webhook signature verified (prevents spoofed webhooks)</item>
+        <item>No sensitive data exposed in client-side code or error messages</item>
+        <item>Business logic validations prevent tenant lockout scenarios</item>
+      </criteria>
+
+      <criteria category="Documentation">
+        <item>README.md updated with Story 1.6 implementation details</item>
+        <item>SETUP.md includes Clerk webhook configuration instructions</item>
+        <item>Code comments on complex business logic (validations)</item>
+        <item>JSDocs on all Server Actions and exported functions</item>
+      </criteria>
+    </definition_of_done>
+
+    <manual_verification_steps>
+      <step order="1">Build passes: npm run build</step>
+      <step order="2">Lint passes: npm run lint</step>
+      <step order="3">Unit tests pass: npm run test:unit</step>
+      <step order="4">Integration tests pass: npm run test:integration</step>
+      <step order="5">E2E tests pass: npm run test:e2e</step>
+      <step order="6">Manual test: Invite user flow end-to-end (send invite → user accepts → appears active in table)</step>
+      <step order="7">Manual test: Role change validations (owner lockout, last owner protection)</step>
+      <step order="8">Manual test: Deactivate/reactivate validations (self-protection)</step>
+      <step order="9">Manual test: Search, filter, pagination work correctly</step>
+      <step order="10">Manual test: Mobile responsiveness (Chrome DevTools mobile view)</step>
+      <step order="11">Manual test: Keyboard navigation (Tab, Enter, Escape keys)</step>
+      <step order="12">Manual test: Screen reader compatibility (macOS VoiceOver or NVDA)</step>
+      <step order="13">Security audit: Verify tenant isolation (create users in Tenant A, login as Tenant B, verify no access)</step>
+      <step order="14">Performance benchmark: Load user table with 50 users (&lt;2 seconds)</step>
+    </manual_verification_steps>
+  </validation_checklist>
+
+  <!-- ==================== ADDITIONAL REFERENCES ==================== -->
+  <additional_references>
+    <prd_functional_requirements>
+      <fr id="FR3" description="Invite Users">
+        Owners and Admins can send email invitations to new users with a specific role assigned at invitation time.
+        Covered by: AC3-14 (invite button, form, Server Action, Clerk integration, webhook)
+      </fr>
+      <fr id="FR4" description="Assign Roles">
+        Users are assigned one of five roles: owner, admin, editor, finance, author.
+        Roles can be changed by Owners and Admins after invitation.
+        Covered by: AC17-20 (role change workflow, validations)
+      </fr>
+      <fr id="FR6" description="Deactivate Users">
+        Owners and Admins can deactivate users to prevent login without deleting their data.
+        Users can be reactivated later.
+        Covered by: AC21-26 (deactivate/reactivate workflow, validations)
+      </fr>
+    </prd_functional_requirements>
+
+    <architecture_decisions>
+      <adr id="ADR-001" title="Next.js 16 with App Router">
+        Affects: All components are React Server Components by default, use "use client" only when needed
+      </adr>
+      <adr id="ADR-002" title="Drizzle ORM over Prisma">
+        Affects: Use Drizzle query builder for all database operations, better PostgreSQL support
+      </adr>
+      <adr id="ADR-005" title="Feature-Based Module Organization">
+        Affects: User management code in src/modules/users/ (not components/ or lib/)
+      </adr>
+      <adr id="ADR-006" title="Server Actions as Primary API Pattern">
+        Affects: No API routes needed, Server Actions handle all mutations
+      </adr>
+      <adr id="ADR-007" title="Row-Level Security for Multi-Tenancy">
+        Affects: All queries must include tenant_id filter, RLS provides defense in depth
+      </adr>
+    </architecture_decisions>
+
+    <epic_deliverables>
+      <deliverable>Story 1.1: Project initialization (completed)</deliverable>
+      <deliverable>Story 1.2: Database schema (users table created)</deliverable>
+      <deliverable>Story 1.3: Clerk authentication (middleware, helpers)</deliverable>
+      <deliverable>Story 1.4: Tenant registration flow (getCurrentTenantId available)</deliverable>
+      <deliverable>Story 1.5: RBAC system (requirePermission, MANAGE_USERS, PermissionGate)</deliverable>
+      <deliverable>**Story 1.6: User invitation and management (THIS STORY)**</deliverable>
+      <deliverable>Story 1.7: Tenant settings (pending)</deliverable>
+      <deliverable>Story 1.8: Role-based dashboards (pending)</deliverable>
+    </epic_deliverables>
+
+    <related_documentation>
+      <document path="docs/prd.md" sections="FR3, FR4, FR6" />
+      <document path="docs/architecture.md" sections="Multi-Tenancy Pattern, RBAC, Clerk Integration, Server Actions Pattern" />
+      <document path="docs/sprint-artifacts/tech-spec-epic-1.md" sections="User Invitation Flow, RBAC Enforcement, Clerk Integration" />
+      <document path="docs/sprint-artifacts/1-5-implement-role-based-access-control-rbac-system.md" purpose="Reference for permission patterns" />
+    </related_documentation>
+  </additional_references>
+
+</story_context>

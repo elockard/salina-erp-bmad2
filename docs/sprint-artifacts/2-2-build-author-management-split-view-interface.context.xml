@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2.2</storyId>
+    <title>Build Author Management Split View Interface</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-2-build-author-management-split-view-interface.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>editor</asA>
+    <iWant>view, create, and manage author profiles efficiently</iWant>
+    <soThat>I can maintain our author roster</soThat>
+    <tasks>
+      <task id="1">Create author module structure (types, schema, queries, actions)</task>
+      <task id="2">Implement Zod validation schemas</task>
+      <task id="3">Implement tax ID encryption utility (AES-256-GCM)</task>
+      <task id="4">Implement Server Actions (createAuthor, updateAuthor, deactivateAuthor, getAuthors)</task>
+      <task id="5">Create Split View layout component (320px left / fluid right)</task>
+      <task id="6">Create Author List component (search, filter, selection)</task>
+      <task id="7">Create Author Detail component (view, edit, deactivate)</task>
+      <task id="8">Create Author Form modal (create/edit)</task>
+      <task id="9">Create route page /dashboard/authors</task>
+      <task id="10">Add required shadcn/ui components</task>
+      <task id="11">Write unit tests</task>
+      <task id="12">Write E2E tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Route /dashboard/authors renders Split View layout with left panel (320px) and right panel (fluid)</ac>
+    <ac id="2">Left panel displays scrollable author list with search box at top</ac>
+    <ac id="3">Search box filters authors by name or email (case-insensitive, debounced 300ms)</ac>
+    <ac id="4">Author list shows: Name, email preview (truncated), active/inactive badge</ac>
+    <ac id="5">Authors sorted alphabetically by name (A-Z)</ac>
+    <ac id="6">Clicking author row loads detail in right panel with primary-light background + primary left border</ac>
+    <ac id="7">Right panel displays selected author details: Name, email, phone, address, payment method</ac>
+    <ac id="8">Tax ID displayed masked (***-**-1234) and only visible to Owner/Admin/Finance roles</ac>
+    <ac id="9">Right panel shows "Titles by this author" section with linked table</ac>
+    <ac id="10">Right panel shows "Contracts" summary section (placeholder for Epic 4)</ac>
+    <ac id="11">Edit button opens inline editing mode for all fields in right panel</ac>
+    <ac id="12">Deactivate button sets author is_active=false with confirmation dialog</ac>
+    <ac id="13">"Create Author" button in left panel header opens modal dialog</ac>
+    <ac id="14">Create Author form fields: Name (required), Email (optional), Phone, Address, Tax ID (masked), Payment Method</ac>
+    <ac id="15">Payment Method dropdown: Direct Deposit, Check, Wire Transfer</ac>
+    <ac id="16">Form validation uses Zod schema with inline error messages</ac>
+    <ac id="17">Server Action createAuthor checks permission CREATE_AUTHORS_TITLES before insert</ac>
+    <ac id="18">Server Action updateAuthor checks permission CREATE_AUTHORS_TITLES before update</ac>
+    <ac id="19">Server Action deactivateAuthor checks permission CREATE_AUTHORS_TITLES before update</ac>
+    <ac id="20">On permission denied, return { success: false, error: "You don't have permission..." }</ac>
+    <ac id="21">After creating author: Success toast, author appears in list, detail loads</ac>
+    <ac id="22">After updating author: Success toast, detail refreshes</ac>
+    <ac id="23">After deactivating author: Success toast, author shows inactive badge</ac>
+    <ac id="24">Inactive authors displayed with gray badge and reduced opacity</ac>
+    <ac id="25">Filter toggle "Show inactive" in left panel header</ac>
+    <ac id="26">Empty state: "No authors yet" + Create button</ac>
+    <ac id="27">Loading state: Skeleton loaders for list and detail panels</ac>
+    <ac id="28">Responsive: Desktop 320px left, Tablet 280px left, Mobile list-only with slide-in detail</ac>
+    <ac id="29">Accessibility: Keyboard navigable, ARIA labels</ac>
+    <ac id="30">Tax ID encrypted before storage using app-level AES-256-GCM</ac>
+    <ac id="31">Tax ID decrypted only for Owner/Admin/Finance roles</ac>
+    <ac id="32">All queries filter by tenant_id (tenant isolation)</ac>
+    <ac id="33">Server Components for initial fetch; Client Components for interactivity</ac>
+    <ac id="34">Native map with client-side filtering (not TanStack Table)</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Story 2.2: Author Split View</section>
+        <snippet>Defines AC2.2.1-8 covering Split View pattern, Server Actions, form validation, and permission requirements.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>4.1 Split View Explorer</section>
+        <snippet>Left panel 320px for browsing/filtering, right panel fluid for detail/editing. Active item: primary-light background + primary left border. Responsive: Tablet 280px, Mobile single view with slide-in.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Server Actions Pattern, Module Structure</section>
+        <snippet>Server Actions with "use server" directive, Zod validation, permission checks via requirePermission(), ActionResult&lt;T&gt; return type. Feature modules in src/modules/{feature}/ with actions.ts, schema.ts, types.ts.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR9-FR13 Author Management</section>
+        <snippet>FR9: Create author profiles. FR10: Store tax ID (encrypted). FR11: Update author info. FR12: Author portal login. FR13: Audit trail.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/2-1-create-author-database-schema-and-data-model.md</path>
+        <title>Story 2.1 - Author Schema</title>
+        <section>Completion Notes</section>
+        <snippet>Schema complete at src/db/schema/authors.ts. Types exported: Author, InsertAuthor. RLS enabled. Tax ID encryption deferred to Story 2.2.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/db/schema/authors.ts</path>
+        <kind>schema</kind>
+        <symbol>authors, Author, InsertAuthor</symbol>
+        <lines>1-134</lines>
+        <reason>Database schema for authors table - ALREADY EXISTS. Use Author type for queries, InsertAuthor for inserts.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/permissions.ts</path>
+        <kind>constants</kind>
+        <symbol>CREATE_AUTHORS_TITLES, MANAGE_USERS</symbol>
+        <lines>15-17</lines>
+        <reason>Permission constants. CREATE_AUTHORS_TITLES = ['owner', 'admin', 'editor'] for author CRUD.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>requirePermission, getCurrentTenantId, getCurrentUser</symbol>
+        <lines>1-100</lines>
+        <reason>Authentication helpers. Use requirePermission(CREATE_AUTHORS_TITLES) in Server Actions.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/users/actions.ts</path>
+        <kind>reference</kind>
+        <symbol>inviteUser, getUsers, deactivateUser</symbol>
+        <lines>1-391</lines>
+        <reason>Reference implementation for Server Actions pattern. Follow same structure: Zod validation, permission check, tenant context, ActionResult return.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/users/schema.ts</path>
+        <kind>reference</kind>
+        <symbol>inviteUserSchema</symbol>
+        <lines>1-20</lines>
+        <reason>Reference for Zod schema pattern. Follow same structure for createAuthorSchema.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/types.ts</path>
+        <kind>types</kind>
+        <symbol>ActionResult</symbol>
+        <lines>1-10</lines>
+        <reason>ActionResult&lt;T&gt; type for Server Action returns. { success: boolean, data?: T, error?: string }</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/dialog.tsx</path>
+        <kind>component</kind>
+        <symbol>Dialog, DialogContent, DialogHeader, DialogTitle</symbol>
+        <reason>shadcn/ui Dialog - use for Create Author modal.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/form.tsx</path>
+        <kind>component</kind>
+        <symbol>Form, FormField, FormItem, FormLabel, FormControl, FormMessage</symbol>
+        <reason>shadcn/ui Form with React Hook Form integration.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/badge.tsx</path>
+        <kind>component</kind>
+        <symbol>Badge</symbol>
+        <reason>shadcn/ui Badge - use for active/inactive status indicators.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/skeleton.tsx</path>
+        <kind>component</kind>
+        <symbol>Skeleton</symbol>
+        <reason>shadcn/ui Skeleton - use for loading states.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/select.tsx</path>
+        <kind>component</kind>
+        <symbol>Select, SelectTrigger, SelectContent, SelectItem</symbol>
+        <reason>shadcn/ui Select - use for Payment Method dropdown.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/table.tsx</path>
+        <kind>component</kind>
+        <symbol>Table, TableHeader, TableBody, TableRow, TableCell</symbol>
+        <reason>shadcn/ui Table - use for "Titles by this author" section.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/card.tsx</path>
+        <kind>component</kind>
+        <symbol>Card, CardHeader, CardContent</symbol>
+        <reason>shadcn/ui Card - use for detail panel sections.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/input.tsx</path>
+        <kind>component</kind>
+        <symbol>Input</symbol>
+        <reason>shadcn/ui Input - use for form fields and search box.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/button.tsx</path>
+        <kind>component</kind>
+        <symbol>Button</symbol>
+        <reason>shadcn/ui Button - use for actions.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/sonner.tsx</path>
+        <kind>component</kind>
+        <symbol>Toaster, toast</symbol>
+        <reason>Sonner toast notifications - use for success/error messages.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="@clerk/nextjs" version="^6.35.4">Authentication, user context</package>
+        <package name="drizzle-orm" version="^0.44.7">Database ORM</package>
+        <package name="react-hook-form" version="^7.66.1">Form state management</package>
+        <package name="@hookform/resolvers" version="^5.2.2">Zod resolver for RHF</package>
+        <package name="zod" version="^4.1.12">Schema validation</package>
+        <package name="sonner" version="2.0.7">Toast notifications</package>
+        <package name="lucide-react" version="0.554.0">Icons</package>
+        <package name="next" version="^16.0.3">Framework</package>
+        <package name="react" version="^19.2.0">UI library</package>
+      </node>
+      <note>No new dependencies required. Node.js crypto module for encryption (built-in).</note>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface>
+      <name>createAuthor</name>
+      <kind>Server Action</kind>
+      <signature>createAuthor(data: unknown): Promise&lt;ActionResult&lt;Author&gt;&gt;</signature>
+      <path>src/modules/authors/actions.ts</path>
+    </interface>
+    <interface>
+      <name>updateAuthor</name>
+      <kind>Server Action</kind>
+      <signature>updateAuthor(id: string, data: unknown): Promise&lt;ActionResult&lt;Author&gt;&gt;</signature>
+      <path>src/modules/authors/actions.ts</path>
+    </interface>
+    <interface>
+      <name>deactivateAuthor</name>
+      <kind>Server Action</kind>
+      <signature>deactivateAuthor(id: string): Promise&lt;ActionResult&lt;Author&gt;&gt;</signature>
+      <path>src/modules/authors/actions.ts</path>
+    </interface>
+    <interface>
+      <name>getAuthors</name>
+      <kind>Query function</kind>
+      <signature>getAuthors(options?: { includeInactive?: boolean }): Promise&lt;Author[]&gt;</signature>
+      <path>src/modules/authors/queries.ts</path>
+    </interface>
+    <interface>
+      <name>getAuthorById</name>
+      <kind>Query function</kind>
+      <signature>getAuthorById(id: string): Promise&lt;Author | null&gt;</signature>
+      <path>src/modules/authors/queries.ts</path>
+    </interface>
+    <interface>
+      <name>encryptTaxId</name>
+      <kind>Utility function</kind>
+      <signature>encryptTaxId(plainText: string): string</signature>
+      <path>src/lib/encryption.ts</path>
+    </interface>
+    <interface>
+      <name>decryptTaxId</name>
+      <kind>Utility function</kind>
+      <signature>decryptTaxId(cipherText: string): string</signature>
+      <path>src/lib/encryption.ts</path>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint type="pattern">Server Actions must use "use server" directive and return ActionResult&lt;T&gt;</constraint>
+    <constraint type="pattern">All Server Actions must call requirePermission() before database operations</constraint>
+    <constraint type="pattern">All queries must include tenant_id filter even with RLS enabled (defense in depth)</constraint>
+    <constraint type="pattern">Use Zod .parse() for input validation, catch ZodError for validation messages</constraint>
+    <constraint type="pattern">Soft delete: set is_active=false, never use physical DELETE</constraint>
+    <constraint type="security">Tax ID must be encrypted with AES-256-GCM before storage</constraint>
+    <constraint type="security">Tax ID decryption only for roles: owner, admin, finance</constraint>
+    <constraint type="ui">Split View: 320px left panel (desktop), 280px (tablet), single view (mobile)</constraint>
+    <constraint type="ui">Active list item: bg-primary/10 + border-l-2 border-primary</constraint>
+    <constraint type="ui">Use sonner toast() for success/error notifications</constraint>
+    <constraint type="testing">Unit tests for Zod schemas, encryption, permission checks</constraint>
+    <constraint type="testing">E2E tests for CRUD operations, search, filtering, responsive behavior</constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      Unit tests using Vitest. E2E tests using Playwright. Unit tests cover schema validation, encryption round-trip, permission matrix. E2E tests cover user flows: create author, edit author, deactivate, search, filter by status. Test files colocated or in tests/ directory.
+    </standards>
+    <locations>
+      <location>tests/unit/authors.test.ts</location>
+      <location>tests/unit/encryption.test.ts</location>
+      <location>tests/e2e/authors.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="1,5,6">Navigate to /authors, verify split view renders, click author loads detail</idea>
+      <idea ac="3">Type in search box, verify list filters after 300ms debounce</idea>
+      <idea ac="13,14,16,21">Open create modal, fill form, submit, verify toast and list update</idea>
+      <idea ac="11,22">Click edit, modify field, save, verify toast and detail update</idea>
+      <idea ac="12,23,24">Click deactivate, confirm dialog, verify inactive badge</idea>
+      <idea ac="25">Toggle "Show inactive", verify inactive authors appear/hide</idea>
+      <idea ac="17,18,19,20">Mock non-editor user, attempt action, verify permission error</idea>
+      <idea ac="30,31">Create author with tax ID, verify encrypted in DB, verify masked display</idea>
+      <idea ac="28">Resize viewport, verify responsive breakpoints</idea>
+    </ideas>
+  </tests>
+</story-context>

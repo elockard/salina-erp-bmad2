@@ -40,30 +40,30 @@ development_status:
   1-2-set-up-database-schema-and-multi-tenant-infrastructure: done
   1-3-implement-clerk-authentication-with-multi-tenant-middleware: done
   1-4-create-tenant-registration-flow-with-subdomain-validation: done
-  1-5-implement-role-based-access-control-rbac-system: backlog
-  1-6-build-user-invitation-and-management-system: backlog
-  1-7-create-tenant-settings-configuration-page: backlog
-  1-8-build-role-based-dashboard-landing-page: backlog
+  1-5-implement-role-based-access-control-rbac-system: done
+  1-6-build-user-invitation-and-management-system: done
+  1-7-create-tenant-settings-configuration-page: done
+  1-8-build-role-based-dashboard-landing-page: done
   epic-1-retrospective: optional
 
-  epic-2: backlog
-  2-1-create-author-database-schema-and-data-model: backlog
-  2-2-build-author-management-split-view-interface: backlog
-  2-3-implement-author-portal-access-provisioning: backlog
-  2-4-create-title-database-schema-and-multi-format-support: backlog
-  2-5-build-title-management-split-view-interface: backlog
-  2-6-create-isbn-pool-database-schema-and-tracking: backlog
-  2-7-build-isbn-import-with-csv-upload-and-validation: backlog
-  2-8-build-isbn-pool-status-view-and-availability-tracking: backlog
-  2-9-implement-smart-isbn-assignment-with-row-locking: backlog
-  epic-2-retrospective: optional
+  epic-2: contexted
+  2-1-create-author-database-schema-and-data-model: done
+  2-2-build-author-management-split-view-interface: done
+  2-3-implement-author-portal-access-provisioning: done
+  2-4-create-title-database-schema-and-multi-format-support: done
+  2-5-build-title-management-split-view-interface: done
+  2-6-create-isbn-pool-database-schema-and-tracking: done
+  2-7-build-isbn-import-with-csv-upload-and-validation: done
+  2-8-build-isbn-pool-status-view-and-availability-tracking: done
+  2-9-implement-smart-isbn-assignment-with-row-locking: done
+  epic-2-retrospective: completed
 
   epic-3: backlog
-  3-1-create-sales-transaction-database-schema: backlog
-  3-2-build-sales-transaction-entry-form: backlog
-  3-3-build-sales-transaction-history-view: backlog
-  3-4-create-returns-database-schema-with-approval-workflow: backlog
-  3-5-build-return-request-entry-form: backlog
+  3-1-create-sales-transaction-database-schema: done
+  3-2-build-sales-transaction-entry-form: done
+  3-3-build-sales-transaction-history-view: done
+  3-4-create-returns-database-schema-with-approval-workflow: done
+  3-5-build-return-request-entry-form: drafted
   3-6-build-return-approval-queue-for-finance: backlog
   3-7-build-returns-history-view-with-status-filtering: backlog
   epic-3-retrospective: optional

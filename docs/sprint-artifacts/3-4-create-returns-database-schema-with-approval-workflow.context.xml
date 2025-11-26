@@ -1,0 +1,251 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>4</storyId>
+    <title>Create Returns Database Schema with Approval Workflow</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-25</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-4-create-returns-database-schema-with-approval-workflow.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform architect</asA>
+    <iWant>establish returns tracking with approval workflow</iWant>
+    <soThat>only approved returns affect royalty calculations</soThat>
+    <tasks>
+      <task id="1" acs="1,2,3,6">Create returns schema file
+        <subtask>Create src/db/schema/returns.ts</subtask>
+        <subtask>Define returnStatusValues const array ('pending', 'approved', 'rejected')</subtask>
+        <subtask>Export ReturnStatus type from const array</subtask>
+        <subtask>Define returns pgTable with all columns per architecture.md</subtask>
+        <subtask>Add foreign key references with appropriate ON DELETE behavior</subtask>
+        <subtask>Add CHECK constraints for positive quantity, price, amount</subtask>
+        <subtask>Export Return and InsertReturn TypeScript types</subtask>
+      </task>
+      <task id="2" acs="5">Create database indexes
+        <subtask>Add tenant_id index</subtask>
+        <subtask>Add title_id index</subtask>
+        <subtask>Add status index (critical for approval queue filtering)</subtask>
+        <subtask>Add return_date index</subtask>
+        <subtask>Add composite index (tenant_id, return_date)</subtask>
+        <subtask>Add composite index (tenant_id, status)</subtask>
+      </task>
+      <task id="3" acs="7">Add returns relations
+        <subtask>Update src/db/schema/relations.ts</subtask>
+        <subtask>Add returnsRelations with tenant, title, originalSale, reviewedBy, createdBy</subtask>
+        <subtask>Follow existing pattern from salesRelations</subtask>
+      </task>
+      <task id="4" acs="8,9">Update schema exports
+        <subtask>Update src/db/schema/index.ts</subtask>
+        <subtask>Add export * from "./returns"</subtask>
+        <subtask>Add Return type to type exports</subtask>
+      </task>
+      <task id="5" acs="10">Generate and apply migration
+        <subtask>Run npm run db:generate</subtask>
+        <subtask>Review generated migration SQL for correctness</subtask>
+        <subtask>Run npm run db:migrate to apply migration</subtask>
+        <subtask>Verify table exists with correct structure in Neon Studio</subtask>
+      </task>
+      <task id="6" acs="4">Enable RLS on returns table
+        <subtask>Create migration or SQL to enable RLS</subtask>
+        <subtask>Create tenant isolation policy matching sales pattern</subtask>
+        <subtask>Test RLS enforcement</subtask>
+      </task>
+      <task id="7" acs="1,2">Create Zod validation schemas
+        <subtask>Create src/modules/returns/schema.ts</subtask>
+        <subtask>Define createReturnSchema for form validation</subtask>
+        <subtask>Define returnFilterSchema for query filtering</subtask>
+        <subtask>Define approveReturnSchema for approval action</subtask>
+        <subtask>Export all schemas and inferred types</subtask>
+      </task>
+      <task id="8" acs="8">Create returns types
+        <subtask>Create src/modules/returns/types.ts</subtask>
+        <subtask>Define ReturnWithRelations type (includes title, user info)</subtask>
+        <subtask>Define PendingReturn type for approval queue</subtask>
+        <subtask>Define ReturnApproval type for approve/reject action</subtask>
+      </task>
+      <task id="9" acs="1-9">Write unit tests for returns schema
+        <subtask>Create tests/unit/returns-schema.test.ts</subtask>
+        <subtask>Test schema exports and types</subtask>
+        <subtask>Test status enum values</subtask>
+        <subtask>Test Zod schema validation (positive quantity, valid status)</subtask>
+      </task>
+      <task id="10" acs="1,3,4,10">Write integration test for returns table
+        <subtask>Create tests/integration/returns-db.test.ts</subtask>
+        <subtask>Test INSERT with valid data</subtask>
+        <subtask>Test foreign key constraints (invalid title_id fails)</subtask>
+        <subtask>Test CHECK constraints (negative quantity fails)</subtask>
+        <subtask>Test default status is 'pending'</subtask>
+        <subtask>Test tenant isolation via RLS</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">returns table created with all required columns (id, tenant_id, title_id, original_sale_id, format, quantity, unit_price, total_amount, return_date, reason, status, reviewed_by_user_id, reviewed_at, created_by_user_id, created_at, updated_at)</criterion>
+    <criterion id="2">Status enum with three values: pending (default), approved, rejected</criterion>
+    <criterion id="3">Foreign key relationships correctly defined with appropriate ON DELETE behavior (tenant_id CASCADE, title_id RESTRICT, original_sale_id SET NULL, reviewed_by_user_id SET NULL, created_by_user_id RESTRICT)</criterion>
+    <criterion id="4">PostgreSQL Row-Level Security (RLS) configured with tenant isolation policy</criterion>
+    <criterion id="5">Indexes created for query optimization (tenant_id, title_id, status, return_date, composite indexes)</criterion>
+    <criterion id="6">CHECK constraints enforced at database level (quantity > 0, unit_price > 0, total_amount > 0)</criterion>
+    <criterion id="7">Relations exported in relations.ts with returnsRelations</criterion>
+    <criterion id="8">TypeScript types exported (Return, InsertReturn, ReturnStatus, returnStatusValues)</criterion>
+    <criterion id="9">Schema exported from src/db/schema/index.ts</criterion>
+    <criterion id="10">Drizzle migration generated and applied successfully</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Salina ERP Product Requirements Document</title>
+        <section>Returns Management (FR30-37)</section>
+        <snippet>FR32: Return requests are created with "pending" status awaiting approval. FR35: System tracks who approved/rejected returns and when. FR36: Only approved returns affect royalty calculations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Data Architecture - Returns Table</section>
+        <snippet>Returns table schema (lines 1672-1699) defines complete structure including status enum (pending/approved/rejected), foreign keys to tenants, titles, sales, and users, with approval workflow fields (reviewed_by_user_id, reviewed_at).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Multi-Tenant Row-Level Security</section>
+        <snippet>Defense in Depth - Three Layers: Middleware (tenant context), Application (Drizzle query wrapper), Database (RLS policies). All tenant-scoped tables must enable RLS with tenant isolation policy.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories</title>
+        <section>Epic 3: Sales and Returns Processing - Story 3.4</section>
+        <snippet>Story 3.4: Create Returns Database Schema with Approval Workflow. FRs: FR30-37. Establishes returns tracking with pending/approved/rejected workflow.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/db/schema/sales.ts</path>
+        <kind>schema</kind>
+        <symbol>sales, salesChannelValues, salesFormatValues</symbol>
+        <lines>1-215</lines>
+        <reason>Primary reference pattern for returns schema. Shows CHECK constraints, enum patterns, foreign keys, indexes, and JSDoc documentation style. Returns schema should follow this exact pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/relations.ts</path>
+        <kind>relations</kind>
+        <symbol>salesRelations, tenantsRelations</symbol>
+        <lines>114-127</lines>
+        <reason>Pattern for defining returnsRelations. Shows one() relationship syntax for tenant, title, and user references.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/index.ts</path>
+        <kind>exports</kind>
+        <symbol>exports</symbol>
+        <lines>1-23</lines>
+        <reason>Export pattern for new schema. Add `export * from "./returns"` and `Return` type export.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/sales/schema.ts</path>
+        <kind>validation</kind>
+        <symbol>createSaleSchema, salesFilterSchema, positiveCurrencySchema</symbol>
+        <lines>1-118</lines>
+        <reason>Pattern for returns Zod schemas. Shows enum schema creation, positive integer/currency validation, and filter schema patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/sales/types.ts</path>
+        <kind>types</kind>
+        <symbol>SaleWithRelations, PaginatedSales</symbol>
+        <lines>1-149</lines>
+        <reason>Pattern for returns types. Shows WithRelations type pattern and form value types.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/unit/sales-schema.test.ts</path>
+        <kind>test</kind>
+        <symbol>describe blocks for schema validation</symbol>
+        <lines>1-593</lines>
+        <reason>Test pattern for returns-schema.test.ts. Shows enum validation, positive value tests, create schema tests.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/setup.ts</path>
+        <kind>config</kind>
+        <symbol>vi.mock</symbol>
+        <lines>1-31</lines>
+        <reason>Test setup configuration. Use for integration test setup with dotenv and cleanup.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="drizzle-orm" version="^0.44.7">ORM for schema definition, relations, and queries</package>
+        <package name="zod" version="^4.1.12">Schema validation for Zod schemas</package>
+        <package name="vitest" version="4.0.13">Test framework for unit and integration tests</package>
+        <package name="@neondatabase/serverless" version="^1.0.2">Neon PostgreSQL driver</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture">Multi-tenant isolation: Always include tenant_id as first condition in WHERE clauses</constraint>
+    <constraint source="architecture">Use PostgreSQL RLS policies for database-level tenant isolation</constraint>
+    <constraint source="architecture">Use Decimal.js for any financial calculations - never JavaScript arithmetic</constraint>
+    <constraint source="story">Quantity is POSITIVE: Returns use positive integers, deduction determined by table context</constraint>
+    <constraint source="story">original_sale_id is NULLABLE: Reference to original sale is optional for flexibility</constraint>
+    <constraint source="architecture">Foreign key ON DELETE: tenant_id CASCADE, title_id RESTRICT, original_sale_id SET NULL, user IDs per story notes</constraint>
+    <constraint source="prd">Only approved returns affect royalty calculations (FR36)</constraint>
+    <constraint source="architecture">Follow feature-based module organization in src/modules/returns/</constraint>
+    <constraint source="architecture">File naming: kebab-case for files, PascalCase for types, camelCase for functions</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>returns pgTable</name>
+      <kind>Drizzle schema</kind>
+      <signature>export const returns = pgTable("returns", { id, tenant_id, title_id, original_sale_id, format, quantity, unit_price, total_amount, return_date, reason, status, reviewed_by_user_id, reviewed_at, created_by_user_id, created_at, updated_at }, (table) => ({ ...indexes, ...checks }))</signature>
+      <path>src/db/schema/returns.ts</path>
+    </interface>
+    <interface>
+      <name>returnStatusValues</name>
+      <kind>const array</kind>
+      <signature>export const returnStatusValues = ["pending", "approved", "rejected"] as const</signature>
+      <path>src/db/schema/returns.ts</path>
+    </interface>
+    <interface>
+      <name>ReturnStatus</name>
+      <kind>TypeScript type</kind>
+      <signature>export type ReturnStatus = (typeof returnStatusValues)[number]</signature>
+      <path>src/db/schema/returns.ts</path>
+    </interface>
+    <interface>
+      <name>Return / InsertReturn</name>
+      <kind>TypeScript types</kind>
+      <signature>export type Return = typeof returns.$inferSelect; export type InsertReturn = typeof returns.$inferInsert;</signature>
+      <path>src/db/schema/returns.ts</path>
+    </interface>
+    <interface>
+      <name>returnsRelations</name>
+      <kind>Drizzle relations</kind>
+      <signature>export const returnsRelations = relations(returns, ({ one }) => ({ tenant, title, originalSale, reviewedByUser, createdByUser }))</signature>
+      <path>src/db/schema/relations.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use Vitest as test framework. Follow describe/it pattern with meaningful test names. Unit tests in tests/unit/, integration tests in tests/integration/. Mock Next.js navigation as shown in tests/setup.ts. Use safeParse for Zod validation tests. Integration tests should use real database with test tenant isolation.</standards>
+    <locations>
+      <location>tests/unit/returns-schema.test.ts</location>
+      <location>tests/integration/returns-db.test.ts</location>
+    </locations>
+    <ideas>
+      <idea acId="1">Test returns table can be created with all required columns via InsertReturn type</idea>
+      <idea acId="2">Test returnStatusValues has exactly 3 values: pending, approved, rejected</idea>
+      <idea acId="2">Test ReturnStatus type accepts valid values, rejects invalid</idea>
+      <idea acId="3">Test foreign key constraints: invalid title_id fails INSERT</idea>
+      <idea acId="4">Test tenant isolation: query with wrong tenant_id returns empty</idea>
+      <idea acId="5">Test indexes exist via database introspection or migration SQL</idea>
+      <idea acId="6">Test CHECK constraints: quantity 0 or negative fails, unit_price 0 or negative fails</idea>
+      <idea acId="7">Test createReturnSchema validates positive quantity, valid status</idea>
+      <idea acId="7">Test returnFilterSchema accepts partial filters and empty object</idea>
+      <idea acId="8">Test ReturnWithRelations type includes title and user info</idea>
+      <idea acId="10">Test migration applies cleanly on fresh database</idea>
+    </ideas>
+  </tests>
+</story-context>

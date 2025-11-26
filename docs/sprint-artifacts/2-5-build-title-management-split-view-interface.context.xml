@@ -1,0 +1,275 @@
+<story-context id="2-5-build-title-management-split-view-interface" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>5</storyId>
+    <title>Build Title Management Split View Interface</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-5-build-title-management-split-view-interface.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>an editor</asA>
+    <iWant>to create and manage title records with metadata</iWant>
+    <soThat>I can track our publishing catalog</soThat>
+    <tasks>
+      <task id="1" ac="1">Create title Split View page structure - src/app/(dashboard)/titles/page.tsx with responsive layout</task>
+      <task id="2" ac="2">Build title list component for left panel - search, status filter, list items with author/status/format badges</task>
+      <task id="3" ac="2,3">Implement title queries and data fetching - getTitles, getTitleById with author relations</task>
+      <task id="4" ac="3,4">Build title detail component for right panel - all fields, formats section, ISBN status</task>
+      <task id="5" ac="3,6">Implement inline editing for title fields with updateTitle Server Action</task>
+      <task id="6" ac="5">Build Create Title modal form with author dropdown and Zod validation</task>
+      <task id="7" ac="6">Implement permission enforcement - CREATE_AUTHORS_TITLES for mutations, VIEW_OWN_STATEMENTS for reads</task>
+      <task id="8" ac="1-6">Write E2E tests for title management</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Split View renders with left panel (320px fixed) and right panel (flexible): Left panel contains searchable title list with responsive scrolling; Right panel displays selected title details or empty state; Split View follows established pattern from authors module (Story 2.2); Mobile responsive: single column layout below 768px</ac>
+    <ac id="2">Left panel displays title list with search and filter: Search box filters by title name, author name, ISBN/eISBN; Publication status filter dropdown (All, Draft, Pending, Published, Out of Print); Each list item shows: title name, author name, status badge, format icons (P/E for Physical/Ebook); Sorted by most recently updated (updated_at DESC); Click title loads detail in right panel; Skeleton loaders during data fetch; Empty state: "No titles yet. Create your first title."</ac>
+    <ac id="3">Right panel displays selected title details: Title and subtitle (with inline edit capability); Author name (linked to /authors/[id]); Genre (dropdown or text with inline edit); Word count (number with inline edit); Publication status (dropdown with visual badge, inline edit); Publication date (date picker with inline edit); Formats section showing: Physical: ISBN or "Not assigned" badge + "Assign ISBN" button; Ebook: eISBN or "Not assigned" badge + "Assign ISBN" button; Audiobook: "Coming soon" label (disabled); Sales summary placeholder (total units sold by format - can be 0 initially); Created/Updated timestamps</ac>
+    <ac id="4">Formats section displays ISBN status and assignment buttons: Physical format: Shows assigned ISBN-13 formatted (978-X-XXXX-XXXX-X) or "Not assigned" badge; Ebook format: Shows assigned eISBN formatted or "Not assigned" badge; "Assign ISBN" button visible only when not assigned; Button disabled if no ISBNs available in pool (show tooltip: "No Physical ISBNs available"); Button triggers ISBN assignment modal (Story 2.9 integration point)</ac>
+    <ac id="5">"Create Title" modal implements Spacious Guided Flow: Title (required, text input, max 200 chars); Subtitle (optional, text input, max 200 chars); Author (required, searchable dropdown, loads from authors list); Genre (optional, dropdown with common genres + "Other" option); Word Count (optional, number input, min 0); Publication Status (dropdown, defaults to "draft"); Form validation with Zod schema and inline error messages; Submit creates title via Server Action; Success: toast notification, modal closes, new title appears in list and loads in detail; Error: inline error display, form remains open</ac>
+    <ac id="6">Permission check enforces CREATE_AUTHORS_TITLES permission: Create/Edit buttons hidden for users without permission (Finance, Author roles); Server Actions return 403 if permission denied; Read-only view available for all authenticated users (VIEW_OWN_STATEMENTS); Inline edit controls disabled for unauthorized users</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR14-FR23: Title &amp; ISBN Management</section>
+        <snippet>FR14: Editors can create title records with metadata (title, genre, word count, publication status). FR15: Editors can track multiple formats for a single title (physical, ebook, audiobook). FR22: Editors can update title metadata and publication status.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Project Structure, Implementation Patterns, Data Access Patterns</section>
+        <snippet>Feature-based module organization in src/modules/titles/. Server Actions pattern with ActionResult&lt;T&gt; responses. All queries auto-inject tenant_id filter for RLS. CRUD pattern with create, update, soft-delete operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Story 2.5 Title Split View, Data Models, APIs and Interfaces</section>
+        <snippet>AC2.5.1-6: Split View renders with searchable title list, filter by publication status, right panel shows title details with author link, formats section with ISBN status and Assign ISBN button, Create Title modal, permission enforcement.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/2-4-create-title-database-schema-and-multi-format-support.md</path>
+        <title>Story 2.4 - Title Schema (DONE)</title>
+        <section>Schema, Zod Schemas, Dev Notes</section>
+        <snippet>Title schema at src/db/schema/titles.ts with all required fields. Zod schemas at src/modules/titles/schema.ts. Types at src/modules/titles/types.ts. RLS policies applied via migration.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/2-2-build-author-management-split-view-interface.md</path>
+        <title>Story 2.2 - Author Split View (DONE)</title>
+        <section>Pattern Reference</section>
+        <snippet>Reference implementation for Split View pattern. AuthorsSplitView component structure, AuthorList component, AuthorDetail component, AuthorForm modal. Follow same responsive layout and UX patterns.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/db/schema/titles.ts</path>
+        <kind>schema</kind>
+        <symbol>titles</symbol>
+        <lines>71-164</lines>
+        <reason>Database schema for titles table - all fields, indexes, types. Use for queries and insert operations.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/relations.ts</path>
+        <kind>relations</kind>
+        <symbol>titlesRelations</symbol>
+        <lines>62-71</lines>
+        <reason>Drizzle relations for titles - includes tenant and author relationships for eager loading.</reason>
+      </file>
+      <file>
+        <path>src/modules/titles/schema.ts</path>
+        <kind>validation</kind>
+        <symbol>createTitleSchema, updateTitleSchema, publicationStatusSchema</symbol>
+        <lines>1-89</lines>
+        <reason>Zod validation schemas for title create/update operations. Use for form validation.</reason>
+      </file>
+      <file>
+        <path>src/modules/titles/types.ts</path>
+        <kind>types</kind>
+        <symbol>Title, TitleWithAuthor, TitleListItem, PublicationStatus</symbol>
+        <lines>1-72</lines>
+        <reason>TypeScript types for title management including TitleWithAuthor for list displays.</reason>
+      </file>
+      <file>
+        <path>src/modules/authors/components/authors-split-view.tsx</path>
+        <kind>component</kind>
+        <symbol>AuthorsSplitView</symbol>
+        <lines>1-226</lines>
+        <reason>Reference implementation for Split View pattern - state management, responsive layout, list/detail coordination. Follow this pattern.</reason>
+      </file>
+      <file>
+        <path>src/modules/authors/components/author-list.tsx</path>
+        <kind>component</kind>
+        <symbol>AuthorList</symbol>
+        <lines>1-179</lines>
+        <reason>Reference implementation for left panel list - search, filters, list items, skeleton loading, empty state. Follow this pattern.</reason>
+      </file>
+      <file>
+        <path>src/modules/authors/components/author-detail.tsx</path>
+        <kind>component</kind>
+        <symbol>AuthorDetail</symbol>
+        <lines>1-636</lines>
+        <reason>Reference implementation for detail panel - inline editing, action dialogs, permission-based UI. Follow this pattern.</reason>
+      </file>
+      <file>
+        <path>src/modules/authors/components/author-form.tsx</path>
+        <kind>component</kind>
+        <symbol>AuthorForm</symbol>
+        <lines>1-223</lines>
+        <reason>Reference implementation for create modal form - React Hook Form, Zod resolver, loading states. Follow this pattern.</reason>
+      </file>
+      <file>
+        <path>src/modules/authors/actions.ts</path>
+        <kind>actions</kind>
+        <symbol>createAuthor, updateAuthor, deactivateAuthor, fetchAuthors</symbol>
+        <lines>1-529</lines>
+        <reason>Reference implementation for Server Actions pattern - permission checks, validation, tenant scoping, error handling. Follow this pattern.</reason>
+      </file>
+      <file>
+        <path>src/lib/permissions.ts</path>
+        <kind>constants</kind>
+        <symbol>CREATE_AUTHORS_TITLES, VIEW_OWN_STATEMENTS</symbol>
+        <lines>1-44</lines>
+        <reason>Permission constants to use for authorization checks in Server Actions and UI conditionals.</reason>
+      </file>
+      <file>
+        <path>src/lib/dashboard-nav.ts</path>
+        <kind>navigation</kind>
+        <symbol>NAV_ITEMS</symbol>
+        <lines>43-48</lines>
+        <reason>Navigation item for Titles already defined. Remove comingSoon flag when implementing.</reason>
+      </file>
+      <file>
+        <path>src/app/(dashboard)/authors/page.tsx</path>
+        <kind>page</kind>
+        <symbol>AuthorsPage</symbol>
+        <reason>Reference implementation for dashboard page - Server Component fetching initial data, passing to client component.</reason>
+      </file>
+      <file>
+        <path>tests/e2e/authors.spec.ts</path>
+        <kind>test</kind>
+        <symbol>Author Management E2E tests</symbol>
+        <lines>1-273</lines>
+        <reason>Reference implementation for E2E tests - test patterns, selectors, assertions. Follow this structure for titles.spec.ts.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>@hookform/resolvers</package>
+        <version>^5.2.2</version>
+        <purpose>Zod resolver for React Hook Form</purpose>
+      </node>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.66.1</version>
+        <purpose>Form state management</purpose>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.12</version>
+        <purpose>Schema validation</purpose>
+      </node>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <purpose>Database ORM with relations</purpose>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>2.0.7</version>
+        <purpose>Toast notifications</purpose>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>0.554.0</version>
+        <purpose>Icons (Search, Pencil, BookOpen, etc.)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>All mutations require CREATE_AUTHORS_TITLES permission (owner, admin, editor roles)</constraint>
+    <constraint>All reads require VIEW_OWN_STATEMENTS permission (all authenticated users)</constraint>
+    <constraint>All queries must include tenant_id filter for multi-tenant isolation</constraint>
+    <constraint>Follow Server Actions pattern with ActionResult&lt;T&gt; response type</constraint>
+    <constraint>Use Zod for both client-side and server-side validation</constraint>
+    <constraint>Follow the Split View pattern from authors module (Story 2.2)</constraint>
+    <constraint>Mobile responsive: single column layout below 768px breakpoint</constraint>
+    <constraint>ISBN fields are nullable until assigned by Story 2.9</constraint>
+    <constraint>Author dropdown must load from current tenant's active authors only</constraint>
+    <constraint>Publication status must be one of: draft, pending, published, out_of_print</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>createTitle Server Action</name>
+      <kind>server-action</kind>
+      <signature>async function createTitle(data: unknown): Promise&lt;ActionResult&lt;Title&gt;&gt;</signature>
+      <path>src/modules/titles/actions.ts</path>
+    </interface>
+    <interface>
+      <name>updateTitle Server Action</name>
+      <kind>server-action</kind>
+      <signature>async function updateTitle(id: string, data: unknown): Promise&lt;ActionResult&lt;Title&gt;&gt;</signature>
+      <path>src/modules/titles/actions.ts</path>
+    </interface>
+    <interface>
+      <name>fetchTitles Server Action</name>
+      <kind>server-action</kind>
+      <signature>async function fetchTitles(options?: { status?: PublicationStatus; search?: string }): Promise&lt;TitleWithAuthor[]&gt;</signature>
+      <path>src/modules/titles/actions.ts</path>
+    </interface>
+    <interface>
+      <name>getTitleById Query</name>
+      <kind>query</kind>
+      <signature>async function getTitleById(id: string): Promise&lt;TitleWithAuthor | null&gt;</signature>
+      <path>src/modules/titles/queries.ts</path>
+    </interface>
+    <interface>
+      <name>fetchAuthors</name>
+      <kind>server-action</kind>
+      <signature>async function fetchAuthors(options?: { includeInactive?: boolean }): Promise&lt;Author[]&gt;</signature>
+      <path>src/modules/authors/actions.ts</path>
+    </interface>
+    <interface>
+      <name>ActionResult Type</name>
+      <kind>type</kind>
+      <signature>type ActionResult&lt;T&gt; = { success: true; data: T } | { success: false; error: string }</signature>
+      <path>src/lib/types.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Playwright for E2E tests. Tests should follow the pattern established in tests/e2e/authors.spec.ts. Test files go in tests/e2e/ directory. Use page.goto(), page.getByRole(), page.getByText(), page.getByPlaceholder() selectors. Use expect() assertions from @playwright/test. Tests require authentication helper (TODO in authors tests). Use test.describe() for grouping related tests.
+    </standards>
+    <locations>
+      <location>tests/e2e/titles.spec.ts</location>
+      <location>tests/unit/modules/titles/*.test.ts (optional)</location>
+    </locations>
+    <ideas>
+      <testIdea acRef="1">Navigate to /dashboard/titles, verify Split View layout with 320px left panel and fluid right panel</testIdea>
+      <testIdea acRef="1">Verify mobile responsive behavior - single column below 768px, back button in detail view</testIdea>
+      <testIdea acRef="2">Verify search input filters titles by name, author name, ISBN</testIdea>
+      <testIdea acRef="2">Verify status filter dropdown filters by publication status</testIdea>
+      <testIdea acRef="2">Verify list items show title, author, status badge, format icons</testIdea>
+      <testIdea acRef="2">Verify empty state message when no titles exist</testIdea>
+      <testIdea acRef="3">Click title in list, verify detail panel shows all fields</testIdea>
+      <testIdea acRef="3">Verify author name links to /dashboard/authors/[id]</testIdea>
+      <testIdea acRef="4">Verify formats section shows ISBN status and Assign buttons</testIdea>
+      <testIdea acRef="5">Click Create Title button, verify modal opens with all fields</testIdea>
+      <testIdea acRef="5">Submit form with valid data, verify success toast and list updates</testIdea>
+      <testIdea acRef="5">Submit form with invalid data, verify inline errors</testIdea>
+      <testIdea acRef="6">Login as Finance role, verify Create/Edit buttons hidden</testIdea>
+      <testIdea acRef="6">Verify unauthorized Server Action returns error</testIdea>
+    </ideas>
+  </tests>
+</story-context>

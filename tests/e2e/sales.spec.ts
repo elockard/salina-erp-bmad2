@@ -22,7 +22,10 @@ test.describe("Sales Transaction Recording", () => {
     // Login
     await page.goto(`${tenantURL}/sign-in`);
     await page.fill('[name="identifier"]', editor.email);
-    await page.fill('[name="password"]', process.env.TEST_EDITOR_PASSWORD!);
+    await page.fill(
+      '[name="password"]',
+      process.env.TEST_EDITOR_PASSWORD ?? ""
+    );
     await page.click('button[type="submit"]');
 
     // Navigate to Sales
@@ -39,7 +42,7 @@ test.describe("Sales Transaction Recording", () => {
 
     // Verify calculated total
     await expect(page.locator('[data-testid="total-amount"]')).toContainText(
-      "$3,748.50",
+      "$3,748.50"
     );
 
     // Submit
@@ -47,7 +50,7 @@ test.describe("Sales Transaction Recording", () => {
 
     // Verify success
     await expect(page.locator('[data-testid="success-toast"]')).toContainText(
-      /sale recorded/i,
+      /sale recorded/i
     );
     await expect(page).toHaveURL(/sales/);
   });
@@ -64,7 +67,10 @@ test.describe("Sales Transaction Recording", () => {
     // Login and navigate to sales form
     await page.goto(`${tenantURL}/sign-in`);
     await page.fill('[name="identifier"]', editor.email);
-    await page.fill('[name="password"]', process.env.TEST_EDITOR_PASSWORD!);
+    await page.fill(
+      '[name="password"]',
+      process.env.TEST_EDITOR_PASSWORD ?? ""
+    );
     await page.click('button[type="submit"]');
 
     await page.goto(`${tenantURL}/sales/new`);
@@ -75,7 +81,7 @@ test.describe("Sales Transaction Recording", () => {
 
     // Should show validation error
     await expect(page.locator('[data-testid="quantity-error"]')).toContainText(
-      /must be positive/i,
+      /must be positive/i
     );
   });
 });
@@ -100,7 +106,10 @@ test.describe("Sales Transaction History", () => {
     // Login
     await page.goto(`${tenantURL}/sign-in`);
     await page.fill('[name="identifier"]', editor.email);
-    await page.fill('[name="password"]', process.env.TEST_EDITOR_PASSWORD!);
+    await page.fill(
+      '[name="password"]',
+      process.env.TEST_EDITOR_PASSWORD ?? ""
+    );
     await page.click('button[type="submit"]');
 
     // View transaction history

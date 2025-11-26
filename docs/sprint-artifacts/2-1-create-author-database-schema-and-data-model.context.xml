@@ -1,0 +1,240 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>1</storyId>
+    <title>Create Author Database Schema and Data Model</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-23</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-1-create-author-database-schema-and-data-model.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform architect</asA>
+    <iWant>to establish the author data model with audit trail support</iWant>
+    <soThat>publishers can manage author information securely</soThat>
+    <tasks>
+- Create authors schema file (AC: 1-2, 20-21, 25)
+- Add foreign key and constraints (AC: 3, 22)
+- Create indexes (AC: 4-7)
+- Enable Row-Level Security (AC: 8-9)
+- Export schema and TypeScript types (AC: 10-11, 26)
+- Generate and apply migration (AC: 12-17, 27-29)
+- Document and validate (AC: 18-19, 23-24, 25)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Create `authors` table schema file at `src/db/schema/authors.ts` with Drizzle ORM
+2. Table includes all fields from architecture.md specification: id (UUID, PK), tenant_id (UUID, FK), name (text, NOT NULL), email (text, nullable), phone (text, nullable), address (text, nullable), tax_id (text, nullable, encrypted), payment_method (text, nullable), is_active (boolean, NOT NULL, default true), created_at (timestamp with timezone), updated_at (timestamp with timezone)
+3. Foreign key constraint on `tenant_id` references `tenants.id` with ON DELETE CASCADE
+4. Index created on `tenant_id` column for query performance
+5. Index created on `email` column for search functionality
+6. Index created on `is_active` column for filtering active/inactive authors
+7. Composite index on `(tenant_id, is_active)` for efficient tenant-scoped active author queries
+8. Row-Level Security (RLS) policy enabled on `authors` table using PostgreSQL ALTER TABLE statement
+9. RLS policy enforces `tenant_id = current_setting('app.current_tenant_id')::uuid` filter
+10. Schema exports `authors` table definition for import in queries and actions
+11. Schema includes TypeScript type inference via `typeof authors.$inferSelect` for use in application code
+12. Migration generated using Drizzle Kit: `npm run db:generate`
+13. Migration file created in `drizzle/migrations/` directory with timestamp prefix
+14. Migration applied to database using: `npm run db:migrate` or `npm run db:push` for development
+15. Verify migration success: `authors` table exists in database with all columns
+16. Verify indexes created: Query `pg_indexes` WHERE tablename = 'authors'
+17. Verify RLS policy enabled: Query `pg_policies` WHERE tablename = 'authors'
+18. Soft delete supported via `is_active` flag (authors not physically deleted, set is_active=false)
+19. Tax ID field uses PostgreSQL pgcrypto extension for column-level encryption (if available) or app-level encryption (deferred to Story 2.2)
+20. Schema follows architectural naming conventions: snake_case columns, camelCase TypeScript types
+21. All timestamp fields use `withTimezone: true` to store UTC timestamps
+22. Payment method validation enforced at database level using CHECK constraint or application-level Zod schema
+23. Email field supports null but if provided must be valid email format (enforced at application layer via Zod, AC verified in Story 2.2)
+24. No duplicate constraints on email (multiple authors can have same email if representing same person across tenants)
+25. Schema file includes comments documenting field purposes and constraints
+26. Export schema in `src/db/schema/index.ts` for centralized schema imports
+27. Build passes after schema creation: `npm run build` succeeds
+28. TypeScript compilation passes: No type errors related to authors schema
+29. Database connection successful: Schema can be imported and used in Server Actions without errors
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown - Epic 2: Author & Title Catalog Management</title>
+        <section>Story 2.1: Create Author Database Schema and Data Model</section>
+        <snippet>Establish the author data model with audit trail support for managing author information securely. Covers FR9-13 (author profiles, tax ID, audit trail, update support).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Authors Table Schema</title>
+        <section>Database Schema - Authors Table</section>
+        <snippet>Authors table: id, tenant_id, name, email, phone, address, tax_id (encrypted), payment_method, is_active, created_at, updated_at. Multi-tenant isolation via RLS.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Multi-Tenant Row-Level Security Pattern</title>
+        <section>Pattern 2: Multi-Tenant Row-Level Security</section>
+        <snippet>Three-layer defense: Application-level (WHERE tenant_id filter), ORM wrapper (auto-inject tenant_id), Database RLS (enforce boundary via policy). Critical for data isolation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements - Author Management (FR9-FR13)</title>
+        <section>Functional Requirements: Author Management</section>
+        <snippet>FR9: Create author profiles with contact info. FR10: Record tax IDs for 1099 reporting. FR11: Update author information. FR12: Author portal login. FR13: Complete history for audit.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic 1 Tech Spec - Multi-Tenant Patterns</title>
+        <section>Data Models and Contracts - Multi-Tenant Infrastructure</section>
+        <snippet>Established patterns for tenant_id foreign keys, RLS policies, and soft delete via is_active flags. All tables reference tenants.id with cascade delete.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/1-2-set-up-database-schema-and-multi-tenant-infrastructure.md</path>
+        <title>Story 1.2 - Database Schema & Multi-Tenant Setup</title>
+        <section>Reference Story - Foundation Patterns</section>
+        <snippet>Created tenants and users tables with RLS. Established Drizzle migration workflow (db:generate, db:push). Index patterns and foreign key cascades proven working.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/db/schema/tenants.ts</path>
+        <kind>schema</kind>
+        <symbol>tenants</symbol>
+        <lines>all</lines>
+        <reason>Foreign key reference - authors.tenant_id must reference tenants.id. Pattern established for multi-tenant tables.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/users.ts</path>
+        <kind>schema</kind>
+        <symbol>users</symbol>
+        <lines>all</lines>
+        <reason>Reference pattern for tenant_id foreign key, RLS policy structure, is_active soft delete, and timestamp fields. Similar table structure.</reason>
+      </file>
+      <file>
+        <path>src/db/index.ts</path>
+        <kind>database-config</kind>
+        <symbol>db</symbol>
+        <lines>all</lines>
+        <reason>Database connection and Drizzle client configuration. Authors schema must be exported here for use in Server Actions.</reason>
+      </file>
+      <file>
+        <path>drizzle.config.ts</path>
+        <kind>config</kind>
+        <symbol>drizzleConfig</symbol>
+        <lines>all</lines>
+        <reason>Drizzle Kit configuration for migrations. Schema directory, output directory, and database connection settings.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.36.4</version>
+        <usage>ORM for schema definition, query building, type inference</usage>
+      </node>
+      <node>
+        <package>@neondatabase/serverless</package>
+        <version>^0.10.3</version>
+        <usage>PostgreSQL driver for Neon serverless database</usage>
+      </node>
+      <node>
+        <package>drizzle-kit</package>
+        <version>^0.29.1</version>
+        <usage>Migration generation and schema management tool</usage>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^3.24.1</version>
+        <usage>Schema validation for author input data (deferred to Story 2.2)</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- MUST follow multi-tenant isolation pattern: tenant_id foreign key + RLS policy on every table
+- MUST use soft delete (is_active=false) instead of physical DELETE operations
+- MUST create indexes on tenant_id, email, is_active, and composite (tenant_id, is_active)
+- MUST enable Row-Level Security with tenant isolation policy
+- MUST use snake_case for database columns, camelCase for TypeScript types
+- MUST store timestamps with timezone (UTC) using withTimezone: true
+- MUST use uuid().defaultRandom() for primary key generation
+- MUST cascade delete (onDelete: 'cascade') for tenant_id foreign key
+- MUST export TypeScript types using $inferSelect and $inferInsert
+- Tax ID encryption deferred to Story 2.2 (create column as TEXT, implement encryption in Server Actions)
+- Payment method validation deferred to Zod schema (Story 2.2) - no database CHECK constraint
+- DO NOT modify existing tenants or users tables
+- DO NOT create Server Actions or UI components in this story (database schema only)
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>authors table schema</name>
+      <kind>Drizzle ORM pgTable</kind>
+      <signature>
+export const authors = pgTable('authors', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  email: text('email'),
+  phone: text('phone'),
+  address: text('address'),
+  tax_id: text('tax_id'),
+  payment_method: text('payment_method'),
+  is_active: boolean('is_active').notNull().default(true),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  tenantIdIdx: index('authors_tenant_id_idx').on(table.tenant_id),
+  emailIdx: index('authors_email_idx').on(table.email),
+  isActiveIdx: index('authors_is_active_idx').on(table.is_active),
+  tenantActiveIdx: index('authors_tenant_active_idx').on(table.tenant_id, table.is_active),
+}))
+      </signature>
+      <path>src/db/schema/authors.ts</path>
+    </interface>
+    <interface>
+      <name>Author TypeScript type</name>
+      <kind>TypeScript type (inferred)</kind>
+      <signature>
+export type Author = typeof authors.$inferSelect
+export type InsertAuthor = typeof authors.$inferInsert
+      </signature>
+      <path>src/db/schema/authors.ts</path>
+    </interface>
+    <interface>
+      <name>RLS Policy SQL</name>
+      <kind>PostgreSQL Policy</kind>
+      <signature>
+-- Enable RLS on authors table
+ALTER TABLE authors ENABLE ROW LEVEL SECURITY;
+
+-- Create tenant isolation policy
+CREATE POLICY tenant_isolation_policy ON authors
+  USING (tenant_id = current_setting('app.current_tenant_id')::uuid);
+      </signature>
+      <path>Manual SQL execution or migration file</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+Database schema testing: Use Drizzle Studio to visually verify table creation, indexes, and foreign keys. Verify RLS policies using pg_policies system catalog. Run build and type-check to validate TypeScript type inference. Test migration rollback capability if supported.
+    </standards>
+    <locations>
+- drizzle/migrations/ - Generated SQL migration files
+- src/db/schema/ - Schema definition files
+- Drizzle Studio - Visual database inspection (npm run db:studio)
+    </locations>
+    <ideas>
+- AC1-2: Verify authors table created with all 12 columns matching architecture.md specification
+- AC3: Test foreign key constraint - attempt to insert author with non-existent tenant_id, expect failure
+- AC4-7: Query pg_indexes WHERE tablename='authors' to verify 4 indexes created
+- AC8-9: Query pg_policies WHERE tablename='authors' to verify RLS policy exists and matches tenant isolation pattern
+- AC12-14: Run npm run db:generate, verify migration file created with CREATE TABLE statement
+- AC15: After migration, query database to verify table exists with correct schema
+- AC18: Test soft delete - set is_active=false, verify record still exists in table
+- AC20-21: Run npx tsc --noEmit to verify snake_case columns and TypeScript types compile correctly
+- AC27-29: Run npm run build, verify no TypeScript errors related to authors schema
+- Integration test: Import authors schema in test file, verify db.query.authors works without runtime errors
+    </ideas>
+  </tests>
+</story-context>

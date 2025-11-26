@@ -15,7 +15,9 @@ export const users = pgTable(
     tenant_id: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
-    clerk_user_id: text("clerk_user_id").notNull().unique(),
+    // Nullable to support pre-created portal users awaiting invitation acceptance
+    // Story 2.3: Author portal users are created with clerk_user_id=null, then updated via webhook
+    clerk_user_id: text("clerk_user_id").unique(),
     email: text("email").notNull(),
     role: text("role", {
       enum: ["owner", "admin", "editor", "finance", "author"],

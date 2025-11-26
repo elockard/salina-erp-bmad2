@@ -1,0 +1,284 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>5</storyId>
+    <title>Implement Role-Based Access Control (RBAC) System</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-23</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-5-implement-role-based-access-control-rbac-system.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>system architect</asA>
+    <iWant>to enforce role-based permissions on all operations</iWant>
+    <soThat>users can only access features appropriate to their role</soThat>
+    <tasks>
+- Create permission checking infrastructure (auth.ts types, UserRole, User interface)
+- Implement getCurrentUser() function (already exists, may need enhancement)
+- Implement hasPermission() function
+- Implement requirePermission() function
+- Create React hook useHasPermission() for client-side permission checks
+- Add permission checks to existing Server Actions from Story 1.4
+- Implement audit logging for permission denials
+- Create permission matrix helper (src/lib/permissions.ts)
+- Create UI component PermissionGate for permission-based rendering
+- Add permission checks to placeholder UI components
+- Create unit tests for permission functions
+- Create integration tests for permission enforcement
+- Create E2E tests for RBAC system
+- Update documentation with JSDoc comments and usage examples
+- Final validation and testing
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Permission checking middleware is created in `src/lib/auth.ts` per architecture.md pattern with functions: `getCurrentUser()`, `hasPermission(roles)`, and `requirePermission(roles)`
+2. Permission helper functions are accessible to all Server Actions for authorization checks
+3. All existing Server Actions (tenant registration, subdomain validation from Story 1.4) include permission checks before execution
+4. Role definitions are enforced per PRD specifications: Owner (full access), Admin (user mgmt, data, settings), Editor (authors, titles, ISBN, sales), Finance (returns, royalties, statements), Author (own statements only)
+5. Permission matrix is implemented and enforced with 8 action types mapped to 5 roles
+6. `getCurrentUser()` function retrieves current user from Clerk authentication with tenant context
+7. `getCurrentUser()` returns user object with role, email, tenant_id, and is_active fields
+8. `hasPermission(roles)` function accepts array of permitted roles and returns boolean
+9. `requirePermission(roles)` function throws error with 403 status if user lacks permission
+10. Server Actions return standardized error for permission denial: `{ success: false, error: "Unauthorized" }`
+11. Permission denied errors are logged to audit trail with user ID, attempted action, and timestamp
+12. UI components can check permissions client-side using `useHasPermission(roles)` React hook
+13. React hook `useHasPermission(roles)` calls server to verify permissions and caches result
+14. UI elements (buttons, menu items, page sections) are hidden or disabled based on user role
+15. Automated tests verify permission enforcement for each role (Owner, Admin, Editor, Finance, Author)
+16. Permission check integration tests cover: (1) authorized access succeeds, (2) unauthorized access returns 403
+17. Unit tests cover: `getCurrentUser()`, `hasPermission()`, `requirePermission()` edge cases
+18. Documentation in code comments explains permission model and role hierarchy
+19. Error messages for permission denials are user-friendly: "You don't have permission to perform this action"
+20. Permission checks happen BEFORE any database operations to prevent unauthorized data access
+21. Failed permission checks return HTTP 403 Forbidden (not 404 Not Found to avoid information disclosure)
+22. All permission helper functions handle missing authentication gracefully (return null or false)
+23. Permission system supports future role expansion without breaking existing checks
+24. Role definitions are stored as TypeScript union type: `type UserRole = 'owner' | 'admin' | 'editor' | 'finance' | 'author'`
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Security & Authorization</section>
+        <snippet>RBAC (Owner/Admin/Editor/Finance/Author) enforced at Server Action level before database access. Permission checks via getCurrentUser(), hasPermission(), requirePermission() functions. Defense-in-depth with application-level RBAC + database RLS.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Permission Enforcement</section>
+        <snippet>All Server Actions check permissions FIRST using requirePermission(). Return 403 Forbidden for unauthorized access. Log all permission denials for audit. Client-side UI uses hooks for UX only, server enforces security.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Salina ERP - Product Requirements Document</title>
+        <section>FR4: Role Assignment</section>
+        <snippet>Administrators can assign roles to users (Owner, Admin, Editor, Finance, Author). Five distinct roles with different permission scopes defined.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Salina ERP - Product Requirements Document</title>
+        <section>FR78: Permission Enforcement</section>
+        <snippet>System enforces role-based permissions on all operations. Users cannot access functions outside their assigned role scope.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Salina ERP - Product Requirements Document</title>
+        <section>Permissions & Roles</section>
+        <snippet>Owner Role: Full access, billing, tenant deletion. Admin Role: User management, all data, settings (no billing/delete). Editor: Authors, titles, ISBN, sales entry. Finance: Return approval, royalty calculations, statements. Author: Own statements only.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics for Salina ERP</title>
+        <section>Story 1.5: Implement Role-Based Access Control (RBAC) System</section>
+        <snippet>Create permission checking middleware in lib/auth.ts. Implement permission matrix for 5 roles and 8 action types. Create React hooks for client-side permission checks. Add comprehensive tests.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentUser</symbol>
+        <lines>44-63</lines>
+        <reason>Already implements getCurrentUser() function - uses Clerk authentication, queries database for user with role. May need enhancement to add hasPermission/requirePermission functions for RBAC.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>checkPermission</symbol>
+        <lines>70-80</lines>
+        <reason>Already implements basic checkPermission(allowedRoles) - needs to be renamed to hasPermission() and requirePermission() wrapper added per AC requirements.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentTenantId</symbol>
+        <lines>12-21</lines>
+        <reason>Utility function for tenant context extraction from headers. Used by permission checking functions to ensure tenant isolation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getDb</symbol>
+        <lines>28-37</lines>
+        <reason>Authenticated database connection using Clerk JWT for RLS enforcement. Required by getCurrentUser() to query users table securely.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/users.ts</path>
+        <kind>schema</kind>
+        <symbol>users</symbol>
+        <lines>11-31</lines>
+        <reason>Database schema defines users table with role column (enum: owner, admin, editor, finance, author) and is_active flag. Foundation for RBAC system.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/types.ts</path>
+        <kind>type</kind>
+        <symbol>ActionResult</symbol>
+        <lines>1-3</lines>
+        <reason>Standard Server Action response type. Permission denied errors should return { success: false, error: "Unauthorized" } per this pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/tenant/actions.ts</path>
+        <kind>server-action</kind>
+        <symbol>registerTenant</symbol>
+        <lines>all</lines>
+        <reason>Existing Server Action from Story 1.4. Public registration action (no permission check needed), but good reference for ActionResult pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/tenant/actions.ts</path>
+        <kind>server-action</kind>
+        <symbol>checkSubdomainAvailability</symbol>
+        <lines>all</lines>
+        <reason>Existing Server Action from Story 1.4. Public action for subdomain validation (no permission check needed), demonstrates Server Action patterns.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@clerk/nextjs</package>
+        <version>^6.35.4</version>
+        <reason>Clerk authentication provider - currentUser() and auth() functions used to get authenticated user for permission checks</reason>
+      </node>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <reason>Database ORM for querying users table to get user role and permissions</reason>
+      </node>
+      <node>
+        <package>react</package>
+        <version>^19.2.0</version>
+        <reason>React framework for useHasPermission hook and PermissionGate component</reason>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.12</version>
+        <reason>Schema validation for permission-related inputs (role types, permission arrays)</reason>
+      </node>
+      <node>
+        <package>@playwright/test</package>
+        <version>^1.56.1</version>
+        <reason>E2E testing framework for RBAC system tests (5 role-based access scenarios)</reason>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Defense-in-depth security: Server-side permission checks are PRIMARY enforcement, client-side UI control is UX enhancement only
+- All Server Actions MUST check permissions BEFORE executing business logic (fail fast pattern)
+- Permission denied errors return HTTP 403 Forbidden (not 404 to avoid information disclosure)
+- User-friendly error messages required: "You don't have permission to perform this action" (not technical details)
+- Permission checks must handle unauthenticated users gracefully (return null/false, not throw exceptions)
+- TypeScript union type for UserRole ensures compile-time role validation
+- Audit logging required for all permission denials (userId, action, timestamp)
+- Row-Level Security (RLS) from Story 1.2 complements RBAC (database-level + application-level isolation)
+- Permission system must support future role expansion without breaking existing checks
+- Existing getCurrentUser() and checkPermission() functions already implemented - extend rather than replace
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>getCurrentUser</name>
+      <kind>async function</kind>
+      <signature>async function getCurrentUser(): Promise&lt;User | null&gt;</signature>
+      <path>src/lib/auth.ts</path>
+      <description>Already implemented. Returns authenticated user with role from database, or null if not authenticated.</description>
+    </interface>
+    <interface>
+      <name>hasPermission (rename from checkPermission)</name>
+      <kind>async function</kind>
+      <signature>async function hasPermission(allowedRoles: UserRole[]): Promise&lt;boolean&gt;</signature>
+      <path>src/lib/auth.ts</path>
+      <description>Check if current user has one of the allowed roles. Returns boolean. Already exists as checkPermission() - needs rename to hasPermission().</description>
+    </interface>
+    <interface>
+      <name>requirePermission</name>
+      <kind>async function</kind>
+      <signature>async function requirePermission(allowedRoles: UserRole[]): Promise&lt;void&gt;</signature>
+      <path>src/lib/auth.ts</path>
+      <description>NEW FUNCTION. Wrapper for hasPermission() that throws Error('UNAUTHORIZED') if permission check fails. For use at start of Server Actions.</description>
+    </interface>
+    <interface>
+      <name>useHasPermission</name>
+      <kind>React hook</kind>
+      <signature>function useHasPermission(allowedRoles: UserRole[]): boolean</signature>
+      <path>src/lib/hooks/useHasPermission.ts</path>
+      <description>NEW HOOK. Client-side React hook that calls Server Action to verify permissions and caches result. Returns boolean for conditional UI rendering.</description>
+    </interface>
+    <interface>
+      <name>PermissionGate</name>
+      <kind>React component</kind>
+      <signature>function PermissionGate({ allowedRoles, fallback?, children }: PermissionGateProps): ReactNode</signature>
+      <path>src/components/PermissionGate.tsx</path>
+      <description>NEW COMPONENT. Wraps children and only renders if user has permission (uses useHasPermission hook). Renders fallback (or null) if unauthorized.</description>
+    </interface>
+    <interface>
+      <name>ActionResult</name>
+      <kind>TypeScript type</kind>
+      <signature>type ActionResult&lt;T&gt; = { success: true; data: T } | { success: false; error: string; fields?: Record&lt;string, string&gt; }</signature>
+      <path>src/lib/types.ts</path>
+      <description>Standard Server Action response type. Permission denials return { success: false, error: "Unauthorized" }.</description>
+    </interface>
+    <interface>
+      <name>UserRole</name>
+      <kind>TypeScript type</kind>
+      <signature>type UserRole = 'owner' | 'admin' | 'editor' | 'finance' | 'author'</signature>
+      <path>src/db/schema (exported from db/schema/index.ts)</path>
+      <description>Already defined in database schema. May need to export from src/lib/auth.ts for use in permission functions.</description>
+    </interface>
+    <interface>
+      <name>Permission Matrix Constants</name>
+      <kind>exported constants</kind>
+      <signature>export const MANAGE_USERS: UserRole[] = ['owner', 'admin']</signature>
+      <path>src/lib/permissions.ts</path>
+      <description>NEW FILE. 8 permission constants mapping actions to allowed roles: MANAGE_USERS, MANAGE_SETTINGS, CREATE_AUTHORS_TITLES, RECORD_SALES, APPROVE_RETURNS, CALCULATE_ROYALTIES, VIEW_OWN_STATEMENTS, VIEW_ALL_STATEMENTS</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+Follow existing test patterns from Story 1.4. Use Playwright for E2E tests (tests/e2e/rbac.spec.ts). Mock Clerk authentication and database for deterministic testing. Test all 5 roles (Owner, Admin, Editor, Finance, Author) across permission matrix. Verify both positive (authorized) and negative (403 denied) test cases. Unit tests should cover edge cases: missing user, inactive user, empty roles array, invalid role values.
+    </standards>
+    <locations>
+- tests/unit/auth.test.ts (unit tests for permission functions)
+- tests/integration/permissions.test.ts (integration tests for Server Action permission enforcement)
+- tests/e2e/rbac.spec.ts (end-to-end tests for role-based UI access and data isolation)
+    </locations>
+    <ideas>
+- AC1-2: Unit test getCurrentUser() returns user with role field, hasPermission() checks role match
+- AC3: Integration test Server Action with requirePermission() throws on unauthorized access
+- AC5: Unit test permission matrix constants contain correct role arrays for each action
+- AC8-9: Unit test hasPermission() returns boolean, requirePermission() throws UNAUTHORIZED error
+- AC10: Integration test Server Action returns { success: false, error: "Unauthorized" } format
+- AC11: Unit test requirePermission() logs permission denial with userId, action, timestamp
+- AC12-14: E2E test PermissionGate hides UI elements for unauthorized roles
+- AC15-16: E2E test 5 roles (Owner, Admin, Editor, Finance, Author) with positive and negative cases
+- AC17: Unit test edge cases: null user, inactive user, empty allowedRoles array
+- AC20-21: Integration test permission checks occur BEFORE database operations, return 403 not 404
+- AC22: Unit test permission functions handle missing authentication without exceptions
+- AC24: Unit test UserRole type validation at compile time
+    </ideas>
+  </tests>
+</story-context>

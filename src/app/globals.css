@@ -2,8 +2,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@tailwind base;
-@tailwind components;
+@import "tailwindcss/preflight";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
 @tailwind utilities;
 
 @theme inline {
@@ -61,7 +62,7 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.62 0.08 50); /* #c17d4a Warm Bronze */
   --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.50 0.20 27); /* #b91c1c Deep Red */
+  --destructive: oklch(0.5 0.2 27); /* #b91c1c Deep Red */
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.52 0.04 240); /* Slate Blue for focus rings */

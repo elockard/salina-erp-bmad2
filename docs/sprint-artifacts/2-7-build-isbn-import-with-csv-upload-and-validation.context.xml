@@ -1,0 +1,250 @@
+<story-context id="2-7-build-isbn-import-with-csv-upload-and-validation" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>7</storyId>
+    <title>Build ISBN Import with CSV Upload and Validation</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-7-build-isbn-import-with-csv-upload-and-validation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>publisher administrator</asA>
+    <iWant>to import ISBNs from a CSV file with validation</iWant>
+    <soThat>I can efficiently add ISBN blocks to my inventory pool</soThat>
+    <tasks>
+      <task id="1" ac="1">Create ISBN import page route and layout
+        <subtask>Create src/app/(dashboard)/settings/isbn-import/page.tsx</subtask>
+        <subtask>Add permission check using requirePermission('MANAGE_SETTINGS')</subtask>
+        <subtask>Create page header with title and description</subtask>
+        <subtask>Add breadcrumb navigation (Settings > ISBN Import)</subtask>
+      </task>
+      <task id="2" ac="5">Implement ISBN-13 checksum validation utility
+        <subtask>Create src/modules/isbn/utils.ts with validation functions</subtask>
+        <subtask>Implement normalizeIsbn13(isbn: string): string - strips hyphens/spaces</subtask>
+        <subtask>Implement validateIsbn13Checksum(isbn: string): boolean - ISBN-13 checksum algorithm</subtask>
+        <subtask>Implement validateIsbn13(isbn: string): { valid: boolean; error?: string } - full validation</subtask>
+        <subtask>Write unit tests for checksum validation with known valid/invalid ISBNs</subtask>
+      </task>
+      <task id="3" ac="2,3,4">Build CSV upload component
+        <subtask>Create src/modules/isbn/components/isbn-import-form.tsx</subtask>
+        <subtask>Add file input with drag-and-drop zone (using shadcn/ui)</subtask>
+        <subtask>Add ISBN type radio group (Physical / Ebook)</subtask>
+        <subtask>Implement file validation (size, type, row count)</subtask>
+        <subtask>Integrate papaparse for CSV parsing</subtask>
+        <subtask>Display preview table with first rows</subtask>
+      </task>
+      <task id="4" ac="5,6,7">Implement client-side validation with error display
+        <subtask>Validate each ISBN row using validateIsbn13()</subtask>
+        <subtask>Detect duplicates within file</subtask>
+        <subtask>Build error list with row numbers and reasons</subtask>
+        <subtask>Display inline validation errors component</subtask>
+        <subtask>Show summary: "X of Y ISBNs valid" or error count</subtask>
+      </task>
+      <task id="5" ac="6,8">Create Server Action for ISBN import
+        <subtask>Create importISBNs action in src/modules/isbn/actions.ts</subtask>
+        <subtask>Add permission check: requirePermission('MANAGE_SETTINGS')</subtask>
+        <subtask>Server-side validation (re-validate all ISBNs)</subtask>
+        <subtask>Query database for existing ISBNs (duplicate check)</subtask>
+        <subtask>Use transaction for atomic bulk insert</subtask>
+        <subtask>Return ActionResult&lt;ISBNImportResult&gt;</subtask>
+      </task>
+      <task id="6" ac="9">Implement success handling and navigation
+        <subtask>Display success toast with count</subtask>
+        <subtask>Show import summary modal/card</subtask>
+        <subtask>Implement redirect to /isbn-pool</subtask>
+        <subtask>Handle edge cases (empty file, all duplicates)</subtask>
+      </task>
+      <task id="7" ac="1-9">Write tests
+        <subtask>Unit tests: ISBN-13 checksum validation (valid/invalid cases)</subtask>
+        <subtask>Unit tests: CSV parsing and validation</subtask>
+        <subtask>Integration tests: importISBNs Server Action</subtask>
+        <subtask>E2E test: Full import flow (upload, validate, import, redirect)</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Import page accessible at /settings/isbn-import route with permission check (MANAGE_SETTINGS: owner, admin only)</criterion>
+    <criterion id="AC2">File upload component accepts CSV files only (max 1MB, max 100 rows, MIME validation, drag-and-drop support)</criterion>
+    <criterion id="AC3">ISBN type selection required before import (Physical or Ebook radio buttons, no default)</criterion>
+    <criterion id="AC4">CSV parsing with preview display (papaparse, first 5-10 rows, total count, single-column CSV)</criterion>
+    <criterion id="AC5">Each ISBN validated with ISBN-13 checksum algorithm (13 digits, 978/979 prefix, checksum validation, normalize hyphens/spaces)</criterion>
+    <criterion id="AC6">Duplicate detection within file and database (global uniqueness across all tenants, report row numbers, block import)</criterion>
+    <criterion id="AC7">Validation errors displayed inline with row context (row number, invalid value, specific error reason, summary count)</criterion>
+    <criterion id="AC8">Transaction ensures all-or-nothing import (atomic INSERT, status='available', tenant_id from session)</criterion>
+    <criterion id="AC9">Success feedback and navigation (toast notification, import summary, redirect to /isbn-pool)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Story 2.7: ISBN Import (AC2.7.1-7)</section>
+        <snippet>Story 2.7 acceptance criteria, ISBN Server Actions signatures, ISBN Import Flow diagram, ISBNs table schema, and ISBN-13 checksum algorithm reference.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Implementation Patterns</section>
+        <snippet>Server Actions pattern with ActionResult&lt;T&gt;, permission enforcement with requirePermission(), multi-tenant context via getCurrentTenantId(), Zod + React Hook Form pattern, and transaction pattern for atomic operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/2-6-create-isbn-pool-database-schema-and-tracking.md</path>
+        <title>Story 2.6 (Predecessor)</title>
+        <section>Dev Agent Record</section>
+        <snippet>Schema established in src/db/schema/isbns.ts, Zod schemas in src/modules/isbn/schema.ts (batchImportIsbnSchema), types in src/modules/isbn/types.ts (ISBNImportResult). Format validation exists but checksum validation must be added.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/modules/isbn/schema.ts</path>
+        <kind>validation</kind>
+        <symbol>isbn13Schema, batchImportIsbnSchema, createIsbnSchema</symbol>
+        <lines>1-100</lines>
+        <reason>Existing Zod schemas for ISBN validation. isbn13Schema validates format (978/979 prefix) but NOT checksum - must add checksum validation utility. batchImportIsbnSchema validates array structure.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/isbn/types.ts</path>
+        <kind>types</kind>
+        <symbol>ISBNImportResult, ISBNType, ISBNStatus</symbol>
+        <lines>58-70</lines>
+        <reason>ISBNImportResult type defined with imported/duplicates/errors counts and errorDetails array. Use this as return type for importISBNs action.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/isbns.ts</path>
+        <kind>schema</kind>
+        <symbol>isbns, NewISBN, ISBN</symbol>
+        <lines>65-146</lines>
+        <reason>Database schema for isbns table. isbn_13 has global unique constraint. NewISBN type for INSERT operations. Status defaults to 'available'.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/permissions.ts</path>
+        <kind>constants</kind>
+        <symbol>MANAGE_SETTINGS</symbol>
+        <lines>13</lines>
+        <reason>MANAGE_SETTINGS permission array: ["owner", "admin"]. Use with requirePermission() for import page and action.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>service</kind>
+        <symbol>requirePermission, getCurrentTenantId, getDb, getCurrentUser</symbol>
+        <lines>110-128</lines>
+        <reason>Auth utilities. requirePermission() throws "UNAUTHORIZED" error. getCurrentTenantId() gets tenant from headers. getDb() returns authenticated Drizzle client.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(dashboard)/settings/page.tsx</path>
+        <kind>page</kind>
+        <symbol>TenantSettingsPage</symbol>
+        <lines>1-14</lines>
+        <reason>Pattern for settings page with permission check. Shows async Server Component calling requirePermission(MANAGE_SETTINGS) at top level.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/unit/isbn-schema.test.ts</path>
+        <kind>test</kind>
+        <symbol>isbn13Schema tests, batchImportIsbnSchema tests</symbol>
+        <lines>158-379</lines>
+        <reason>Existing unit tests for ISBN Zod schemas using vitest. Follow this pattern for new checksum validation tests.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <ecosystem name="node">
+        <package name="papaparse" required="true" installed="false">CSV parsing library for client-side preview. Must install: npm install papaparse @types/papaparse</package>
+        <package name="zod" version="^4.1.12" installed="true">Schema validation for form and server-side validation</package>
+        <package name="react-hook-form" version="^7.66.1" installed="true">Form state management</package>
+        <package name="@hookform/resolvers" version="^5.2.2" installed="true">Zod integration with react-hook-form</package>
+        <package name="drizzle-orm" version="^0.44.7" installed="true">Database ORM with transaction support</package>
+        <package name="sonner" version="2.0.7" installed="true">Toast notifications</package>
+      </ecosystem>
+      <ecosystem name="shadcn-ui">
+        <component name="Button" installed="true">Form submit button</component>
+        <component name="Input" installed="true">File input (hidden)</component>
+        <component name="RadioGroup" installed="true">ISBN type selection</component>
+        <component name="Table" installed="true">Preview display</component>
+        <component name="Card" installed="true">Form container</component>
+        <component name="Badge" installed="true">Error/success indicators</component>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md" type="pattern">Server Actions must use "use server" directive, check permissions before DB operations, return ActionResult&lt;T&gt; type</constraint>
+    <constraint source="architecture.md" type="pattern">All database queries must include tenant_id filter (getCurrentTenantId())</constraint>
+    <constraint source="architecture.md" type="pattern">Use Drizzle transaction for multi-step atomic operations</constraint>
+    <constraint source="tech-spec-epic-2.md" type="security">File size limit: 1MB, max rows: 100, MIME type: text/csv</constraint>
+    <constraint source="tech-spec-epic-2.md" type="security">Server-side re-validation required (never trust client)</constraint>
+    <constraint source="tech-spec-epic-2.md" type="business">ISBN-13 must validate checksum per international standard</constraint>
+    <constraint source="db/schema/isbns.ts" type="database">isbn_13 has global unique constraint across all tenants</constraint>
+    <constraint source="story" type="validation">All-or-nothing import: if any ISBN fails validation, no ISBNs imported</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>requirePermission</name>
+      <kind>function</kind>
+      <signature>async function requirePermission(allowedRoles: UserRole[]): Promise&lt;void&gt;</signature>
+      <path>src/lib/auth.ts</path>
+    </interface>
+    <interface>
+      <name>getCurrentTenantId</name>
+      <kind>function</kind>
+      <signature>async function getCurrentTenantId(): Promise&lt;string&gt;</signature>
+      <path>src/lib/auth.ts</path>
+    </interface>
+    <interface>
+      <name>getDb</name>
+      <kind>function</kind>
+      <signature>async function getDb(): Promise&lt;DrizzleClient&gt;</signature>
+      <path>src/lib/auth.ts</path>
+    </interface>
+    <interface>
+      <name>ActionResult</name>
+      <kind>type</kind>
+      <signature>type ActionResult&lt;T&gt; = { success: true; data: T } | { success: false; error: string; fields?: Record&lt;string, string&gt; }</signature>
+      <path>src/lib/types.ts</path>
+    </interface>
+    <interface>
+      <name>ISBNImportResult</name>
+      <kind>type</kind>
+      <signature>interface ISBNImportResult { imported: number; duplicates: number; errors: number; errorDetails: Array&lt;{ isbn_13: string; error: string }&gt; }</signature>
+      <path>src/modules/isbn/types.ts</path>
+    </interface>
+    <interface>
+      <name>NewISBN</name>
+      <kind>type</kind>
+      <signature>type NewISBN = typeof isbns.$inferInsert</signature>
+      <path>src/db/schema/isbns.ts</path>
+    </interface>
+    <interface>
+      <name>MANAGE_SETTINGS</name>
+      <kind>constant</kind>
+      <signature>const MANAGE_SETTINGS: UserRole[] = ["owner", "admin"]</signature>
+      <path>src/lib/permissions.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests use vitest with describe/it blocks. Test files in tests/unit/ with .test.ts extension. Integration tests in tests/integration/ for Server Actions with mocked auth. E2E tests use Playwright in tests/e2e/ with .spec.ts extension. Follow existing patterns in tests/unit/isbn-schema.test.ts for assertion style.
+    </standards>
+    <locations>
+      <location>tests/unit/*.test.ts</location>
+      <location>tests/integration/*.test.ts</location>
+      <location>tests/e2e/*.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="AC5">Unit test validateIsbn13Checksum() with known valid ISBNs: 9780306406157, 9780140449136, 9780201633610</idea>
+      <idea ac="AC5">Unit test validateIsbn13Checksum() with invalid checksums: 9780306406158 (wrong check digit)</idea>
+      <idea ac="AC5">Unit test normalizeIsbn13() strips hyphens, spaces correctly</idea>
+      <idea ac="AC6">Unit test duplicate detection within array of ISBNs</idea>
+      <idea ac="AC6">Integration test importISBNs returns duplicate error when ISBN exists in DB</idea>
+      <idea ac="AC8">Integration test importISBNs rolls back on partial failure (transaction atomicity)</idea>
+      <idea ac="AC1-9">E2E test full import flow: login as admin, navigate to /settings/isbn-import, upload valid CSV, select type, submit, verify redirect to /isbn-pool</idea>
+      <idea ac="AC7">E2E test error display: upload CSV with invalid ISBN, verify inline error shown with row number</idea>
+    </ideas>
+  </tests>
+</story-context>

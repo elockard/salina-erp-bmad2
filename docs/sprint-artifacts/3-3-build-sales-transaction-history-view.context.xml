@@ -1,0 +1,320 @@
+<story-context id="3-3-build-sales-transaction-history-view" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>3</storyId>
+    <title>Build Sales Transaction History View</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-25</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-3-build-sales-transaction-history-view.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to view and filter sales transaction history</iWant>
+    <soThat>I can verify recorded sales and analyze patterns</soThat>
+    <tasks>
+      <task id="1">Create sales queries for history view (getSalesWithFilters, getSalesStats, searchTitlesForFilter)</task>
+      <task id="2">Create sales Server Actions for history (getSalesHistoryAction, getSalesStatsAction, exportSalesCsvAction)</task>
+      <task id="3">Build stats cards component (sales-stats-cards.tsx)</task>
+      <task id="4">Build sales filters component (sales-filters.tsx)</task>
+      <task id="5">Build sales table component with TanStack Table (sales-table.tsx)</task>
+      <task id="6">Build transaction detail modal (transaction-detail-modal.tsx)</task>
+      <task id="7">Build CSV export functionality (csv-export.ts)</task>
+      <task id="8">Create sales history page (/sales/page.tsx)</task>
+      <task id="9">Add sales navigation and permissions</task>
+      <task id="10">Write unit tests for sales history</task>
+      <task id="11">Write E2E tests for sales history</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Sales history page accessible at /sales with header, subtitle, and Modular Dashboard Grid layout</criterion>
+    <criterion id="2">Stats cards at top: Total Sales This Month ($), Transactions This Month (count), Best Selling Title</criterion>
+    <criterion id="3">Transaction history table with columns: Date, Title, Format (badge), Quantity, Unit Price, Total Amount, Channel (badge), Recorded By</criterion>
+    <criterion id="4">Filter controls: Date range picker, Title search autocomplete, Format dropdown, Channel dropdown, Clear Filters button</criterion>
+    <criterion id="5">TanStack Table: Sortable columns (Date desc, Total Amount), Pagination (20/page), Row count display</criterion>
+    <criterion id="6">Transaction detail modal on row click: Full data, audit trail, related title info, immutability notice</criterion>
+    <criterion id="7">CSV export: Export button, filtered results, filename with date, streaming download</criterion>
+    <criterion id="8">Loading states (skeleton), empty state, error state with retry</criterion>
+    <criterion id="9">Permission enforcement: Owner/Admin/Editor/Finance access, Author redirected to portal</criterion>
+    <criterion id="10">Responsive design: Mobile (stacked cards, horizontal scroll), Tablet (2-col), Desktop (3-col)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Sales Transaction Management (FR24-29)</section>
+        <snippet>FR27: Users can view transaction history with filtering by date, title, format, channel. FR28: System records transaction metadata for audit. FR75: CSV export capability.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>TanStack Table Pattern</section>
+        <snippet>Use useReactTable with getCoreRowModel, getSortedRowModel, getPaginationRowModel. Define ColumnDef array with accessors and cell formatters.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Server Action Pattern</section>
+        <snippet>Server Actions with permission check, tenant context, Zod validation, paginated query building, and ActionResult return type.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 3.3</section>
+        <snippet>Build Sales Transaction History View - implements FR27 (view transaction history with filtering), FR28 (transaction metadata), FR75 (CSV export).</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/db/schema/sales.ts</path>
+        <kind>schema</kind>
+        <symbol>sales, salesChannelValues, salesFormatValues, Sale, InsertSale</symbol>
+        <reason>Sales table schema with enums for format/channel, CHECK constraints, indexes. Source of truth for sales data structure.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/schema.ts</path>
+        <kind>validation</kind>
+        <symbol>salesFilterSchema, SalesFilterInput</symbol>
+        <lines>108-117</lines>
+        <reason>Zod schema for filter validation with optional title_id, format, channel, start_date, end_date.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/actions.ts</path>
+        <kind>server-action</kind>
+        <symbol>searchTitlesAction, recordSale</symbol>
+        <reason>Existing sales Server Actions demonstrating permission checking, Zod validation, tenant context, and ActionResult pattern.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/queries.ts</path>
+        <kind>query</kind>
+        <symbol>searchTitlesForSales, getTitleForSale, getTenantTimezone</symbol>
+        <reason>Query patterns with tenant isolation, joins (titles, authors), and timezone retrieval for date formatting.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/types.ts</path>
+        <kind>types</kind>
+        <symbol>Sale, TitleForSalesSelect, SalesFormValues, SaleRecordResult</symbol>
+        <reason>TypeScript types for sales module. Extend with pagination types (PaginatedSales, SalesStats).</reason>
+      </file>
+      <file>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentUser, getCurrentTenantId, getDb, requirePermission</symbol>
+        <reason>Auth utilities for permission checking and tenant-scoped database access. Use requirePermission(RECORD_SALES).</reason>
+      </file>
+      <file>
+        <path>src/lib/permissions.ts</path>
+        <kind>constants</kind>
+        <symbol>RECORD_SALES, MANAGE_USERS</symbol>
+        <reason>Permission arrays by operation. RECORD_SALES = ["owner", "admin", "editor", "finance"].</reason>
+      </file>
+      <file>
+        <path>src/lib/types.ts</path>
+        <kind>types</kind>
+        <symbol>ActionResult</symbol>
+        <reason>Generic ActionResult type for Server Action returns: { success: true, data } | { success: false, error }.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/table.tsx</path>
+        <kind>component</kind>
+        <symbol>Table, TableHeader, TableBody, TableRow, TableCell</symbol>
+        <reason>shadcn/ui table primitives for building TanStack Table UI.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/badge.tsx</path>
+        <kind>component</kind>
+        <symbol>Badge</symbol>
+        <reason>Badge component for format (P/E/A) and channel display.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/calendar.tsx</path>
+        <kind>component</kind>
+        <symbol>Calendar</symbol>
+        <reason>Calendar component for date range picker filter.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/popover.tsx</path>
+        <kind>component</kind>
+        <symbol>Popover, PopoverTrigger, PopoverContent</symbol>
+        <reason>Popover for date picker and autocomplete dropdowns.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/dialog.tsx</path>
+        <kind>component</kind>
+        <symbol>Dialog, DialogContent, DialogHeader, DialogTitle</symbol>
+        <reason>Dialog component for transaction detail modal.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/skeleton.tsx</path>
+        <kind>component</kind>
+        <symbol>Skeleton</symbol>
+        <reason>Skeleton loader for loading states.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/select.tsx</path>
+        <kind>component</kind>
+        <symbol>Select, SelectTrigger, SelectContent, SelectItem</symbol>
+        <reason>Select component for format and channel filter dropdowns.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/card.tsx</path>
+        <kind>component</kind>
+        <symbol>Card, CardHeader, CardTitle, CardContent</symbol>
+        <reason>Card component for stats dashboard cards.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/components/title-autocomplete.tsx</path>
+        <kind>component</kind>
+        <symbol>TitleAutocomplete</symbol>
+        <reason>Existing autocomplete component pattern for title search filter.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/relations.ts</path>
+        <kind>relations</kind>
+        <symbol>salesRelations</symbol>
+        <reason>Sales relations with tenant, title, createdByUser for join queries.</reason>
+      </file>
+      <file>
+        <path>tests/e2e/sales-entry.spec.ts</path>
+        <kind>test</kind>
+        <symbol>E2E test patterns</symbol>
+        <reason>Existing E2E test patterns for sales. Extend for history view tests.</reason>
+      </file>
+      <file>
+        <path>tests/unit/sales-schema.test.ts</path>
+        <kind>test</kind>
+        <symbol>Unit test patterns</symbol>
+        <reason>Existing unit test patterns for sales validation. Extend for query/filter tests.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>@tanstack/react-query</package>
+        <version>^5.90.10</version>
+        <use>Data fetching and caching for sales queries</use>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>^4.1.0</version>
+        <use>Date formatting (format function for "MMM d, yyyy")</use>
+      </node>
+      <node>
+        <package>@date-fns/tz</package>
+        <version>1.4.1</version>
+        <use>Timezone-aware date formatting (toZonedTime)</use>
+      </node>
+      <node>
+        <package>decimal.js</package>
+        <version>^10.6.0</version>
+        <use>Currency calculations (never JavaScript arithmetic)</use>
+      </node>
+      <node>
+        <package>react-day-picker</package>
+        <version>9.11.2</version>
+        <use>Calendar component for date range picker</use>
+      </node>
+      <node>
+        <package>papaparse</package>
+        <version>5.5.3</version>
+        <use>CSV generation for export functionality</use>
+      </node>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <use>Database queries with tenant isolation</use>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.12</version>
+        <use>Filter schema validation</use>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Use TanStack Table 8.x with useReactTable hook, ColumnDef array, getCoreRowModel, getSortedRowModel, getPaginationRowModel</constraint>
+    <constraint type="pattern">All Server Actions must call requirePermission(RECORD_SALES) before query execution</constraint>
+    <constraint type="pattern">All queries must include tenant_id filter (via getCurrentTenantId) for RLS isolation</constraint>
+    <constraint type="currency">Use Decimal.js for all currency calculations - never JavaScript arithmetic</constraint>
+    <constraint type="date">Format dates using date-fns with tenant timezone (toZonedTime from @date-fns/tz)</constraint>
+    <constraint type="format">Currency: Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })</constraint>
+    <constraint type="structure">Components in src/modules/sales/components/, queries in queries.ts, actions in actions.ts</constraint>
+    <constraint type="immutable">Sales records are APPEND-ONLY - modal must display immutability notice</constraint>
+    <constraint type="testing">Unit tests in tests/unit/, E2E tests in tests/e2e/ using Playwright</constraint>
+    <constraint type="ui">Use shadcn/ui components (Table, Card, Badge, Dialog, Calendar, Popover, Select, Skeleton)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>getSalesHistoryAction</name>
+      <kind>server-action</kind>
+      <signature>async function getSalesHistoryAction(filters: SalesFilterInput, page?: number, pageSize?: number): Promise&lt;ActionResult&lt;PaginatedSales&gt;&gt;</signature>
+      <path>src/modules/sales/actions.ts</path>
+    </interface>
+    <interface>
+      <name>getSalesStatsAction</name>
+      <kind>server-action</kind>
+      <signature>async function getSalesStatsAction(filters?: SalesFilterInput): Promise&lt;ActionResult&lt;SalesStats&gt;&gt;</signature>
+      <path>src/modules/sales/actions.ts</path>
+    </interface>
+    <interface>
+      <name>exportSalesCsvAction</name>
+      <kind>server-action</kind>
+      <signature>async function exportSalesCsvAction(filters: SalesFilterInput): Promise&lt;ActionResult&lt;string&gt;&gt;</signature>
+      <path>src/modules/sales/actions.ts</path>
+    </interface>
+    <interface>
+      <name>PaginatedSales</name>
+      <kind>type</kind>
+      <signature>{ items: SaleWithRelations[]; total: number; page: number; pageSize: number; totalPages: number }</signature>
+      <path>src/modules/sales/types.ts</path>
+    </interface>
+    <interface>
+      <name>SalesStats</name>
+      <kind>type</kind>
+      <signature>{ totalSalesThisMonth: string; transactionsThisMonth: number; bestSellingTitle: { title: string; units: number } | null }</signature>
+      <path>src/modules/sales/types.ts</path>
+    </interface>
+    <interface>
+      <name>SaleWithRelations</name>
+      <kind>type</kind>
+      <signature>Sale &amp; { title: { title: string; author_name: string }; createdBy: { name: string } }</signature>
+      <path>src/modules/sales/types.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing stack: Vitest for unit tests, Playwright for E2E tests. Unit tests mock database calls using vi.mock(). E2E tests use real database with test fixtures. Follow existing patterns in tests/unit/sales-*.test.ts and tests/e2e/sales-*.spec.ts. Test both happy path and error cases. Permission tests verify role-based access.
+    </standards>
+    <locations>
+      <location>tests/unit/sales-queries.test.ts</location>
+      <location>tests/e2e/sales-history.spec.ts</location>
+      <location>tests/support/fixtures/factories/sales-factory.ts</location>
+    </locations>
+    <ideas>
+      <idea acId="1">Test page renders with correct heading and layout</idea>
+      <idea acId="2">Test stats cards display correct calculations and refresh on filter change</idea>
+      <idea acId="3">Test table columns render with correct formatting (date, currency, badges)</idea>
+      <idea acId="4">Test filter application (date range, title search, format, channel)</idea>
+      <idea acId="4">Test Clear Filters resets to defaults</idea>
+      <idea acId="5">Test sorting by date (default desc) and total amount</idea>
+      <idea acId="5">Test pagination controls and row count display</idea>
+      <idea acId="6">Test modal opens on row click with all transaction details</idea>
+      <idea acId="6">Test modal shows immutability notice</idea>
+      <idea acId="7">Test CSV export downloads file with correct content</idea>
+      <idea acId="7">Test export respects current filters</idea>
+      <idea acId="8">Test skeleton loaders display during data fetch</idea>
+      <idea acId="8">Test empty state message when no sales</idea>
+      <idea acId="9">Test Owner/Admin/Editor/Finance can access page</idea>
+      <idea acId="9">Test Author role is redirected</idea>
+      <idea acId="10">Test responsive layout at mobile/tablet/desktop breakpoints</idea>
+    </ideas>
+  </tests>
+</story-context>

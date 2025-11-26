@@ -1,0 +1,338 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>3</storyId>
+    <title>Implement Author Portal Access Provisioning</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-3-implement-author-portal-access-provisioning.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>publisher administrator</asA>
+    <iWant>grant authors secure access to the author portal</iWant>
+    <soThat>authors can view their own royalty statements without contacting support</soThat>
+    <tasks>
+      <task id="1" title="Update author schema with portal_user_id link" acs="8,31">
+        <subtask>Create Drizzle migration to add portal_user_id column to authors table</subtask>
+        <subtask>Define as uuid("portal_user_id").references(() => users.id) (nullable)</subtask>
+        <subtask>Add unique constraint (one author = one portal user)</subtask>
+        <subtask>Update Drizzle relations to include portalUser relation</subtask>
+        <subtask>Run migration npm run db:migrate</subtask>
+      </task>
+      <task id="2" title="Create Clerk webhook handler" acs="13,14">
+        <subtask>Create src/app/api/webhooks/clerk/route.ts</subtask>
+        <subtask>Install svix package for webhook verification</subtask>
+        <subtask>Verify webhook signature using Clerk signing secret</subtask>
+        <subtask>Handle user.created event</subtask>
+        <subtask>Extract author_id from publicMetadata.author_id</subtask>
+        <subtask>Query author by ID, verify tenant_id matches</subtask>
+        <subtask>Update users table: set clerk_user_id, set is_active=true</subtask>
+        <subtask>Return 200 OK response</subtask>
+      </task>
+      <task id="3" title="Implement Server Actions for portal provisioning" acs="6-12,17,18">
+        <subtask>Create grantPortalAccess(authorId) in src/modules/authors/actions.ts</subtask>
+        <subtask>Check permission MANAGE_USERS via requirePermission</subtask>
+        <subtask>Validate author exists and has email</subtask>
+        <subtask>Check if author already has portal user</subtask>
+        <subtask>Create users record with role=author, tenant_id, is_active=false</subtask>
+        <subtask>Call Clerk clerkClient.invitations.createInvitation</subtask>
+        <subtask>Update authors.portal_user_id to link to new user</subtask>
+        <subtask>Create revokePortalAccess(authorId) Server Action</subtask>
+        <subtask>Set users.is_active=false for revoke</subtask>
+      </task>
+      <task id="4" title="Update Author Detail component with portal controls" acs="1-5,15-19,32">
+        <subtask>Modify src/modules/authors/components/author-detail.tsx</subtask>
+        <subtask>Add Portal Access section in detail panel</subtask>
+        <subtask>Show status badge (Active/None)</subtask>
+        <subtask>Conditionally render Grant/Revoke Portal Access buttons</subtask>
+        <subtask>Implement confirmation dialogs</subtask>
+        <subtask>Handle success/error with toast notifications</subtask>
+        <subtask>Update author list to show portal icon for authors with portal access</subtask>
+      </task>
+      <task id="5" title="Create portal route group and layout" acs="20,21,24,25,29,30">
+        <subtask>Create src/app/(portal)/ route group directory</subtask>
+        <subtask>Create src/app/(portal)/layout.tsx with simplified portal layout</subtask>
+        <subtask>Add Clerk middleware protection for /portal/* routes</subtask>
+        <subtask>Middleware checks user.role === author, redirects dashboard users</subtask>
+        <subtask>Update dashboard middleware to redirect author role users</subtask>
+      </task>
+      <task id="6" title="Create portal landing page" acs="22,23,26">
+        <subtask>Create src/app/(portal)/portal/page.tsx (Server Component)</subtask>
+        <subtask>Check permission portal:view-own-statements</subtask>
+        <subtask>Call getAuthorForPortalUser(userId)</subtask>
+        <subtask>Display My Royalty Statements heading with placeholder</subtask>
+      </task>
+      <task id="7" title="Implement RLS policy for author portal data isolation" acs="27">
+        <subtask>Create RLS policy on statements table (Epic 5 dependency)</subtask>
+        <subtask>Policy: author_id matches portal user's linked author</subtask>
+      </task>
+      <task id="8" title="Create portal-specific permission definition" acs="28">
+        <subtask>Update src/lib/permissions.ts with VIEW_OWN_STATEMENTS permission</subtask>
+        <subtask>Map role=author to VIEW_OWN_STATEMENTS permission</subtask>
+        <subtask>Create getAuthorForPortalUser(userId) helper in queries.ts</subtask>
+      </task>
+      <task id="9" title="Update Clerk configuration for author role">
+        <subtask>Update Clerk Dashboard to support custom role author</subtask>
+        <subtask>Ensure author role is included in JWT claims</subtask>
+        <subtask>Test role-based middleware redirects</subtask>
+      </task>
+      <task id="10" title="Write unit tests" acs="6,17,26,27">
+        <subtask>Test grantPortalAccess permission check and Clerk mock</subtask>
+        <subtask>Test revokePortalAccess permission check</subtask>
+        <subtask>Test getAuthorForPortalUser returns correct author</subtask>
+        <subtask>Test RLS policy logic</subtask>
+      </task>
+      <task id="11" title="Write integration tests" acs="13,14">
+        <subtask>Test Clerk webhook handler with mock payload</subtask>
+        <subtask>Test signature verification</subtask>
+        <subtask>Test user activation flow</subtask>
+      </task>
+      <task id="12" title="Write E2E tests" acs="33,34">
+        <subtask>Create tests/e2e/author-portal.spec.ts</subtask>
+        <subtask>Test: Admin grants portal access</subtask>
+        <subtask>Test: Author completes signup and sees portal</subtask>
+        <subtask>Test: Admin revokes portal access</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Grant Portal Access button visible in Author Detail panel (right panel of /dashboard/authors)</ac>
+    <ac id="2">Grant Portal Access button only shown when author has valid email AND does not already have portal access</ac>
+    <ac id="3">Button disabled state with tooltip "Email required" when author has no email</ac>
+    <ac id="4">Clicking Grant Portal Access opens confirmation dialog explaining what will happen</ac>
+    <ac id="5">Confirmation dialog text: "Send portal invitation to [author.email]? The author will receive an email to create their account and access their royalty statements."</ac>
+    <ac id="6">Server Action grantPortalAccess(authorId) checks permission MANAGE_USERS (Owner/Admin only)</ac>
+    <ac id="7">Server Action creates users record with role=author, tenant_id from session, is_active=false (pending activation)</ac>
+    <ac id="8">Server Action links author record via portal_user_id foreign key (requires schema migration)</ac>
+    <ac id="9">Server Action calls Clerk clerkClient.invitations.createInvitation(email, metadata) with author_id in metadata</ac>
+    <ac id="10">Clerk sends invitation email to author with signup link</ac>
+    <ac id="11">On success: Toast "Portal invitation sent to [email]", button changes to "Revoke Portal Access"</ac>
+    <ac id="12">On error: Toast with specific error message</ac>
+    <ac id="13">Clerk webhook handler for user.created event updates users.clerk_user_id and sets is_active=true</ac>
+    <ac id="14">Webhook validates author_id from invitation metadata matches user's tenant</ac>
+    <ac id="15">Revoke Portal Access button visible when author has active portal access</ac>
+    <ac id="16">Clicking Revoke Portal Access opens confirmation dialog</ac>
+    <ac id="17">Server Action revokePortalAccess(authorId) sets users.is_active=false</ac>
+    <ac id="18">After revoking: Toast "Portal access revoked for [author.name]", button changes back to Grant Portal Access</ac>
+    <ac id="19">Author Detail panel shows portal status badge: "Portal Access: Active" (green) or "Portal Access: None" (gray)</ac>
+    <ac id="20">Author can navigate to [subdomain].salina-erp.com/portal (different route group from dashboard)</ac>
+    <ac id="21">Portal route requires authentication via Clerk with role=author</ac>
+    <ac id="22">Portal landing page (/portal) shows "My Royalty Statements" heading</ac>
+    <ac id="23">Portal page displays placeholder message for Epic 5</ac>
+    <ac id="24">Portal navigation sidebar shows only: "My Statements"</ac>
+    <ac id="25">Portal uses different layout from dashboard: simplified header, no admin nav items</ac>
+    <ac id="26">Database query helper getAuthorForPortalUser(userId) returns author linked to user</ac>
+    <ac id="27">RLS policy on statements table enforces author_id matches portal user</ac>
+    <ac id="28">Permission check requirePermission('portal:view-own-statements') for all portal routes</ac>
+    <ac id="29">Authors cannot access /dashboard/* routes (redirect to /portal if attempted)</ac>
+    <ac id="30">Dashboard users cannot access /portal routes (redirect to /dashboard if attempted)</ac>
+    <ac id="31">Migration adds portal_user_id column to authors table (nullable, foreign key to users.id)</ac>
+    <ac id="32">Author list in Split View shows small portal icon next to authors with active portal access</ac>
+    <ac id="33">E2E test: Admin grants portal access, author receives invitation, completes signup, accesses portal</ac>
+    <ac id="34">E2E test: Admin revokes portal access, author login redirected to error page</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Story 2.3: Author Portal Access</section>
+        <snippet>AC2.3.1-6: Grant Portal Access button, Server Action creates user with role="author", Clerk invitation email sent, Author can login, limited access, RLS enforces own data only.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 2: Multi-Tenant Row-Level Security + Author Portal</section>
+        <snippet>Portal route group at (portal)/, Clerk authentication with role="author", middleware redirects between /dashboard and /portal based on role.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Authentication Flow + Project Structure</section>
+        <snippet>User -> Clerk (auth) -> Middleware -> Extract tenant -> Load user + permissions -> Server Action/Page. Portal routes at src/app/(portal)/.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/2-2-build-author-management-split-view-interface.md</path>
+        <title>Story 2.2 Author Management (completed)</title>
+        <section>Dev Notes - Technical Patterns</section>
+        <snippet>Server Action pattern: permission check -> validation -> execution -> revalidate. ActionResult response format. Split View component patterns for reuse.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/db/schema/authors.ts</path>
+        <kind>schema</kind>
+        <symbol>authors</symbol>
+        <lines>51-121</lines>
+        <reason>MODIFY: Add portal_user_id column (uuid, nullable, FK to users.id, unique) for linking author to portal user account</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/users.ts</path>
+        <kind>schema</kind>
+        <symbol>users</symbol>
+        <lines>11-31</lines>
+        <reason>REFERENCE: Users table with role enum including "author". New portal users will be created here with role="author"</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/authors/actions.ts</path>
+        <kind>server-actions</kind>
+        <symbol>createAuthor, updateAuthor, deactivateAuthor</symbol>
+        <lines>1-314</lines>
+        <reason>MODIFY: Add grantPortalAccess(authorId) and revokePortalAccess(authorId) Server Actions</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/authors/components/author-detail.tsx</path>
+        <kind>component</kind>
+        <symbol>AuthorDetail</symbol>
+        <lines>67-413</lines>
+        <reason>MODIFY: Add Portal Access section with Grant/Revoke buttons, status badge, confirmation dialogs</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/permissions.ts</path>
+        <kind>permissions</kind>
+        <symbol>MANAGE_USERS, VIEW_OWN_STATEMENTS</symbol>
+        <lines>1-41</lines>
+        <reason>REFERENCE: MANAGE_USERS permission for portal provisioning (owner, admin). May need to add portal-specific permission.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>auth-utilities</kind>
+        <symbol>getCurrentTenantId, getDb, requirePermission</symbol>
+        <lines>1-129</lines>
+        <reason>REFERENCE: Auth utilities for permission checks and tenant context in Server Actions</reason>
+      </artifact>
+      <artifact>
+        <path>src/middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>clerkMiddleware</symbol>
+        <lines>1-100</lines>
+        <reason>MODIFY: Add portal route protection (/portal/*), redirect author role from /dashboard to /portal, redirect non-author from /portal to /dashboard</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/api/webhooks/clerk/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>POST handler</symbol>
+        <lines>1-162</lines>
+        <reason>MODIFY: Enhance user.created handler to detect author invitation via metadata.author_id, update users.clerk_user_id and set is_active=true</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/index.ts</path>
+        <kind>schema-index</kind>
+        <symbol>exports</symbol>
+        <lines>1-13</lines>
+        <reason>REFERENCE: Schema exports including UserRole type with "author" role already defined</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/encryption.ts</path>
+        <kind>utility</kind>
+        <symbol>encryptTaxId, decryptTaxId</symbol>
+        <reason>REFERENCE: Encryption utilities pattern available for any sensitive data handling</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@clerk/nextjs</package>
+        <version>^6.35.4</version>
+        <usage>clerkClient.invitations.createInvitation() for portal access invites</usage>
+      </node>
+      <node>
+        <package>svix</package>
+        <version>1.81.0</version>
+        <usage>Already installed - Clerk webhook signature verification</usage>
+      </node>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <usage>Database queries, schema definitions, migrations</usage>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.12</version>
+        <usage>Input validation for Server Actions</usage>
+      </node>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.66.1</version>
+        <usage>Form state management in author-detail component</usage>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>2.0.7</version>
+        <usage>Toast notifications for success/error feedback</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="permission">grantPortalAccess and revokePortalAccess require MANAGE_USERS permission (owner, admin only)</constraint>
+    <constraint type="validation">Author must have valid email to receive portal invitation</constraint>
+    <constraint type="validation">Author can only have ONE portal user account (unique constraint on portal_user_id)</constraint>
+    <constraint type="security">Portal users (role=author) CANNOT access /dashboard/* routes - redirect to /portal</constraint>
+    <constraint type="security">Dashboard users (non-author roles) CANNOT access /portal routes - redirect to /dashboard</constraint>
+    <constraint type="architecture">Server Actions must follow pattern: permission check -> validation -> execution -> revalidate</constraint>
+    <constraint type="architecture">All mutations use ActionResult&lt;T&gt; response format</constraint>
+    <constraint type="architecture">Soft delete pattern: set is_active=false, never physical DELETE</constraint>
+    <constraint type="rls">Author portal users restricted to own data via RLS policy on statements table</constraint>
+    <constraint type="pattern">Use existing shadcn/ui components: Dialog, Button, Badge, Form, etc.</constraint>
+    <constraint type="pattern">Use existing toast pattern via sonner: toast.success(), toast.error()</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>clerkClient.invitations.createInvitation</name>
+      <kind>REST API (Clerk SDK)</kind>
+      <signature>createInvitation({ emailAddress: string, publicMetadata: { author_id, tenant_id, role }, redirectUrl?: string })</signature>
+      <path>@clerk/nextjs/server</path>
+    </interface>
+    <interface>
+      <name>grantPortalAccess</name>
+      <kind>Server Action</kind>
+      <signature>async function grantPortalAccess(authorId: string): Promise&lt;ActionResult&lt;User&gt;&gt;</signature>
+      <path>src/modules/authors/actions.ts</path>
+    </interface>
+    <interface>
+      <name>revokePortalAccess</name>
+      <kind>Server Action</kind>
+      <signature>async function revokePortalAccess(authorId: string): Promise&lt;ActionResult&lt;void&gt;&gt;</signature>
+      <path>src/modules/authors/actions.ts</path>
+    </interface>
+    <interface>
+      <name>getAuthorForPortalUser</name>
+      <kind>Query Function</kind>
+      <signature>async function getAuthorForPortalUser(userId: string): Promise&lt;Author | null&gt;</signature>
+      <path>src/modules/authors/queries.ts (NEW)</path>
+    </interface>
+    <interface>
+      <name>Clerk Webhook user.created</name>
+      <kind>Webhook Handler</kind>
+      <signature>POST /api/webhooks/clerk - handles user.created with author_id in metadata</signature>
+      <path>src/app/api/webhooks/clerk/route.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <paragraph>Testing follows Playwright for E2E tests (tests/e2e/), Vitest for unit tests (tests/unit/), and integration tests (tests/integration/). All Server Actions should have unit tests mocking database and external APIs. E2E tests should cover full user flows including Clerk authentication. Use @faker-js/faker for test data generation.</paragraph>
+    </standards>
+    <locations>
+      <location>tests/e2e/*.spec.ts</location>
+      <location>tests/unit/*.test.ts</location>
+      <location>tests/integration/*.test.ts</location>
+      <location>vitest.config.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="6">Unit test grantPortalAccess: verify MANAGE_USERS permission check, mock clerkClient.invitations.createInvitation</idea>
+      <idea ac="17">Unit test revokePortalAccess: verify permission check, assert is_active=false after execution</idea>
+      <idea ac="26">Unit test getAuthorForPortalUser: returns correct author for portal user ID</idea>
+      <idea ac="13,14">Integration test Clerk webhook: mock user.created payload with author_id metadata, verify user activation</idea>
+      <idea ac="33">E2E test: Admin grants portal access -> Clerk invitation mock -> author completes signup -> accesses /portal</idea>
+      <idea ac="34">E2E test: Admin revokes portal access -> author login redirected to error page</idea>
+      <idea ac="29">E2E test: Author role cannot access /dashboard/* (redirect to /portal)</idea>
+      <idea ac="30">E2E test: Non-author role cannot access /portal (redirect to /dashboard)</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,215 @@
+<story-context id="2-6-create-isbn-pool-database-schema-and-tracking" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>6</storyId>
+    <title>Create ISBN Pool Database Schema and Tracking</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-6-create-isbn-pool-database-schema-and-tracking.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform architect</asA>
+    <iWant>establish ISBN pool tracking with status management</iWant>
+    <soThat>publishers can manage their ISBN inventory</soThat>
+    <tasks>
+      <task id="1" ac="1,2,3,4,5">Create ISBNs table schema in src/db/schema/isbns.ts with Drizzle table definition, all columns, unique constraint on isbn_13, foreign keys, and type exports</task>
+      <task id="2" ac="3">Define Drizzle relations in src/db/schema/relations.ts - add isbnsRelations and update titlesRelations</task>
+      <task id="3" ac="4,5">Create Zod validation schemas in src/modules/isbn/schema.ts for type/status enums and validation</task>
+      <task id="4" ac="1">Create TypeScript types in src/modules/isbn/types.ts</task>
+      <task id="5" ac="1,2,6,7">Generate and run database migration with RLS policy</task>
+      <task id="6" ac="1">Update src/db/schema/index.ts to export isbns table</task>
+      <task id="7" ac="1-7">Write unit tests in tests/unit/isbn-schema.test.ts</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">isbns table created with all required fields: id, tenant_id, isbn_13, type, status, assigned_to_title_id, assigned_at, assigned_by_user_id, created_at, updated_at</ac>
+    <ac id="2">Unique constraint enforced on isbn_13 column (globally unique across all tenants)</ac>
+    <ac id="3">Foreign key constraints properly defined: assigned_to_title_id → titles.id, assigned_by_user_id → users.id, tenant_id → tenants.id (cascade delete)</ac>
+    <ac id="4">Status enum enforced at database level: available, assigned, registered, retired</ac>
+    <ac id="5">Type enum enforced at database level: physical, ebook</ac>
+    <ac id="6">RLS policy created for tenant isolation: isbns_tenant_isolation</ac>
+    <ac id="7">Indexes created for query performance: tenant_id, status, type, assigned_to_title_id, isbn_13 (unique)</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Data Models and Contracts - ISBNs Table</section>
+        <snippet>Defines the isbns table schema with all columns, enums, indexes, and Drizzle relations for ISBN pool management supporting FR17, FR19, FR23.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Database Schema - isbns table</section>
+        <snippet>ISBNs table schema lines 1614-1633 with tenant isolation, status/type enums, and foreign key constraints to titles and users.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Pattern 3: ISBN Pool Management with Row Locking</section>
+        <snippet>Describes ISBN assignment pattern using PostgreSQL row-level locking to prevent duplicate assignment during concurrent operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Pattern 2: Multi-Tenant Row-Level Security</section>
+        <snippet>Defense in depth RLS pattern: Middleware extracts tenant, Application injects tenant_id, Database enforces via RLS policies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories</title>
+        <section>Story 2.6: Create ISBN Pool Database Schema and Tracking</section>
+        <snippet>Story definition with acceptance criteria covering isbns table creation, unique constraint, foreign keys, enums, RLS policy, and indexes.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/db/schema/titles.ts</path>
+        <kind>schema</kind>
+        <symbol>titles, publicationStatusValues, Title, InsertTitle</symbol>
+        <lines>1-177</lines>
+        <reason>Reference schema pattern for pgTable definition, enum const arrays, indexes, unique constraints, type exports. ISBN fields (isbn, eisbn) are defined here for title assignment.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/users.ts</path>
+        <kind>schema</kind>
+        <symbol>users</symbol>
+        <lines>1-34</lines>
+        <reason>Foreign key reference target for assigned_by_user_id. Shows index definition pattern using array syntax.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/tenants.ts</path>
+        <kind>schema</kind>
+        <symbol>tenants</symbol>
+        <reason>Foreign key reference target for tenant_id with cascade delete.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/relations.ts</path>
+        <kind>schema</kind>
+        <symbol>tenantsRelations, usersRelations, authorsRelations, titlesRelations</symbol>
+        <lines>1-72</lines>
+        <reason>Add isbnsRelations here. Update titlesRelations to include assignedIsbns (many) relationship.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/index.ts</path>
+        <kind>schema</kind>
+        <symbol>exports</symbol>
+        <lines>1-17</lines>
+        <reason>Add export for isbns and ISBN type. Follow existing pattern for re-exports.</reason>
+      </file>
+      <file>
+        <path>src/modules/titles/schema.ts</path>
+        <kind>validation</kind>
+        <symbol>publicationStatusSchema, isbnSchema, createTitleSchema</symbol>
+        <lines>1-105</lines>
+        <reason>Reference Zod schema pattern for enums and validation. Create similar schemas for ISBN type/status enums.</reason>
+      </file>
+      <file>
+        <path>drizzle/migrations/0004_titles_rls.sql</path>
+        <kind>migration</kind>
+        <symbol>RLS policies</symbol>
+        <lines>1-91</lines>
+        <reason>Reference RLS policy pattern. Create similar policies for isbns table with tenant isolation.</reason>
+      </file>
+      <file>
+        <path>tests/unit/title-schema.test.ts</path>
+        <kind>test</kind>
+        <symbol>createTitleSchema tests, publicationStatusSchema tests</symbol>
+        <lines>1-370</lines>
+        <reason>Reference test pattern for Zod schema validation. Create similar tests for ISBN type/status schemas.</reason>
+      </file>
+      <file>
+        <path>vitest.config.ts</path>
+        <kind>config</kind>
+        <symbol>vitest configuration</symbol>
+        <lines>1-24</lines>
+        <reason>Test configuration including setup file path and include patterns for unit tests.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="drizzle-orm" version="^0.44.7">ORM for PostgreSQL schema definition, migrations, and queries</package>
+        <package name="drizzle-kit" version="^0.31.7" dev="true">Migration generation and database tooling</package>
+        <package name="zod" version="^4.1.12">Runtime schema validation for TypeScript</package>
+        <package name="vitest" version="4.0.13" dev="true">Unit testing framework</package>
+        <package name="@neondatabase/serverless" version="^1.0.2">Neon PostgreSQL serverless driver</package>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow established Drizzle schema pattern from src/db/schema/titles.ts - use pgTable with object return for indexes</constraint>
+    <constraint type="pattern">Export enum const arrays (e.g., isbnTypeEnum, isbnStatusEnum) for reuse in Zod schemas</constraint>
+    <constraint type="pattern">Export $inferSelect and $inferInsert types from schema file</constraint>
+    <constraint type="security">ISBN-13 must be globally unique across ALL tenants (industry standard identifier)</constraint>
+    <constraint type="security">RLS policy must enforce tenant isolation using auth.user_id() and users table lookup</constraint>
+    <constraint type="naming">Table name: isbns (plural, snake_case). Column names: snake_case. Index names: isbns_{column}_idx</constraint>
+    <constraint type="testing">Unit tests must cover all enum values and validation schema edge cases</constraint>
+    <constraint type="migration">RLS policy SQL must be added manually to generated migration or as separate migration file</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ISBN Table Schema</name>
+      <kind>Drizzle pgTable</kind>
+      <signature>export const isbns = pgTable("isbns", {...columns}, (table) => ({...indexes}))</signature>
+      <path>src/db/schema/isbns.ts</path>
+    </interface>
+    <interface>
+      <name>ISBN Type Export</name>
+      <kind>TypeScript type inference</kind>
+      <signature>export type ISBN = typeof isbns.$inferSelect; export type NewISBN = typeof isbns.$inferInsert;</signature>
+      <path>src/db/schema/isbns.ts</path>
+    </interface>
+    <interface>
+      <name>isbnsRelations</name>
+      <kind>Drizzle relations</kind>
+      <signature>export const isbnsRelations = relations(isbns, ({ one }) => ({ tenant, assignedTitle, assignedByUser }))</signature>
+      <path>src/db/schema/relations.ts</path>
+    </interface>
+    <interface>
+      <name>ISBN Zod Schemas</name>
+      <kind>Zod validation</kind>
+      <signature>isbnTypeSchema = z.enum(["physical", "ebook"]); isbnStatusSchema = z.enum(["available", "assigned", "registered", "retired"])</signature>
+      <path>src/modules/isbn/schema.ts</path>
+    </interface>
+    <interface>
+      <name>Foreign Key: titles.id</name>
+      <kind>PostgreSQL FK</kind>
+      <signature>assigned_to_title_id: uuid("assigned_to_title_id").references(() => titles.id)</signature>
+      <path>src/db/schema/isbns.ts</path>
+    </interface>
+    <interface>
+      <name>Foreign Key: users.id</name>
+      <kind>PostgreSQL FK</kind>
+      <signature>assigned_by_user_id: uuid("assigned_by_user_id").references(() => users.id)</signature>
+      <path>src/db/schema/isbns.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests use Vitest with jsdom environment. Tests are located in tests/unit/ directory with .test.ts extension. Follow existing test patterns from title-schema.test.ts: group tests with describe blocks, use safeParse for validation, test both valid and invalid inputs, test all enum values.
+    </standards>
+    <locations>
+      <location>tests/unit/*.test.ts</location>
+      <location>tests/integration/*.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="4">Test isbnStatusSchema accepts all four valid values: available, assigned, registered, retired</idea>
+      <idea ac="4">Test isbnStatusSchema rejects invalid status values</idea>
+      <idea ac="5">Test isbnTypeSchema accepts physical and ebook</idea>
+      <idea ac="5">Test isbnTypeSchema rejects invalid type values (e.g., audiobook, hardcover)</idea>
+      <idea ac="1">Test createIsbnSchema validates required fields (isbn_13, type)</idea>
+      <idea ac="2">Test ISBN-13 format validation (13 digits, starts with 978 or 979)</idea>
+      <idea ac="3">Test assignIsbnSchema validates title_id and user_id as valid UUIDs</idea>
+    </ideas>
+  </tests>
+</story-context>

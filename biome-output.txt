@@ -1,0 +1,366 @@
+src/app/(dashboard)/sales/page.tsx:44:9 lint/correctness/noUnusedVariables  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This variable router is unused.
+  
+    43 │ export default function SalesHistoryPage() {
+  > 44 │   const router = useRouter();
+       │         ^^^^^^
+    45 │ 
+    46 │   // Filter state
+  
+  i Unused variables are often the result of an incomplete refactoring, typos, or other sources of bugs.
+  
+  i Unsafe fix: If this is intentional, prepend router with an underscore.
+  
+     42  42 │   
+     43  43 │   export default function SalesHistoryPage() {
+     44     │ - ··const·router·=·useRouter();
+         44 │ + ··const·_router·=·useRouter();
+     45  45 │   
+     46  46 │     // Filter state
+  
+
+src/app/(dashboard)/sales/page.tsx:52:10 lint/correctness/noUnusedVariables  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This variable currentPage is unused.
+  
+    50 │   const [salesData, setSalesData] = React.useState<PaginatedSales | null>(null);
+    51 │   const [statsData, setStatsData] = React.useState<SalesStats | null>(null);
+  > 52 │   const [currentPage, setCurrentPage] = React.useState(1);
+       │          ^^^^^^^^^^^
+    53 │ 
+    54 │   // Loading states
+  
+  i Unused variables are often the result of an incomplete refactoring, typos, or other sources of bugs.
+  
+  i Unsafe fix: If this is intentional, prepend currentPage with an underscore.
+  
+     50  50 │     const [salesData, setSalesData] = React.useState<PaginatedSales | null>(null);
+     51  51 │     const [statsData, setStatsData] = React.useState<SalesStats | null>(null);
+     52     │ - ··const·[currentPage,·setCurrentPage]·=·React.useState(1);
+         52 │ + ··const·[_currentPage,·setCurrentPage]·=·React.useState(1);
+     53  53 │   
+     54  54 │     // Loading states
+  
+
+src/app/api/webhooks/clerk/route.ts:179:33 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    177 │         email: email,
+    178 │         tenant_id: tenant_id,
+  > 179 │         role: (metadata.role as any) || "owner", // Default to owner for first user
+        │                                 ^^^
+    180 │         is_active: true,
+    181 │       });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/db/index.ts:6:23 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+    5 │ // Admin connection for migrations, Studio, and non-RLS queries (tenant lookup)
+  > 6 │ const adminSql = neon(process.env.DATABASE_URL!);
+      │                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+    7 │ export const adminDb = drizzle(adminSql, { schema });
+    8 │ 
+  
+
+src/db/index.ts:10:22 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+     9 │ // Authenticated connection for app queries with RLS enforcement
+  > 10 │ const authSql = neon(process.env.DATABASE_AUTHENTICATED_URL!);
+       │                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    11 │ export const db = drizzle(authSql, { schema });
+    12 │ 
+  
+
+src/db/index.ts:19:20 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+    17 │  */
+    18 │ export function getAuthenticatedDb(authToken: string) {
+  > 19 │   const sql = neon(process.env.DATABASE_AUTHENTICATED_URL!, {
+       │                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    20 │     authToken, // Pass JWT to enable auth.user_id() in RLS policies
+    21 │   });
+  
+
+src/modules/authors/components/author-detail.tsx:45:8 lint/correctness/noUnusedImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This import is unused.
+  
+    43 │   SelectValue,
+    44 │ } from "@/components/ui/select";
+  > 45 │ import { Separator } from "@/components/ui/separator";
+       │        ^^^^^^^^^^^^^
+    46 │ import { Skeleton } from "@/components/ui/skeleton";
+    47 │ import { Textarea } from "@/components/ui/textarea";
+  
+  i Unused imports might be the result of an incomplete refactoring.
+  
+  i Unsafe fix: Remove the unused imports.
+  
+     43  43 │     SelectValue,
+     44  44 │   } from "@/components/ui/select";
+     45     │ - import·{·Separator·}·from·"@/components/ui/separator";
+     46  45 │   import { Skeleton } from "@/components/ui/skeleton";
+     47  46 │   import { Textarea } from "@/components/ui/textarea";
+  
+
+src/modules/authors/components/author-detail.tsx:46:8 lint/correctness/noUnusedImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This import is unused.
+  
+    44 │ } from "@/components/ui/select";
+    45 │ import { Separator } from "@/components/ui/separator";
+  > 46 │ import { Skeleton } from "@/components/ui/skeleton";
+       │        ^^^^^^^^^^^^
+    47 │ import { Textarea } from "@/components/ui/textarea";
+    48 │ import {
+  
+  i Unused imports might be the result of an incomplete refactoring.
+  
+  i Unsafe fix: Remove the unused imports.
+  
+     44  44 │   } from "@/components/ui/select";
+     45  45 │   import { Separator } from "@/components/ui/separator";
+     46     │ - import·{·Skeleton·}·from·"@/components/ui/skeleton";
+     47  46 │   import { Textarea } from "@/components/ui/textarea";
+     48  47 │   import {
+  
+
+src/modules/authors/components/author-detail.tsx:70:23 lint/correctness/noUnusedImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Several of these imports are unused.
+  
+    68 │ } from "../actions";
+    69 │ import { type UpdateAuthorInput, updateAuthorSchema } from "../schema";
+  > 70 │ import type { Author, AuthorWithPortalStatus, PaymentMethod } from "../types";
+       │                       ^^^^^^^^^^^^^^^^^^^^^^
+    71 │ 
+    72 │ interface AuthorDetailProps {
+  
+  i Unused imports might be the result of an incomplete refactoring.
+  
+  i Unsafe fix: Remove the unused imports.
+  
+    70 │ import·type·{·Author,·AuthorWithPortalStatus,·PaymentMethod·}·from·"../types";
+       │                       ------------------------                                
+
+src/modules/authors/components/authors-split-view.tsx:144:8 lint/complexity/useOptionalChain  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Change to an optional chain.
+  
+    142 │     return (
+    143 │       author.name.toLowerCase().includes(query) ||
+  > 144 │       (author.email && author.email.toLowerCase().includes(query))
+        │        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    145 │     );
+    146 │   });
+  
+  i Unsafe fix: Change to an optional chain.
+  
+    142 142 │       return (
+    143 143 │         author.name.toLowerCase().includes(query) ||
+    144     │ - ······(author.email·&&·author.email.toLowerCase().includes(query))
+        144 │ + ······(author.email?.toLowerCase().includes(query))
+    145 145 │       );
+    146 146 │     });
+  
+
+src/modules/authors/queries.ts:27:7 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+    25 │     const searchTerm = `%${filters.searchQuery}%`;
+    26 │     conditions.push(
+  > 27 │       or(ilike(authors.name, searchTerm), ilike(authors.email, searchTerm))!,
+       │       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    28 │     );
+    29 │   }
+  
+
+tests/unit/sales-schema.test.ts:387:15 lint/correctness/noUnusedVariables ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This variable title_id is unused.
+  
+    385 │   describe("invalid inputs", () => {
+    386 │     it("rejects missing title_id", () => {
+  > 387 │       const { title_id, ...inputWithoutTitleId } = validSaleInput;
+        │               ^^^^^^^^
+    388 │       const result = createSaleSchema.safeParse(inputWithoutTitleId);
+    389 │       expect(result.success).toBe(false);
+  
+  i Unused variables are often the result of an incomplete refactoring, typos, or other sources of bugs.
+  
+  i You can use the ignoreRestSiblings option to ignore unused variables in an object destructuring with a spread.
+  
+
+tests/unit/sales-schema.test.ts:401:15 lint/correctness/noUnusedVariables ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This variable format is unused.
+  
+    400 │     it("rejects missing format", () => {
+  > 401 │       const { format, ...inputWithoutFormat } = validSaleInput;
+        │               ^^^^^^
+    402 │       const result = createSaleSchema.safeParse(inputWithoutFormat);
+    403 │       expect(result.success).toBe(false);
+  
+  i Unused variables are often the result of an incomplete refactoring, typos, or other sources of bugs.
+  
+  i You can use the ignoreRestSiblings option to ignore unused variables in an object destructuring with a spread.
+  
+
+tests/unit/sales-schema.test.ts:479:15 lint/correctness/noUnusedVariables ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This variable sale_date is unused.
+  
+    478 │     it("rejects missing sale_date", () => {
+  > 479 │       const { sale_date, ...inputWithoutDate } = validSaleInput;
+        │               ^^^^^^^^^
+    480 │       const result = createSaleSchema.safeParse(inputWithoutDate);
+    481 │       expect(result.success).toBe(false);
+  
+  i Unused variables are often the result of an incomplete refactoring, typos, or other sources of bugs.
+  
+  i You can use the ignoreRestSiblings option to ignore unused variables in an object destructuring with a spread.
+  
+
+src/lib/encryption.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     28  28 │     if (!keyHex) {
+     29  29 │       throw new Error(
+     30     │ - ······"ENCRYPTION_KEY·environment·variable·is·not·set.·Generate·with:·openssl·rand·-hex·32"
+         30 │ + ······"ENCRYPTION_KEY·environment·variable·is·not·set.·Generate·with:·openssl·rand·-hex·32",
+     31  31 │       );
+     32  32 │     }
+    ······· │ 
+     34  34 │     if (keyHex.length !== 64) {
+     35  35 │       throw new Error(
+     36     │ - ······"ENCRYPTION_KEY·must·be·64·hex·characters·(32·bytes).·Generate·with:·openssl·rand·-hex·32"
+         36 │ + ······"ENCRYPTION_KEY·must·be·64·hex·characters·(32·bytes).·Generate·with:·openssl·rand·-hex·32",
+     37  37 │       );
+     38  38 │     }
+  
+
+src/modules/authors/components/author-detail.tsx:136:3 lint/correctness/useExhaustiveDependencies  FIXABLE  ━━━━━━━━━━━━━━━━━━
+
+  × This hook specifies more dependencies than necessary: author.id
+  
+    135 │   // Fetch masked tax ID when author changes
+  > 136 │   useEffect(() => {
+        │   ^^^^^^^^^
+    137 │     if (author.tax_id && canViewTaxId) {
+    138 │       getMaskedTaxIdAction(author.tax_id).then(setMaskedTaxId);
+  
+  i This dependency can be removed from the list.
+  
+    140 │       setMaskedTaxId("");
+    141 │     }
+  > 142 │   }, [author.id, author.tax_id, canViewTaxId]);
+        │       ^^^^^^^^^
+    143 │ 
+    144 │   const form = useForm<UpdateAuthorInput>({
+  
+  i Unsafe fix: Remove the extra dependencies from the list.
+  
+    142 │ ··},·[author.id,·author.tax_id,·canViewTaxId]);
+        │       -----------                              
+
+src/modules/authors/components/author-list.tsx:121:15 lint/a11y/noNoninteractiveElementToInteractiveRole  FIXABLE  ━━━━━━━━━━━
+
+  × The HTML element ul is non-interactive and should not have an interactive role.
+  
+    119 │       {!loading && authors.length > 0 && (
+    120 │         <div className="flex-1 overflow-y-auto">
+  > 121 │           <ul role="listbox" aria-label="Authors">
+        │               ^^^^^^^^^^^^^^
+    122 │             {authors.map((author) => (
+    123 │               <li key={author.id}>
+  
+  i Replace ul with a div or a span.
+  
+  i Unsafe fix: Remove the role attribute.
+  
+    121 │ ··········<ul·role="listbox"·aria-label="Authors">
+        │               ---------------                     
+
+src/modules/authors/components/author-list.tsx:145:25 lint/a11y/useAriaPropsSupportedByRole ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × The ARIA attribute 'aria-label' is not supported by this element.
+  
+    143 │                       {/* AC 32: Portal icon for authors with active portal access */}
+    144 │                       {author.portal_user_id && (
+  > 145 │                         <span
+        │                         ^^^^^
+  > 146 │                           className="text-xs"
+  > 147 │                           title="Has portal access"
+  > 148 │                           aria-label="Has portal access"
+  > 149 │                         >
+        │                         ^
+    150 │                           🔑
+    151 │                         </span>
+  
+  i Ensure that ARIA attributes are valid for the role of the element.
+  
+
+src/modules/authors/components/authors-split-view.tsx:57:3 lint/correctness/useExhaustiveDependencies  FIXABLE  ━━━━━━━━━━━━━━
+
+  × This hook specifies more dependencies than necessary: showInactive
+  
+    56 │   // Reload when showInactive changes
+  > 57 │   useEffect(() => {
+       │   ^^^^^^^^^
+    58 │     reloadAuthors();
+    59 │   }, [showInactive, reloadAuthors]);
+  
+  i This dependency can be removed from the list.
+  
+    57 │   useEffect(() => {
+    58 │     reloadAuthors();
+  > 59 │   }, [showInactive, reloadAuthors]);
+       │       ^^^^^^^^^^^^
+    60 │ 
+    61 │   // Story 2.3: Load portal user info when selected author changes
+  
+  i Unsafe fix: Remove the extra dependencies from the list.
+  
+    59 │ ··},·[showInactive,·reloadAuthors]);
+       │       --------------                
+
+src/modules/isbn/components/isbn-detail-modal.tsx:249:15 lint/a11y/noLabelWithoutControl ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × A form label must be associated with an input.
+  
+    247 │             {/* ISBN-13 with copy button */}
+    248 │             <div className="space-y-2">
+  > 249 │               <label className="text-sm font-medium text-muted-foreground">
+        │               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 250 │                 ISBN-13
+  > 251 │               </label>
+        │               ^^^^^^^^
+    252 │               <div className="flex items-center gap-2">
+    253 │                 <code className="flex-1 rounded-md bg-muted px-3 py-2 font-mono text-lg">
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.
+Diagnostics not shown: 118.
+Checked 183 files in 96ms. No fixes applied.
+Found 32 errors.
+Found 101 warnings.
+Found 5 infos.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+

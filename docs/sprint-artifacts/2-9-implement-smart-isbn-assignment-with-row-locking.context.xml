@@ -1,0 +1,242 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>9</storyId>
+    <title>Implement Smart ISBN Assignment with Row Locking</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-9-implement-smart-isbn-assignment-with-row-locking.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>editor</asA>
+    <iWant>to assign ISBNs to titles from the available pool</iWant>
+    <soThat>each title has proper identification for sales tracking</soThat>
+    <tasks>
+      <task id="1" acs="2,3,4,5,6,7">Create ISBN assignment Server Action (assignISBNToTitle)</task>
+      <task id="2" acs="1">Create ISBN preview query (getNextAvailableISBN)</task>
+      <task id="3" acs="1,8">Update ISBN detail modal with assignment UI</task>
+      <task id="4" acs="1,8">Create title-side ISBN assignment modal</task>
+      <task id="5" acs="1,7,8">Integrate assignment flow in title detail page</task>
+      <task id="6" acs="1-7">Add assignment types and schema</task>
+      <task id="7" acs="2,3,4,5,6,7">Write unit tests for assignment action</task>
+      <task id="8" acs="1-8">Write E2E tests for assignment flow</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Assignment modal shows next available ISBN preview (ISBN-13, available count, title name, "Assign This ISBN" button)</criterion>
+    <criterion id="2">"Assign This ISBN" uses PostgreSQL row-level locking via FOR UPDATE on selected ISBN</criterion>
+    <criterion id="3">Transaction updates isbns and titles tables atomically (status → assigned, assigned_to_title_id, assigned_at, assigned_by_user_id, isbn/eisbn field)</criterion>
+    <criterion id="4">Race condition handled gracefully - auto-retry with next available ISBN if selected one was assigned concurrently</criterion>
+    <criterion id="5">Clear error messages when no ISBNs available ("No Physical/Ebook ISBNs available. Import an ISBN block first.")</criterion>
+    <criterion id="6">Audit trail captures all assignment events (userId, titleId, isbnId, isbn_13, format, timestamp)</criterion>
+    <criterion id="7">Permission check enforces CREATE_AUTHORS_TITLES (Editor, Admin, Owner roles only)</criterion>
+    <criterion id="8">Already-assigned ISBN handling - show info message and currently assigned ISBN</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Story 2.9: ISBN Assignment</section>
+        <snippet>AC2.9.1-7: Modal shows next available ISBN preview, row locking prevents concurrent assignment, transaction updates atomically, race condition handled gracefully.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Pattern 3: ISBN Pool Management with Row Locking</section>
+        <snippet>PostgreSQL row-level locking using FOR UPDATE. Transaction ensures atomicity: both ISBN update and title update succeed or both rollback.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Smart ISBN Assignment Flow</section>
+        <snippet>SELECT ... FOR UPDATE acquires row lock, UPDATE isbns SET status='assigned', UPDATE titles SET isbn|eisbn, COMMIT transaction.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/modules/isbn/actions.ts</path>
+        <kind>server-action</kind>
+        <symbol>importISBNs</symbol>
+        <lines>47-194</lines>
+        <reason>Existing Server Action pattern to follow; add assignISBNToTitle action here</reason>
+      </file>
+      <file>
+        <path>src/modules/isbn/queries.ts</path>
+        <kind>query</kind>
+        <symbol>getISBNPoolStats, getISBNList, getISBNById</symbol>
+        <lines>44-270</lines>
+        <reason>Existing query patterns; add getNextAvailableISBN query here</reason>
+      </file>
+      <file>
+        <path>src/modules/isbn/types.ts</path>
+        <kind>types</kind>
+        <symbol>ISBNAssignmentResult, ISBNPoolStats, ISBNListItem</symbol>
+        <lines>1-84</lines>
+        <reason>Existing types; add AssignedISBN and ISBNAssignmentInput types here</reason>
+      </file>
+      <file>
+        <path>src/modules/isbn/schema.ts</path>
+        <kind>validation</kind>
+        <symbol>assignIsbnSchema, isbnTypeSchema</symbol>
+        <lines>63-66</lines>
+        <reason>Existing Zod schema for assignment; enhance AssignISBNInput validation</reason>
+      </file>
+      <file>
+        <path>src/modules/isbn/components/isbn-detail-modal.tsx</path>
+        <kind>component</kind>
+        <symbol>ISBNDetailModal</symbol>
+        <lines>78-259</lines>
+        <reason>Has disabled "Assign to Title" button (line 229-240); enable and add assignment UI</reason>
+      </file>
+      <file>
+        <path>src/db/schema/isbns.ts</path>
+        <kind>schema</kind>
+        <symbol>isbns table, ISBNStatus, ISBNType</symbol>
+        <lines>65-133</lines>
+        <reason>Database schema with assigned_to_title_id, assigned_at, assigned_by_user_id fields</reason>
+      </file>
+      <file>
+        <path>src/db/schema/titles.ts</path>
+        <kind>schema</kind>
+        <symbol>titles table, isbn, eisbn fields</symbol>
+        <lines>71-164</lines>
+        <reason>Database schema with isbn (physical) and eisbn (ebook) fields for assignment</reason>
+      </file>
+      <file>
+        <path>src/lib/permissions.ts</path>
+        <kind>utility</kind>
+        <symbol>CREATE_AUTHORS_TITLES</symbol>
+        <lines>16</lines>
+        <reason>Permission constant for ISBN assignment (owner, admin, editor roles)</reason>
+      </file>
+      <file>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>requirePermission, getCurrentTenantId, getDb</symbol>
+        <reason>Auth utilities for permission checking and tenant context</reason>
+      </file>
+      <file>
+        <path>src/lib/types.ts</path>
+        <kind>types</kind>
+        <symbol>ActionResult</symbol>
+        <lines>1-3</lines>
+        <reason>Standard response type for Server Actions</reason>
+      </file>
+      <file>
+        <path>src/modules/titles/queries.ts</path>
+        <kind>query</kind>
+        <symbol>getTitles, getTitleById</symbol>
+        <lines>25-95</lines>
+        <reason>Title query patterns for title selector in assignment modal</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <usage>Transaction with .forUpdate() for row locking</usage>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.12</version>
+        <usage>Schema validation for assignment input</usage>
+      </node>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.66.1</version>
+        <usage>Form state management for assignment modal</usage>
+      </node>
+      <node>
+        <package>@hookform/resolvers</package>
+        <version>^5.2.2</version>
+        <usage>Zod resolver for react-hook-form</usage>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>2.0.7</version>
+        <usage>Toast notifications for success/error feedback</usage>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>^4.1.0</version>
+        <usage>Date formatting for assignment timestamps</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="permission">All Server Actions must check CREATE_AUTHORS_TITLES permission via requirePermission() before database access</constraint>
+    <constraint type="tenant">All queries must include tenant_id filter for multi-tenant isolation</constraint>
+    <constraint type="transaction">ISBN assignment must use database transaction with FOR UPDATE row locking to prevent concurrent assignment</constraint>
+    <constraint type="atomicity">Both isbns table (status, assigned_to_title_id, assigned_at, assigned_by_user_id) and titles table (isbn/eisbn) must update in single transaction - all succeed or all rollback</constraint>
+    <constraint type="response">Server Actions must return ActionResult&lt;T&gt; type ({ success: true; data: T } | { success: false; error: string })</constraint>
+    <constraint type="validation">Zod schema validation required on both client and server side</constraint>
+    <constraint type="ui-state">Loading/pending states must be shown during assignment operation using useTransition</constraint>
+    <constraint type="retry">On row lock conflict, auto-retry with next available ISBN (max 3 attempts)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>assignISBNToTitle</name>
+      <kind>Server Action</kind>
+      <signature>async function assignISBNToTitle(input: AssignISBNInput): Promise&lt;ActionResult&lt;AssignedISBN&gt;&gt;</signature>
+      <path>src/modules/isbn/actions.ts</path>
+    </interface>
+    <interface>
+      <name>getNextAvailableISBN</name>
+      <kind>Server Query</kind>
+      <signature>async function getNextAvailableISBN(format: "physical" | "ebook"): Promise&lt;ActionResult&lt;{ isbn: string; availableCount: number } | null&gt;&gt;</signature>
+      <path>src/modules/isbn/queries.ts</path>
+    </interface>
+    <interface>
+      <name>AssignISBNInput</name>
+      <kind>Zod Schema</kind>
+      <signature>z.object({ titleId: z.string().uuid(), format: z.enum(["physical", "ebook"]) })</signature>
+      <path>src/modules/isbn/schema.ts</path>
+    </interface>
+    <interface>
+      <name>AssignedISBN</name>
+      <kind>TypeScript Type</kind>
+      <signature>{ id: string; isbn_13: string; type: ISBNType; titleId: string; assignedAt: Date; assignedByUserId: string }</signature>
+      <path>src/modules/isbn/types.ts</path>
+    </interface>
+    <interface>
+      <name>ISBNAssignmentModal</name>
+      <kind>React Component</kind>
+      <signature>function ISBNAssignmentModal({ titleId, open, onOpenChange, onSuccess }: Props)</signature>
+      <path>src/modules/titles/components/isbn-assignment-modal.tsx</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests use Vitest with @testing-library/react. E2E tests use Playwright. All tests are co-located in tests/ directory. Unit tests mock database and external dependencies. E2E tests run against test database with seeded data. Tests follow AAA pattern (Arrange, Act, Assert). Server Actions tested via direct function calls. Components tested via render + user events.
+    </standards>
+    <locations>
+      <location>tests/unit/isbn-assignment.test.ts (NEW - unit tests for Server Action)</location>
+      <location>tests/e2e/isbn-assignment.spec.ts (NEW - E2E tests for assignment flow)</location>
+      <location>tests/unit/isbn-*.test.ts (existing test patterns)</location>
+      <location>tests/e2e/isbn-*.spec.ts (existing E2E patterns)</location>
+    </locations>
+    <ideas>
+      <idea ac="2,3">Test successful assignment updates both isbns and titles tables atomically</idea>
+      <idea ac="2">Test row locking prevents duplicate assignment - simulate concurrent requests</idea>
+      <idea ac="4">Test race condition retry logic - mock first ISBN taken, second succeeds</idea>
+      <idea ac="5">Test "no available ISBNs" returns proper error message for each format</idea>
+      <idea ac="7">Test permission check denies author and finance roles</idea>
+      <idea ac="7">Test permission check allows owner, admin, editor roles</idea>
+      <idea ac="1">E2E: Navigate to title, click "Assign ISBN", verify modal shows preview</idea>
+      <idea ac="3">E2E: Assign Physical ISBN, verify title isbn field updated</idea>
+      <idea ac="3">E2E: Assign Ebook ISBN, verify title eisbn field updated</idea>
+      <idea ac="5">E2E: Attempt assign when pool empty, verify error toast</idea>
+      <idea ac="8">E2E: Verify "already assigned" message shows for assigned format</idea>
+    </ideas>
+  </tests>
+</story-context>

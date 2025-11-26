@@ -34,7 +34,10 @@ test.describe("Authentication", () => {
     // Login (using Clerk test credentials)
     await page.goto(`${tenantURL}/sign-in`);
     await page.fill('[name="identifier"]', editor.email);
-    await page.fill('[name="password"]', process.env.TEST_EDITOR_PASSWORD!);
+    await page.fill(
+      '[name="password"]',
+      process.env.TEST_EDITOR_PASSWORD ?? ""
+    );
     await page.click('button[type="submit"]');
 
     // Should redirect to dashboard
@@ -56,7 +59,10 @@ test.describe("Role-Based Access Control (RBAC)", () => {
     // Login as Editor
     await page.goto(`${tenantURL}/sign-in`);
     await page.fill('[name="identifier"]', editor.email);
-    await page.fill('[name="password"]', process.env.TEST_EDITOR_PASSWORD!);
+    await page.fill(
+      '[name="password"]',
+      process.env.TEST_EDITOR_PASSWORD ?? ""
+    );
     await page.click('button[type="submit"]');
 
     // Editor CAN access Authors
@@ -66,7 +72,7 @@ test.describe("Role-Based Access Control (RBAC)", () => {
     // Editor CANNOT access Returns approval (Finance only)
     await page.goto(`${tenantURL}/returns`);
     await expect(
-      page.locator('[data-testid="unauthorized-message"]'),
+      page.locator('[data-testid="unauthorized-message"]')
     ).toBeVisible();
   });
 
@@ -82,14 +88,17 @@ test.describe("Role-Based Access Control (RBAC)", () => {
     // Login as Finance
     await page.goto(`${tenantURL}/sign-in`);
     await page.fill('[name="identifier"]', finance.email);
-    await page.fill('[name="password"]', process.env.TEST_FINANCE_PASSWORD!);
+    await page.fill(
+      '[name="password"]',
+      process.env.TEST_FINANCE_PASSWORD ?? ""
+    );
     await page.click('button[type="submit"]');
 
     // Finance CAN access Returns approval queue
     await page.goto(`${tenantURL}/returns`);
     await expect(page.locator("h1")).toContainText(/returns/i);
     await expect(
-      page.locator('[data-testid="approve-return-button"]'),
+      page.locator('[data-testid="approve-return-button"]')
     ).toBeVisible();
   });
 });
@@ -118,7 +127,10 @@ test.describe("Multi-Tenant Isolation", () => {
 
     await page.goto(`${tenant2URL}/sign-in`);
     await page.fill('[name="identifier"]', editor2.email);
-    await page.fill('[name="password"]', process.env.TEST_EDITOR_PASSWORD!);
+    await page.fill(
+      '[name="password"]',
+      process.env.TEST_EDITOR_PASSWORD ?? ""
+    );
     await page.click('button[type="submit"]');
 
     // Navigate to authors in Tenant 2

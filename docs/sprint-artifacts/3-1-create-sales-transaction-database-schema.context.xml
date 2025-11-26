@@ -1,0 +1,277 @@
+<story-context id="3-1-create-sales-transaction-database-schema" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>1</storyId>
+    <title>Create Sales Transaction Database Schema</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-1-create-sales-transaction-database-schema.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform architect</asA>
+    <iWant>establish an immutable sales transaction ledger</iWant>
+    <soThat>all sales data is append-only and auditable</soThat>
+    <tasks>
+      <task id="1" goal="Create sales schema file (AC: 1, 3, 4)">
+        <subtask>Create `src/db/schema/sales.ts` following titles.ts pattern</subtask>
+        <subtask>Define `salesChannelValues` const array: retail, wholesale, direct, distributor</subtask>
+        <subtask>Define `salesFormatValues` const array: physical, ebook, audiobook</subtask>
+        <subtask>Export `SalesChannel` and `SalesFormat` types</subtask>
+        <subtask>Define `sales` pgTable with all columns per AC1</subtask>
+        <subtask>Use `numeric(10, 2)` for DECIMAL currency fields</subtask>
+        <subtask>Export `Sale` and `InsertSale` types</subtask>
+      </task>
+      <task id="2" goal="Add CHECK constraints and indexes (AC: 2, 7)">
+        <subtask>Add CHECK constraint: `quantity > 0`</subtask>
+        <subtask>Add CHECK constraint: `unit_price > 0`</subtask>
+        <subtask>Add CHECK constraint: `total_amount > 0`</subtask>
+        <subtask>Add index on `tenant_id`</subtask>
+        <subtask>Add index on `title_id`</subtask>
+        <subtask>Add index on `sale_date`</subtask>
+        <subtask>Add index on `channel`</subtask>
+        <subtask>Add index on `format`</subtask>
+        <subtask>Add composite index on `(tenant_id, sale_date)`</subtask>
+      </task>
+      <task id="3" goal="Add foreign key constraints (AC: 5)">
+        <subtask>Import `tenants` from `./tenants`</subtask>
+        <subtask>Import `titles` from `./titles`</subtask>
+        <subtask>Import `users` from `./users`</subtask>
+        <subtask>Add FK reference: tenant_id to tenants.id (onDelete: cascade)</subtask>
+        <subtask>Add FK reference: title_id to titles.id (no cascade - restrict)</subtask>
+        <subtask>Add FK reference: created_by_user_id to users.id (no cascade - restrict)</subtask>
+      </task>
+      <task id="4" goal="Update schema index and relations (AC: 1)">
+        <subtask>Add `export * from "./sales"` to `src/db/schema/index.ts`</subtask>
+        <subtask>Add `salesRelations` to `src/db/schema/relations.ts`</subtask>
+        <subtask>Define relation: sales.tenant to tenants (many-to-one)</subtask>
+        <subtask>Define relation: sales.title to titles (many-to-one)</subtask>
+        <subtask>Define relation: sales.createdByUser to users (many-to-one)</subtask>
+        <subtask>Add inverse relations: titles.sales, users.createdSales</subtask>
+      </task>
+      <task id="5" goal="Generate and apply migration (AC: 1-7)">
+        <subtask>Run `npx drizzle-kit generate` to create migration</subtask>
+        <subtask>Review generated SQL for correctness</subtask>
+        <subtask>Apply migration with `npx drizzle-kit push` (dev) or migrate command</subtask>
+        <subtask>Verify table created with correct structure</subtask>
+      </task>
+      <task id="6" goal="Document append-only policy (AC: 8)">
+        <subtask>Add JSDoc comments explaining immutability requirement</subtask>
+        <subtask>Document that no update/delete operations should be implemented</subtask>
+        <subtask>Note: Server Actions for sales will only support INSERT (recordSale)</subtask>
+        <subtask>Consider future: database trigger to prevent UPDATE/DELETE</subtask>
+      </task>
+      <task id="7" goal="Write unit tests for schema (AC: 1-7)">
+        <subtask>Create `tests/unit/sales-schema.test.ts`</subtask>
+        <subtask>Test: Insert valid sale record succeeds</subtask>
+        <subtask>Test: Insert with quantity &lt;= 0 fails (if DB constraint)</subtask>
+        <subtask>Test: Insert with unit_price &lt;= 0 fails (if DB constraint)</subtask>
+        <subtask>Test: Insert with missing required fields fails</subtask>
+        <subtask>Test: Tenant isolation - cannot access other tenant's sales</subtask>
+        <subtask>Test: Foreign key violation on invalid title_id fails</subtask>
+        <subtask>Test: Foreign key violation on invalid created_by_user_id fails</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" description="sales table created per architecture.md schema">
+      <fields>id (UUID, PK), tenant_id (UUID, FK), title_id (UUID, FK), format (text enum), quantity (integer), unit_price (DECIMAL(10,2)), total_amount (DECIMAL(10,2)), sale_date (date), channel (text enum), created_by_user_id (UUID, FK), created_at (timestamp), updated_at (timestamp)</fields>
+    </criterion>
+    <criterion id="AC2" description="CHECK constraints enforce business rules">
+      <rules>quantity &gt; 0, unit_price &gt; 0, total_amount &gt; 0</rules>
+    </criterion>
+    <criterion id="AC3" description="Channel enum defined">
+      <values>retail, wholesale, direct, distributor</values>
+    </criterion>
+    <criterion id="AC4" description="Format enum defined">
+      <values>physical, ebook, audiobook</values>
+    </criterion>
+    <criterion id="AC5" description="Foreign key constraints established">
+      <constraints>title_id to titles.id (ON DELETE RESTRICT), created_by_user_id to users.id (ON DELETE RESTRICT), tenant_id to tenants.id (ON DELETE CASCADE)</constraints>
+    </criterion>
+    <criterion id="AC6" description="RLS policy for tenant isolation">
+      <pattern>Application-level WHERE tenant_id = :current_tenant, Database RLS policy, consistent with existing multi-tenant patterns</pattern>
+    </criterion>
+    <criterion id="AC7" description="Indexes for query performance">
+      <indexes>tenant_id, title_id, sale_date, channel, format, composite (tenant_id, sale_date)</indexes>
+    </criterion>
+    <criterion id="AC8" description="Append-only enforcement">
+      <rules>No UPDATE or DELETE Server Actions, documented immutability, future trigger consideration</rules>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Salina ERP - Product Requirements Document</title>
+        <section>Sales Transaction Management (FR24-FR29)</section>
+        <snippet>FR24: Editors can record individual sales transactions in real-time. FR25: Sale details include title, format, quantity, unit price, sale date, channel. FR29: System prevents modification of historical transactions (append-only ledger).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Database Schema - sales table (lines 1636-1669)</section>
+        <snippet>Complete sales table schema definition including tenant_id, title_id, format, quantity, unit_price, total_amount, sale_date, channel, created_by_user_id fields with CHECK constraints for positive values.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Implementation Patterns - Data Access Patterns</section>
+        <snippet>Tenant Scoping (CRITICAL - ALWAYS ENFORCE): Always include tenant_id in WHERE clause. CRUD Pattern examples with tenant_id injection and transaction patterns.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Currency Handling</section>
+        <snippet>Use numeric(10, 2) for currency fields. Use Decimal.js for calculations. Never use JavaScript arithmetic for currency.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Salina ERP Epics</title>
+        <section>Epic 3: Sales &amp; Returns Processing - Story 3.1</section>
+        <snippet>Create immutable sales transaction ledger with append-only audit capability. Prerequisites for Stories 3.2-3.7 and royalty calculations.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/db/schema/titles.ts</path>
+        <kind>schema</kind>
+        <symbol>titles pgTable</symbol>
+        <lines>71-164</lines>
+        <reason>Reference pattern for pgTable definition with indexes, unique constraints, JSDoc comments, and type exports. Sales schema should follow identical structure.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/isbns.ts</path>
+        <kind>schema</kind>
+        <symbol>isbns pgTable, isbnTypeValues, isbnStatusValues</symbol>
+        <lines>36-54, 65-133</lines>
+        <reason>Reference pattern for enum const arrays with type exports. Sales schema needs salesChannelValues and salesFormatValues following this pattern.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/users.ts</path>
+        <kind>schema</kind>
+        <symbol>users pgTable</symbol>
+        <lines>11-33</lines>
+        <reason>Foreign key target for created_by_user_id. Reference for FK constraint pattern.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/relations.ts</path>
+        <kind>schema</kind>
+        <symbol>titlesRelations, isbnsRelations</symbol>
+        <lines>66-98</lines>
+        <reason>Pattern for defining Drizzle relations. Need to add salesRelations and update titlesRelations with sales inverse relation.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/index.ts</path>
+        <kind>schema</kind>
+        <symbol>exports</symbol>
+        <lines>1-19</lines>
+        <reason>Schema index file - must add `export * from "./sales"` and Sale type export.</reason>
+      </file>
+      <file>
+        <path>tests/unit/isbn-schema.test.ts</path>
+        <kind>test</kind>
+        <symbol>describe, it, expect</symbol>
+        <lines>1-50</lines>
+        <reason>Reference pattern for schema unit tests using Vitest. Follow structure for sales-schema.test.ts.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="drizzle-orm" version="^0.44.7">ORM for PostgreSQL schema and queries</package>
+        <package name="@neondatabase/serverless" version="^1.0.2">Neon PostgreSQL serverless driver</package>
+        <package name="zod" version="^4.1.12">Schema validation for Server Actions</package>
+        <package name="decimal.js" version="^10.6.0">Precise currency calculations</package>
+        <package name="vitest" version="4.0.13" dev="true">Unit testing framework</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md" type="pattern">
+      Multi-tenant isolation: All queries MUST include tenant_id in WHERE clause. Three-layer defense: middleware, ORM wrapper, database RLS.
+    </constraint>
+    <constraint source="architecture.md" type="pattern">
+      Naming conventions: Table names plural snake_case (sales), column names snake_case, foreign keys {table}_id format.
+    </constraint>
+    <constraint source="architecture.md" type="financial">
+      Currency fields use numeric(10, 2) precision. All currency math via Decimal.js, never JavaScript arithmetic.
+    </constraint>
+    <constraint source="prd.md" type="business">
+      FR29: Append-only ledger - no modification of historical transactions. No UPDATE or DELETE operations allowed.
+    </constraint>
+    <constraint source="architecture.md" type="testing">
+      Unit tests in tests/unit/ directory. Use Vitest with describe/it/expect pattern.
+    </constraint>
+    <constraint source="dev-notes" type="pattern">
+      Follow src/db/schema/titles.ts structure with comprehensive JSDoc comments. Export both Select type (Sale) and Insert type (InsertSale).
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>pgTable</name>
+      <kind>function</kind>
+      <signature>pgTable(name: string, columns: {...}, constraints?: (table) => {...})</signature>
+      <path>drizzle-orm/pg-core</path>
+    </interface>
+    <interface>
+      <name>numeric</name>
+      <kind>column type</kind>
+      <signature>numeric(name: string, config: { precision: number, scale: number })</signature>
+      <path>drizzle-orm/pg-core</path>
+    </interface>
+    <interface>
+      <name>relations</name>
+      <kind>function</kind>
+      <signature>relations(table, callback: ({ one, many }) => {...})</signature>
+      <path>drizzle-orm</path>
+    </interface>
+    <interface>
+      <name>index</name>
+      <kind>constraint</kind>
+      <signature>index(name: string).on(column)</signature>
+      <path>drizzle-orm/pg-core</path>
+    </interface>
+    <interface>
+      <name>check (if supported)</name>
+      <kind>constraint</kind>
+      <signature>check(name: string, sql`...`)</signature>
+      <path>drizzle-orm/pg-core</path>
+      <note>Drizzle CHECK constraint support varies by version. May need raw SQL migration or application-layer Zod validation as fallback.</note>
+    </interface>
+    <interface>
+      <name>references</name>
+      <kind>FK constraint</kind>
+      <signature>.references(() => table.column, { onDelete: 'cascade' | 'restrict' })</signature>
+      <path>drizzle-orm/pg-core</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests use Vitest framework (vitest run, vitest watch). Tests located in tests/unit/ directory. Follow describe/it/expect pattern with safeParse for Zod schema testing. Integration tests in tests/integration/. E2E tests use Playwright in tests/e2e/. Use @faker-js/faker for test data generation.
+    </standards>
+    <locations>
+      <glob>tests/unit/**/*.test.ts</glob>
+      <glob>tests/integration/**/*.test.ts</glob>
+      <glob>tests/e2e/*.spec.ts</glob>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test: Insert valid sale record with all required fields succeeds</idea>
+      <idea ac="AC1">Test: Sale type inference works correctly (Sale, InsertSale types)</idea>
+      <idea ac="AC2">Test: Insert with quantity &lt;= 0 rejected by CHECK constraint or validation</idea>
+      <idea ac="AC2">Test: Insert with unit_price &lt;= 0 rejected</idea>
+      <idea ac="AC3,AC4">Test: salesChannelSchema validates retail, wholesale, direct, distributor</idea>
+      <idea ac="AC3,AC4">Test: salesFormatSchema validates physical, ebook, audiobook</idea>
+      <idea ac="AC5">Test: FK violation on invalid title_id returns error</idea>
+      <idea ac="AC5">Test: FK violation on invalid created_by_user_id returns error</idea>
+      <idea ac="AC6">Test: Query without tenant_id filter fails or returns no data from other tenants</idea>
+      <idea ac="AC7">Test: Queries on indexed columns perform efficiently (verify indexes exist via DB introspection)</idea>
+      <idea ac="AC8">Test: No updateSale or deleteSale actions exist in module</idea>
+    </ideas>
+  </tests>
+</story-context>

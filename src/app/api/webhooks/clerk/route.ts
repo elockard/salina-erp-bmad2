@@ -1,8 +1,9 @@
 import type { WebhookEvent } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { headers } from "next/headers";
 import { Webhook } from "svix";
 import { adminDb } from "@/db";
+import { authors } from "@/db/schema/authors";
 import { tenants } from "@/db/schema/tenants";
 import { users } from "@/db/schema/users";
 
@@ -71,8 +72,86 @@ export async function POST(req: Request) {
         role?: string;
         tenant_name?: string;
         tenant_subdomain?: string;
+        author_id?: string; // Story 2.3: Author portal invitation metadata
       };
 
+      // Story 2.3: Handle author portal invitation
+      // If author_id is present in metadata, this is an author accepting portal invitation
+      if (
+        metadata.author_id &&
+        metadata.tenant_id &&
+        metadata.role === "author"
+      ) {
+        console.log("Processing author portal invitation:", {
+          author_id: metadata.author_id,
+          tenant_id: metadata.tenant_id,
+          email,
+        });
+
+        // Find the pre-created user record (created by grantPortalAccess)
+        // that matches the email, tenant_id, role="author", and has no clerk_user_id yet
+        const pendingUser = await adminDb.query.users.findFirst({
+          where: and(
+            eq(users.email, email),
+            eq(users.tenant_id, metadata.tenant_id),
+            eq(users.role, "author"),
+            isNull(users.clerk_user_id),
+          ),
+        });
+
+        if (!pendingUser) {
+          console.error("No pending author user found for invitation:", {
+            email,
+            tenant_id: metadata.tenant_id,
+          });
+          // User record doesn't exist - may have been revoked or never created
+          return new Response("No pending user found", { status: 400 });
+        }
+
+        // Verify the author exists and matches the tenant
+        const author = await adminDb.query.authors.findFirst({
+          where: and(
+            eq(authors.id, metadata.author_id),
+            eq(authors.tenant_id, metadata.tenant_id),
+          ),
+        });
+
+        if (!author) {
+          console.error("Author not found or tenant mismatch:", {
+            author_id: metadata.author_id,
+            tenant_id: metadata.tenant_id,
+          });
+          return new Response("Author validation failed", { status: 400 });
+        }
+
+        // Verify the author is linked to this user record
+        if (author.portal_user_id !== pendingUser.id) {
+          console.error("Author portal_user_id mismatch:", {
+            author_portal_user_id: author.portal_user_id,
+            pending_user_id: pendingUser.id,
+          });
+          return new Response("Author-user link mismatch", { status: 400 });
+        }
+
+        // Activate user and link Clerk ID
+        await adminDb
+          .update(users)
+          .set({
+            clerk_user_id: id,
+            is_active: true,
+            updated_at: new Date(),
+          })
+          .where(eq(users.id, pendingUser.id));
+
+        console.log("Author portal user activated:", {
+          user_id: pendingUser.id,
+          clerk_user_id: id,
+          author_id: metadata.author_id,
+        });
+        return new Response("Author portal user activated", { status: 200 });
+      }
+
+      // Standard user signup flow (non-author)
       let tenant_id = metadata.tenant_id;
 
       // If no tenant_id in metadata, this is a new tenant owner signup

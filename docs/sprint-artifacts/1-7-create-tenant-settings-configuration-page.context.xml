@@ -1,0 +1,328 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.7</storyId>
+    <title>Create Tenant Settings Configuration Page</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-23</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-7-create-tenant-settings-configuration-page.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a tenant owner or administrator</asA>
+    <iWant>to configure tenant-level settings (timezone, fiscal year, currency, statement frequency)</iWant>
+    <soThat>the system operates according to my publishing company's business practices and generates appropriate financial reports</soThat>
+    <tasks>
+      - Create tenant settings page route at /dashboard/settings (AC: 1, 25-26)
+      - Create Server Action to fetch current tenant settings (AC: 2, 7)
+      - Create Zod validation schema for settings (AC: 8-12)
+      - Create tenant settings form component with all fields (AC: 3-12, 20-23, 27-35)
+      - Create update tenant settings Server Action (AC: 13-19, 24)
+      - Add toast notifications for success/error (AC: 18, 24)
+      - Add route protection for settings page (AC: 25-26)
+      - Add settings link to dashboard navigation (AC: 1)
+      - Create integration tests for settings Server Actions (AC: 13-19)
+      - Create E2E tests for settings page (all ACs)
+      - Final validation and manual testing (all ACs)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Owner/Admin can access tenant settings page at `/dashboard/settings` route
+    2. Settings page displays form with current tenant settings loaded from database
+    3. Form includes timezone field with dropdown of common timezones (e.g., America/New_York, America/Los_Angeles, America/Chicago, Europe/London)
+    4. Form includes fiscal year start date field (date picker) allowing selection of any month/day
+    5. Form includes default currency field with dropdown (USD, EUR, GBP, CAD)
+    6. Form includes statement frequency field with radio buttons (Quarterly, Annual)
+    7. All fields pre-populated with current tenant values from database on page load
+    8. Form validates timezone is a valid TZ identifier (IANA timezone database format)
+    9. Form validates fiscal year start date is valid date and not in future (warning only, not blocker)
+    10. Form validates default currency is 3-letter ISO 4217 code (USD, EUR, GBP, CAD)
+    11. Form validates statement frequency is either "quarterly" or "annual"
+    12. Client-side validation uses Zod schema before submission
+    13. Server Action `updateTenantSettings(data)` checks permission using `requirePermission(MANAGE_SETTINGS)` from Story 1.5
+    14. If permission denied, Server Action returns `{ success: false, error: "You don't have permission to update settings" }`
+    15. Server Action validates all fields server-side using Zod schema
+    16. Server Action updates tenant record in database with new values: timezone, fiscal_year_start, default_currency, statement_frequency
+    17. Server Action sets `updated_at` timestamp to current date/time
+    18. Upon successful update, toast notification displays: "Settings saved successfully"
+    19. Updated settings persist across sessions and affect future operations (royalty calculations, statement generation)
+    20. Form includes "Cancel" button that resets fields to original values (no server call)
+    21. Form includes "Save Changes" button that triggers Server Action
+    22. Save button disabled while form invalid or unchanged (no dirty fields)
+    23. Save button shows loading spinner during Server Action execution
+    24. If save fails, toast error message displays with specific error (validation error, permission error, network error)
+    25. Settings page requires Owner or Admin role to access (route protection via middleware or redirect)
+    26. Editor/Finance roles attempting to access settings page see 403 error or redirect to dashboard with error message
+    27. Settings page layout includes header "Tenant Settings" with description text explaining impact of settings
+    28. Timezone setting includes help text: "Used for displaying dates/times and scheduling royalty statements"
+    29. Fiscal year start setting includes help text: "Your company's fiscal year start date for financial reporting (e.g., July 1 for July-June fiscal year)"
+    30. Currency setting includes help text: "Default currency for displaying financial data. Multi-currency support coming soon."
+    31. Statement frequency setting includes help text: "How often royalty statements are generated (Quarterly = 4x/year, Annual = 1x/year)"
+    32. Form uses shadcn/ui components (Input, Select, RadioGroup, Button) for consistent styling
+    33. Form responsive design: adapts to mobile screens with vertical layout
+    34. Accessibility: All fields keyboard navigable, proper labels, ARIA attributes, screen reader compatible
+    35. Error states: Field-level validation errors display inline below each field with red text
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR8 - Configure Tenant Settings</section>
+        <snippet>Owner and Admin users can configure tenant-level operational settings including timezone for date/time display, fiscal year start for financial reporting, default currency for display, and royalty statement frequency (quarterly or annual).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Tenant Settings Management</section>
+        <snippet>Tenant settings stored in tenants table. Server Actions follow permission-protected pattern with requirePermission(MANAGE_SETTINGS). Form validation uses Zod schemas client-side and server-side.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Tenant Settings Update Flow</section>
+        <snippet>Settings workflow: Load current settings → Display in form → Validate changes → Update database → Set updated_at timestamp → Toast notification → Settings persist and affect future operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/1-6-build-user-invitation-and-management-system.md</path>
+        <title>Story 1.6 - User Invitation and Management</title>
+        <section>Dev Notes - Form Patterns</section>
+        <snippet>Established patterns: React Hook Form + Zod validation, useEffect to load data on mount, form.reset(data) to populate, Cancel button resets to originalValues, Save button disabled when !isDirty || !isValid || isSubmitting, toast notifications for success/error feedback.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/db/schema/tenants.ts</path>
+        <kind>schema</kind>
+        <symbol>tenants</symbol>
+        <lines>3-15</lines>
+        <reason>Tenant table schema with settings columns: timezone (text, default 'America/New_York'), fiscal_year_start (date), default_currency (text, default 'USD'), statement_frequency (text, default 'quarterly'). These are the fields this story needs to update.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/permissions.ts</path>
+        <kind>constants</kind>
+        <symbol>MANAGE_SETTINGS</symbol>
+        <lines>12-13</lines>
+        <reason>Permission constant MANAGE_SETTINGS: ['owner', 'admin'] defines who can access settings page and update settings. Required for Server Action permission checks.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>helpers</kind>
+        <symbol>getCurrentTenantId, getCurrentUser, requirePermission</symbol>
+        <lines>1-112</lines>
+        <reason>Authentication helpers: getCurrentTenantId() gets tenant context from headers, getCurrentUser() retrieves authenticated user with role, requirePermission() enforces role-based access control. All Server Actions must use these patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/users/actions.ts</path>
+        <kind>server-actions</kind>
+        <symbol>inviteUser, updateUserRole, deactivateUser</symbol>
+        <lines>all</lines>
+        <reason>Reference implementation of Server Actions pattern: 'use server' directive, requirePermission() check, getCurrentTenantId() for tenant context, Zod validation, standardized ActionResult&lt;T&gt; response format, try-catch error handling with UNAUTHORIZED and ZodError cases.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/users/schema.ts</path>
+        <kind>validation</kind>
+        <symbol>inviteUserSchema</symbol>
+        <lines>all</lines>
+        <reason>Example Zod schema pattern: z.object with field validations, z.enum for constrained values, custom refinements. This story needs similar pattern for updateTenantSettingsSchema.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/users/components/user-list.tsx</path>
+        <kind>component</kind>
+        <symbol>UserList</symbol>
+        <lines>all</lines>
+        <reason>Reference form component pattern: React Hook Form integration, useEffect to load data, form state management (isDirty, isValid, isSubmitting), loading states, error handling, toast notifications via sonner.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/tenant/actions.ts</path>
+        <kind>server-actions</kind>
+        <symbol>createTenant</symbol>
+        <lines>all</lines>
+        <reason>Existing tenant module Server Actions. This story will add getTenantSettings() and updateTenantSettings() to this file following the same pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/tenant/schema.ts</path>
+        <kind>validation</kind>
+        <symbol>createTenantSchema</symbol>
+        <lines>all</lines>
+        <reason>Existing tenant Zod schemas. This story will add updateTenantSettingsSchema to this file.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(dashboard)/settings/users/page.tsx</path>
+        <kind>page</kind>
+        <symbol>UsersSettingsPage</symbol>
+        <lines>all</lines>
+        <reason>Reference page route implementation: (dashboard) route group, permission-protected page, layout with header and description, integration with Server Actions and components. Settings page will follow similar pattern at src/app/(dashboard)/settings/page.tsx.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/input.tsx</path>
+        <kind>component</kind>
+        <symbol>Input</symbol>
+        <lines>all</lines>
+        <reason>shadcn/ui Input component available for text/date inputs in settings form.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/select.tsx</path>
+        <kind>component</kind>
+        <symbol>Select, SelectTrigger, SelectValue, SelectContent, SelectItem</symbol>
+        <lines>all</lines>
+        <reason>shadcn/ui Select components available for timezone and currency dropdowns in settings form.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/button.tsx</path>
+        <kind>component</kind>
+        <symbol>Button</symbol>
+        <lines>all</lines>
+        <reason>shadcn/ui Button component available for Cancel and Save buttons.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/label.tsx</path>
+        <kind>component</kind>
+        <symbol>Label</symbol>
+        <lines>all</lines>
+        <reason>shadcn/ui Label component available for form field labels.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.66.1</version>
+        <purpose>Form state management, validation integration</purpose>
+      </node>
+      <node>
+        <package>@hookform/resolvers</package>
+        <version>^5.2.2</version>
+        <purpose>Zod resolver for React Hook Form</purpose>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.12</version>
+        <purpose>Schema validation (client + server)</purpose>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>2.0.7</version>
+        <purpose>Toast notifications</purpose>
+      </node>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <purpose>Database queries for tenant settings</purpose>
+      </node>
+      <node>
+        <package>@radix-ui/react-select</package>
+        <version>2.2.6</version>
+        <purpose>Select dropdown components (timezone, currency)</purpose>
+      </node>
+      <node>
+        <package>@radix-ui/react-label</package>
+        <version>2.1.8</version>
+        <purpose>Form labels</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - All Server Actions MUST begin with 'use server' directive
+    - All Server Actions MUST call requirePermission(MANAGE_SETTINGS) before business logic
+    - All Server Actions MUST validate input using Zod schemas server-side (never trust client)
+    - All Server Actions MUST return ActionResult&lt;T&gt; format: { success: true, data: T } or { success: false, error: string }
+    - All Server Actions MUST handle UNAUTHORIZED error (throw from requirePermission) and return user-friendly error message
+    - All Server Actions MUST get tenant context via getCurrentTenantId() to enforce tenant isolation
+    - All database queries MUST include tenant_id filter (WHERE tenant_id = tenantId)
+    - Form validation MUST use Zod schema with zodResolver from @hookform/resolvers
+    - Form MUST track isDirty state to disable Save button when unchanged
+    - Form MUST track isValid state to disable Save button when invalid
+    - Form MUST track isSubmitting state to show loading spinner and disable actions
+    - Cancel button MUST reset form to original values WITHOUT server call
+    - Settings page route MUST be protected (Owner/Admin only) via middleware or component-level check
+    - Settings link in navigation MUST be wrapped in PermissionGate component to hide from Editor/Finance
+    - Toast notifications MUST use sonner library (toast.success, toast.error)
+    - All UI components MUST use shadcn/ui components (Input, Select, RadioGroup, Button, Label)
+    - Form MUST be responsive (mobile-friendly layout)
+    - Form MUST be accessible (keyboard navigation, ARIA labels, screen reader compatible)
+    - Timezone validation MUST check against IANA timezone database (use Intl.supportedValuesOf('timeZone'))
+    - Currency validation MUST enforce 3-letter ISO 4217 codes (USD, EUR, GBP, CAD)
+    - Statement frequency MUST be enum: 'quarterly' or 'annual'
+    - Database update MUST set updated_at timestamp to current date/time
+    - Integration tests MUST mock database and session context
+    - E2E tests MUST seed test database with tenant and users
+    - Follow existing patterns from Story 1.6 (User Management) for forms and Server Actions
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>getTenantSettings</name>
+      <kind>server-action</kind>
+      <signature>async function getTenantSettings(): Promise&lt;ActionResult&lt;Tenant&gt;&gt;</signature>
+      <path>src/modules/tenant/actions.ts</path>
+      <description>Fetches current tenant settings for authenticated user. Requires MANAGE_SETTINGS permission. Returns tenant object with all settings fields.</description>
+    </interface>
+    <interface>
+      <name>updateTenantSettings</name>
+      <kind>server-action</kind>
+      <signature>async function updateTenantSettings(data: unknown): Promise&lt;ActionResult&lt;Tenant&gt;&gt;</signature>
+      <path>src/modules/tenant/actions.ts</path>
+      <description>Updates tenant settings. Validates input with Zod, checks MANAGE_SETTINGS permission, updates database, sets updated_at timestamp. Returns updated tenant object or error.</description>
+    </interface>
+    <interface>
+      <name>updateTenantSettingsSchema</name>
+      <kind>zod-schema</kind>
+      <signature>z.object({ timezone: z.string().refine(...), fiscal_year_start: z.coerce.date().optional(), default_currency: z.enum(['USD', 'EUR', 'GBP', 'CAD']), statement_frequency: z.enum(['quarterly', 'annual']) })</signature>
+      <path>src/modules/tenant/schema.ts</path>
+      <description>Zod validation schema for tenant settings update. Validates timezone against IANA database, currency as ISO 4217 code, statement frequency as enum, fiscal year as optional date.</description>
+    </interface>
+    <interface>
+      <name>TenantSettingsForm</name>
+      <kind>react-component</kind>
+      <signature>function TenantSettingsForm(): JSX.Element</signature>
+      <path>src/modules/tenant/components/tenant-settings-form.tsx</path>
+      <description>Form component for tenant settings. Uses React Hook Form with Zod validation. Loads current settings on mount, displays all fields, handles submit, shows loading/error states, provides Cancel/Save buttons.</description>
+    </interface>
+    <interface>
+      <name>ActionResult&lt;T&gt;</name>
+      <kind>type</kind>
+      <signature>type ActionResult&lt;T&gt; = { success: true; data: T } | { success: false; error: string; fields?: Record&lt;string, string&gt; }</signature>
+      <path>src/lib/types.ts</path>
+      <description>Standardized Server Action response format. Success case includes data payload, error case includes error message and optional field-level validation errors.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      - Unit tests use Vitest framework (npm run test:unit)
+      - Integration tests use Vitest with mocked database and session context (npm run test:integration)
+      - E2E tests use Playwright framework (npm run test:e2e)
+      - Integration tests verify Server Action logic: permission checks, validation, database operations, error handling
+      - E2E tests verify full user workflows: page access, form interaction, settings persistence, toast notifications
+      - Test files follow naming convention: [feature].test.ts (integration), [feature].spec.ts (E2E)
+      - Mock Clerk authentication and session context in integration tests
+      - Seed test database with tenant and users for E2E tests
+      - Verify cross-tenant isolation in E2E tests (user cannot access other tenant's settings)
+    </standards>
+
+    <locations>
+      - tests/integration/tenant-settings.test.ts (new file for this story)
+      - tests/e2e/tenant-settings.spec.ts (new file for this story)
+      - tests/setup.ts (existing test setup, may need Clerk mocking utilities)
+    </locations>
+
+    <ideas>
+      <test ac="1, 25-26" type="e2e">Owner can access /dashboard/settings route, page renders correctly. Editor redirected with 403 error.</test>
+      <test ac="2, 7" type="integration">getTenantSettings() returns current tenant settings for authorized user. Unauthorized user gets 403 error.</test>
+      <test ac="2, 7" type="e2e">Settings page loads with form pre-populated with current tenant values from database.</test>
+      <test ac="8-12" type="integration">updateTenantSettingsSchema validates valid timezone, rejects invalid timezone. Validates currency as USD/EUR/GBP/CAD enum. Validates statement frequency as quarterly/annual enum.</test>
+      <test ac="13-19" type="integration">updateTenantSettings() succeeds for authorized user, updates database, sets updated_at timestamp. Unauthorized user gets permission error. Invalid data returns validation errors.</test>
+      <test ac="13-19" type="e2e">Owner can update timezone, save succeeds, settings persist after page reload. Toast notification appears.</test>
+      <test ac="20-23" type="e2e">Cancel button resets form to original values without server call. Save button disabled when form unchanged. Save button shows loading spinner during submit.</test>
+      <test ac="24" type="e2e">Invalid timezone triggers validation error with red text below field. Network error shows toast with retry option.</test>
+      <test ac="33" type="e2e">Form adapts to mobile viewport (Chrome DevTools mobile view), all fields accessible.</test>
+      <test ac="34" type="e2e">All form fields keyboard navigable. Tab navigation works correctly. Screen reader announces field labels and errors.</test>
+    </ideas>
+  </tests>
+</story-context>

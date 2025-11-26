@@ -1,0 +1,364 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>8</storyId>
+    <title>Build ISBN Pool Status View and Availability Tracking</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-8-build-isbn-pool-status-view-and-availability-tracking.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>editor</asA>
+    <iWant>to view ISBN pool status and availability by type</iWant>
+    <soThat>I know when to request more ISBNs</soThat>
+    <tasks>
+      <task id="1" status="pending">Create ISBN pool stats query function (AC: 1, 2, 3)
+        <subtask>Create `getISBNPoolStats` query in `src/modules/isbn/queries.ts`</subtask>
+        <subtask>Return counts by status (available, assigned, registered, retired)</subtask>
+        <subtask>Return counts by type (physical, ebook)</subtask>
+        <subtask>Return available counts by type for low warning check</subtask>
+        <subtask>Add tenant_id filtering for multi-tenant isolation</subtask>
+      </task>
+      <task id="2" status="pending">Build dashboard ISBN pool widget (AC: 1, 2)
+        <subtask>Create `src/modules/isbn/components/isbn-pool-widget.tsx`</subtask>
+        <subtask>Display physical available/total with progress bar</subtask>
+        <subtask>Display ebook available/total with progress bar</subtask>
+        <subtask>Add warning badge when available &lt; 10 for either type</subtask>
+        <subtask>Make widget clickable to navigate to `/isbn-pool`</subtask>
+        <subtask>Integrate widget into dashboard page</subtask>
+      </task>
+      <task id="3" status="pending">Create ISBN pool page route and layout (AC: 3, 8)
+        <subtask>Create `src/app/(dashboard)/isbn-pool/page.tsx`</subtask>
+        <subtask>Add page header with title "ISBN Pool" and description</subtask>
+        <subtask>Add breadcrumb navigation (Dashboard > ISBN Pool)</subtask>
+        <subtask>Verify page is accessible to authenticated users</subtask>
+      </task>
+      <task id="4" status="pending">Build ISBN pool stats cards (AC: 3)
+        <subtask>Create `src/modules/isbn/components/isbn-pool-stats.tsx`</subtask>
+        <subtask>Physical ISBNs card with breakdown by status</subtask>
+        <subtask>Ebook ISBNs card with breakdown by status</subtask>
+        <subtask>Total ISBNs card with combined counts</subtask>
+        <subtask>Add utilization progress bars</subtask>
+        <subtask>Add low inventory warning badges</subtask>
+      </task>
+      <task id="5" status="pending">Create ISBN list query with pagination and filters (AC: 4, 5, 6)
+        <subtask>Create `getISBNList` query in `src/modules/isbn/queries.ts`</subtask>
+        <subtask>Support type filter parameter</subtask>
+        <subtask>Support status filter parameter</subtask>
+        <subtask>Support search (partial ISBN match using ILIKE)</subtask>
+        <subtask>Implement pagination (offset/limit, default 20 per page)</subtask>
+        <subtask>Return total count for pagination UI</subtask>
+        <subtask>Include related title and user data via joins</subtask>
+      </task>
+      <task id="6" status="pending">Build ISBN data table component (AC: 4, 5, 6)
+        <subtask>Create `src/modules/isbn/components/isbn-pool-table.tsx`</subtask>
+        <subtask>Implement columns: ISBN-13, Type, Status, Assigned To, Assigned Date, Actions</subtask>
+        <subtask>Use monospace font for ISBN-13 column</subtask>
+        <subtask>Add colored badges for Type and Status columns</subtask>
+        <subtask>Link title name to title detail page</subtask>
+        <subtask>Add "View Details" button in Actions column</subtask>
+        <subtask>Use TanStack Table for table implementation</subtask>
+      </task>
+      <task id="7" status="pending">Build filter controls component (AC: 5)
+        <subtask>Create `src/modules/isbn/components/isbn-pool-filters.tsx`</subtask>
+        <subtask>Type dropdown: All, Physical, Ebook</subtask>
+        <subtask>Status dropdown: All, Available, Assigned, Registered, Retired</subtask>
+        <subtask>Search input with debounced onChange</subtask>
+        <subtask>Clear filters button</subtask>
+        <subtask>Filters update URL query params for shareable links</subtask>
+      </task>
+      <task id="8" status="pending">Build pagination component (AC: 6)
+        <subtask>Use shadcn/ui pagination components</subtask>
+        <subtask>Display "Showing X-Y of Z results"</subtask>
+        <subtask>Previous/Next buttons with disabled states</subtask>
+        <subtask>Page number display</subtask>
+        <subtask>Handle page changes with URL query params</subtask>
+      </task>
+      <task id="9" status="pending">Build ISBN detail modal (AC: 7)
+        <subtask>Create `src/modules/isbn/components/isbn-detail-modal.tsx`</subtask>
+        <subtask>Display full ISBN-13 with copy-to-clipboard button</subtask>
+        <subtask>Display Type and Status badges</subtask>
+        <subtask>If assigned: show title link, assigned by, assigned date</subtask>
+        <subtask>If available: show "Assign to Title" button (disabled, tooltip "Coming in Story 2.9")</subtask>
+        <subtask>Use shadcn/ui Dialog component</subtask>
+      </task>
+      <task id="10" status="pending">Write tests (AC: 1-8)
+        <subtask>Unit tests: `getISBNPoolStats` query function</subtask>
+        <subtask>Unit tests: `getISBNList` query with filters and pagination</subtask>
+        <subtask>Integration tests: ISBN pool page data loading</subtask>
+        <subtask>E2E test: Navigate to ISBN pool, apply filters, verify table updates</subtask>
+        <subtask>E2E test: Dashboard widget displays correct counts</subtask>
+        <subtask>E2E test: Detail modal opens and displays correct data</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Dashboard widget displays ISBN pool summary - Physical ISBNs: X available / Y total, Ebook ISBNs: X available / Y total, Progress bars showing utilization percentage, Clickable to navigate to full `/isbn-pool` page</criterion>
+    <criterion id="AC2">Warning badge displays when availability is low - Badge appears if available &lt; 10 for either Physical or Ebook type, Badge text: "Low" with warning color (amber/orange), Visible on both dashboard widget and ISBN pool page</criterion>
+    <criterion id="AC3">Full `/isbn-pool` page displays stats cards - Physical ISBNs card: Available / Assigned / Registered / Retired counts, Ebook ISBNs card: Available / Assigned / Registered / Retired counts, Total ISBNs card: Combined counts across both types, Visual progress bar showing pool utilization</criterion>
+    <criterion id="AC4">ISBN table displays all pool entries with required columns - ISBN-13 (monospace font for readability), Type badge (Physical/Ebook with color coding), Status badge (Available/Assigned/Registered/Retired with color coding), Assigned To (title link if assigned, empty if available), Assigned Date (formatted date, empty if available), Actions column (View Details button)</criterion>
+    <criterion id="AC5">Table supports filtering - Type filter dropdown: All / Physical / Ebook, Status filter dropdown: All / Available / Assigned / Registered / Retired, Search input: partial match on ISBN-13 value, Filters apply immediately on change, Clear filters button to reset all filters</criterion>
+    <criterion id="AC6">Table pagination (20 items per page) - Display total count of matching ISBNs, Previous/Next navigation buttons, Page number indicators, Pagination state persists with filters</criterion>
+    <criterion id="AC7">ISBN detail modal shows comprehensive information - Full ISBN-13 value with copy button, Type and Status badges, If assigned: Title name (clickable link), assigned by user name, assigned date, If available: "Assign to Title" button (opens title selector - deferred to Story 2.9), Close button</criterion>
+    <criterion id="AC8">Permission enforcement - Page accessible to all authenticated dashboard users, Uses `VIEW_OWN_STATEMENTS` permission (all roles), No edit/delete capabilities in this story (read-only view)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Story 2.8: ISBN Pool View</section>
+        <snippet>AC2.8.1-6: Dashboard widget shows available/total by type, warning badge if available &lt; 10, full /isbn-pool page shows stats cards, table with ISBN/type/status/assigned title, filters (type/status/search), pagination (20 per page).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Pattern 3: ISBN Pool Management with Row Locking</section>
+        <snippet>PostgreSQL Row-Level Locking for ISBN assignment. Transaction with forUpdate() prevents concurrent assignment. All queries include tenant_id filter for multi-tenant isolation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Implementation Patterns - Data Access</section>
+        <snippet>CRUD Pattern with tenant scoping, ActionResult type for responses, Three-layer validation (Zod client + server + database constraints).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>UI Components</section>
+        <snippet>shadcn/ui + Radix UI for accessible components, TanStack Table 8.21+ for data grids, Toast notifications via sonner.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/db/schema/isbns.ts</path>
+        <kind>schema</kind>
+        <symbol>isbns, ISBN, NewISBN, ISBNStatus, ISBNType</symbol>
+        <lines>65-146</lines>
+        <reason>ISBN table schema with status/type enums, tenant_id foreign key, indexes for status/type/assigned_to_title_id</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/isbn/types.ts</path>
+        <kind>types</kind>
+        <symbol>ISBNPoolStats, ISBNWithRelations, ISBNListItem, ISBNImportResult</symbol>
+        <lines>1-84</lines>
+        <reason>Type definitions for ISBN pool stats, list items, and relations - reuse ISBNPoolStats for stats query</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/isbn/actions.ts</path>
+        <kind>server-actions</kind>
+        <symbol>importISBNs, ImportISBNsResult</symbol>
+        <lines>1-195</lines>
+        <reason>Existing ISBN import action - follow same patterns for new query functions, shows permission checks and tenant scoping</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/isbn/components/isbn-import-form.tsx</path>
+        <kind>component</kind>
+        <symbol>ISBNImportForm</symbol>
+        <reason>Reference component for ISBN module patterns, form handling, UI structure</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/permissions.ts</path>
+        <kind>permissions</kind>
+        <symbol>VIEW_OWN_STATEMENTS, MANAGE_SETTINGS</symbol>
+        <lines>31-37</lines>
+        <reason>Permission constants - use VIEW_OWN_STATEMENTS for ISBN pool read access (all authenticated users)</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentTenantId, getDb, requirePermission, getCurrentUser</symbol>
+        <reason>Auth utilities for tenant context, database access, permission enforcement</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(dashboard)/dashboard/page.tsx</path>
+        <kind>page</kind>
+        <symbol>DashboardPage</symbol>
+        <lines>1-62</lines>
+        <reason>Dashboard page structure - shows role-based rendering pattern, integrate ISBN widget here</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(dashboard)/dashboard/components/editor-dashboard.tsx</path>
+        <kind>component</kind>
+        <symbol>EditorDashboard</symbol>
+        <lines>1-120</lines>
+        <reason>Dashboard component showing Card pattern, stats display, Quick Actions - add ISBN pool widget to this pattern</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/dashboard/actions.ts</path>
+        <kind>server-actions</kind>
+        <symbol>getDashboardStats</symbol>
+        <reason>Dashboard stats action - extend to include ISBN pool stats or call ISBN query from here</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/card.tsx</path>
+        <kind>component</kind>
+        <symbol>Card, CardHeader, CardTitle, CardContent, CardDescription</symbol>
+        <reason>shadcn/ui Card component for stats cards and widgets</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/badge.tsx</path>
+        <kind>component</kind>
+        <symbol>Badge</symbol>
+        <reason>shadcn/ui Badge for type/status badges with variant styling</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/table.tsx</path>
+        <kind>component</kind>
+        <symbol>Table, TableHeader, TableBody, TableRow, TableHead, TableCell</symbol>
+        <reason>shadcn/ui Table primitives for ISBN data table</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/dialog.tsx</path>
+        <kind>component</kind>
+        <symbol>Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription</symbol>
+        <reason>shadcn/ui Dialog for ISBN detail modal</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/select.tsx</path>
+        <kind>component</kind>
+        <symbol>Select, SelectTrigger, SelectValue, SelectContent, SelectItem</symbol>
+        <reason>shadcn/ui Select for filter dropdowns</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/input.tsx</path>
+        <kind>component</kind>
+        <symbol>Input</symbol>
+        <reason>shadcn/ui Input for search field</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/button.tsx</path>
+        <kind>component</kind>
+        <symbol>Button</symbol>
+        <reason>shadcn/ui Button for actions, pagination controls</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/skeleton.tsx</path>
+        <kind>component</kind>
+        <symbol>Skeleton</symbol>
+        <reason>shadcn/ui Skeleton for loading states</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/tooltip.tsx</path>
+        <kind>component</kind>
+        <symbol>Tooltip, TooltipTrigger, TooltipContent, TooltipProvider</symbol>
+        <reason>shadcn/ui Tooltip for disabled "Assign to Title" button explanation</reason>
+      </artifact>
+      <artifact>
+        <path>tests/e2e/isbn-import.spec.ts</path>
+        <kind>test</kind>
+        <symbol>ISBN import E2E tests</symbol>
+        <reason>Existing ISBN E2E tests - extend for ISBN pool view tests</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package version="^16.0.3">next</package>
+        <package version="^19.2.0">react</package>
+        <package version="^0.44.7">drizzle-orm</package>
+        <package version="^4.1.12">zod</package>
+        <package version="^7.66.1">react-hook-form</package>
+        <package version="^5.2.2">@hookform/resolvers</package>
+        <package version="^5.90.10">@tanstack/react-query</package>
+        <package version="^4.1.0">date-fns</package>
+        <package version="0.554.0">lucide-react</package>
+        <package version="2.0.7">sonner</package>
+        <package version="class-variance-authority">0.7.1</package>
+        <package version="clsx">2.1.1</package>
+        <package version="tailwind-merge">3.4.0</package>
+      </ecosystem>
+      <ecosystem name="shadcn-ui">
+        <package>Card, Badge, Table, Dialog, Select, Input, Button, Skeleton, Tooltip</package>
+      </ecosystem>
+      <note>TanStack Table (@tanstack/react-table) NOT installed - may need to add for data table or use basic shadcn Table</note>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture">All queries MUST include tenant_id filter for multi-tenant isolation</constraint>
+    <constraint source="architecture">Use Server Actions pattern with ActionResult&lt;T&gt; response type</constraint>
+    <constraint source="architecture">All Server Actions must check permissions via requirePermission()</constraint>
+    <constraint source="dev-notes">Use VIEW_OWN_STATEMENTS permission - accessible to all authenticated users</constraint>
+    <constraint source="dev-notes">Read-only view in this story - no edit/delete capabilities</constraint>
+    <constraint source="architecture">Follow kebab-case for file names, PascalCase for components</constraint>
+    <constraint source="architecture">Feature module organization: queries.ts, actions.ts, components/*.tsx</constraint>
+    <constraint source="tech-spec">Stats query should be a single aggregation query, not multiple queries</constraint>
+    <constraint source="tech-spec">Table query with filters should use database-level filtering, not client-side</constraint>
+    <constraint source="tech-spec">Pagination reduces initial load time for large ISBN pools</constraint>
+    <constraint source="dev-notes">Badge Colors - Type: Physical=secondary, Ebook=outline; Status: Available=green, Assigned=default/blue, Registered=secondary, Retired=destructive</constraint>
+    <constraint source="dev-notes">Warning badge: amber/warning color for "Low" inventory (&lt;10 available)</constraint>
+    <constraint source="architecture">URL query params for filters enable shareable/bookmarkable filter states</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ISBNPoolStats</name>
+      <kind>TypeScript interface</kind>
+      <signature>{ total: number; available: number; assigned: number; registered: number; retired: number; byType: { physical: number; ebook: number }; availableByType: { physical: number; ebook: number } }</signature>
+      <path>src/modules/isbn/types.ts</path>
+    </interface>
+    <interface>
+      <name>ISBNListItem</name>
+      <kind>TypeScript interface</kind>
+      <signature>{ id: string; isbn_13: string; type: ISBNType; status: ISBNStatus; assignedTitleName: string | null; assignedAt: Date | null }</signature>
+      <path>src/modules/isbn/types.ts</path>
+    </interface>
+    <interface>
+      <name>ISBNWithRelations</name>
+      <kind>TypeScript interface</kind>
+      <signature>extends ISBN { assignedTitle: Title | null; assignedByUser: User | null }</signature>
+      <path>src/modules/isbn/types.ts</path>
+    </interface>
+    <interface>
+      <name>ActionResult</name>
+      <kind>TypeScript type</kind>
+      <signature>{ success: true; data: T } | { success: false; error: string; fields?: Record&lt;string, string&gt; }</signature>
+      <path>src/lib/types.ts (or define in module)</path>
+    </interface>
+    <interface>
+      <name>PaginatedResult</name>
+      <kind>TypeScript interface (new)</kind>
+      <signature>{ data: T[]; total: number; page: number; pageSize: number; totalPages: number }</signature>
+      <path>Create in src/modules/isbn/types.ts or src/lib/types.ts</path>
+    </interface>
+    <interface>
+      <name>getISBNPoolStats</name>
+      <kind>Query function (new)</kind>
+      <signature>async function getISBNPoolStats(): Promise&lt;ISBNPoolStats&gt;</signature>
+      <path>src/modules/isbn/queries.ts (create)</path>
+    </interface>
+    <interface>
+      <name>getISBNList</name>
+      <kind>Query function (new)</kind>
+      <signature>async function getISBNList(filters?: { type?: ISBNType; status?: ISBNStatus; search?: string; page?: number; pageSize?: number }): Promise&lt;PaginatedResult&lt;ISBNListItem&gt;&gt;</signature>
+      <path>src/modules/isbn/queries.ts (create)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Tests follow Vitest for unit/integration tests and Playwright for E2E tests. Unit tests for query functions should mock database responses. E2E tests verify full user flows including navigation, filtering, and data display. Follow existing patterns in tests/e2e/isbn-import.spec.ts for ISBN-related E2E tests.
+    </standards>
+    <locations>
+      <location>tests/unit/isbn-queries.test.ts (new)</location>
+      <location>tests/integration/isbn-pool-page.test.ts (new)</location>
+      <location>tests/e2e/isbn-import.spec.ts (extend with pool view tests)</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1">Test getISBNPoolStats returns correct counts by status and type</idea>
+      <idea acRef="AC2">Test warning badge appears when available &lt; 10 for either type</idea>
+      <idea acRef="AC3">Test stats cards display correct breakdown by status</idea>
+      <idea acRef="AC4">Test table renders all required columns with correct formatting</idea>
+      <idea acRef="AC5">Test filters update table results correctly (type, status, search)</idea>
+      <idea acRef="AC6">Test pagination shows correct page counts and navigation works</idea>
+      <idea acRef="AC7">Test detail modal displays correct data for available vs assigned ISBNs</idea>
+      <idea acRef="AC8">E2E: Verify page accessible to editor role, all data loads correctly</idea>
+      <idea acRef="AC1,AC2">E2E: Dashboard widget shows ISBN stats with correct counts and warning badge</idea>
+      <idea acRef="AC5">E2E: Apply filters and verify URL params update, table filters correctly</idea>
+    </ideas>
+  </tests>
+</story-context>

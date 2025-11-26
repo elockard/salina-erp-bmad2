@@ -1,0 +1,310 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>8</storyId>
+    <title>Build Role-Based Dashboard Landing Page</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-23</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-8-build-role-based-dashboard-landing-page.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>tenant user (Owner, Admin, Editor, Finance, Author)</asA>
+    <iWant>to see a role-appropriate dashboard when I access the `/dashboard` route</iWant>
+    <soThat>I can quickly access the features relevant to my responsibilities and see an overview of key information for my role</soThat>
+    <tasks>
+      - Create dashboard page route (src/app/(dashboard)/dashboard/page.tsx) with authentication and metadata
+      - Implement role detection and routing logic (getCurrentUser, author redirect to /portal)
+      - Create dashboard layout component (header, sidebar, user dropdown, responsive)
+      - Create navigation filter helper (src/lib/dashboard-nav.ts with role-based filtering)
+      - Create Owner/Admin dashboard content with tenant statistics
+      - Create Editor dashboard content with editor-focused metrics
+      - Create Finance dashboard content with finance placeholders
+      - Create loading and empty states (Skeleton, empty messages)
+      - Add dashboard access from welcome page
+      - Implement tenant statistics Server Actions (src/modules/dashboard/actions.ts)
+      - Create dashboard navigation constants with role permissions
+      - Integrate navigation into sidebar with active state highlighting
+      - Style dashboard with shadcn/ui components (Card, Button, Badge)
+      - Add user profile dropdown to header (DropdownMenu)
+      - Create E2E tests for role-based dashboards
+      - Final validation and manual testing (build, lint, E2E, manual verification)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Dashboard route accessible at /dashboard path (authenticated users only)</criterion>
+    <criterion id="AC2">Dashboard detects current user's role from session</criterion>
+    <criterion id="AC3">Owner/Admin users see full dashboard with navigation to all modules</criterion>
+    <criterion id="AC4">Editor users see dashboard with navigation to Authors, Titles, ISBN, and Sales modules only</criterion>
+    <criterion id="AC5">Finance users see dashboard with navigation to Returns, Royalties, and Statements modules only</criterion>
+    <criterion id="AC6">Author users redirected from /dashboard to /portal (author-specific interface)</criterion>
+    <criterion id="AC7">Dashboard displays role-appropriate welcome message with user's name</criterion>
+    <criterion id="AC8">Dashboard includes navigation menu/sidebar filtered by user role and permissions</criterion>
+    <criterion id="AC9">Owner/Admin dashboard shows: active users count, total titles count, recent activity placeholder</criterion>
+    <criterion id="AC10">Editor dashboard shows: authors count, titles count, ISBN availability, quick action buttons</criterion>
+    <criterion id="AC11">Finance dashboard shows: pending returns (0), royalty liability placeholder, statement date placeholder, quick action buttons</criterion>
+    <criterion id="AC12">Dashboard navigation menu includes links to relevant pages based on role</criterion>
+    <criterion id="AC13">Dashboard header shows tenant name from tenant settings</criterion>
+    <criterion id="AC14">Dashboard header includes user profile dropdown with Settings and Sign Out links</criterion>
+    <criterion id="AC15">Dashboard layout responsive: tablet and mobile screens</criterion>
+    <criterion id="AC16">Dashboard uses shadcn/ui components (Card, Button, Badge)</criterion>
+    <criterion id="AC17">Dashboard page Server Component: Data fetched server-side for optimal performance</criterion>
+    <criterion id="AC18">Dashboard statistics load from database with proper tenant isolation (tenant_id filter)</criterion>
+    <criterion id="AC19">Dashboard handles loading state gracefully (skeleton loaders)</criterion>
+    <criterion id="AC20">Dashboard handles empty states: No authors yet, no pending returns, etc.</criterion>
+    <criterion id="AC21">Navigation menu items include icons for visual clarity</criterion>
+    <criterion id="AC22">Dashboard page protected by authentication middleware (redirect to /sign-in if unauthenticated)</criterion>
+    <criterion id="AC23">Permission check: User role validated before rendering role-specific content</criterion>
+    <criterion id="AC24">Dashboard title in browser tab: Dashboard - Salina ERP</criterion>
+    <criterion id="AC25">Module placeholders for unimplemented features: Coming soon badges</criterion>
+    <criterion id="AC26">Dashboard accessible from welcome page via Go to Dashboard button</criterion>
+    <criterion id="AC27">All dashboard statistics queries use correct tenant scoping (no cross-tenant data leakage)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>User Experience Principles</section>
+        <snippet>Design Philosophy: Professional Efficiency. Role-Appropriate Views: Each user role sees relevant functionality only. Dashboard-driven navigation with module-based organization.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Permissions &amp; Roles</section>
+        <snippet>Owner (full admin), Admin (manage users/settings), Editor (create/edit content), Finance (approve returns/royalties), Author (view own statements). Permission enforcement at Server Action level.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Server Components</section>
+        <snippet>Dashboard page is Server Component. Fetches data server-side, no client-side waterfalls. Use React Suspense for streaming (optional optimization).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Multi-Tenancy Pattern</section>
+        <snippet>All queries scoped to tenant_id. RLS enforces isolation at database level. Tenant context from subdomain via middleware.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC8: Role-Based Dashboards</section>
+        <snippet>Dashboard content determined by user.role. Server Component pattern. Navigation items filtered by allowedRoles array. Tenant-scoped statistics queries.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/1-5-implement-role-based-access-control-rbac-system.md</path>
+        <title>Story 1.5 RBAC Implementation</title>
+        <section>RBAC Patterns</section>
+        <snippet>getCurrentUser() fetches user with role. hasPermission(allowedRoles) checks access. requirePermission() throws UNAUTHORIZED error.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/1-7-create-tenant-settings-configuration-page.md</path>
+        <title>Story 1.7 Tenant Settings</title>
+        <section>Learnings</section>
+        <snippet>Server Component data fetching proven. shadcn/ui components available: Card, Button, Badge, Skeleton, DropdownMenu. Permission checks at page level.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentUser</symbol>
+        <lines>44-63</lines>
+        <reason>Required to fetch current user with role for dashboard routing and content rendering</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentTenantId</symbol>
+        <lines>12-21</lines>
+        <reason>Required for tenant-scoped database queries in dashboard statistics</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getDb</symbol>
+        <lines>28-37</lines>
+        <reason>Required to get authenticated database connection with RLS enforcement</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/permissions.ts</path>
+        <kind>utility</kind>
+        <symbol>MANAGE_USERS, MANAGE_SETTINGS</symbol>
+        <lines>10-13</lines>
+        <reason>Reference for understanding permission patterns, though dashboard doesn't require explicit permission checks (role-based rendering only)</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/users/types.ts</path>
+        <kind>type</kind>
+        <symbol>UserRole</symbol>
+        <lines>4</lines>
+        <reason>TypeScript type for user roles used in navigation filtering and dashboard rendering</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(dashboard)/welcome/page.tsx</path>
+        <kind>page</kind>
+        <symbol>WelcomePage</symbol>
+        <lines>17-123</lines>
+        <reason>Needs modification to add Go to Dashboard button (AC26). Shows existing Server Component pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/users.ts</path>
+        <kind>schema</kind>
+        <symbol>users</symbol>
+        <lines>11-31</lines>
+        <reason>Users table schema for counting active users in Owner/Admin dashboard statistics</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/tenants.ts</path>
+        <kind>schema</kind>
+        <symbol>tenants</symbol>
+        <lines>3-15</lines>
+        <reason>Tenants table schema for displaying tenant name in dashboard header</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/tenant/actions.ts</path>
+        <kind>service</kind>
+        <symbol>getTenantSettings</symbol>
+        <lines>1-100</lines>
+        <reason>Existing Server Action to load tenant settings (name, timezone, etc.) for dashboard header</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/card.tsx</path>
+        <kind>component</kind>
+        <symbol>Card, CardHeader, CardContent</symbol>
+        <lines>1-80</lines>
+        <reason>shadcn/ui Card components for displaying dashboard statistics</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/skeleton.tsx</path>
+        <kind>component</kind>
+        <symbol>Skeleton</symbol>
+        <lines>1-20</lines>
+        <reason>shadcn/ui Skeleton component for loading states (AC19)</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/badge.tsx</path>
+        <kind>component</kind>
+        <symbol>Badge</symbol>
+        <lines>1-40</lines>
+        <reason>shadcn/ui Badge component for Coming soon labels (AC25)</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package name="next" version="^16.0.3" />
+        <package name="react" version="^19.2.0" />
+        <package name="@clerk/nextjs" version="^6.35.4" />
+        <package name="drizzle-orm" version="^0.44.7" />
+        <package name="lucide-react" version="0.554.0" />
+        <package name="@radix-ui/react-slot" version="1.2.4" />
+        <package name="class-variance-authority" version="0.7.1" />
+        <package name="tailwind-merge" version="3.4.0" />
+        <package name="clsx" version="2.1.1" />
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>ALL database queries MUST include tenant_id filter (WHERE tenant_id = ?) for data isolation</constraint>
+    <constraint>Dashboard page MUST be Server Component (export default async function) for server-side data fetching</constraint>
+    <constraint>Author role users MUST redirect to /portal, not dashboard (AC6)</constraint>
+    <constraint>Use getCurrentUser() from src/lib/auth.ts (NOT Clerk's currentUser directly) to get user with role</constraint>
+    <constraint>Use getCurrentTenantId() from src/lib/auth.ts for all tenant-scoped queries</constraint>
+    <constraint>Navigation items MUST filter by role using allowedRoles array pattern</constraint>
+    <constraint>Statistics for authors, titles, isbns tables are placeholders - these tables don't exist yet in Epic 1, hardcode 0 or use placeholder text</constraint>
+    <constraint>Returns table doesn't exist yet - hardcode pendingReturns: 0 for Finance dashboard</constraint>
+    <constraint>Use shadcn/ui components: Card, Button, Badge, Skeleton (already installed)</constraint>
+    <constraint>Install @radix-ui/react-dropdown-menu if not present for user profile dropdown (AC14)</constraint>
+    <constraint>Use lucide-react for navigation icons (already installed)</constraint>
+    <constraint>Dashboard route: src/app/(dashboard)/dashboard/page.tsx (uses (dashboard) route group)</constraint>
+    <constraint>Server Actions pattern: 'use server' directive, return ActionResult&lt;T&gt; type</constraint>
+    <constraint>Responsive layout: Tailwind CSS classes for mobile/tablet breakpoints</constraint>
+    <constraint>Page metadata: export const metadata = { title: 'Dashboard - Salina ERP' }</constraint>
+    <constraint>E2E tests: Playwright framework in tests/e2e/dashboard.spec.ts</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>getCurrentUser</name>
+      <kind>async function</kind>
+      <signature>async function getCurrentUser(): Promise&lt;User | null&gt;</signature>
+      <path>src/lib/auth.ts:44-63</path>
+    </interface>
+    <interface>
+      <name>getCurrentTenantId</name>
+      <kind>async function</kind>
+      <signature>async function getCurrentTenantId(): Promise&lt;string&gt;</signature>
+      <path>src/lib/auth.ts:12-21</path>
+    </interface>
+    <interface>
+      <name>getDb</name>
+      <kind>async function</kind>
+      <signature>async function getDb(): Promise&lt;Database&gt;</signature>
+      <path>src/lib/auth.ts:28-37</path>
+    </interface>
+    <interface>
+      <name>getTenantSettings</name>
+      <kind>Server Action</kind>
+      <signature>async function getTenantSettings(): Promise&lt;ActionResult&lt;TenantSettings&gt;&gt;</signature>
+      <path>src/modules/tenant/actions.ts</path>
+    </interface>
+    <interface>
+      <name>getDashboardStats (NEW)</name>
+      <kind>Server Action</kind>
+      <signature>async function getDashboardStats(): Promise&lt;ActionResult&lt;DashboardStats&gt;&gt;</signature>
+      <path>src/modules/dashboard/actions.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>getNavigationItems (NEW)</name>
+      <kind>function</kind>
+      <signature>function getNavigationItems(role: UserRole): NavItem[]</signature>
+      <path>src/lib/dashboard-nav.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>UserRole</name>
+      <kind>TypeScript type</kind>
+      <signature>type UserRole = "owner" | "admin" | "editor" | "finance" | "author"</signature>
+      <path>src/modules/users/types.ts:4</path>
+    </interface>
+    <interface>
+      <name>ActionResult</name>
+      <kind>TypeScript type</kind>
+      <signature>type ActionResult&lt;T&gt; = { success: true; data: T } | { success: false; error: string }</signature>
+      <path>src/lib/types.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      E2E testing uses Playwright framework. Test files in tests/e2e/*.spec.ts. Tests seed database with test tenant and users with different roles. Tests verify authentication, role-based rendering, navigation filtering, and statistics display. Use page.goto(), page.click(), page.waitForSelector() patterns. Verify dashboard redirects for author role. Check tenant isolation (no cross-tenant data).
+    </standards>
+    <locations>
+      <location>tests/e2e/dashboard.spec.ts</location>
+      <location>tests/unit/ (if unit tests needed for helper functions)</location>
+    </locations>
+    <ideas>
+      <idea criterion="AC1,AC22">Test unauthenticated user accessing /dashboard redirects to /sign-in</idea>
+      <idea criterion="AC2,AC3">Test Owner user sees full dashboard with all navigation items and statistics</idea>
+      <idea criterion="AC2,AC4">Test Editor user sees filtered dashboard with Authors/Titles/ISBN/Sales navigation only</idea>
+      <idea criterion="AC2,AC5">Test Finance user sees filtered dashboard with Returns/Royalties/Statements navigation only</idea>
+      <idea criterion="AC6">Test Author user accessing /dashboard redirects to /portal</idea>
+      <idea criterion="AC7">Test dashboard displays welcome message with user's name from session</idea>
+      <idea criterion="AC9">Test Owner/Admin dashboard displays active users count and total titles count (verify tenant isolation)</idea>
+      <idea criterion="AC10">Test Editor dashboard displays authors count, titles count, ISBN availability</idea>
+      <idea criterion="AC11">Test Finance dashboard displays pending returns (0), royalty liability placeholder, statement date placeholder</idea>
+      <idea criterion="AC13">Test dashboard header displays tenant name from tenant settings</idea>
+      <idea criterion="AC14">Test user profile dropdown opens and has Settings/Sign Out links</idea>
+      <idea criterion="AC15">Test dashboard responsive layout on mobile viewport (sidebar collapses)</idea>
+      <idea criterion="AC19">Test loading state shows skeleton loaders while fetching statistics</idea>
+      <idea criterion="AC20">Test empty states when no authors/titles exist (show empty state messages)</idea>
+      <idea criterion="AC25">Test Coming soon badges appear on unimplemented module navigation items</idea>
+      <idea criterion="AC26">Test Go to Dashboard button on welcome page navigates to /dashboard</idea>
+      <idea criterion="AC27">Test tenant isolation: User A cannot see User B's tenant statistics</idea>
+    </ideas>
+  </tests>
+</story-context>
