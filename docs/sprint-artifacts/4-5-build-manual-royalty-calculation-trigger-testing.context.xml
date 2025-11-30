@@ -1,0 +1,165 @@
+<story-context id="4-5-build-manual-royalty-calculation-trigger-testing" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>5</storyId>
+    <title>Build Manual Royalty Calculation Trigger (Testing)</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-5-build-manual-royalty-calculation-trigger-testing.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance user</asA>
+    <iWant>to manually trigger royalty calculations for testing</iWant>
+    <soThat>I can verify calculations before statement generation</soThat>
+    <tasks>
+      <task id="1" ac="1">Create calculate page route and layout at src/app/(dashboard)/royalties/calculate/page.tsx with CALCULATE_ROYALTIES permission check</task>
+      <task id="2" ac="2,3">Build calculation form component with searchable author dropdown, date pickers, and Zod validation</task>
+      <task id="3" ac="4">Create server action triggerTestCalculation in actions.ts calling calculateRoyaltyForPeriod</task>
+      <task id="4" ac="5,6">Build results display component with summary card, net sales table, tier breakdown sections</task>
+      <task id="5" ac="7">Add collapsible JSON output section with toggle functionality</task>
+      <task id="6" ac="8">Add warning banner with amber styling and dry-run messaging</task>
+      <task id="7" ac="9,10">Verify dry-run behavior - no database writes, no statement creation</task>
+      <task id="8" ac="11">Add clear/reset functionality to form and results</task>
+      <task id="9" ac="12">Write unit tests for form rendering, validation, results display, JSON toggle</task>
+      <task id="10" ac="1">Export components and integrate with module index</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Page accessible at /royalties/calculate for Finance, Admin, or Owner roles. Protected by CALCULATE_ROYALTIES permission. Redirects unauthorized users to /dashboard.</criterion>
+    <criterion id="2">Manual calculation form displays: Author dropdown (required, searchable), Period Start Date (date picker, required), Period End Date (date picker, required), "Calculate Royalties" button (disabled until valid).</criterion>
+    <criterion id="3">Form validation: Author must be selected, Start date cannot be in future, End date cannot be before start date, End date cannot be more than 1 year after start date.</criterion>
+    <criterion id="4">On submit, calls calculateRoyaltyForPeriod with selected parameters. Shows loading state during calculation. Handles error responses gracefully.</criterion>
+    <criterion id="5">Successful calculation displays: Summary card (Total Royalty Earned, Advance Recoupment, Net Payable), Net Sales by format table, Tier-by-tier breakdown per format, Advance information.</criterion>
+    <criterion id="6">Results display includes: Contract details (author name, title name, contract ID), Period dates formatted, Currency as USD with 2 decimals, Percentages displayed as percentages (10% not 0.10).</criterion>
+    <criterion id="7">Collapsible JSON output section showing full RoyaltyCalculation object. Default collapsed. Toggle button: "Show/Hide Raw JSON".</criterion>
+    <criterion id="8">Warning banner prominently displayed with amber color: "This is a test calculation only. No statements created. No contract balances updated." Visible above form and above results.</criterion>
+    <criterion id="9">Does NOT create statement (dry run only). No database writes. Uses pure calculateRoyaltyForPeriod function.</criterion>
+    <criterion id="10">Does NOT update advance_recouped in contract. Calculator function does not persist any changes.</criterion>
+    <criterion id="11">Reset/Clear functionality: "Clear Results" button after calculation, resets form to initial state.</criterion>
+    <criterion id="12">Unit tests cover component rendering, form validation, loading state, results rendering with mock data, JSON toggle functionality.</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Project Structure" snippet="Module structure for royalties at src/modules/royalties/ including calculator.ts for royalty calculation engine. Route at src/app/(dashboard)/royalties/." />
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Pattern 1: Tiered Royalty Calculation Engine" snippet="calculateRoyaltyForPeriod function signature and algorithm for tiered royalty calculation with advance recoupment." />
+      <doc path="docs/architecture.md" title="Decision Architecture" section="FR Category to Architecture Mapping" snippet="Royalty Calculation (FR45-52) in modules/royalties/ with RoyaltyCalculationTrigger component. Background Jobs: Inngest calculate-royalties." />
+      <doc path="docs/prd.md" title="PRD" section="FR45" snippet="Finance users can trigger royalty calculations for specific periods (quarterly, annual, custom)." />
+      <doc path="docs/epics.md" title="Epics" section="Story 4.5" snippet="Build Manual Royalty Calculation Trigger (Testing) - testing/verification tool for finance to validate calculations before statement generation." />
+      <doc path="docs/testing.md" title="Testing Documentation" section="Unit Tests" snippet="Unit tests use Vitest in JSDOM environment. Location: tests/unit/**/*.test.ts. Use vi mocks for dependencies." />
+      <doc path="docs/sprint-artifacts/4-4-implement-tiered-royalty-calculation-engine.md" title="Story 4.4" section="Dev Agent Record" snippet="Calculator at src/modules/royalties/calculator.ts. Types: RoyaltyCalculation, FormatCalculation, TierBreakdown, NetSalesData. Pure function with no side effects." />
+    </docs>
+
+    <code>
+      <file path="src/modules/royalties/calculator.ts" kind="calculator" symbol="calculateRoyaltyForPeriod" lines="48-138" reason="Core calculation function to call from server action. Returns RoyaltyCalculationResult with success/failure and detailed breakdown." />
+      <file path="src/modules/royalties/types.ts" kind="types" symbol="RoyaltyCalculation, FormatCalculation, TierBreakdown, NetSalesData, RoyaltyCalculationResult" lines="95-201" reason="Type definitions for calculation results used in results display component." />
+      <file path="src/modules/royalties/queries.ts" kind="queries" symbol="searchAuthorsForContract" lines="36-71" reason="Query for author dropdown - returns AuthorOption[] for Combobox component." />
+      <file path="src/modules/royalties/actions.ts" kind="actions" symbol="searchAuthorsAction" lines="52-70" reason="Server action pattern for author search. Copy pattern for triggerTestCalculation." />
+      <file path="src/modules/royalties/components/contract-step-basic-info.tsx" kind="component" symbol="ContractStepBasicInfo, useDebounce" lines="1-150" reason="Reference implementation of searchable author dropdown with Combobox pattern, debounced search." />
+      <file path="src/modules/royalties/index.ts" kind="module-index" symbol="exports" lines="1-59" reason="Module exports - add new components and triggerTestCalculation action." />
+      <file path="src/lib/permissions.ts" kind="permissions" symbol="CALCULATE_ROYALTIES" lines="35-36" reason="Permission constant for page access check. Allows owner, admin, finance roles." />
+      <file path="src/lib/auth.ts" kind="auth" symbol="requirePermission, getCurrentUser, getCurrentTenantId" reason="Auth helpers for permission check and tenant context in server action." />
+      <file path="src/app/(dashboard)/royalties/page.tsx" kind="page" reason="Existing royalties page - reference for page structure and permission patterns." />
+      <file path="src/components/ui/alert.tsx" kind="ui-component" reason="Alert component for warning banner styling." />
+      <file path="src/components/ui/card.tsx" kind="ui-component" reason="Card component for results display sections." />
+      <file path="src/components/ui/button.tsx" kind="ui-component" reason="Button component for form submit and clear actions." />
+      <file path="src/components/ui/command.tsx" kind="ui-component" reason="Command component for searchable author dropdown (Combobox)." />
+      <file path="src/components/ui/popover.tsx" kind="ui-component" reason="Popover for dropdown menus." />
+      <file path="src/components/ui/calendar.tsx" kind="ui-component" reason="Calendar component for date pickers via react-day-picker." />
+      <file path="src/components/ui/table.tsx" kind="ui-component" reason="Table component for net sales and tier breakdown tables." />
+      <file path="tests/unit/royalty-calculator.test.ts" kind="test" reason="Existing tests for calculateRoyaltyForPeriod - reference for mocking patterns." />
+      <file path="tests/unit/contract-actions.test.ts" kind="test" reason="Reference for server action testing patterns with auth mocks." />
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="react-hook-form" version="^7.66.1" />
+        <package name="@hookform/resolvers" version="^5.2.2" />
+        <package name="zod" version="^4.1.13" />
+        <package name="react-day-picker" version="9.11.2" />
+        <package name="date-fns" version="^4.1.0" />
+        <package name="@date-fns/tz" version="1.4.1" />
+        <package name="decimal.js" version="^10.6.0" />
+        <package name="lucide-react" version="0.554.0" />
+        <package name="cmdk" version="1.1.1" />
+        <package name="vitest" version="4.0.14" />
+        <package name="@testing-library/react" version="16.3.0" />
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md">Use React Hook Form + Zod for form handling and validation</constraint>
+    <constraint source="architecture.md">Use Server Actions for data mutations (triggerTestCalculation)</constraint>
+    <constraint source="architecture.md">Use shadcn/ui components (Card, Button, Command, Popover, Table)</constraint>
+    <constraint source="story">Form must use CALCULATE_ROYALTIES permission (owner, admin, finance roles)</constraint>
+    <constraint source="story">NO database writes - pure dry-run calculation only</constraint>
+    <constraint source="story">NO statement generation - testing interface only</constraint>
+    <constraint source="story">NO advance_recouped updates - calculator is read-only</constraint>
+    <constraint source="architecture.md">Use Decimal.js for any financial calculations (already handled by calculator)</constraint>
+    <constraint source="architecture.md">Currency formatting: Intl.NumberFormat with USD, 2 decimal places</constraint>
+    <constraint source="testing.md">Unit tests use Vitest + @testing-library/react in JSDOM environment</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="calculateRoyaltyForPeriod" kind="function" path="src/modules/royalties/calculator.ts">
+      <signature>async function calculateRoyaltyForPeriod(authorId: string, tenantId: string, startDate: Date, endDate: Date): Promise&lt;RoyaltyCalculationResult&gt;</signature>
+    </interface>
+    <interface name="searchAuthorsForContract" kind="function" path="src/modules/royalties/queries.ts">
+      <signature>async function searchAuthorsForContract(searchTerm: string, limit?: number): Promise&lt;AuthorOption[]&gt;</signature>
+    </interface>
+    <interface name="requirePermission" kind="function" path="src/lib/auth.ts">
+      <signature>async function requirePermission(permission: UserRole[]): Promise&lt;void&gt; // throws if unauthorized</signature>
+    </interface>
+    <interface name="getCurrentUser" kind="function" path="src/lib/auth.ts">
+      <signature>async function getCurrentUser(): Promise&lt;User | null&gt;</signature>
+    </interface>
+    <interface name="getCurrentTenantId" kind="function" path="src/lib/auth.ts">
+      <signature>async function getCurrentTenantId(): Promise&lt;string&gt;</signature>
+    </interface>
+    <interface name="RoyaltyCalculationResult" kind="type" path="src/modules/royalties/types.ts">
+      <signature>type RoyaltyCalculationResult = { success: true; calculation: RoyaltyCalculation } | { success: false; error: string }</signature>
+    </interface>
+    <interface name="RoyaltyCalculation" kind="type" path="src/modules/royalties/types.ts">
+      <signature>interface RoyaltyCalculation { period: { startDate: Date; endDate: Date }; authorId: string; contractId: string; titleId: string; formatCalculations: FormatCalculation[]; totalRoyaltyEarned: number; advanceRecoupment: number; netPayable: number; error?: string; }</signature>
+    </interface>
+    <interface name="FormatCalculation" kind="type" path="src/modules/royalties/types.ts">
+      <signature>interface FormatCalculation { format: ContractFormat; netSales: NetSalesData; tierBreakdowns: TierBreakdown[]; formatRoyalty: number; }</signature>
+    </interface>
+    <interface name="AuthorOption" kind="type" path="src/modules/royalties/types.ts">
+      <signature>interface AuthorOption { id: string; name: string; email: string | null; }</signature>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests use Vitest with JSDOM environment and @testing-library/react. Mock server actions and auth context using vi.mock().
+      Follow existing patterns in tests/unit/contract-actions.test.ts and tests/unit/royalty-calculator.test.ts.
+      Use vi.mock('@/lib/auth') to mock getCurrentUser, requirePermission.
+      Use vi.mock('../actions') to mock server action responses.
+      Test form validation, loading states, error handling, and successful result display.
+    </standards>
+    <locations>
+      <location>tests/unit/calculation-test-form.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="1,2">Test form renders author dropdown, date pickers, calculate button</idea>
+      <idea ac="3">Test validation errors: no author selected, start date in future, end date before start</idea>
+      <idea ac="4">Test loading state displays during calculation</idea>
+      <idea ac="4">Test error message displays when calculation fails (no contract)</idea>
+      <idea ac="5,6">Test results display with mock RoyaltyCalculation data</idea>
+      <idea ac="5">Test summary card shows Total Earned, Recoupment, Net Payable</idea>
+      <idea ac="5">Test net sales table shows all formats with correct values</idea>
+      <idea ac="5">Test tier breakdown sections render for each format</idea>
+      <idea ac="6">Test currency formatting (USD, 2 decimals)</idea>
+      <idea ac="6">Test percentage formatting (10% not 0.10)</idea>
+      <idea ac="7">Test JSON section is collapsed by default</idea>
+      <idea ac="7">Test JSON section toggles on button click</idea>
+      <idea ac="8">Test warning banner is visible with correct text</idea>
+      <idea ac="11">Test clear button resets form and hides results</idea>
+    </ideas>
+  </tests>
+</story-context>

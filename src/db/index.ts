@@ -12,7 +12,7 @@ if (!databaseUrl) {
 
 if (!databaseAuthenticatedUrl) {
   throw new Error(
-    "DATABASE_AUTHENTICATED_URL environment variable is required"
+    "DATABASE_AUTHENTICATED_URL environment variable is required",
   );
 }
 
@@ -23,7 +23,7 @@ export const adminDb = drizzle(adminSql, { schema });
 // Authenticated connection for app queries with RLS enforcement
 if (!databaseAuthenticatedUrl) {
   throw new Error(
-    "DATABASE_AUTHENTICATED_URL environment variable is required"
+    "DATABASE_AUTHENTICATED_URL environment variable is required",
   );
 }
 const authSql = neon(databaseAuthenticatedUrl);
@@ -37,7 +37,7 @@ export const db = drizzle(authSql, { schema });
 export function getAuthenticatedDb(authToken: string) {
   if (!databaseAuthenticatedUrl) {
     throw new Error(
-      "DATABASE_AUTHENTICATED_URL environment variable is required"
+      "DATABASE_AUTHENTICATED_URL environment variable is required",
     );
   }
   const sql = neon(databaseAuthenticatedUrl, {

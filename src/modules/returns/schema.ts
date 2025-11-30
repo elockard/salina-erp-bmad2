@@ -5,6 +5,7 @@
  * Used by Story 3.5+ for return request entry and approval forms.
  *
  * Related Story: 3.4 - Create Returns Database Schema with Approval Workflow
+ * Related Story: 3.5 - Build Return Request Entry Form
  * Related FRs: FR30-FR37 (Returns Management)
  *
  * Approval Workflow:
@@ -16,6 +17,32 @@
 import { z } from "zod";
 import { returnStatusValues } from "@/db/schema/returns";
 import { salesFormatValues } from "@/db/schema/sales";
+
+/**
+ * Return reason values for dropdown (Story 3.5 AC 7)
+ * - damaged: Physical damage to returned items
+ * - unsold_inventory: Unsold stock returns from retailers
+ * - customer_return: End customer returns
+ * - other: Requires additional reason_other text
+ */
+export const returnReasonValues = [
+  "damaged",
+  "unsold_inventory",
+  "customer_return",
+  "other",
+] as const;
+
+export type ReturnReason = (typeof returnReasonValues)[number];
+
+/**
+ * Labels for return reason dropdown display (Story 3.5 AC 7)
+ */
+export const RETURN_REASON_LABELS: Record<ReturnReason, string> = {
+  damaged: "Damaged",
+  unsold_inventory: "Unsold inventory",
+  customer_return: "Customer return",
+  other: "Other",
+};
 
 /**
  * Zod schema for return status enum validation
@@ -73,35 +100,78 @@ export const positiveCurrencySchema = z
   );
 
 /**
- * Zod schema for date string validation
+ * Zod schema for date string validation (Story 3.5 AC 6)
  * Used for return_date field
+ * - Must be valid date format
+ * - Cannot be in the future
  */
-export const returnDateSchema = z.string().refine(
-  (val) => {
-    const date = new Date(val);
-    return !Number.isNaN(date.getTime());
-  },
-  { message: "Invalid date format" },
-);
+export const returnDateSchema = z
+  .string()
+  .refine(
+    (val) => {
+      const date = new Date(val);
+      return !Number.isNaN(date.getTime());
+    },
+    { message: "Invalid date format" },
+  )
+  .refine(
+    (val) => {
+      const date = new Date(val);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // End of today
+      return date <= today;
+    },
+    { message: "Return date cannot be in the future" },
+  );
+
+/**
+ * Zod schema for return reason enum validation (Story 3.5 AC 7)
+ */
+export const returnReasonSchema = z.enum(returnReasonValues, {
+  error: "Please select a reason for return",
+});
 
 /**
  * Zod schema for creating a new return request
  * Used in createReturn Server Action (Story 3.5)
  *
  * FR32: Returns created with "pending" status (default, not in form)
+ * AC 4-8: Field validations
+ * AC 7: Reason dropdown with conditional "other" text
  */
-export const createReturnSchema = z.object({
-  title_id: uuidSchema.describe("Title being returned"),
-  original_sale_id: uuidSchema
-    .optional()
-    .describe("Optional reference to original sale"),
-  format: returnFormatSchema.describe("Format of the item returned"),
-  quantity: positiveIntegerSchema.describe("Number of units returned"),
-  unit_price: positiveCurrencySchema.describe("Price per unit"),
-  total_amount: positiveCurrencySchema.describe("Total return amount"),
-  return_date: returnDateSchema.describe("Date of the return"),
-  reason: z.string().max(1000).optional().describe("Reason for return"),
-});
+export const createReturnSchema = z
+  .object({
+    title_id: uuidSchema.describe("Title being returned"),
+    format: returnFormatSchema.describe("Format of the item returned"),
+    quantity: positiveIntegerSchema.describe("Number of units returned"),
+    unit_price: positiveCurrencySchema.describe("Price per unit"),
+    total_amount: positiveCurrencySchema.describe("Total return amount"),
+    return_date: returnDateSchema.describe("Date of the return"),
+    reason: returnReasonSchema.describe("Reason category for return"),
+    reason_other: z
+      .string()
+      .max(500)
+      .optional()
+      .describe("Required description when reason is 'other'"),
+    original_sale_reference: z
+      .string()
+      .max(100)
+      .optional()
+      .describe("Optional reference to original sale (e.g., Invoice #12345)"),
+  })
+  .refine(
+    (data) => {
+      // If reason is "other", reason_other must be provided
+      if (data.reason === "other") {
+        return data.reason_other && data.reason_other.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Please describe the reason for return",
+      path: ["reason_other"],
+    },
+  );
 
 /**
  * Zod schema for return filter/query parameters

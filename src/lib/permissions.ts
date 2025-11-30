@@ -18,8 +18,19 @@ export const CREATE_AUTHORS_TITLES: UserRole[] = ["owner", "admin", "editor"];
 /** Users who can record sales transactions */
 export const RECORD_SALES: UserRole[] = ["owner", "admin", "editor", "finance"];
 
+/** Users who can record return requests (Story 3.5 AC 12) */
+export const RECORD_RETURNS: UserRole[] = [
+  "owner",
+  "admin",
+  "editor",
+  "finance",
+];
+
 /** Users who can approve/reject return requests */
 export const APPROVE_RETURNS: UserRole[] = ["owner", "admin", "finance"];
+
+/** Users who can view returns history (Story 3.7 AC 12) */
+export const VIEW_RETURNS: UserRole[] = ["owner", "admin", "editor", "finance"];
 
 /** Users who can calculate royalties and generate statements */
 export const CALCULATE_ROYALTIES: UserRole[] = ["owner", "admin", "finance"];
@@ -41,3 +52,6 @@ export const VIEW_ALL_STATEMENTS: UserRole[] = ["owner", "admin", "finance"];
 
 /** Users who can view sensitive tax information (Tax ID) */
 export const VIEW_TAX_ID: UserRole[] = ["owner", "admin", "finance"];
+
+/** Users who can create/edit royalty contracts (Story 4.2 AC 9) */
+export const MANAGE_CONTRACTS: UserRole[] = ["owner", "admin", "editor"];

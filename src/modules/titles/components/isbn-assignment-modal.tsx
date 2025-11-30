@@ -98,7 +98,7 @@ export function ISBNAssignmentModal({
         toast.success(
           `${format === "physical" ? "ISBN" : "eISBN"} assigned: ${
             result.data.isbn_13
-          }`
+          }`,
         );
         onSuccess();
         onOpenChange(false);
@@ -112,7 +112,7 @@ export function ISBNAssignmentModal({
     format: ISBNType,
     currentValue: string | null,
     preview: NextAvailableISBNPreview | null,
-    loading: boolean
+    loading: boolean,
   ) => {
     const formatLabel = format === "physical" ? "Physical ISBN" : "Ebook ISBN";
 
@@ -259,7 +259,7 @@ export function ISBNAssignmentModal({
               "physical",
               currentISBN,
               physicalPreview,
-              loadingPhysical
+              loadingPhysical,
             )}
           </TabsContent>
 
@@ -268,7 +268,7 @@ export function ISBNAssignmentModal({
               "ebook",
               currentEISBN,
               ebookPreview,
-              loadingEbook
+              loadingEbook,
             )}
           </TabsContent>
         </Tabs>
@@ -285,6 +285,6 @@ function formatISBN(isbn: string): string {
   if (digits.length !== 13) return isbn;
   return `${digits.slice(0, 3)}-${digits.slice(3, 4)}-${digits.slice(
     4,
-    8
+    8,
   )}-${digits.slice(8, 12)}-${digits.slice(12)}`;
 }

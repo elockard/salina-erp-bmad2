@@ -1,7 +1,8 @@
 "use server";
 
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql, sum } from "drizzle-orm";
 import { isbns } from "@/db/schema/isbns";
+import { returns } from "@/db/schema/returns";
 import { users } from "@/db/schema/users";
 import { getCurrentTenantId, getCurrentUser, getDb } from "@/lib/auth";
 import type { ActionResult } from "@/lib/types";
@@ -91,11 +92,33 @@ export async function getDashboardStats(): Promise<
       }
 
       case "finance": {
-        // Returns, royalties, statements tables don't exist yet - hardcode placeholders
+        // Fetch pending returns count and total (Story 3.6 AC 10)
+        const pendingReturnsResult = await db
+          .select({
+            count: count(),
+            total: sum(returns.total_amount),
+          })
+          .from(returns)
+          .where(
+            and(eq(returns.tenant_id, tenantId), eq(returns.status, "pending")),
+          );
+
+        const pendingData = pendingReturnsResult[0];
+        const pendingCount = pendingData?.count ?? 0;
+        const pendingTotal = pendingData?.total ?? "0.00";
+        const formattedTotal = parseFloat(pendingTotal).toLocaleString(
+          "en-US",
+          {
+            style: "currency",
+            currency: "USD",
+          },
+        );
+
         stats = {
-          pendingReturns: 0, // Placeholder
-          royaltyLiability: "$0.00 (coming soon)", // Placeholder
-          lastStatementDate: "No statements generated yet", // Placeholder
+          pendingReturns: pendingCount,
+          pendingReturnsTotal: formattedTotal,
+          royaltyLiability: "$0.00 (coming soon)", // Placeholder - Epic 4
+          lastStatementDate: "No statements generated yet", // Placeholder - Epic 5
         };
         break;
       }

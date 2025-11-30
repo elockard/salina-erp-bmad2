@@ -10,6 +10,8 @@ import {
   returnDateSchema,
   returnFilterSchema,
   returnFormatSchema,
+  returnReasonSchema,
+  returnReasonValues,
   returnStatusSchema,
 } from "@/modules/returns/schema";
 
@@ -17,12 +19,14 @@ import {
  * Unit tests for Returns Zod schemas
  *
  * Story 3.4 - AC 1-9: Unit tests validate schema constraints
+ * Story 3.5 - AC 4, 5, 6, 7, 13: Form validation tests
  * - Return status enum values correct (pending, approved, rejected)
  * - Return format enum values correct (physical, ebook, audiobook)
+ * - Return reason enum values correct (damaged, unsold_inventory, customer_return, other)
  * - Quantity validation (positive integer)
  * - Currency validation (positive decimal)
- * - Date validation
- * - Create return schema validation
+ * - Date validation (not future)
+ * - Create return schema validation with reason conditional
  * - Approve return schema validation
  */
 
@@ -264,6 +268,12 @@ describe("returnDateSchema", () => {
       const result = returnDateSchema.safeParse("2024-01-15T10:30:00Z");
       expect(result.success).toBe(true);
     });
+
+    it("accepts today's date (Story 3.5 AC 6)", () => {
+      const today = new Date().toISOString().split("T")[0];
+      const result = returnDateSchema.safeParse(today);
+      expect(result.success).toBe(true);
+    });
   });
 
   describe("invalid values", () => {
@@ -276,10 +286,111 @@ describe("returnDateSchema", () => {
       const result = returnDateSchema.safeParse("");
       expect(result.success).toBe(false);
     });
+
+    it("rejects future date (Story 3.5 AC 6)", () => {
+      // Create a date 30 days in the future
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 30);
+      const result = returnDateSchema.safeParse(
+        futureDate.toISOString().split("T")[0],
+      );
+      expect(result.success).toBe(false);
+    });
   });
 });
 
-describe("createReturnSchema", () => {
+describe("returnReasonSchema (Story 3.5 AC 7)", () => {
+  describe("valid values", () => {
+    it("accepts 'damaged'", () => {
+      const result = returnReasonSchema.safeParse("damaged");
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBe("damaged");
+      }
+    });
+
+    it("accepts 'unsold_inventory'", () => {
+      const result = returnReasonSchema.safeParse("unsold_inventory");
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBe("unsold_inventory");
+      }
+    });
+
+    it("accepts 'customer_return'", () => {
+      const result = returnReasonSchema.safeParse("customer_return");
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBe("customer_return");
+      }
+    });
+
+    it("accepts 'other'", () => {
+      const result = returnReasonSchema.safeParse("other");
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBe("other");
+      }
+    });
+
+    it("accepts all four valid reason values", () => {
+      expect(returnReasonValues).toHaveLength(4);
+      for (const reason of returnReasonValues) {
+        const result = returnReasonSchema.safeParse(reason);
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data).toBe(reason);
+        }
+      }
+    });
+  });
+
+  describe("invalid values", () => {
+    it("rejects 'defective'", () => {
+      const result = returnReasonSchema.safeParse("defective");
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects 'wrong_item'", () => {
+      const result = returnReasonSchema.safeParse("wrong_item");
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects empty string", () => {
+      const result = returnReasonSchema.safeParse("");
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects uppercase 'DAMAGED'", () => {
+      const result = returnReasonSchema.safeParse("DAMAGED");
+      expect(result.success).toBe(false);
+    });
+  });
+});
+
+describe("returnReasonValues const array (Story 3.5 AC 7)", () => {
+  it("has exactly 4 values", () => {
+    expect(returnReasonValues).toHaveLength(4);
+  });
+
+  it("contains damaged", () => {
+    expect(returnReasonValues).toContain("damaged");
+  });
+
+  it("contains unsold_inventory", () => {
+    expect(returnReasonValues).toContain("unsold_inventory");
+  });
+
+  it("contains customer_return", () => {
+    expect(returnReasonValues).toContain("customer_return");
+  });
+
+  it("contains other", () => {
+    expect(returnReasonValues).toContain("other");
+  });
+});
+
+describe("createReturnSchema (Story 3.5)", () => {
   const validReturn = {
     title_id: "550e8400-e29b-41d4-a716-446655440000",
     format: "physical" as const,
@@ -287,26 +398,52 @@ describe("createReturnSchema", () => {
     unit_price: "10.99",
     total_amount: "54.95",
     return_date: "2024-01-15",
+    reason: "damaged" as const,
   };
 
   describe("valid inputs", () => {
-    it("accepts valid return without optional fields", () => {
+    it("accepts valid return with required fields", () => {
       const result = createReturnSchema.safeParse(validReturn);
       expect(result.success).toBe(true);
     });
 
-    it("accepts valid return with reason", () => {
+    it("accepts valid return with reason 'damaged' (AC 7)", () => {
       const result = createReturnSchema.safeParse({
         ...validReturn,
-        reason: "Damaged in shipping",
+        reason: "damaged",
       });
       expect(result.success).toBe(true);
     });
 
-    it("accepts valid return with original_sale_id", () => {
+    it("accepts valid return with reason 'unsold_inventory' (AC 7)", () => {
       const result = createReturnSchema.safeParse({
         ...validReturn,
-        original_sale_id: "660e8400-e29b-41d4-a716-446655440001",
+        reason: "unsold_inventory",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts valid return with reason 'customer_return' (AC 7)", () => {
+      const result = createReturnSchema.safeParse({
+        ...validReturn,
+        reason: "customer_return",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts valid return with reason 'other' and reason_other text (AC 7)", () => {
+      const result = createReturnSchema.safeParse({
+        ...validReturn,
+        reason: "other",
+        reason_other: "Custom reason description",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts valid return with original_sale_reference (AC 8)", () => {
+      const result = createReturnSchema.safeParse({
+        ...validReturn,
+        original_sale_reference: "Invoice #12345",
       });
       expect(result.success).toBe(true);
     });
@@ -343,7 +480,7 @@ describe("createReturnSchema", () => {
       expect(result.success).toBe(false);
     });
 
-    it("rejects zero quantity", () => {
+    it("rejects zero quantity (AC 4)", () => {
       const result = createReturnSchema.safeParse({
         ...validReturn,
         quantity: 0,
@@ -351,7 +488,7 @@ describe("createReturnSchema", () => {
       expect(result.success).toBe(false);
     });
 
-    it("rejects negative quantity", () => {
+    it("rejects negative quantity (AC 4)", () => {
       const result = createReturnSchema.safeParse({
         ...validReturn,
         quantity: -5,
@@ -359,10 +496,18 @@ describe("createReturnSchema", () => {
       expect(result.success).toBe(false);
     });
 
-    it("rejects zero unit_price", () => {
+    it("rejects zero unit_price (AC 5)", () => {
       const result = createReturnSchema.safeParse({
         ...validReturn,
         unit_price: "0",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects negative unit_price (AC 5)", () => {
+      const result = createReturnSchema.safeParse({
+        ...validReturn,
+        unit_price: "-10.00",
       });
       expect(result.success).toBe(false);
     });
@@ -375,10 +520,52 @@ describe("createReturnSchema", () => {
       expect(result.success).toBe(false);
     });
 
-    it("rejects reason over 1000 characters", () => {
+    it("rejects missing reason (AC 7)", () => {
+      const { reason, ...noReason } = validReturn;
+      const result = createReturnSchema.safeParse(noReason);
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects invalid reason value (AC 7)", () => {
       const result = createReturnSchema.safeParse({
         ...validReturn,
-        reason: "x".repeat(1001),
+        reason: "invalid_reason",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects reason 'other' without reason_other text (AC 7)", () => {
+      const result = createReturnSchema.safeParse({
+        ...validReturn,
+        reason: "other",
+        // reason_other is missing
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects reason 'other' with empty reason_other text (AC 7)", () => {
+      const result = createReturnSchema.safeParse({
+        ...validReturn,
+        reason: "other",
+        reason_other: "",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects reason 'other' with whitespace-only reason_other (AC 7)", () => {
+      const result = createReturnSchema.safeParse({
+        ...validReturn,
+        reason: "other",
+        reason_other: "   ",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects reason_other over 500 characters", () => {
+      const result = createReturnSchema.safeParse({
+        ...validReturn,
+        reason: "other",
+        reason_other: "x".repeat(501),
       });
       expect(result.success).toBe(false);
     });

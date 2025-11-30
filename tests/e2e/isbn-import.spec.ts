@@ -52,7 +52,7 @@ test.describe("ISBN Import - Full Flow", () => {
   test("AC2: File upload accepts CSV files only", async ({ page }) => {
     // Upload zone visible
     await expect(
-      page.getByText("Drag and drop your CSV file here")
+      page.getByText("Drag and drop your CSV file here"),
     ).toBeVisible();
     await expect(page.getByText("browse to upload")).toBeVisible();
 
@@ -104,7 +104,7 @@ test.describe("ISBN Import - Full Flow", () => {
 
       // Should show duplicate warning
       await expect(
-        page.getByText("Duplicates found within file")
+        page.getByText("Duplicates found within file"),
       ).toBeVisible();
       await expect(page.getByText(/appears in rows/)).toBeVisible();
     } finally {
@@ -199,7 +199,7 @@ test.describe("ISBN Import - Full Flow", () => {
 
       // Should reset to initial state
       await expect(
-        page.getByText("Drag and drop your CSV file here")
+        page.getByText("Drag and drop your CSV file here"),
       ).toBeVisible();
       await expect(page.getByText("Validation Results")).not.toBeVisible();
     } finally {
@@ -226,7 +226,7 @@ test.describe("ISBN Import - Full Flow", () => {
 
       // Should reset
       await expect(
-        page.getByText("Drag and drop your CSV file here")
+        page.getByText("Drag and drop your CSV file here"),
       ).toBeVisible();
     } finally {
       fs.unlinkSync(csvPath);

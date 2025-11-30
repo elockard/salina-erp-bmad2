@@ -79,16 +79,16 @@ export function SalesFilters({ onFiltersChange }: SalesFiltersProps) {
         from: new Date(now.getFullYear(), now.getMonth(), 1),
         to: new Date(now.getFullYear(), now.getMonth() + 1, 0),
       };
-    }
+    },
   );
 
   const [selectedTitle, setSelectedTitle] =
     React.useState<SelectedTitle | null>(null);
   const [selectedFormat, setSelectedFormat] = React.useState<string>(
-    searchParams.get("format") || "all"
+    searchParams.get("format") || "all",
   );
   const [selectedChannel, setSelectedChannel] = React.useState<string>(
-    searchParams.get("channel") || "all"
+    searchParams.get("channel") || "all",
   );
 
   // Update URL and notify parent of filter changes
@@ -157,7 +157,7 @@ export function SalesFilters({ onFiltersChange }: SalesFiltersProps) {
       selectedChannel,
       router,
       onFiltersChange,
-    ]
+    ],
   );
 
   // Handle date range change
@@ -244,7 +244,7 @@ export function SalesFilters({ onFiltersChange }: SalesFiltersProps) {
               variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal md:w-[260px]",
-                !dateRange && "text-muted-foreground"
+                !dateRange && "text-muted-foreground",
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />

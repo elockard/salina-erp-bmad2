@@ -1,87 +1,90 @@
-import type { LucideIcon } from "lucide-react";
-import {
-  BarChart,
-  BookOpen,
-  DollarSign,
-  FileText,
-  Hash,
-  Home,
-  Receipt,
-  Settings,
-  Users,
-} from "lucide-react";
 import type { UserRole } from "@/modules/users/types";
+
+// Icon names that can be serialized (resolved in client component)
+export type IconName =
+  | "Home"
+  | "Users"
+  | "BookOpen"
+  | "Hash"
+  | "Receipt"
+  | "RotateCcw"
+  | "DollarSign"
+  | "BarChart"
+  | "Settings";
 
 export interface NavItem {
   label: string;
   href: string;
-  icon: LucideIcon;
+  icon: IconName;
   allowedRoles: UserRole[];
   comingSoon?: boolean;
+  /** Badge count to display (e.g., pending items) */
+  badgeCount?: number;
+  /** Key to identify this item for badge injection */
+  badgeKey?: string;
 }
 
 export const NAV_ITEMS: NavItem[] = [
   {
     label: "Dashboard",
     href: "/dashboard",
-    icon: Home,
+    icon: "Home",
     allowedRoles: ["owner", "admin", "editor", "finance"],
   },
   {
     label: "Users",
     href: "/settings/users",
-    icon: Users,
+    icon: "Users",
     allowedRoles: ["owner", "admin"],
   },
   {
     label: "Authors",
     href: "/dashboard/authors",
-    icon: Users,
+    icon: "Users",
     allowedRoles: ["owner", "admin", "editor"],
   },
   {
     label: "Titles",
     href: "/dashboard/titles",
-    icon: BookOpen,
+    icon: "BookOpen",
     allowedRoles: ["owner", "admin", "editor"],
   },
   {
     label: "ISBN Pool",
     href: "/isbn-pool",
-    icon: Hash,
+    icon: "Hash",
     allowedRoles: ["owner", "admin", "editor", "finance"],
   },
   {
     label: "Sales",
     href: "/sales",
-    icon: Receipt,
+    icon: "Receipt",
     allowedRoles: ["owner", "admin", "editor", "finance"],
   },
   {
     label: "Returns",
-    href: "/dashboard/returns",
-    icon: FileText,
-    allowedRoles: ["owner", "admin", "finance"],
-    comingSoon: true,
+    href: "/returns",
+    icon: "RotateCcw",
+    allowedRoles: ["owner", "admin", "editor", "finance"],
+    badgeKey: "pendingReturns",
   },
   {
     label: "Royalties",
-    href: "/dashboard/royalties",
-    icon: DollarSign,
-    allowedRoles: ["owner", "admin", "finance"],
-    comingSoon: true,
+    href: "/royalties",
+    icon: "DollarSign",
+    allowedRoles: ["owner", "admin", "editor"],
   },
   {
     label: "Reports",
     href: "/dashboard/reports",
-    icon: BarChart,
+    icon: "BarChart",
     allowedRoles: ["owner", "admin", "editor", "finance"],
     comingSoon: true,
   },
   {
     label: "Settings",
     href: "/settings",
-    icon: Settings,
+    icon: "Settings",
     allowedRoles: ["owner", "admin"],
   },
 ];

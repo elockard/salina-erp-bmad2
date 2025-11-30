@@ -1,7 +1,21 @@
 "use client";
 
 import { SignOutButton } from "@clerk/nextjs";
-import { LogOut, Menu, Settings, User } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  BarChart,
+  BookOpen,
+  DollarSign,
+  Hash,
+  Home,
+  LogOut,
+  Menu,
+  Receipt,
+  RotateCcw,
+  Settings,
+  User,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -21,8 +35,21 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import type { NavItem } from "@/lib/dashboard-nav";
+import type { IconName, NavItem } from "@/lib/dashboard-nav";
 import { cn } from "@/lib/utils";
+
+// Map icon names to actual Lucide components
+const iconMap: Record<IconName, LucideIcon> = {
+  Home,
+  Users,
+  BookOpen,
+  Hash,
+  Receipt,
+  RotateCcw,
+  DollarSign,
+  BarChart,
+  Settings,
+};
 
 interface DashboardHeaderProps {
   userName: string;
@@ -58,7 +85,7 @@ export function DashboardHeader({
           <nav className="mt-4 flex-1 space-y-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
-              const Icon = item.icon;
+              const Icon = iconMap[item.icon];
 
               return (
                 <Link

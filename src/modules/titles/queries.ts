@@ -23,7 +23,7 @@ export interface TitleFilters {
  * AC 2: List sorted by most recently updated
  */
 export async function getTitles(
-  filters?: TitleFilters
+  filters?: TitleFilters,
 ): Promise<TitleWithAuthor[]> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
@@ -48,7 +48,7 @@ export async function getTitles(
     const searchCondition = or(
       ilike(titles.title, searchTerm),
       ilike(titles.isbn, searchTerm),
-      ilike(titles.eisbn, searchTerm)
+      ilike(titles.eisbn, searchTerm),
     );
     if (searchCondition) {
       conditions.push(searchCondition);
@@ -72,7 +72,7 @@ export async function getTitles(
         title.title.toLowerCase().includes(searchLower) ||
         title.author.name.toLowerCase().includes(searchLower) ||
         title.isbn?.toLowerCase().includes(searchLower) ||
-        title.eisbn?.toLowerCase().includes(searchLower)
+        title.eisbn?.toLowerCase().includes(searchLower),
     );
   }
 
@@ -85,7 +85,7 @@ export async function getTitles(
  * @returns Title with author or null if not found
  */
 export async function getTitleById(
-  id: string
+  id: string,
 ): Promise<TitleWithAuthor | null> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();

@@ -77,7 +77,7 @@ test.describe("Multi-Tenant Isolation (Application-Level)", () => {
     const tenantADataFromBContext = await db.query.tenants.findMany({
       where: and(
         eq(schema.tenants.id, tenantAId),
-        eq(schema.tenants.id, tenantBId) // This AND condition ensures no results
+        eq(schema.tenants.id, tenantBId), // This AND condition ensures no results
       ),
     });
 
@@ -97,7 +97,7 @@ test.describe("Multi-Tenant Isolation (Application-Level)", () => {
     const tenantAUsersFromBContext = await db.query.users.findMany({
       where: and(
         eq(schema.users.tenant_id, tenantAId),
-        eq(schema.users.tenant_id, tenantBId) // Contradictory filter ensures no results
+        eq(schema.users.tenant_id, tenantBId), // Contradictory filter ensures no results
       ),
     });
 

@@ -24,7 +24,7 @@ test.describe("Sales Transaction Recording", () => {
     await page.fill('[name="identifier"]', editor.email);
     await page.fill(
       '[name="password"]',
-      process.env.TEST_EDITOR_PASSWORD ?? ""
+      process.env.TEST_EDITOR_PASSWORD ?? "",
     );
     await page.click('button[type="submit"]');
 
@@ -42,7 +42,7 @@ test.describe("Sales Transaction Recording", () => {
 
     // Verify calculated total
     await expect(page.locator('[data-testid="total-amount"]')).toContainText(
-      "$3,748.50"
+      "$3,748.50",
     );
 
     // Submit
@@ -50,7 +50,7 @@ test.describe("Sales Transaction Recording", () => {
 
     // Verify success
     await expect(page.locator('[data-testid="success-toast"]')).toContainText(
-      /sale recorded/i
+      /sale recorded/i,
     );
     await expect(page).toHaveURL(/sales/);
   });
@@ -69,7 +69,7 @@ test.describe("Sales Transaction Recording", () => {
     await page.fill('[name="identifier"]', editor.email);
     await page.fill(
       '[name="password"]',
-      process.env.TEST_EDITOR_PASSWORD ?? ""
+      process.env.TEST_EDITOR_PASSWORD ?? "",
     );
     await page.click('button[type="submit"]');
 
@@ -81,7 +81,7 @@ test.describe("Sales Transaction Recording", () => {
 
     // Should show validation error
     await expect(page.locator('[data-testid="quantity-error"]')).toContainText(
-      /must be positive/i
+      /must be positive/i,
     );
   });
 });
@@ -108,7 +108,7 @@ test.describe("Sales Transaction History", () => {
     await page.fill('[name="identifier"]', editor.email);
     await page.fill(
       '[name="password"]',
-      process.env.TEST_EDITOR_PASSWORD ?? ""
+      process.env.TEST_EDITOR_PASSWORD ?? "",
     );
     await page.click('button[type="submit"]');
 

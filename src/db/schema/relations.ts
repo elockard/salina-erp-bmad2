@@ -8,10 +8,12 @@
  * Story 2.4: Added titlesRelations for author and tenant links
  * Story 2.6: Added isbnsRelations for ISBN pool management
  * Story 3.1: Added salesRelations for sales transaction ledger
+ * Story 4.1: Added contractsRelations and contractTiersRelations for royalty contracts
  */
 
 import { relations } from "drizzle-orm";
 import { authors } from "./authors";
+import { contracts, contractTiers } from "./contracts";
 import { isbns } from "./isbns";
 import { returns } from "./returns";
 import { sales } from "./sales";
@@ -21,7 +23,7 @@ import { users } from "./users";
 
 /**
  * Tenant relations
- * One tenant has many users, authors, titles, isbns, sales, and returns
+ * One tenant has many users, authors, titles, isbns, sales, returns, and contracts
  */
 export const tenantsRelations = relations(tenants, ({ many }) => ({
   users: many(users),
@@ -30,6 +32,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   isbns: many(isbns),
   sales: many(sales),
   returns: many(returns),
+  contracts: many(contracts),
 }));
 
 /**
@@ -53,7 +56,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
  * Author relations
  * Each author belongs to one tenant
  * Each author may have one portal user account (via portal_user_id)
- * Each author can have many titles
+ * Each author can have many titles and contracts
  */
 export const authorsRelations = relations(authors, ({ one, many }) => ({
   tenant: one(tenants, {
@@ -65,6 +68,7 @@ export const authorsRelations = relations(authors, ({ one, many }) => ({
     references: [users.id],
   }),
   titles: many(titles),
+  contracts: many(contracts),
 }));
 
 /**
@@ -74,6 +78,7 @@ export const authorsRelations = relations(authors, ({ one, many }) => ({
  * Story 2.6: Added assignedIsbns relation for ISBN pool tracking
  * Story 3.1: Added sales relation for sales transaction ledger
  * Story 3.4: Added returns relation for returns tracking
+ * Story 4.1: Added contracts relation for royalty contracts
  */
 export const titlesRelations = relations(titles, ({ one, many }) => ({
   tenant: one(tenants, {
@@ -87,6 +92,7 @@ export const titlesRelations = relations(titles, ({ one, many }) => ({
   assignedIsbns: many(isbns),
   sales: many(sales),
   returns: many(returns),
+  contracts: many(contracts),
 }));
 
 /**
@@ -163,5 +169,39 @@ export const returnsRelations = relations(returns, ({ one }) => ({
     fields: [returns.reviewed_by_user_id],
     references: [users.id],
     relationName: "reviewedByUser",
+  }),
+}));
+
+/**
+ * Contracts relations
+ * Each contract belongs to one tenant, one author, and one title
+ * Each contract can have many tiers (tiered royalty rates)
+ * Story 4.1: Royalty contract management with tiered rates
+ */
+export const contractsRelations = relations(contracts, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [contracts.tenant_id],
+    references: [tenants.id],
+  }),
+  author: one(authors, {
+    fields: [contracts.author_id],
+    references: [authors.id],
+  }),
+  title: one(titles, {
+    fields: [contracts.title_id],
+    references: [titles.id],
+  }),
+  tiers: many(contractTiers),
+}));
+
+/**
+ * Contract Tiers relations
+ * Each tier belongs to one contract
+ * Story 4.1: Tiered royalty rate structure
+ */
+export const contractTiersRelations = relations(contractTiers, ({ one }) => ({
+  contract: one(contracts, {
+    fields: [contractTiers.contract_id],
+    references: [contracts.id],
   }),
 }));

@@ -1,0 +1,352 @@
+<story-context id="4-2-build-contract-creation-form-with-tiered-royalty-configuration" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>4.2</storyId>
+    <title>Build Contract Creation Form with Tiered Royalty Configuration</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-2-build-contract-creation-form-with-tiered-royalty-configuration.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>editor</asA>
+    <iWant>to create royalty contracts with tiered rates by format</iWant>
+    <soThat>author payment terms are properly documented</soThat>
+    <tasks>
+      <task id="1">Create royalties module structure (AC: 6, 9)
+        <subtask>Create src/modules/royalties/ directory</subtask>
+        <subtask>Create actions.ts with createContract server action</subtask>
+        <subtask>Create queries.ts with contract query functions</subtask>
+        <subtask>Create schema.ts with Zod validation schemas</subtask>
+        <subtask>Create types.ts with TypeScript interfaces</subtask>
+        <subtask>Implement permission checking (Editor/Admin/Owner)</subtask>
+      </task>
+      <task id="2">Build wizard modal shell component (AC: 1)
+        <subtask>Create components/contract-wizard-modal.tsx</subtask>
+        <subtask>Implement 5-step wizard navigation</subtask>
+        <subtask>Add progress indicator per UX spec</subtask>
+        <subtask>Implement Back/Next/Cancel button logic</subtask>
+        <subtask>Handle modal open/close state</subtask>
+      </task>
+      <task id="3">Build Step 1 - Basic Information form (AC: 2)
+        <subtask>Create components/contract-step-basic-info.tsx</subtask>
+        <subtask>Implement searchable author dropdown with Combobox</subtask>
+        <subtask>Implement searchable title dropdown with Combobox</subtask>
+        <subtask>Add status dropdown (Active/Suspended/Terminated)</subtask>
+        <subtask>Add currency inputs for advance amount and paid</subtask>
+        <subtask>Wire up form state with React Hook Form</subtask>
+      </task>
+      <task id="4">Build Steps 2-4 - Tier Configuration component (AC: 3, 4)
+        <subtask>Create components/contract-tier-builder.tsx (reusable)</subtask>
+        <subtask>Implement dynamic tier row addition (max 5 tiers)</subtask>
+        <subtask>Implement tier row removal</subtask>
+        <subtask>Auto-fill min_quantity from previous tier max + 1</subtask>
+        <subtask>Add Infinity option for last tier max_quantity</subtask>
+        <subtask>Implement tier validation (sequential, non-overlapping)</subtask>
+        <subtask>Add example text display</subtask>
+      </task>
+      <task id="5">Build Step 5 - Review and Create summary (AC: 5)
+        <subtask>Create components/contract-step-review.tsx</subtask>
+        <subtask>Display tier tables by format</subtask>
+        <subtask>Display advance summary</subtask>
+        <subtask>Display author/title confirmation</subtask>
+        <subtask>Add Create Contract action button</subtask>
+      </task>
+      <task id="6">Implement server action and database integration (AC: 6, 7, 8)
+        <subtask>Implement createContract server action in actions.ts</subtask>
+        <subtask>Use database transaction for atomic creation</subtask>
+        <subtask>Create contract record with all fields</subtask>
+        <subtask>Create contract_tiers records for each tier</subtask>
+        <subtask>Handle unique constraint violation (duplicate prevention)</subtask>
+        <subtask>Return ActionResult with proper error handling</subtask>
+      </task>
+      <task id="7">Wire up entry points and navigation (AC: 10, 7)
+        <subtask>Add Create Contract button to author detail view</subtask>
+        <subtask>Add Create Contract button to title detail view</subtask>
+        <subtask>Create /royalties route with contracts list</subtask>
+        <subtask>Add New Contract button to royalties page</subtask>
+        <subtask>Implement redirect to contract detail after creation</subtask>
+      </task>
+      <task id="8">Write unit tests (AC: 4, 6, 8, 9)
+        <subtask>Create tests/unit/contract-form.test.ts</subtask>
+        <subtask>Test tier validation logic (sequential, non-overlapping)</subtask>
+        <subtask>Test rate boundary validation (0-100%)</subtask>
+        <subtask>Test form schema validation</subtask>
+        <subtask>Test permission checking logic</subtask>
+        <subtask>Test duplicate detection</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Contract form displays multi-step wizard modal with 5 steps: Basic Information, Physical Book Royalty Tiers, Ebook Royalty Tiers, Audiobook Royalty Tiers (optional), Review and Create</ac>
+    <ac id="2">Step 1 (Basic Information) includes required fields: Author (searchable dropdown), Title (searchable dropdown), Status (dropdown with Active/Suspended/Terminated, default Active), Advance Amount (currency input, default $0.00), Advance Paid (currency input, default $0.00)</ac>
+    <ac id="3">Steps 2-4 (Tier Configuration) implement dynamic tier builder with tier rows showing min-max units and royalty percentage, Add Tier button (max 5 tiers), auto-fill next min from previous max + 1, Infinity option for last tier</ac>
+    <ac id="4">Tier validation enforces: non-overlapping ranges, sequential tiers, rates between 0-100%, at least one tier per enabled format, min_quantity >= 0</ac>
+    <ac id="5">Step 5 (Review and Create) displays summary of all tiers by format, advance info, author/title confirmation, Create Contract button</ac>
+    <ac id="6">Server Action creates contract and tiers atomically using database transaction, returns ActionResult with created contract</ac>
+    <ac id="7">Form submission shows success toast, handles errors, redirects to contract detail on success</ac>
+    <ac id="8">Duplicate contract prevention: same author + title + tenant returns error, uses unique constraint from schema</ac>
+    <ac id="9">Permission check enforced: only Editor/Admin/Owner can create contracts</ac>
+    <ac id="10">Contract entry accessible from Author detail, Title detail, and Royalties module</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR38-FR40 Royalty Contract Management</section>
+        <snippet>FR38: Editors can create royalty contracts linking authors to titles. FR39: Users can configure tiered royalty rates by format and sales volume. FR40: System supports multiple tiers per format.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Modular Structure - royalties module</section>
+        <snippet>src/modules/royalties/ containing components/, calculator.ts, actions.ts, queries.ts, schema.ts, types.ts. Server Action Pattern with permission checking and ActionResult return type.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Transaction Pattern</section>
+        <snippet>Use db.transaction() for atomic multi-step operations. Create parent record first, then related records within same transaction.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Currency Handling</section>
+        <snippet>Use Decimal.js for all financial calculations. Store currency as DECIMAL(10,2). Display with Intl.NumberFormat. Never use JavaScript arithmetic for currency.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Wizard-Guided Modal Pattern</section>
+        <snippet>Multi-step modal for complex workflows. Progress indicator at top showing current step. Back/Next/Cancel buttons. Step validation before advancing.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic and Story Definitions</title>
+        <section>Epic 4 Story 4.2</section>
+        <snippet>Contract creation form with 5-step wizard: Basic Info, Physical Tiers, Ebook Tiers, Audiobook Tiers (optional), Review. Dynamic tier builder supporting up to 5 tiers per format.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/4-1-create-royalty-contract-database-schema-with-tiered-rates.md</path>
+        <title>Story 4.1 Completed</title>
+        <section>Dev Agent Record</section>
+        <snippet>Schema created in src/db/schema/contracts.ts. Tables: contracts (with advance fields) and contract_tiers (with rate as DECIMAL(5,4)). Unique constraint on tenant_id + author_id + title_id. Migration 0008 applied.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/db/schema/contracts.ts</path>
+        <kind>schema</kind>
+        <symbol>contracts, contractTiers, Contract, InsertContract, ContractTier, InsertContractTier</symbol>
+        <lines>1-332</lines>
+        <reason>Database schema for contracts and tiers created in Story 4.1. Use these types for form and server action.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/actions.ts</path>
+        <kind>server-action</kind>
+        <symbol>recordSale</symbol>
+        <lines>90-207</lines>
+        <reason>Example Server Action pattern: permission check, Zod validation, Decimal.js for currency, ActionResult return, revalidatePath, toast message format.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/schema.ts</path>
+        <kind>validation-schema</kind>
+        <symbol>createSaleSchema, positiveCurrencySchema</symbol>
+        <lines>1-113</lines>
+        <reason>Example Zod schema patterns for forms. Currency validation with decimal places check. UUID validation pattern.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/components/sales-form.tsx</path>
+        <kind>component</kind>
+        <symbol>SalesForm</symbol>
+        <lines>1-547</lines>
+        <reason>Example form component: React Hook Form with Zod resolver, searchable dropdowns, currency input, toast on success, form reset pattern.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/components/title-autocomplete.tsx</path>
+        <kind>component</kind>
+        <symbol>TitleAutocomplete</symbol>
+        <reason>Reusable searchable dropdown component using cmdk. Pattern for author/title dropdowns in contract form.</reason>
+      </file>
+      <file>
+        <path>src/modules/authors/queries.ts</path>
+        <kind>query</kind>
+        <symbol>getAuthors</symbol>
+        <lines>12-41</lines>
+        <reason>Query pattern for fetching authors with search. Use similar pattern for author dropdown in contract form.</reason>
+      </file>
+      <file>
+        <path>src/modules/titles/queries.ts</path>
+        <kind>query</kind>
+        <symbol>getTitles, getTitleById</symbol>
+        <lines>25-101</lines>
+        <reason>Query pattern for fetching titles with relations. Use for title dropdown and validation.</reason>
+      </file>
+      <file>
+        <path>src/modules/authors/components/author-detail.tsx</path>
+        <kind>component</kind>
+        <symbol>AuthorDetail</symbol>
+        <reason>Add Create Contract button here (AC 10). Entry point for contract creation from author context.</reason>
+      </file>
+      <file>
+        <path>src/modules/titles/components/title-detail.tsx</path>
+        <kind>component</kind>
+        <symbol>TitleDetail</symbol>
+        <reason>Add Create Contract button here (AC 10). Entry point for contract creation from title context.</reason>
+      </file>
+      <file>
+        <path>src/lib/permissions.ts</path>
+        <kind>config</kind>
+        <symbol>CREATE_AUTHORS_TITLES, RECORD_SALES</symbol>
+        <lines>1-55</lines>
+        <reason>Permission constants pattern. Create new MANAGE_CONTRACTS permission for owner/admin/editor roles.</reason>
+      </file>
+      <file>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>requirePermission, getCurrentUser, getCurrentTenantId, getDb</symbol>
+        <reason>Auth utilities used in server actions. Call requirePermission(MANAGE_CONTRACTS) at start of createContract action.</reason>
+      </file>
+      <file>
+        <path>src/lib/types.ts</path>
+        <kind>type</kind>
+        <symbol>ActionResult</symbol>
+        <lines>1-3</lines>
+        <reason>Standard return type for server actions. Return ActionResult&lt;Contract&gt; from createContract.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/form.tsx</path>
+        <kind>component</kind>
+        <symbol>Form, FormField, FormItem, FormLabel, FormControl, FormMessage</symbol>
+        <reason>shadcn/ui form components for building the wizard form steps.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/index.ts</path>
+        <kind>schema</kind>
+        <symbol>exports</symbol>
+        <reason>Verify contracts and contractTiers are exported. Add if missing.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.66.1</version>
+        <usage>Form state management for wizard steps</usage>
+      </node>
+      <node>
+        <package>@hookform/resolvers</package>
+        <version>^5.2.2</version>
+        <usage>Zod resolver for form validation</usage>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.13</version>
+        <usage>Schema validation for form and server action</usage>
+      </node>
+      <node>
+        <package>decimal.js</package>
+        <version>^10.6.0</version>
+        <usage>Financial calculations for advance amounts and rates</usage>
+      </node>
+      <node>
+        <package>cmdk</package>
+        <version>1.1.1</version>
+        <usage>Command menu for searchable author/title dropdowns</usage>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>2.0.7</version>
+        <usage>Toast notifications for success/error feedback</usage>
+      </node>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <usage>Database queries and transactions</usage>
+      </node>
+      <node>
+        <package>@radix-ui/react-dialog</package>
+        <version>1.1.15</version>
+        <usage>Modal dialog for wizard</usage>
+      </node>
+      <node>
+        <package>@radix-ui/react-select</package>
+        <version>2.2.6</version>
+        <usage>Status dropdown component</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">Follow modular monolith pattern - all contract code in src/modules/royalties/</constraint>
+    <constraint type="security">Server Actions must call requirePermission() before any database operations</constraint>
+    <constraint type="security">Use CREATE_AUTHORS_TITLES permission array for Editor/Admin/Owner access</constraint>
+    <constraint type="database">Use db.transaction() for atomic contract + tiers creation</constraint>
+    <constraint type="currency">Use Decimal.js for all financial calculations, never JavaScript arithmetic</constraint>
+    <constraint type="currency">Store advance amounts as DECIMAL(10,2), rates as DECIMAL(5,4)</constraint>
+    <constraint type="validation">Validate tier ranges: sequential, non-overlapping, min_quantity >= 0</constraint>
+    <constraint type="validation">Validate rates between 0 and 1 (0-100%)</constraint>
+    <constraint type="ux">Follow Wizard-Guided Modal pattern from UX spec</constraint>
+    <constraint type="ux">Show progress indicator with 5 steps</constraint>
+    <constraint type="testing">Minimum 80% coverage on validation logic and server action</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>createContract Server Action</name>
+      <kind>server-action</kind>
+      <signature>async function createContract(data: CreateContractInput): Promise&lt;ActionResult&lt;Contract&gt;&gt;</signature>
+      <path>src/modules/royalties/actions.ts</path>
+    </interface>
+    <interface>
+      <name>CreateContractInput</name>
+      <kind>type</kind>
+      <signature>{ author_id: string; title_id: string; status: ContractStatus; advance_amount: string; advance_paid: string; tiers: TierInput[]; }</signature>
+      <path>src/modules/royalties/schema.ts</path>
+    </interface>
+    <interface>
+      <name>TierInput</name>
+      <kind>type</kind>
+      <signature>{ format: ContractFormat; min_quantity: number; max_quantity: number | null; rate: number; }</signature>
+      <path>src/modules/royalties/schema.ts</path>
+    </interface>
+    <interface>
+      <name>searchAuthorsForContract</name>
+      <kind>query</kind>
+      <signature>async function searchAuthorsForContract(term: string): Promise&lt;Author[]&gt;</signature>
+      <path>src/modules/royalties/queries.ts</path>
+    </interface>
+    <interface>
+      <name>searchTitlesForContract</name>
+      <kind>query</kind>
+      <signature>async function searchTitlesForContract(term: string): Promise&lt;TitleWithAuthor[]&gt;</signature>
+      <path>src/modules/royalties/queries.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Vitest for unit tests with describe/it/expect pattern. Test files in tests/unit/ directory.
+      Mock database and auth dependencies. Test validation logic and business rules.
+      E2E tests with Playwright in tests/e2e/ for full wizard flow.
+    </standards>
+    <locations>
+      <location>tests/unit/contract-form.test.ts</location>
+      <location>tests/unit/contract-schema.test.ts</location>
+      <location>tests/e2e/contracts.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="4">Test tier validation: sequential ranges (0-5000, 5001-10000), overlapping detection, gap detection</idea>
+      <idea ac="4">Test rate validation: 0% allowed, 100% allowed, -1% rejected, 101% rejected</idea>
+      <idea ac="4">Test min_quantity validation: 0 allowed, -1 rejected</idea>
+      <idea ac="6">Test transaction rollback: if tier insert fails, contract should not be created</idea>
+      <idea ac="8">Test duplicate prevention: same author+title returns error with clear message</idea>
+      <idea ac="9">Test permission: editor allowed, finance rejected, author rejected</idea>
+      <idea ac="2">Test currency input: accepts 10000, displays as $10,000.00</idea>
+      <idea ac="3">Test tier auto-fill: entering max=5000 auto-fills next min=5001</idea>
+    </ideas>
+  </tests>
+</story-context>

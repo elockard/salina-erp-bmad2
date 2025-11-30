@@ -1,4 +1,5 @@
 export * from "./authors";
+export * from "./contracts";
 export * from "./isbns";
 export * from "./relations";
 export * from "./returns";
@@ -8,6 +9,7 @@ export * from "./titles";
 export * from "./users";
 
 import type { authors } from "./authors";
+import type { contracts, contractTiers } from "./contracts";
 import type { isbns } from "./isbns";
 import type { returns } from "./returns";
 import type { sales } from "./sales";
@@ -22,4 +24,6 @@ export type Title = typeof titles.$inferSelect;
 export type ISBN = typeof isbns.$inferSelect;
 export type Sale = typeof sales.$inferSelect;
 export type Return = typeof returns.$inferSelect;
+export type Contract = typeof contracts.$inferSelect;
+export type ContractTier = typeof contractTiers.$inferSelect;
 export type UserRole = "owner" | "admin" | "editor" | "finance" | "author";

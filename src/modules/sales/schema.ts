@@ -56,7 +56,7 @@ export const positiveCurrencySchema = z
       const num = parseFloat(val);
       return !Number.isNaN(num) && num > 0;
     },
-    { message: "Amount must be a positive number" }
+    { message: "Amount must be a positive number" },
   )
   .refine(
     (val) => {
@@ -64,7 +64,7 @@ export const positiveCurrencySchema = z
       const parts = val.split(".");
       return parts.length === 1 || (parts[1]?.length ?? 0) <= 2;
     },
-    { message: "Amount cannot have more than 2 decimal places" }
+    { message: "Amount cannot have more than 2 decimal places" },
   );
 
 /**
@@ -76,7 +76,7 @@ export const saleDateSchema = z.string().refine(
     const date = new Date(val);
     return !Number.isNaN(date.getTime());
   },
-  { message: "Invalid date format" }
+  { message: "Invalid date format" },
 );
 
 /**

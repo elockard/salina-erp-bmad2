@@ -1,0 +1,321 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>4</storyId>
+    <title>Implement Tiered Royalty Calculation Engine</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-4-implement-tiered-royalty-calculation-engine.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform architect</asA>
+    <iWant>to build the core royalty calculation engine with tier application logic</iWant>
+    <soThat>accurate royalties are calculated per contract terms</soThat>
+    <tasks>
+      <task id="1" ac="7">Define TypeScript types for calculation results
+        <subtask>Create RoyaltyCalculation interface in types.ts</subtask>
+        <subtask>Create FormatCalculation interface for per-format breakdown</subtask>
+        <subtask>Create TierBreakdown interface for tier-by-tier details</subtask>
+        <subtask>Create NetSalesData interface for sales/returns aggregation</subtask>
+        <subtask>Export all types from module index</subtask>
+      </task>
+      <task id="2" ac="3">Implement sales aggregation queries
+        <subtask>Create getSalesByFormatForPeriod query in queries.ts</subtask>
+        <subtask>Create getApprovedReturnsByFormatForPeriod query in queries.ts</subtask>
+        <subtask>Both queries filter by tenant_id, title_id, date range</subtask>
+        <subtask>Group results by format with SUM aggregations</subtask>
+        <subtask>Use Decimal.js for aggregation calculations</subtask>
+      </task>
+      <task id="3" ac="1,2">Create calculation engine core function
+        <subtask>Create calculator.ts in src/modules/royalties/</subtask>
+        <subtask>Implement calculateRoyaltyForPeriod function signature</subtask>
+        <subtask>Load contract with tiers using existing getContractById or new query</subtask>
+        <subtask>Handle no-contract case with appropriate error response</subtask>
+        <subtask>Return early with empty result if no active contract</subtask>
+      </task>
+      <task id="4" ac="3,6">Implement net sales calculation
+        <subtask>Call sales and returns aggregation queries</subtask>
+        <subtask>Calculate net quantity: sales - approved returns per format</subtask>
+        <subtask>Calculate net revenue: sales amount - returns amount per format</subtask>
+        <subtask>Handle negative net by capping at zero (FR50)</subtask>
+        <subtask>Return NetSalesData per format</subtask>
+      </task>
+      <task id="5" ac="4,8">Implement tiered rate application
+        <subtask>Sort tiers by min_quantity for each format</subtask>
+        <subtask>Iterate allocating units through tiers</subtask>
+        <subtask>Handle max_quantity = null as Infinity</subtask>
+        <subtask>Calculate tier royalty: (units_in_tier / total_units) * net_revenue * rate</subtask>
+        <subtask>Accumulate tier breakdowns for result</subtask>
+        <subtask>Use Decimal.js for all calculations</subtask>
+      </task>
+      <task id="6" ac="5">Implement advance recoupment calculation
+        <subtask>Calculate remaining_advance = advance_amount - advance_recouped</subtask>
+        <subtask>Calculate recoupment = min(total_royalty, remaining_advance)</subtask>
+        <subtask>Calculate net_payable = total_royalty - recoupment</subtask>
+        <subtask>Handle fully recouped advances (remaining = 0)</subtask>
+        <subtask>DO NOT update database (calculation only)</subtask>
+      </task>
+      <task id="7" ac="6">Handle negative period edge cases
+        <subtask>Cap negative net sales at zero per format</subtask>
+        <subtask>Total royalty cannot be negative</subtask>
+        <subtask>Net payable minimum is zero</subtask>
+        <subtask>Preserve detailed breakdown showing negative impact</subtask>
+      </task>
+      <task id="8" ac="7">Assemble complete calculation result
+        <subtask>Build FormatCalculation for each format with tiers</subtask>
+        <subtask>Build RoyaltyCalculation with all components</subtask>
+        <subtask>Include period dates, author/contract identifiers</subtask>
+        <subtask>Ensure JSON-serializable structure</subtask>
+        <subtask>Return typed result object</subtask>
+      </task>
+      <task id="9" ac="9">Write unit tests for calculation engine
+        <subtask>Create tests/unit/royalty-calculator.test.ts</subtask>
+        <subtask>Test tier boundary calculations</subtask>
+        <subtask>Test advance recoupment scenarios</subtask>
+        <subtask>Test negative period handling</subtask>
+        <subtask>Test multiple format aggregation</subtask>
+        <subtask>Test decimal precision (verify no rounding errors)</subtask>
+        <subtask>Test empty period (no sales/returns)</subtask>
+        <subtask>Test no contract scenario</subtask>
+        <subtask>Mock database queries for unit testing</subtask>
+      </task>
+      <task id="10" ac="10">Export and integrate with module
+        <subtask>Export calculateRoyaltyForPeriod from src/modules/royalties/index.ts</subtask>
+        <subtask>Export all new types from types.ts</subtask>
+        <subtask>Verify integration with existing royalties module exports</subtask>
+        <subtask>Add JSDoc documentation to calculator.ts</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Calculation function signature: calculateRoyaltyForPeriod(authorId, tenantId, startDate, endDate): Promise&lt;RoyaltyCalculation&gt; in src/modules/royalties/calculator.ts</criterion>
+    <criterion id="2">Step 1: Load contract with all tiered rates via author_id/tenant_id query including contract_tiers relation; handle no-contract case with error result</criterion>
+    <criterion id="3">Step 2: Calculate net sales per format - query sales/approved-returns by tenant_id, title_id, date range; group by format; net = sales - approved returns</criterion>
+    <criterion id="4">Step 3: Apply tiered rates per format - sort tiers by min_quantity, iterate allocating units, apply rate, handle max_quantity=null as infinity, use Decimal.js</criterion>
+    <criterion id="5">Step 4: Calculate advance recoupment - recoupment = min(total_royalty, remaining_advance); net_payable = total - recoupment; DO NOT persist</criterion>
+    <criterion id="6">Step 5: Handle negative periods - cap net at zero, no negative royalty, no advance reversal, preserve breakdown showing impact</criterion>
+    <criterion id="7">Step 6: Return detailed breakdown - period, authorId, contractId, per-format calculations, tier breakdowns, totals, recoupment, net_payable as JSON-serializable</criterion>
+    <criterion id="8">Multiple formats supported independently - physical/ebook/audiobook calculated separately with different tier structures, aggregated for total</criterion>
+    <criterion id="9">Unit tests verify: tier boundaries, advance recoupment logic, negative periods, multi-format aggregation, decimal precision, empty periods, no-contract case</criterion>
+    <criterion id="10">Integration: export calculateRoyaltyForPeriod and RoyaltyCalculation type from module index; add queries to queries.ts; function does NOT persist</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR45-FR52: Royalty Calculation Engine</section>
+        <snippet>FR45: Trigger calculations for periods. FR46: Net sales (sales - approved returns). FR47: Apply tiered rates by volume/format. FR48: Advance recoupment. FR49: Net payable. FR50: Handle negative periods. FR51: Multiple formats. FR52: Detailed breakdown.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Novel Architectural Patterns - Pattern 1: Tiered Royalty Calculation Engine</section>
+        <snippet>Core algorithm: 1) Get contract with tiered rates, 2) Calculate net sales per format, 3) Apply tiered rates, 4) Calculate advance recoupment, 5) Calculate net payable, 6) Handle negative periods. Use Decimal.js for all financial math.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Currency Handling / Decimal.js</section>
+        <snippet>ALWAYS use Decimal.js for financial math. Store currency as DECIMAL(10,2) in database. Rates stored as DECIMAL(5,4) where 0.1000 = 10%. Convert to number only for display or DB storage.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 4.4: Implement Tiered Royalty Calculation Engine</section>
+        <snippet>Pure calculation function with no side effects. Steps: load contract, calculate net sales, apply tiers, handle advance recoupment, handle negative periods. Unit tests cover edge cases.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/4-3-build-contract-detail-view-and-management.md</path>
+        <title>Story 4.3 (Previous)</title>
+        <section>Dev Agent Record</section>
+        <snippet>Contract queries: getContractById returns ContractWithRelations including tiers. Decimal handling: currency as strings in DB, use parseFloat or Decimal.js. Contract tiers grouped by format, sorted by min_quantity. 82 unit tests.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/modules/royalties/types.ts</path>
+        <kind>types</kind>
+        <symbol>ContractWithRelations, TierInput</symbol>
+        <lines>1-94</lines>
+        <reason>Existing types for contracts/tiers. Add RoyaltyCalculation, FormatCalculation, TierBreakdown, NetSalesData types here.</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/queries.ts</path>
+        <kind>queries</kind>
+        <symbol>getContractById</symbol>
+        <lines>125-143</lines>
+        <reason>Existing contract query with tiers relation. Add getSalesByFormatForPeriod, getApprovedReturnsByFormatForPeriod queries.</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/index.ts</path>
+        <kind>module-index</kind>
+        <symbol>module exports</symbol>
+        <lines>1-44</lines>
+        <reason>Add export for calculateRoyaltyForPeriod function and new types.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/contracts.ts</path>
+        <kind>schema</kind>
+        <symbol>contracts, contractTiers</symbol>
+        <lines>94-307</lines>
+        <reason>Contract schema with advance_amount, advance_paid, advance_recouped. ContractTier with format, min_quantity, max_quantity, rate (DECIMAL 5,4).</reason>
+      </file>
+      <file>
+        <path>src/db/schema/sales.ts</path>
+        <kind>schema</kind>
+        <symbol>sales</symbol>
+        <lines>83-202</lines>
+        <reason>Sales table: tenant_id, title_id, format, quantity, total_amount, sale_date. Query for period aggregation.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/returns.ts</path>
+        <kind>schema</kind>
+        <symbol>returns</symbol>
+        <lines>67-224</lines>
+        <reason>Returns table: tenant_id, title_id, format, quantity, total_amount, return_date, status (pending/approved/rejected). Only approved returns affect royalties.</reason>
+      </file>
+      <file>
+        <path>src/modules/sales/queries.ts</path>
+        <kind>queries</kind>
+        <symbol>getSalesWithFilters, getSalesStats</symbol>
+        <lines>192-362</lines>
+        <reason>Query patterns for sales with filters, date ranges, aggregations (sum, count). Use as reference for new royalty queries.</reason>
+      </file>
+      <file>
+        <path>src/modules/returns/queries.ts</path>
+        <kind>queries</kind>
+        <symbol>getReturnsHistory</symbol>
+        <lines>196-375</lines>
+        <reason>Query patterns for returns with filters including status filter. Use for approved returns query.</reason>
+      </file>
+      <file>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentTenantId, getDb</symbol>
+        <lines>12-41</lines>
+        <reason>Database access pattern: getCurrentTenantId(), getDb() for authenticated queries.</reason>
+      </file>
+      <file>
+        <path>tests/unit/contract-actions.test.ts</path>
+        <kind>test</kind>
+        <symbol>updateContractStatus, Decimal usage</symbol>
+        <lines>1-100</lines>
+        <reason>Test patterns: Decimal.js usage, Zod schema validation, mocking patterns. Use as reference.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>decimal.js</package>
+        <version>^10.6.0</version>
+        <usage>CRITICAL: Use for ALL financial calculations. import Decimal from "decimal.js". Methods: new Decimal(val), .times(), .plus(), .minus(), .dividedBy(), .toNumber()</usage>
+      </node>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <usage>Database queries. Imports: and, eq, gte, lte, sum, count from "drizzle-orm". Use db.select() with aggregations.</usage>
+      </node>
+      <node>
+        <package>vitest</package>
+        <version>4.0.14</version>
+        <usage>Unit testing. describe, it, expect, vi for mocks. Run: npm run test</usage>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.13</version>
+        <usage>Schema validation for function inputs if needed.</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Use Decimal.js for ALL financial calculations. NEVER use JavaScript arithmetic (+, -, *, /) for currency.</constraint>
+    <constraint type="pattern">Calculator is a PURE FUNCTION - no database writes, no side effects. Results are passed to caller for persistence.</constraint>
+    <constraint type="pattern">Query only approved returns (status = 'approved') for royalty calculations per FR36.</constraint>
+    <constraint type="pattern">Negative periods: cap royalty at $0, do NOT reverse already-recouped advances per FR50.</constraint>
+    <constraint type="pattern">Multi-tenant: all queries must filter by tenant_id. Use getCurrentTenantId() and getDb() pattern.</constraint>
+    <constraint type="pattern">Currency stored as DECIMAL(10,2) strings in DB. Rates stored as DECIMAL(5,4) where 0.1000 = 10%.</constraint>
+    <constraint type="layer">Calculator goes in src/modules/royalties/calculator.ts. Types in types.ts. Queries in queries.ts.</constraint>
+    <constraint type="testing">Unit tests must mock database queries. Test tier boundaries, advance recoupment, negative periods, precision.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>calculateRoyaltyForPeriod</name>
+      <kind>function</kind>
+      <signature>async function calculateRoyaltyForPeriod(authorId: string, tenantId: string, startDate: Date, endDate: Date): Promise&lt;RoyaltyCalculation&gt;</signature>
+      <path>src/modules/royalties/calculator.ts (NEW)</path>
+    </interface>
+    <interface>
+      <name>getContractById</name>
+      <kind>function</kind>
+      <signature>async function getContractById(contractId: string): Promise&lt;ContractWithRelations | null&gt;</signature>
+      <path>src/modules/royalties/queries.ts:125</path>
+    </interface>
+    <interface>
+      <name>getCurrentTenantId</name>
+      <kind>function</kind>
+      <signature>async function getCurrentTenantId(): Promise&lt;string&gt;</signature>
+      <path>src/lib/auth.ts:12</path>
+    </interface>
+    <interface>
+      <name>getDb</name>
+      <kind>function</kind>
+      <signature>async function getDb(): Promise&lt;AuthenticatedDb&gt;</signature>
+      <path>src/lib/auth.ts:28</path>
+    </interface>
+    <interface>
+      <name>RoyaltyCalculation</name>
+      <kind>type</kind>
+      <signature>interface RoyaltyCalculation { period: { startDate: Date; endDate: Date }; authorId: string; contractId: string; formatCalculations: FormatCalculation[]; totalRoyaltyEarned: number; advanceRecoupment: number; netPayable: number; error?: string }</signature>
+      <path>src/modules/royalties/types.ts (NEW)</path>
+    </interface>
+    <interface>
+      <name>FormatCalculation</name>
+      <kind>type</kind>
+      <signature>interface FormatCalculation { format: ContractFormat; netSales: NetSalesData; tierBreakdowns: TierBreakdown[]; formatRoyalty: number }</signature>
+      <path>src/modules/royalties/types.ts (NEW)</path>
+    </interface>
+    <interface>
+      <name>TierBreakdown</name>
+      <kind>type</kind>
+      <signature>interface TierBreakdown { tierId: string; minQuantity: number; maxQuantity: number | null; rate: number; unitsApplied: number; royaltyAmount: number }</signature>
+      <path>src/modules/royalties/types.ts (NEW)</path>
+    </interface>
+    <interface>
+      <name>NetSalesData</name>
+      <kind>type</kind>
+      <signature>interface NetSalesData { grossQuantity: number; grossRevenue: number; returnsQuantity: number; returnsAmount: number; netQuantity: number; netRevenue: number }</signature>
+      <path>src/modules/royalties/types.ts (NEW)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Unit tests use Vitest with describe/it/expect pattern. Tests should mock database dependencies and test pure calculation logic. Use Decimal.js assertions for financial precision. Test file naming: royalty-calculator.test.ts. All tests should be independent and not rely on database state.</standards>
+    <locations>
+      <location>tests/unit/*.test.ts</location>
+      <location>tests/integration/*.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="4,9">Test tier boundary: exactly 5000 units should apply Tier 1 rate (boundary inclusive)</idea>
+      <idea ac="4,9">Test tier spans: 7500 units should split across Tier 1 (5000) and Tier 2 (2500)</idea>
+      <idea ac="4,9">Test all tiers: 15000 units should use all three tiers with correct allocations</idea>
+      <idea ac="5,9">Test partial advance recoupment: $5000 royalty with $8000 remaining = $5000 recouped, $0 payable</idea>
+      <idea ac="5,9">Test full recoupment: $10000 royalty with $3000 remaining = $3000 recouped, $7000 payable</idea>
+      <idea ac="5,9">Test zero advance: contract with $0 advance should have $0 recoupment</idea>
+      <idea ac="6,9">Test negative period: 100 sales, 150 returns = $0 royalty (not negative)</idea>
+      <idea ac="6,9">Test no advance reversal: negative period does not reduce advance_recouped</idea>
+      <idea ac="8,9">Test multi-format: physical 5000 units @ 10%, ebook 3000 units @ 20% = correctly aggregated</idea>
+      <idea ac="9">Test decimal precision: $123.456789 * 1500 units should not have floating-point errors</idea>
+      <idea ac="9">Test empty period: no sales, no returns = $0 royalty, $0 recoupment</idea>
+      <idea ac="2,9">Test no contract: author without contract returns error result</idea>
+      <idea ac="4,9">Test single-tier contract: one tier with max_quantity=null</idea>
+    </ideas>
+  </tests>
+</story-context>

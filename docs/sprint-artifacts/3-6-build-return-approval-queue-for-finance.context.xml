@@ -1,0 +1,154 @@
+<story-context id="3-6-build-return-approval-queue-for-finance" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>6</storyId>
+    <title>Build Return Approval Queue for Finance</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-6-build-return-approval-queue-for-finance.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance user</asA>
+    <iWant>to review and approve/reject return requests</iWant>
+    <soThat>only legitimate returns affect royalty calculations</soThat>
+    <tasks>
+      <task id="1" ac="1,11">Create pending returns page route at /returns/pending with permission check</task>
+      <task id="2" ac="2,4,10">Create returns queries for approval queue (getPendingReturns, getPendingReturnsCount, getPendingReturnsSummary, getReturnById, calculateRoyaltyImpact)</task>
+      <task id="3" ac="6,7,8,11,12">Create returns Server Actions for approval (approveReturn, rejectReturn, getNextPendingReturn)</task>
+      <task id="4" ac="2,3,9">Create ApprovalQueueView component with Split View Explorer layout</task>
+      <task id="5" ac="2">Create PendingReturnsList component for left panel queue display</task>
+      <task id="6" ac="3,4">Create ReturnDetailPanel component for right panel with return info and impact statement</task>
+      <task id="7" ac="5,6,7,8">Create ApprovalActions component with Approve/Reject buttons</task>
+      <task id="8" ac="5,6">Create ApproveConfirmDialog component with optional internal note</task>
+      <task id="9" ac="7,8">Create RejectConfirmDialog component with required rejection reason</task>
+      <task id="10" ac="9">Create EmptyQueueState component for no pending returns</task>
+      <task id="11" ac="10">Add dashboard widget for pending returns (Finance dashboard card)</task>
+      <task id="12" ac="10">Add navigation badge for pending count on Returns nav item</task>
+      <task id="13" ac="3,4">Update returns module types (ApprovalConfirmData, RejectionConfirmData)</task>
+      <task id="14" ac="6,8,12">Write unit tests for approval actions and schema validation</task>
+      <task id="15" ac="1-12">Write E2E tests for approval flow</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Pending returns page exists at /returns/pending with Split View Explorer layout, page header showing count, uses existing Split View pattern, permission check for Finance/Admin/Owner only</criterion>
+    <criterion id="2">Left panel displays pending returns queue with count header, each item shows Title/Quantity/Amount/Reason/Date, sorted by date (oldest first FIFO), click loads detail in right panel, visual selection indicator</criterion>
+    <criterion id="3">Right panel displays return request detail with header, metadata (submitted by/date), status badge "Pending Approval", Return Information card (title/format/quantity/amount/reason), Original Sale Context card (if reference provided)</criterion>
+    <criterion id="4">Impact statement displayed before action buttons calculating royalty impact using contract rate if available, otherwise return amount</criterion>
+    <criterion id="5">"Approve Return" primary button triggers confirmation dialog with message, optional internal note field, Confirm/Cancel buttons</criterion>
+    <criterion id="6">On approval: updates status to "approved", records reviewed_by_user_id and reviewed_at, stores internal note, success toast, auto-loads next pending return or shows empty state</criterion>
+    <criterion id="7">"Reject Return" secondary button triggers confirmation dialog with required rejection reason field, Confirm/Cancel buttons</criterion>
+    <criterion id="8">On rejection: updates status to "rejected", records reviewed_by_user_id/reviewed_at/rejection reason, success toast, auto-loads next pending return</criterion>
+    <criterion id="9">Empty state when no pending returns shows icon, message "No pending returns", subtitle "All return requests have been processed", link to returns history</criterion>
+    <criterion id="10">Dashboard widget shows pending count badge on Returns navigation and Finance dashboard card with count and total value, click navigates to /returns/pending</criterion>
+    <criterion id="11">Permission enforcement using APPROVE_RETURNS constant for owner/admin/finance roles, unauthorized redirected with error toast, server-side permission check on all actions</criterion>
+    <criterion id="12">Form validation with rejection reason required, server-side Zod validation, toast notifications, graceful handling of concurrent approval attempts</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="Returns Management (FR30-37)" snippet="FR33: Finance users can view queue of pending returns requiring approval. FR34: Finance users can approve or reject return requests. FR35: System tracks who approved/rejected returns and when. FR36: Only approved returns affect royalty calculations."/>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Returns Management Module" snippet="modules/returns/ contains components for ReturnApprovalQueue and ReturnDetail. Server Actions pattern for approveReturn with permission check, validation, database update, path revalidation."/>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Server Action Pattern (lines 749-807)" snippet="Standard Server Action structure: permission check, get user, validate with Zod, get tenant context, verify resource, update database, revalidate paths, return ActionResult."/>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="Return Approvals (Finance)" snippet="Split View pattern: Left panel pending returns queue sortable by date/amount/title, Right panel return detail with original sale context/reason/photos, Action buttons Approve/Reject with confirmation."/>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="UX Journey 2: Approve/Reject Return (lines 451-535)" snippet="Complete workflow from Finance Dashboard click through pending returns queue, select return, review details, approve/reject with dialog, auto-load next pending return."/>
+      <doc path="docs/epics.md" title="Epic 3: Sales and Returns Processing" section="Story 3.6" snippet="Build Return Approval Queue for Finance - Split View Explorer with pending queue, approval/rejection workflow, dashboard widget integration."/>
+    </docs>
+    <code>
+      <file path="src/modules/returns/schema.ts" kind="validation" symbol="approveReturnSchema" reason="Existing Zod schema for approve/reject action with return_id, action enum, optional reason"/>
+      <file path="src/modules/returns/types.ts" kind="types" symbol="PendingReturn, ReturnApproval, ApprovalQueueSummary" reason="Type definitions for approval queue items and summary widget"/>
+      <file path="src/modules/returns/actions.ts" kind="server-action" symbol="recordReturn" reason="Existing actions pattern for returns - extend with approveReturn, rejectReturn"/>
+      <file path="src/modules/returns/queries.ts" kind="query" symbol="getReturnsHistory, getReturnById" reason="Existing query patterns - add getPendingReturns, getPendingReturnsCount, getPendingReturnsSummary"/>
+      <file path="src/db/schema/returns.ts" kind="schema" symbol="returns" reason="Database schema with status column, reviewed_by_user_id, reviewed_at columns, tenant_status_idx composite index"/>
+      <file path="src/lib/permissions.ts" kind="constants" symbol="APPROVE_RETURNS" lines="24-25" reason="Permission constant defining allowed roles: owner, admin, finance"/>
+      <file path="src/modules/authors/components/authors-split-view.tsx" kind="component" symbol="AuthorsSplitView" reason="Reference implementation of Split View pattern with left panel list, right panel detail, mobile responsive"/>
+      <file path="src/modules/returns/components/returns-history-view.tsx" kind="component" symbol="ReturnsHistoryView" reason="Existing returns view component - can reference patterns"/>
+      <file path="src/modules/returns/components/status-badge.tsx" kind="component" symbol="StatusBadge" reason="Existing badge component for return status display"/>
+      <file path="src/lib/dashboard-nav.ts" kind="config" symbol="NAV_ITEMS" lines="61-65" reason="Navigation configuration - Returns nav item to add pending count badge"/>
+      <file path="src/app/(dashboard)/returns/page.tsx" kind="page" reason="Existing returns page - reference for route structure"/>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="next" version="15.x">App Router, Server Components, Server Actions</package>
+        <package name="react" version="19.x">UI components with hooks</package>
+        <package name="drizzle-orm" version="latest">Type-safe database queries</package>
+        <package name="zod" version="3.25+">Schema validation</package>
+        <package name="react-hook-form" version="7.60+">Form state management</package>
+        <package name="@hookform/resolvers" version="5.1+">Zod resolver for forms</package>
+        <package name="sonner" version="latest">Toast notifications</package>
+        <package name="lucide-react" version="latest">Icons (RotateCcw for returns)</package>
+        <package name="date-fns" version="4.1+">Date formatting</package>
+        <package name="decimal.js" version="latest">Currency calculations</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Use Split View Explorer pattern: Left panel 320px (desktop), 280px (tablet), full-width list-only on mobile with slide-in detail</constraint>
+    <constraint type="pattern">Server Action pattern: "use server" directive, requirePermission(APPROVE_RETURNS), getCurrentUser, validate with Zod, getCurrentTenantId, database operation with tenant_id filter, revalidatePath, return ActionResult</constraint>
+    <constraint type="pattern">Multi-tenant isolation: All queries MUST include tenant_id filter as first WHERE condition</constraint>
+    <constraint type="security">Permission check APPROVE_RETURNS on all approval Server Actions before any database operation</constraint>
+    <constraint type="security">Server-side validation with Zod schemas - never trust client data</constraint>
+    <constraint type="ui">Use shadcn/ui components: Dialog for confirmations, Button (primary for Approve, secondary for Reject), Badge for status, Card for info sections, Textarea for notes/reasons</constraint>
+    <constraint type="ui">Display quantities and amounts as negative values (e.g., "-25", "-$312.50") consistent with Story 3.5</constraint>
+    <constraint type="financial">Use Decimal.js for any royalty impact calculations - never JavaScript arithmetic for currency</constraint>
+    <constraint type="testing">Unit tests for schema validation and permission checks; E2E tests for complete approval workflow</constraint>
+    <constraint type="state">Handle concurrent approval attempts gracefully - check status is still "pending" before updating</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="approveReturn" kind="Server Action" path="src/modules/returns/actions.ts">
+      <signature>async function approveReturn(data: { return_id: string; internal_note?: string }): Promise&lt;ActionResult&lt;Return&gt;&gt;</signature>
+      <description>Approves a pending return, updates status to "approved", records reviewer and timestamp</description>
+    </interface>
+    <interface name="rejectReturn" kind="Server Action" path="src/modules/returns/actions.ts">
+      <signature>async function rejectReturn(data: { return_id: string; reason: string }): Promise&lt;ActionResult&lt;Return&gt;&gt;</signature>
+      <description>Rejects a pending return, updates status to "rejected", records reviewer, timestamp, and reason</description>
+    </interface>
+    <interface name="getPendingReturns" kind="Query" path="src/modules/returns/queries.ts">
+      <signature>async function getPendingReturns(): Promise&lt;PendingReturn[]&gt;</signature>
+      <description>Returns all pending returns for current tenant sorted by created_at ASC (FIFO)</description>
+    </interface>
+    <interface name="getPendingReturnsCount" kind="Query" path="src/modules/returns/queries.ts">
+      <signature>async function getPendingReturnsCount(): Promise&lt;number&gt;</signature>
+      <description>Returns count of pending returns for navigation badge</description>
+    </interface>
+    <interface name="getPendingReturnsSummary" kind="Query" path="src/modules/returns/queries.ts">
+      <signature>async function getPendingReturnsSummary(): Promise&lt;ApprovalQueueSummary&gt;</signature>
+      <description>Returns count and total value of pending returns for dashboard card</description>
+    </interface>
+    <interface name="getNextPendingReturn" kind="Server Action" path="src/modules/returns/actions.ts">
+      <signature>async function getNextPendingReturn(excludeId?: string): Promise&lt;ActionResult&lt;PendingReturn | null&gt;&gt;</signature>
+      <description>Gets next pending return after approval/rejection for auto-load feature</description>
+    </interface>
+    <interface name="APPROVE_RETURNS" kind="Permission Constant" path="src/lib/permissions.ts">
+      <signature>const APPROVE_RETURNS: UserRole[] = ["owner", "admin", "finance"]</signature>
+      <description>Roles allowed to approve/reject returns</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Testing follows project patterns: Vitest for unit tests in tests/unit/, Playwright for E2E in tests/e2e/. Unit tests mock database and auth. E2E tests use test fixtures with Finance role user. All tests validate permission enforcement.</standards>
+    <locations>
+      <location>tests/unit/returns-approval.test.ts</location>
+      <location>tests/e2e/returns-approval.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="6">Test approveReturn updates status to "approved" and sets reviewed_by_user_id, reviewed_at</idea>
+      <idea ac="8">Test rejectReturn requires reason and updates status to "rejected"</idea>
+      <idea ac="11">Test permission denied for Editor role calling approveReturn</idea>
+      <idea ac="12">Test validation error when rejection reason is empty</idea>
+      <idea ac="12">Test concurrent approval handling - second request fails gracefully if status changed</idea>
+      <idea ac="1">E2E: Finance user can access /returns/pending</idea>
+      <idea ac="1">E2E: Editor user is redirected from /returns/pending</idea>
+      <idea ac="2">E2E: Pending returns display in oldest-first order</idea>
+      <idea ac="5,6">E2E: Approve flow shows dialog, records note, updates status, shows toast</idea>
+      <idea ac="7,8">E2E: Reject flow requires reason, records reason, updates status</idea>
+      <idea ac="6,8">E2E: After approval/rejection, next pending return auto-loads</idea>
+      <idea ac="9">E2E: Empty state displays when no pending returns</idea>
+      <idea ac="10">E2E: Dashboard card shows correct count and navigates on click</idea>
+    </ideas>
+  </tests>
+</story-context>

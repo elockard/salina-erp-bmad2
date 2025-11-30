@@ -27,13 +27,13 @@ function getEncryptionKey(): Buffer {
 
   if (!keyHex) {
     throw new Error(
-      "ENCRYPTION_KEY environment variable is not set. Generate with: openssl rand -hex 32"
+      "ENCRYPTION_KEY environment variable is not set. Generate with: openssl rand -hex 32",
     );
   }
 
   if (keyHex.length !== 64) {
     throw new Error(
-      "ENCRYPTION_KEY must be 64 hex characters (32 bytes). Generate with: openssl rand -hex 32"
+      "ENCRYPTION_KEY must be 64 hex characters (32 bytes). Generate with: openssl rand -hex 32",
     );
   }
 

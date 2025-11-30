@@ -1,0 +1,333 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>3</storyId>
+    <title>Build Contract Detail View and Management</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-3-build-contract-detail-view-and-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>editor</asA>
+    <iWant>view and update existing royalty contracts</iWant>
+    <soThat>I can maintain accurate author agreements</soThat>
+    <tasks>
+      <task id="1" ac="1,2">Create contract detail page route and layout at src/app/(dashboard)/royalties/[id]/page.tsx with breadcrumb, header, status badge, metadata display, back button</task>
+      <task id="2" ac="3">Build Advance Tracking section component at src/modules/royalties/components/contract-advance-section.tsx with progress bar and recoupment calculations</task>
+      <task id="3" ac="4">Build Royalty Rate Tables component at src/modules/royalties/components/contract-tiers-section.tsx grouped by format with tier/range/rate columns</task>
+      <task id="4" ac="5">Build Related Data section component at src/modules/royalties/components/contract-stats-section.tsx with statement count, lifetime royalties/sales</task>
+      <task id="5" ac="6,7">Build Edit Contract modal at src/modules/royalties/components/contract-edit-modal.tsx with status, advance, tier editing and warning for existing statements</task>
+      <task id="6" ac="8">Build Update Advance modal at src/modules/royalties/components/contract-advance-modal.tsx for recording additional advance payments</task>
+      <task id="7" ac="6">Implement Change Status action with dropdown, confirmation dialog, and updateContractStatus server action</task>
+      <task id="8" ac="9">Add permission checks using MANAGE_CONTRACTS constant for Editor/Admin/Owner roles</task>
+      <task id="9" ac="10">Wire up navigation integration - contracts list row click, wizard redirect, author/title detail redirects</task>
+      <task id="10" ac="1-9">Write unit tests at tests/unit/contract-detail.test.ts for advance calculations, tier formatting, permissions, validation</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Contract detail page accessible at /royalties/[id] with 404 handling and breadcrumb navigation</ac>
+    <ac id="2">Contract header displays Author - Title, status badge with color coding, created/updated dates, back button</ac>
+    <ac id="3">Advance Tracking section shows amount, paid, recouped, remaining balance with progress bar percentage</ac>
+    <ac id="4">Royalty Rate Tables display by format (Physical/Ebook/Audiobook) with Tier/Range/Rate columns</ac>
+    <ac id="5">Related Data section shows statement count, lifetime royalties earned, lifetime sales units</ac>
+    <ac id="6">Actions section provides Edit Contract button, Update Advance button, Change Status dropdown</ac>
+    <ac id="7">Edit modal allows status, advance amount/paid, tier modifications with warning if statements exist</ac>
+    <ac id="8">Update Advance modal shows current amounts, accepts additional payment input, calculates new total</ac>
+    <ac id="9">Permission enforcement - only Editor/Admin/Owner can edit; view-only mode for others</ac>
+    <ac id="10">Navigation integration - list row click, wizard redirect, author/title Create Contract redirect</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Module Structure - royalties/</section>
+        <snippet>Feature-based module organization with components/, actions.ts, queries.ts, schema.ts, types.ts. Server Actions pattern with permission checks at entry.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Server Action Pattern</section>
+        <snippet>Server Actions use "use server" directive, validate with Zod, check permissions via requirePermission(), inject tenant_id, return ActionResult type.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Currency Handling</section>
+        <snippet>Use Decimal.js for financial calculations, store as DECIMAL(10,2), display with Intl.NumberFormat. formatCurrency() helper for display.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Salina ERP PRD</title>
+        <section>FR42-FR44</section>
+        <snippet>FR42: Track advance amount, paid, recouped. FR43: Update contract status (active/terminated/suspended). FR44: Maintain contract history for audit.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 4 - Royalty Contracts</title>
+        <section>Story 4.3</section>
+        <snippet>Contract detail view with advance tracking section showing progress bar, royalty rate tables by format, related data statistics, edit/update modals.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Editorial Navy Theme</section>
+        <snippet>Primary: #1e3a5f, Secondary: #5b7c99, Success: #2d7d3e, Warning: #d97706, Error: #b91c1c. Professional publishing aesthetic.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/4-2-build-contract-creation-form-with-tiered-royalty-configuration.md</path>
+        <title>Story 4.2 - Previous Story</title>
+        <section>Dev Agent Record</section>
+        <snippet>Created royalties module structure. getContractById query exists. TierBuilder component reusable. TODO comments at lines 96-97, 255-257 for navigation to detail.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/modules/royalties/queries.ts</path>
+        <kind>query</kind>
+        <symbol>getContractById</symbol>
+        <lines>125-143</lines>
+        <reason>Existing query returns ContractWithRelations with author, title, tiers - use for detail page data fetching</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/queries.ts</path>
+        <kind>query</kind>
+        <symbol>getContracts</symbol>
+        <lines>152-191</lines>
+        <reason>Existing pagination query - reference for new stats queries pattern</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/actions.ts</path>
+        <kind>action</kind>
+        <symbol>createContract</symbol>
+        <lines>100-231</lines>
+        <reason>Pattern for new update actions - permission check, validation, transaction, revalidatePath</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/types.ts</path>
+        <kind>types</kind>
+        <symbol>ContractWithRelations</symbol>
+        <lines>24-28</lines>
+        <reason>Existing type for contract with author, title, tiers - use for detail view props</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/schema.ts</path>
+        <kind>schema</kind>
+        <symbol>createContractSchema</symbol>
+        <lines>all</lines>
+        <reason>Reference for new updateContractSchema - similar validation patterns</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/components/contract-tier-builder.tsx</path>
+        <kind>component</kind>
+        <symbol>ContractTierBuilder</symbol>
+        <lines>all</lines>
+        <reason>Reuse for edit modal tier modifications - already handles tier CRUD</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/components/contract-wizard-modal.tsx</path>
+        <kind>component</kind>
+        <symbol>ContractWizardModal</symbol>
+        <lines>96-97</lines>
+        <reason>TODO comment to update - redirect to contract detail after creation</reason>
+      </file>
+      <file>
+        <path>src/app/(dashboard)/royalties/page.tsx</path>
+        <kind>page</kind>
+        <symbol>RoyaltiesPage</symbol>
+        <lines>255-257</lines>
+        <reason>TODO comment to update - navigate on row click to detail. STATUS_BADGES pattern lines 41-48.</reason>
+      </file>
+      <file>
+        <path>src/lib/permissions.ts</path>
+        <kind>utility</kind>
+        <symbol>MANAGE_CONTRACTS</symbol>
+        <lines>57</lines>
+        <reason>Permission constant for Editor/Admin/Owner - use for all contract update actions</reason>
+      </file>
+      <file>
+        <path>src/db/schema/contracts.ts</path>
+        <kind>schema</kind>
+        <symbol>contracts, contractTiers</symbol>
+        <lines>94-307</lines>
+        <reason>Database schema with advance_amount, advance_paid, advance_recouped fields. Contract and ContractTier types.</reason>
+      </file>
+      <file>
+        <path>src/modules/authors/components/author-detail.tsx</path>
+        <kind>component</kind>
+        <symbol>AuthorDetail</symbol>
+        <lines>all</lines>
+        <reason>Update Create Contract button to redirect to new contract detail page</reason>
+      </file>
+      <file>
+        <path>src/modules/titles/components/title-detail.tsx</path>
+        <kind>component</kind>
+        <symbol>TitleDetail</symbol>
+        <lines>all</lines>
+        <reason>Update Create Contract button to redirect to new contract detail page</reason>
+      </file>
+      <file>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>requirePermission, getCurrentUser, getCurrentTenantId, getDb</symbol>
+        <lines>all</lines>
+        <reason>Auth utilities for permission checks and tenant context in server actions</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>next</package>
+        <version>^16.0.4</version>
+      </node>
+      <node>
+        <package>react</package>
+        <version>^19.2.0</version>
+      </node>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.13</version>
+      </node>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.66.1</version>
+      </node>
+      <node>
+        <package>@hookform/resolvers</package>
+        <version>^5.2.2</version>
+      </node>
+      <node>
+        <package>decimal.js</package>
+        <version>^10.6.0</version>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>2.0.7</version>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>0.554.0</version>
+      </node>
+      <node>
+        <package>@radix-ui/react-dialog</package>
+        <version>1.1.15</version>
+      </node>
+      <node>
+        <package>@radix-ui/react-alert-dialog</package>
+        <version>1.1.15</version>
+      </node>
+      <node>
+        <package>@radix-ui/react-select</package>
+        <version>2.2.6</version>
+      </node>
+      <node>
+        <package>@radix-ui/react-dropdown-menu</package>
+        <version>2.1.16</version>
+      </node>
+      <node>
+        <package>vitest</package>
+        <version>4.0.14</version>
+        <dev>true</dev>
+      </node>
+      <node>
+        <package>@playwright/test</package>
+        <version>^1.57.0</version>
+        <dev>true</dev>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow modular monolith architecture - all contract components in src/modules/royalties/components/</constraint>
+    <constraint type="pattern">Use Server Components for detail page, Client Components only for interactive elements (modals, buttons)</constraint>
+    <constraint type="pattern">Server Actions must use "use server" directive, validate with Zod, check permissions, inject tenant_id</constraint>
+    <constraint type="security">All update actions must call requirePermission(MANAGE_CONTRACTS) before any database operations</constraint>
+    <constraint type="security">Always include tenant_id in WHERE clauses - use getCurrentTenantId() from auth.ts</constraint>
+    <constraint type="financial">Use Decimal.js for all advance recoupment calculations - never use JS arithmetic operators for currency</constraint>
+    <constraint type="ui">Follow Editorial Navy theme from UX spec - status badges use variant mapping (active=default, suspended=secondary, terminated=destructive)</constraint>
+    <constraint type="api">Return ActionResult type from all server actions - { success: true, data } or { success: false, error, fields? }</constraint>
+    <constraint type="nav">Use revalidatePath() after mutations to refresh Server Component data</constraint>
+    <constraint type="nav">Use Next.js router.push() for client-side navigation to /royalties/[id]</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>getContractById</name>
+      <kind>function</kind>
+      <signature>async function getContractById(contractId: string): Promise&lt;ContractWithRelations | null&gt;</signature>
+      <path>src/modules/royalties/queries.ts</path>
+    </interface>
+    <interface>
+      <name>requirePermission</name>
+      <kind>function</kind>
+      <signature>async function requirePermission(allowedRoles: UserRole[]): Promise&lt;void&gt; // throws "UNAUTHORIZED" if not permitted</signature>
+      <path>src/lib/auth.ts</path>
+    </interface>
+    <interface>
+      <name>ActionResult</name>
+      <kind>type</kind>
+      <signature>type ActionResult&lt;T&gt; = { success: true; data: T } | { success: false; error: string; fields?: Record&lt;string, string&gt; }</signature>
+      <path>src/lib/types.ts</path>
+    </interface>
+    <interface>
+      <name>ContractWithRelations</name>
+      <kind>type</kind>
+      <signature>interface ContractWithRelations extends Contract { author: Author; title: Title; tiers: ContractTier[] }</signature>
+      <path>src/modules/royalties/types.ts</path>
+    </interface>
+    <interface>
+      <name>MANAGE_CONTRACTS</name>
+      <kind>constant</kind>
+      <signature>const MANAGE_CONTRACTS: UserRole[] = ["owner", "admin", "editor"]</signature>
+      <path>src/lib/permissions.ts</path>
+    </interface>
+    <interface>
+      <name>updateContract (to create)</name>
+      <kind>server action</kind>
+      <signature>async function updateContract(contractId: string, data: unknown): Promise&lt;ActionResult&lt;Contract&gt;&gt;</signature>
+      <path>src/modules/royalties/actions.ts</path>
+    </interface>
+    <interface>
+      <name>updateContractStatus (to create)</name>
+      <kind>server action</kind>
+      <signature>async function updateContractStatus(contractId: string, status: ContractStatus): Promise&lt;ActionResult&lt;Contract&gt;&gt;</signature>
+      <path>src/modules/royalties/actions.ts</path>
+    </interface>
+    <interface>
+      <name>updateAdvancePaid (to create)</name>
+      <kind>server action</kind>
+      <signature>async function updateAdvancePaid(contractId: string, additionalPayment: string): Promise&lt;ActionResult&lt;Contract&gt;&gt;</signature>
+      <path>src/modules/royalties/actions.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Unit tests use Vitest with describe/it/expect pattern. Test files at tests/unit/*.test.ts. Import schemas and validation functions directly. Mock external dependencies. Follow existing royalties-schema.test.ts patterns for validation testing. E2E tests use Playwright at tests/e2e/*.spec.ts.</standards>
+    <locations>
+      <location>tests/unit/*.test.ts</location>
+      <location>tests/e2e/*.spec.ts</location>
+      <location>tests/integration/*.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="3">Test advance remaining balance calculation: remaining = amount - recouped</idea>
+      <idea ac="3">Test progress percentage calculation: (recouped / amount) * 100, capped at 100%</idea>
+      <idea ac="3">Test edge cases: zero advance, fully recouped advance, advance_recouped > advance_amount</idea>
+      <idea ac="4">Test tier rate formatting: decimal 0.10 displays as "10.00%"</idea>
+      <idea ac="4">Test max_quantity null handling: displays as "+" or "units+"</idea>
+      <idea ac="7">Test updateContract validates status enum values</idea>
+      <idea ac="8">Test updateAdvancePaid validates positive payment amount</idea>
+      <idea ac="8">Test updateAdvancePaid correctly calculates new total</idea>
+      <idea ac="9">Test permission check blocks Finance/Author roles from edit actions</idea>
+      <idea ac="9">Test permission check allows Editor/Admin/Owner roles</idea>
+    </ideas>
+  </tests>
+</story-context>

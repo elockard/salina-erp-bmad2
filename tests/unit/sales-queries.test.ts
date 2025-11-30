@@ -142,7 +142,7 @@ describe("CSV Export Formatting", () => {
 
   it("escapes values with multiple special characters", () => {
     expect(escapeCSV('Hello, "World"\nNew Line')).toBe(
-      '"Hello, ""World""\nNew Line"'
+      '"Hello, ""World""\nNew Line"',
     );
   });
 
@@ -159,7 +159,7 @@ describe("Pagination Logic", () => {
     const calculatePagination = (
       total: number,
       page: number,
-      pageSize: number
+      pageSize: number,
     ) => ({
       totalPages: Math.ceil(total / pageSize),
       startItem: (page - 1) * pageSize + 1,
@@ -231,7 +231,7 @@ describe("Date Range Defaults", () => {
     it("start is before or equal to end", () => {
       const range = getCurrentMonthRange();
       expect(new Date(range.start).getTime()).toBeLessThanOrEqual(
-        new Date(range.end).getTime()
+        new Date(range.end).getTime(),
       );
     });
 
@@ -317,14 +317,17 @@ describe("Permission Validation", () => {
 describe("Stats Calculation", () => {
   describe("bestSellingTitle", () => {
     const findBestSeller = (
-      sales: { title: string; quantity: number }[]
+      sales: { title: string; quantity: number }[],
     ): { title: string; units: number } | null => {
       if (sales.length === 0) return null;
 
-      const totals = sales.reduce((acc, sale) => {
-        acc[sale.title] = (acc[sale.title] || 0) + sale.quantity;
-        return acc;
-      }, {} as Record<string, number>);
+      const totals = sales.reduce(
+        (acc, sale) => {
+          acc[sale.title] = (acc[sale.title] || 0) + sale.quantity;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       let bestTitle = "";
       let maxUnits = 0;

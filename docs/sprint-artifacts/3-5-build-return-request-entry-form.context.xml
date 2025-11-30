@@ -1,0 +1,364 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>5</storyId>
+    <title>Build Return Request Entry Form</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-5-build-return-request-entry-form.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>editor</asA>
+    <iWant>to record return requests for approval</iWant>
+    <soThat>returns go through proper workflow before affecting financials</soThat>
+    <tasks>
+      <task id="1" ac="1,12,14">Create return entry page route
+        <subtasks>
+          <subtask>Create src/app/(dashboard)/returns/new/page.tsx</subtask>
+          <subtask>Add permission check using RECORD_RETURNS</subtask>
+          <subtask>Add breadcrumb navigation component</subtask>
+          <subtask>Add page header with title and subtitle</subtask>
+          <subtask>Import and render ReturnsForm component</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="4,5,6,7,8,13">Create Zod validation schemas
+        <subtasks>
+          <subtask>Create src/modules/returns/schema.ts (if not exists from 3.4) - EXISTS, may need updates</subtask>
+          <subtask>Define createReturnSchema with all field validations - EXISTS</subtask>
+          <subtask>Define returnReasonValues const array - NEEDS CREATION</subtask>
+          <subtask>Export CreateReturnInput type - EXISTS</subtask>
+          <subtask>Add positive quantity validation - EXISTS</subtask>
+          <subtask>Add positive currency validation - EXISTS</subtask>
+          <subtask>Add date validation (not future) - NEEDS UPDATE</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="2,11">Create returns types
+        <subtasks>
+          <subtask>Update src/modules/returns/types.ts - EXISTS</subtask>
+          <subtask>Add TitleForReturnsSelect type - EXISTS as TitleForReturnSelect</subtask>
+          <subtask>Add ReturnRecordResult type - EXISTS</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="2,3">Create returns queries
+        <subtasks>
+          <subtask>Create src/modules/returns/queries.ts - NEEDS CREATION</subtask>
+          <subtask>Add searchTitlesForReturns function (reuse sales pattern)</subtask>
+          <subtask>Add getTitleForReturn function</subtask>
+          <subtask>Add getTenantTimezone function (or reuse from sales)</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="2,11,12,13">Create returns Server Actions
+        <subtasks>
+          <subtask>Create src/modules/returns/actions.ts - NEEDS CREATION</subtask>
+          <subtask>Add searchTitlesForReturnsAction (reuse sales pattern)</subtask>
+          <subtask>Add recordReturn Server Action</subtask>
+          <subtask>Include permission check (RECORD_RETURNS)</subtask>
+          <subtask>Include Zod validation</subtask>
+          <subtask>Include tenant_id injection</subtask>
+          <subtask>Set status='pending' on insert</subtask>
+          <subtask>Revalidate paths on success</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="12">Create RECORD_RETURNS permission
+        <subtasks>
+          <subtask>Update src/lib/permissions.ts - NEEDS UPDATE</subtask>
+          <subtask>Add RECORD_RETURNS permission constant</subtask>
+          <subtask>Define roles: owner, admin, editor, finance</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="2-10,14">Create ReturnsForm component
+        <subtasks>
+          <subtask>Create src/modules/returns/components/returns-form.tsx - NEEDS CREATION</subtask>
+          <subtask>Use React Hook Form with Zod resolver</subtask>
+          <subtask>Implement title autocomplete with debounced search</subtask>
+          <subtask>Implement format dropdown filtered by title</subtask>
+          <subtask>Implement reason dropdown with conditional text field</subtask>
+          <subtask>Implement real-time return amount calculation</subtask>
+          <subtask>Add form submission handling with toast notifications</subtask>
+          <subtask>Add loading/disabled states</subtask>
+          <subtask>Add cancel button</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="2,3">Create title search combobox
+        <subtasks>
+          <subtask>Create src/modules/returns/components/title-search-combobox.tsx - NEEDS CREATION</subtask>
+          <subtask>Implement debounced search (300ms)</subtask>
+          <subtask>Display title name and author in dropdown</subtask>
+          <subtask>Show format availability indicators</subtask>
+          <subtask>Handle selection callback</subtask>
+        </subtasks>
+      </task>
+      <task id="9" ac="14">Add returns navigation
+        <subtasks>
+          <subtask>Update dashboard navigation to include Returns section</subtask>
+          <subtask>Add "Record Return" action button to returns list page</subtask>
+          <subtask>Ensure breadcrumb shows correct path</subtask>
+        </subtasks>
+      </task>
+      <task id="10" ac="4,5,7,13">Write unit tests
+        <subtasks>
+          <subtask>Create tests/unit/returns-schema.test.ts - EXISTS, needs updates</subtask>
+          <subtask>Test createReturnSchema validation</subtask>
+          <subtask>Test positive quantity validation</subtask>
+          <subtask>Test positive currency validation</subtask>
+          <subtask>Test reason enum validation</subtask>
+          <subtask>Test date validation (not future)</subtask>
+        </subtasks>
+      </task>
+      <task id="11" ac="1-14">Write E2E tests
+        <subtasks>
+          <subtask>Update tests/e2e/returns.spec.ts or create if needed</subtask>
+          <subtask>Test page access with valid permissions</subtask>
+          <subtask>Test redirect for unauthorized users</subtask>
+          <subtask>Test form submission happy path</subtask>
+          <subtask>Test validation error display</subtask>
+          <subtask>Test success redirect and toast</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Return entry page exists at /returns/new with "Spacious Guided Flow" layout: Page header "Record Return Request", subtitle "Submit return requests for approval before affecting royalties", form centered with max-width constraint matching sales form pattern</ac>
+    <ac id="2">Title autocomplete search field: Debounced search (300ms), shows title name and author in dropdown, displays available formats (physical/ebook based on ISBN availability), required field with validation</ac>
+    <ac id="3">Format dropdown filtered by selected title: Only shows formats with assigned ISBNs (physical if isbn, ebook if eisbn), required field auto-selects if only one format available, disabled until title is selected</ac>
+    <ac id="4">Quantity Returned field: Number input required, must be positive integer > 0, validation message "Quantity must be greater than 0"</ac>
+    <ac id="5">Unit Price field: Currency input with $ prefix, required must be positive decimal, maximum 2 decimal places, should match original sale price (informational not enforced)</ac>
+    <ac id="6">Return Date field: Date picker defaults to today's date, cannot be in the future, uses tenant timezone for display</ac>
+    <ac id="7">Reason dropdown with optional text: Dropdown options "Damaged", "Unsold inventory", "Customer return", "Other", required field, if "Other" selected text field appears and becomes required, placeholder "Please describe the reason for return"</ac>
+    <ac id="8">Original Sale Reference field: Optional text input, placeholder "e.g., Invoice #12345", helps verification but not validated against sales table</ac>
+    <ac id="9">Real-time return amount calculation: Displayed as negative "Return Amount: -$312.50", updates on quantity or unit_price change, uses Decimal.js for calculation (no floating-point errors)</ac>
+    <ac id="10">Submit button with loading state: Button text "Submit Return Request", loading state "Submitting..." with spinner, disabled while submitting</ac>
+    <ac id="11">On successful submit: Creates return record with status='pending', sets created_by_user_id to current user, success toast "Return request submitted for approval", redirects to /returns (returns history)</ac>
+    <ac id="12">Permission enforcement: Only Editor, Finance, Admin, or Owner can access, uses RECORD_RETURNS permission constant, redirects unauthorized users to dashboard with error</ac>
+    <ac id="13">Form validation: All required fields validated before submit, server-side validation with Zod schema, field-level error messages displayed inline</ac>
+    <ac id="14">Cancel/back navigation: Cancel button returns to /returns, breadcrumb navigation Dashboard > Returns > Record Return</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Returns Management (FR30-37)</section>
+        <snippet>FR30: Editors can record return transactions. FR31: Users must provide return reason and reference to original sale (optional). FR32: Return requests created with "pending" status awaiting approval.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Server Action Pattern (lines 749-807)</section>
+        <snippet>Server Actions follow consistent pattern: 1) Permission check, 2) Get current user, 3) Validate with Zod, 4) Get tenant context, 5) Execute database operation, 6) Revalidate paths, 7) Return ActionResult.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Returns table (lines 1672-1699)</section>
+        <snippet>Returns table schema with approval workflow: id, tenant_id, title_id, original_sale_id, format, quantity, unit_price, total_amount, return_date, reason, status (pending/approved/rejected), reviewed_by_user_id, reviewed_at.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Currency Handling</section>
+        <snippet>CRITICAL: Use Decimal.js for all financial calculations. Never use JavaScript arithmetic. Store as DECIMAL(10,2) in database. Format with Intl.NumberFormat for display.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories</title>
+        <section>Story 3.5: Build Return Request Entry Form</section>
+        <snippet>Epic 3 (Sales &amp; Returns Processing) story for return entry form with approval workflow. Implements FR30-32. Prerequisites: Story 3.4 (returns schema).</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Guided Flow Pattern</section>
+        <snippet>Spacious Guided Flow for focused data entry (Sales Entry, Create Title, Add Author). Clean, focused forms with clear progression and immediate feedback.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/modules/sales/components/sales-form.tsx</path>
+        <kind>component</kind>
+        <symbol>SalesForm</symbol>
+        <lines>1-547</lines>
+        <reason>PRIMARY PATTERN: Complete form implementation to follow. Uses React Hook Form + Zod, TitleAutocomplete, format dropdown, Decimal.js calculations, toast notifications, loading states. Copy this pattern for ReturnsForm.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/sales/components/title-autocomplete.tsx</path>
+        <kind>component</kind>
+        <symbol>TitleAutocomplete</symbol>
+        <reason>REUSE PATTERN: Debounced title search with author display and format availability. Can be adapted or shared for returns form.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/sales/actions.ts</path>
+        <kind>actions</kind>
+        <symbol>recordSale, searchTitlesAction</symbol>
+        <lines>1-443</lines>
+        <reason>PRIMARY PATTERN: Server Action implementation pattern. Shows permission checks, Zod validation, Decimal.js total calculation, tenant context, revalidatePath. recordReturn action should follow this pattern exactly.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/sales/queries.ts</path>
+        <kind>queries</kind>
+        <symbol>searchTitlesForSales, getTitleForSale</symbol>
+        <reason>REUSE PATTERN: Title search queries for sales form. Can create similar searchTitlesForReturns query or reuse directly.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/sales/schema.ts</path>
+        <kind>schema</kind>
+        <symbol>createSaleSchema, salesFormatValues</symbol>
+        <reason>PATTERN REFERENCE: Zod validation schema pattern. salesFormatValues already exported and used by returns schema.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/returns/schema.ts</path>
+        <kind>schema</kind>
+        <symbol>createReturnSchema, returnStatusSchema, returnReasonSchema</symbol>
+        <lines>1-148</lines>
+        <reason>EXISTING: Return validation schemas already created in Story 3.4. Includes createReturnSchema, positiveIntegerSchema, positiveCurrencySchema. May need to add returnReasonValues for dropdown.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/returns/types.ts</path>
+        <kind>types</kind>
+        <symbol>TitleForReturnSelect, ReturnRecordResult, ReturnsFormValues, SelectedTitleForReturn</symbol>
+        <lines>1-189</lines>
+        <reason>EXISTING: Type definitions already created in Story 3.4. Includes TitleForReturnSelect, ReturnRecordResult, ReturnsFormValues types needed for this form.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/returns.ts</path>
+        <kind>schema</kind>
+        <symbol>returns, returnStatusValues, Return, InsertReturn</symbol>
+        <lines>1-230</lines>
+        <reason>EXISTING: Database schema created in Story 3.4. Returns table with all required fields: tenant_id, title_id, format, quantity, unit_price, total_amount, return_date, reason, status (default 'pending'), created_by_user_id.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/sales.ts</path>
+        <kind>schema</kind>
+        <symbol>salesFormatValues, salesChannelValues</symbol>
+        <reason>REUSE: Format enum values shared between sales and returns (physical, ebook, audiobook).</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/permissions.ts</path>
+        <kind>permissions</kind>
+        <symbol>RECORD_SALES, APPROVE_RETURNS</symbol>
+        <lines>1-44</lines>
+        <reason>UPDATE REQUIRED: Need to add RECORD_RETURNS permission constant. Follow pattern of RECORD_SALES for roles: owner, admin, editor, finance.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>requirePermission, getCurrentUser, getCurrentTenantId, getDb</symbol>
+        <reason>REUSE: Auth utilities for permission checking, user context, tenant context. Import and use in returns actions.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(dashboard)/sales/new/page.tsx</path>
+        <kind>page</kind>
+        <symbol>SalesNewPage</symbol>
+        <reason>PATTERN: Page route structure for guided flow entry form. Follow this pattern for /returns/new/page.tsx.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/unit/returns-schema.test.ts</path>
+        <kind>test</kind>
+        <symbol>returns schema tests</symbol>
+        <reason>EXISTING: Unit tests for returns schema. Will need updates for new returnReasonValues validation.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/integration/returns-db.test.ts</path>
+        <kind>test</kind>
+        <symbol>returns database tests</symbol>
+        <reason>EXISTING: Integration tests for returns database operations from Story 3.4.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <ecosystem name="node">
+        <package name="react" version="^19.2.0">UI library</package>
+        <package name="react-hook-form" version="^7.66.1">Form state management</package>
+        <package name="@hookform/resolvers" version="^5.2.2">Zod resolver for react-hook-form</package>
+        <package name="zod" version="^4.1.13">Schema validation</package>
+        <package name="decimal.js" version="^10.6.0">Financial calculations (CRITICAL for currency)</package>
+        <package name="date-fns" version="^4.1.0">Date formatting</package>
+        <package name="@date-fns/tz" version="1.4.1">Timezone support</package>
+        <package name="sonner" version="2.0.7">Toast notifications</package>
+        <package name="cmdk" version="1.1.1">Command palette (for autocomplete)</package>
+        <package name="lucide-react" version="0.554.0">Icons</package>
+        <package name="next" version="^16.0.4">Framework</package>
+        <package name="drizzle-orm" version="^0.44.7">Database ORM</package>
+        <package name="vitest" version="4.0.14" dev="true">Unit testing</package>
+        <package name="@playwright/test" version="^1.57.0" dev="true">E2E testing</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md">CRITICAL: Use Decimal.js for all currency calculations. Never use JavaScript arithmetic (+, -, *, /) for financial values.</constraint>
+    <constraint source="architecture.md">All Server Actions must: 1) Check permissions first, 2) Validate with Zod, 3) Include tenant_id in all queries, 4) Use ActionResult type for returns.</constraint>
+    <constraint source="architecture.md">Multi-tenant isolation: Always include tenant_id filter in queries. Use getCurrentTenantId() from lib/auth.</constraint>
+    <constraint source="story">Return records must be created with status='pending' (FR32). Finance approval is a separate story (3.6).</constraint>
+    <constraint source="story">Quantity and total_amount in database are POSITIVE values. The negative display (-$312.50) is for UX only.</constraint>
+    <constraint source="architecture.md">Form validation happens at 3 layers: 1) Client-side (React Hook Form + Zod), 2) Server-side (Zod in Server Action), 3) Database (CHECK constraints).</constraint>
+    <constraint source="architecture.md">Date fields: Use tenant timezone for display (date-fns + @date-fns/tz). Store as DATE type in database. Cannot be in future.</constraint>
+    <constraint source="prd.md">Only Editor, Finance, Admin, Owner roles can record returns (FR30). Create RECORD_RETURNS permission constant.</constraint>
+    <constraint source="ux-design">Follow "Spacious Guided Flow" pattern from sales form. Form centered with max-width, clear field labels, inline error messages.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>recordReturn Server Action</name>
+      <kind>Server Action</kind>
+      <signature>export async function recordReturn(data: unknown): Promise&lt;ActionResult&lt;ReturnRecordResult&gt;&gt;</signature>
+      <path>src/modules/returns/actions.ts</path>
+    </interface>
+    <interface>
+      <name>searchTitlesForReturnsAction</name>
+      <kind>Server Action</kind>
+      <signature>export async function searchTitlesForReturnsAction(searchTerm: string): Promise&lt;ActionResult&lt;TitleForReturnSelect[]&gt;&gt;</signature>
+      <path>src/modules/returns/actions.ts</path>
+    </interface>
+    <interface>
+      <name>CreateReturnInput</name>
+      <kind>TypeScript Type</kind>
+      <signature>type CreateReturnInput = { title_id: string; format: SalesFormat; quantity: number; unit_price: string; total_amount: string; return_date: string; reason?: string; original_sale_id?: string; }</signature>
+      <path>src/modules/returns/schema.ts</path>
+    </interface>
+    <interface>
+      <name>RECORD_RETURNS Permission</name>
+      <kind>Permission Constant</kind>
+      <signature>export const RECORD_RETURNS: UserRole[] = ["owner", "admin", "editor", "finance"]</signature>
+      <path>src/lib/permissions.ts</path>
+    </interface>
+    <interface>
+      <name>requirePermission</name>
+      <kind>Auth Utility</kind>
+      <signature>export async function requirePermission(allowedRoles: UserRole[]): Promise&lt;void&gt;</signature>
+      <path>src/lib/auth.ts</path>
+    </interface>
+    <interface>
+      <name>ActionResult</name>
+      <kind>TypeScript Type</kind>
+      <signature>type ActionResult&lt;T&gt; = { success: true; data: T } | { success: false; error: string; fields?: Record&lt;string, string&gt; }</signature>
+      <path>src/lib/types.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Testing uses Vitest for unit tests and Playwright for E2E tests. Unit tests focus on schema validation and utility functions. E2E tests verify full user flows including permission checks, form submission, and toast notifications. Follow existing patterns in tests/unit/sales-schema.test.ts and tests/e2e/sales-entry.spec.ts.</standards>
+    <locations>
+      <location>tests/unit/*.test.ts</location>
+      <location>tests/e2e/*.spec.ts</location>
+      <location>tests/integration/*.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="4,5">Test createReturnSchema rejects negative quantity and unit_price</idea>
+      <idea ac="6">Test return_date validation rejects future dates</idea>
+      <idea ac="7">Test reason validation requires text when "other" is selected</idea>
+      <idea ac="9">Test Decimal.js total calculation matches expected value (no floating-point errors)</idea>
+      <idea ac="12">E2E: Test unauthorized user (author role) is redirected to dashboard</idea>
+      <idea ac="12">E2E: Test authorized user (editor role) can access /returns/new</idea>
+      <idea ac="11">E2E: Test successful submission creates return with status='pending'</idea>
+      <idea ac="11">E2E: Test success toast appears with correct message</idea>
+      <idea ac="13">E2E: Test validation errors display inline for each field</idea>
+      <idea ac="2,3">E2E: Test title selection enables format dropdown with correct options</idea>
+    </ideas>
+  </tests>
+</story-context>

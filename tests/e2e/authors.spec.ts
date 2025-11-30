@@ -66,10 +66,10 @@ test.describe("Author Management - Split View Layout", () => {
 
     // Modal should open
     await expect(
-      page.getByRole("dialog", { name: "Create Author" })
+      page.getByRole("dialog", { name: "Create Author" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Create Author" })
+      page.getByRole("heading", { name: "Create Author" }),
     ).toBeVisible();
   });
 
@@ -94,11 +94,11 @@ test.describe("Author Management - Split View Layout", () => {
 
     // Check options
     await expect(
-      page.getByRole("option", { name: "Direct Deposit" })
+      page.getByRole("option", { name: "Direct Deposit" }),
     ).toBeVisible();
     await expect(page.getByRole("option", { name: "Check" })).toBeVisible();
     await expect(
-      page.getByRole("option", { name: "Wire Transfer" })
+      page.getByRole("option", { name: "Wire Transfer" }),
     ).toBeVisible();
   });
 
@@ -131,7 +131,7 @@ test.describe("Author Management - Split View Layout", () => {
 
     // Modal should close
     await expect(
-      page.getByRole("dialog", { name: "Create Author" })
+      page.getByRole("dialog", { name: "Create Author" }),
     ).not.toBeVisible();
   });
 
@@ -172,7 +172,7 @@ test.describe("Author Management - Detail View", () => {
 
     // Right panel should show author details
     await expect(
-      page.getByRole("heading", { name: "Author Details" })
+      page.getByRole("heading", { name: "Author Details" }),
     ).toBeVisible();
   });
 
@@ -193,7 +193,7 @@ test.describe("Author Management - Detail View", () => {
     await authorItem.click();
 
     await expect(
-      page.getByRole("heading", { name: "Titles by this Author" })
+      page.getByRole("heading", { name: "Titles by this Author" }),
     ).toBeVisible();
   });
 
@@ -204,10 +204,10 @@ test.describe("Author Management - Detail View", () => {
     await authorItem.click();
 
     await expect(
-      page.getByRole("heading", { name: "Contracts" })
+      page.getByRole("heading", { name: "Contracts" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Contract management coming in Epic 4")
+      page.getByText("Contract management coming in Epic 4"),
     ).toBeVisible();
   });
 
@@ -220,11 +220,11 @@ test.describe("Author Management - Detail View", () => {
 
     // Form should be in edit mode
     await expect(
-      page.getByRole("heading", { name: "Edit Author" })
+      page.getByRole("heading", { name: "Edit Author" }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Save Changes" })
+      page.getByRole("button", { name: "Save Changes" }),
     ).toBeVisible();
   });
 
@@ -239,7 +239,7 @@ test.describe("Author Management - Detail View", () => {
 
     // Confirmation dialog should appear
     await expect(
-      page.getByRole("dialog", { name: /Deactivate Author/i })
+      page.getByRole("dialog", { name: /Deactivate Author/i }),
     ).toBeVisible();
     await expect(page.getByText(/Are you sure/i)).toBeVisible();
   });
@@ -263,7 +263,7 @@ test.describe("Author Management - Responsive Behavior", () => {
 
     // Back button should appear on mobile detail view
     await expect(
-      page.getByRole("button", { name: /Back to list/i })
+      page.getByRole("button", { name: /Back to list/i }),
     ).toBeVisible();
   });
 });

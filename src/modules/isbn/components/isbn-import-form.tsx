@@ -99,9 +99,7 @@ export function IsbnImportForm() {
     // Check file size
     if (f.size > MAX_FILE_SIZE) {
       return `File too large. Maximum size is 1MB (${(
-        f.size /
-        1024 /
-        1024
+        f.size / 1024 / 1024
       ).toFixed(2)}MB uploaded).`;
     }
 
@@ -134,7 +132,7 @@ export function IsbnImportForm() {
         // Check row count (AC 2)
         if (isbnRows.length > MAX_ROWS) {
           setFileError(
-            `Too many rows. Maximum is ${MAX_ROWS} ISBNs per import (${isbnRows.length} found).`
+            `Too many rows. Maximum is ${MAX_ROWS} ISBNs per import (${isbnRows.length} found).`,
           );
           return;
         }
@@ -206,7 +204,7 @@ export function IsbnImportForm() {
       setFile(selectedFile);
       processCSV(selectedFile);
     },
-    [validateFile, processCSV]
+    [validateFile, processCSV],
   );
 
   /**
@@ -219,7 +217,7 @@ export function IsbnImportForm() {
         handleFileSelect(selectedFile);
       }
     },
-    [handleFileSelect]
+    [handleFileSelect],
   );
 
   /**
@@ -245,7 +243,7 @@ export function IsbnImportForm() {
         handleFileSelect(droppedFile);
       }
     },
-    [handleFileSelect]
+    [handleFileSelect],
   );
 
   /**

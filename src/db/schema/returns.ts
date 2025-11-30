@@ -156,6 +156,13 @@ export const returns = pgTable(
     reviewed_at: timestamp("reviewed_at", { withTimezone: true }),
 
     /**
+     * Internal note added during approval (optional)
+     * Story 3.6 AC 6: "Stores internal note if provided"
+     * Used for audit trail and internal communication
+     */
+    internal_note: text("internal_note"),
+
+    /**
      * Foreign key to users table - who created this return record
      * ON DELETE RESTRICT - cannot delete a user who created returns records
      * Used for audit trail

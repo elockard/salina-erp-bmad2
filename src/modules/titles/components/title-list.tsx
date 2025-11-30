@@ -67,7 +67,7 @@ function FormatIcons({
       <span
         className={cn(
           "text-[10px] font-medium px-1 rounded",
-          isbn ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400"
+          isbn ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400",
         )}
         title={isbn ? `ISBN: ${isbn}` : "No physical ISBN"}
       >
@@ -76,7 +76,7 @@ function FormatIcons({
       <span
         className={cn(
           "text-[10px] font-medium px-1 rounded",
-          eisbn ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-400"
+          eisbn ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-400",
         )}
         title={eisbn ? `eISBN: ${eisbn}` : "No ebook ISBN"}
       >
@@ -206,7 +206,7 @@ export function TitleList({
                     "flex items-start justify-between gap-2",
                     // Active item styling
                     selectedTitleId === title.id &&
-                      "bg-primary/10 border-l-2 border-l-primary"
+                      "bg-primary/10 border-l-2 border-l-primary",
                   )}
                   role="option"
                   aria-selected={selectedTitleId === title.id}

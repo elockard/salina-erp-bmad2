@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, Key, Pencil, X } from "lucide-react";
+import { Eye, FileText, Key, Pencil, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +56,7 @@ import {
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
 import {
   CREATE_AUTHORS_TITLES,
+  MANAGE_CONTRACTS,
   MANAGE_USERS,
   VIEW_TAX_ID,
 } from "@/lib/permissions";
@@ -108,6 +111,7 @@ export function AuthorDetail({
   onAuthorReactivated,
   onPortalAccessChanged,
 }: AuthorDetailProps) {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [showTaxId, setShowTaxId] = useState(false);
@@ -119,9 +123,13 @@ export function AuthorDetail({
   const [showRevokePortalDialog, setShowRevokePortalDialog] = useState(false);
   const [isPortalActionLoading, setIsPortalActionLoading] = useState(false);
 
+  // Story 4.2: Contract creation modal state
+  const [showContractWizard, setShowContractWizard] = useState(false);
+
   const canManageAuthors = useHasPermission(CREATE_AUTHORS_TITLES);
   const canViewTaxId = useHasPermission(VIEW_TAX_ID);
   const canManageUsers = useHasPermission(MANAGE_USERS);
+  const canManageContracts = useHasPermission(MANAGE_CONTRACTS);
 
   // Derive portal access status
   // AC 19: Active = has portal_user_id AND portalUser.is_active is true AND clerk_user_id is set
@@ -548,14 +556,26 @@ export function AuthorDetail({
         </CardContent>
       </Card>
 
-      {/* Contracts Section - Placeholder for Epic 4 */}
+      {/* Contracts Section - Story 4.2: Create Contract entry point */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Contracts</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Contracts
+          </CardTitle>
+          {canManageContracts && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowContractWizard(true)}
+            >
+              Create Contract
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <div className="text-sm text-muted-foreground text-center py-8">
-            Contract management coming in Epic 4.
+            No contracts yet. Contract list will appear here.
           </div>
         </CardContent>
       </Card>
@@ -667,6 +687,15 @@ export function AuthorDetail({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Story 4.2/4.3: Contract Creation Wizard Modal */}
+      <ContractWizardModal
+        open={showContractWizard}
+        onOpenChange={setShowContractWizard}
+        defaultAuthorId={author.id}
+        defaultAuthorName={author.name}
+        onSuccess={(contractId) => router.push(`/royalties/${contractId}`)}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { getAuthenticatedDb } from "@/db";
+import { adminDb, getAuthenticatedDb } from "@/db";
 import type { User, UserRole } from "@/db/schema";
 import { users } from "@/db/schema/users";
 
@@ -30,8 +30,12 @@ export async function getDb() {
   const jwt = headersList.get("x-clerk-jwt");
 
   if (!jwt) {
+    console.error("[Auth] No JWT found in x-clerk-jwt header");
     throw new Error("Authentication token not found in request context");
   }
+
+  // Debug: Log JWT info (first 50 chars only for security)
+  console.log("[Auth] JWT present, length:", jwt.length, "starts with:", jwt.substring(0, 50) + "...");
 
   return getAuthenticatedDb(jwt);
 }

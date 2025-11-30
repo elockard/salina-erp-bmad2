@@ -176,7 +176,7 @@ export function TransactionDetailModal({
                 label="Recorded At"
                 value={format(
                   new Date(sale.created_at),
-                  "MMM d, yyyy 'at' h:mm a"
+                  "MMM d, yyyy 'at' h:mm a",
                 )}
               />
             </div>

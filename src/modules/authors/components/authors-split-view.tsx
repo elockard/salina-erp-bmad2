@@ -88,7 +88,7 @@ export function AuthorsSplitView({ initialAuthors }: AuthorsSplitViewProps) {
   // Handle author created
   const handleAuthorCreated = (author: Author) => {
     setAuthors((prev) =>
-      [...prev, author].sort((a, b) => a.name.localeCompare(b.name))
+      [...prev, author].sort((a, b) => a.name.localeCompare(b.name)),
     );
     setSelectedAuthorId(author.id);
     setCreateDialogOpen(false);
@@ -101,7 +101,7 @@ export function AuthorsSplitView({ initialAuthors }: AuthorsSplitViewProps) {
     setAuthors((prev) =>
       prev
         .map((a) => (a.id === author.id ? author : a))
-        .sort((a, b) => a.name.localeCompare(b.name))
+        .sort((a, b) => a.name.localeCompare(b.name)),
     );
     toast.success("Author updated");
   };
@@ -154,7 +154,7 @@ export function AuthorsSplitView({ initialAuthors }: AuthorsSplitViewProps) {
           "flex flex-col border-r bg-background",
           "w-[320px] lg:w-[320px] md:w-[280px]",
           "max-md:w-full max-md:border-r-0",
-          mobileDetailOpen && "max-md:hidden"
+          mobileDetailOpen && "max-md:hidden",
         )}
       >
         {/* Header with Create Button */}
@@ -183,7 +183,7 @@ export function AuthorsSplitView({ initialAuthors }: AuthorsSplitViewProps) {
         className={cn(
           "flex-1 overflow-auto bg-muted/30",
           "max-md:fixed max-md:inset-0 max-md:z-50 max-md:bg-background",
-          !mobileDetailOpen && "max-md:hidden"
+          !mobileDetailOpen && "max-md:hidden",
         )}
       >
         {/* Mobile Back Button */}

@@ -1,10 +1,35 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
+import {
+  BarChart,
+  BookOpen,
+  DollarSign,
+  Hash,
+  Home,
+  Receipt,
+  RotateCcw,
+  Settings,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import type { NavItem } from "@/lib/dashboard-nav";
+import type { IconName, NavItem } from "@/lib/dashboard-nav";
 import { cn } from "@/lib/utils";
+
+// Map icon names to actual Lucide components
+const iconMap: Record<IconName, LucideIcon> = {
+  Home,
+  Users,
+  BookOpen,
+  Hash,
+  Receipt,
+  RotateCcw,
+  DollarSign,
+  BarChart,
+  Settings,
+};
 
 interface DashboardSidebarProps {
   items: NavItem[];
@@ -31,7 +56,7 @@ export function DashboardSidebar({ items, tenantName }: DashboardSidebarProps) {
         <nav className="flex-1 space-y-1 p-4">
           {items.map((item) => {
             const isActive = pathname === item.href;
-            const Icon = item.icon;
+            const Icon = iconMap[item.icon];
 
             return (
               <Link
@@ -52,6 +77,11 @@ export function DashboardSidebar({ items, tenantName }: DashboardSidebarProps) {
               >
                 <Icon className="h-4 w-4" />
                 <span className="flex-1">{item.label}</span>
+                {item.badgeCount !== undefined && item.badgeCount > 0 && (
+                  <Badge variant="destructive" className="text-xs">
+                    {item.badgeCount}
+                  </Badge>
+                )}
                 {item.comingSoon && (
                   <Badge variant="secondary" className="text-xs">
                     Soon

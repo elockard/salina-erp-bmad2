@@ -5,11 +5,12 @@
  * Re-exports database types and defines additional application types.
  *
  * Story 3.4: Create Returns Database Schema with Approval Workflow
- * Story 3.5+: Return request entry and approval forms
+ * Story 3.5: Build Return Request Entry Form
  */
 
 import type { ReturnStatus, SalesFormat } from "@/db/schema";
 import type { Return as DbReturn, InsertReturn } from "@/db/schema/returns";
+import type { ReturnReason } from "./schema";
 
 /**
  * Return record as stored in database
@@ -27,6 +28,7 @@ export type NewReturn = InsertReturn;
  * Re-export enum types for use in components
  */
 export type { ReturnStatus };
+export type { ReturnReason };
 export type ReturnFormat = SalesFormat; // Returns use same format enum as sales
 
 /**
@@ -113,17 +115,18 @@ export interface ReturnApproval {
 }
 
 /**
- * Returns form field values
+ * Returns form field values (Story 3.5)
  * Used by React Hook Form for form state
  */
 export interface ReturnsFormValues {
   title_id: string;
-  original_sale_id?: string;
   format: SalesFormat;
   quantity: number;
   unit_price: string;
-  return_date: string;
-  reason?: string;
+  return_date: Date;
+  reason: ReturnReason;
+  reason_other?: string;
+  original_sale_reference?: string;
 }
 
 /**
@@ -163,6 +166,32 @@ export interface PaginatedReturns {
 }
 
 /**
+ * Filter parameters for returns history query
+ * Story 3.7: AC 3-8 (filtering, sorting, pagination)
+ * All filters sync with URL query params
+ */
+export interface ReturnsHistoryFilters {
+  /** Status filter: all, pending, approved, rejected */
+  status?: "all" | "pending" | "approved" | "rejected";
+  /** Start date for date range filter (ISO format) */
+  from_date?: string;
+  /** End date for date range filter (ISO format) */
+  to_date?: string;
+  /** Title name search (debounced 300ms) */
+  search?: string;
+  /** Format filter: all, physical, ebook, audiobook */
+  format?: "all" | "physical" | "ebook" | "audiobook";
+  /** Sort column: date, amount, status */
+  sort?: "date" | "amount" | "status";
+  /** Sort order: asc or desc */
+  order?: "asc" | "desc";
+  /** Current page number (1-indexed) */
+  page?: number;
+  /** Items per page */
+  pageSize?: number;
+}
+
+/**
  * Returns stats for dashboard cards
  */
 export interface ReturnsStats {
@@ -185,4 +214,28 @@ export interface ApprovalQueueSummary {
   pendingTotal: string;
   /** Oldest pending return date */
   oldestPendingDate: Date | null;
+}
+
+/**
+ * Approval confirmation dialog state
+ * Story 3.6: AC 5, 6 - Approve confirmation dialog
+ */
+export interface ApprovalConfirmData {
+  /** Return being approved */
+  returnId: string;
+  /** Return amount for display */
+  amount: string;
+  /** Optional internal note */
+  internalNote?: string;
+}
+
+/**
+ * Rejection confirmation dialog state
+ * Story 3.6: AC 7, 8 - Reject confirmation dialog
+ */
+export interface RejectionConfirmData {
+  /** Return being rejected */
+  returnId: string;
+  /** Required rejection reason */
+  reason: string;
 }

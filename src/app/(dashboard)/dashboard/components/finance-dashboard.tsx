@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, FileText } from "lucide-react";
+import { Calendar, DollarSign, FileText, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,18 +37,22 @@ export function FinanceDashboard({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Returns
-            </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingReturns}</div>
-            <p className="text-xs text-muted-foreground">Awaiting approval</p>
-          </CardContent>
-        </Card>
+        <Link href="/returns/pending" className="block">
+          <Card className="transition-colors hover:bg-accent/50 cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Pending Returns
+              </CardTitle>
+              <RotateCcw className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.pendingReturns}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.pendingReturnsTotal} awaiting approval
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -91,15 +95,19 @@ export function FinanceDashboard({
             <Button
               variant="outline"
               className="h-auto flex-col items-start py-4"
-              disabled
+              asChild
             >
-              <div className="flex w-full items-center justify-between">
-                <span className="font-medium">Approve Returns</span>
-                <Badge variant="secondary">Coming Soon</Badge>
-              </div>
-              <span className="mt-1 text-xs text-muted-foreground">
-                Review pending returns
-              </span>
+              <Link href="/returns/pending">
+                <div className="flex w-full items-center justify-between">
+                  <span className="font-medium">Approve Returns</span>
+                  {Number(stats.pendingReturns) > 0 && (
+                    <Badge variant="destructive">{stats.pendingReturns}</Badge>
+                  )}
+                </div>
+                <span className="mt-1 text-xs text-muted-foreground">
+                  Review pending returns
+                </span>
+              </Link>
             </Button>
             <Button
               variant="outline"

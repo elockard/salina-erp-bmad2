@@ -78,7 +78,7 @@ describe("Tax ID Encryption", () => {
 
     it("throws error for invalid format", () => {
       expect(() => decryptTaxId("invalid-format")).toThrow(
-        "Invalid encrypted data format"
+        "Invalid encrypted data format",
       );
     });
 
@@ -130,7 +130,7 @@ describe("Tax ID Encryption", () => {
       vi.stubEnv("ENCRYPTION_KEY", "");
 
       expect(() => encryptTaxId("123-45-6789")).toThrow(
-        "ENCRYPTION_KEY environment variable is not set"
+        "ENCRYPTION_KEY environment variable is not set",
       );
     });
 
@@ -138,7 +138,7 @@ describe("Tax ID Encryption", () => {
       vi.stubEnv("ENCRYPTION_KEY", "tooshort");
 
       expect(() => encryptTaxId("123-45-6789")).toThrow(
-        "ENCRYPTION_KEY must be 64 hex characters"
+        "ENCRYPTION_KEY must be 64 hex characters",
       );
     });
   });

@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { getCurrentUser } from "@/lib/auth";
-import { getNavigationItems } from "@/lib/dashboard-nav";
+import { getNavigationItems, type NavItem } from "@/lib/dashboard-nav";
+import { APPROVE_RETURNS } from "@/lib/permissions";
+import { getPendingReturnsCount } from "@/modules/returns/queries";
 import { getTenantSettings } from "@/modules/tenant/actions";
 import type { UserRole } from "@/modules/users/types";
 
@@ -29,7 +31,26 @@ export default async function DashboardLayout({
     : "Dashboard";
 
   // Get role-filtered navigation items
-  const navItems = getNavigationItems(user.role as UserRole);
+  let navItems = getNavigationItems(user.role as UserRole);
+
+  // Fetch pending returns count for badge (Story 3.6 AC 10)
+  // Only fetch for users with APPROVE_RETURNS permission (owner, admin, finance)
+  if (APPROVE_RETURNS.includes(user.role as UserRole)) {
+    try {
+      const pendingCount = await getPendingReturnsCount();
+      // Inject badge count into Returns nav item
+      if (pendingCount > 0) {
+        navItems = navItems.map((item: NavItem) => {
+          if (item.badgeKey === "pendingReturns") {
+            return { ...item, badgeCount: pendingCount };
+          }
+          return item;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch pending returns count:", error);
+    }
+  }
 
   // Extract user display name from email if no name available
   const userName = user.email?.split("@")[0] || "User";

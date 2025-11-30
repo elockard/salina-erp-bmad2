@@ -101,14 +101,14 @@ const salesFormSchema = z.object({
         const num = parseFloat(val);
         return !Number.isNaN(num) && num > 0;
       },
-      { message: "Unit price must be greater than 0" }
+      { message: "Unit price must be greater than 0" },
     )
     .refine(
       (val) => {
         const parts = val.split(".");
         return parts.length === 1 || (parts[1]?.length ?? 0) <= 2;
       },
-      { message: "Unit price cannot have more than 2 decimal places" }
+      { message: "Unit price cannot have more than 2 decimal places" },
     ),
   sale_date: z.date({ message: "Sale date is required" }),
   channel: z.enum(salesChannelValues, { error: "Please select a channel" }),
@@ -274,7 +274,7 @@ export function SalesForm({
         } - ${new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: "USD",
-        }).format(parseFloat(result.data.total_amount))}`
+        }).format(parseFloat(result.data.total_amount))}`,
       );
 
       // AC 7: Remember channel for next entry
@@ -453,7 +453,7 @@ export function SalesForm({
                       disabled={isSubmitting}
                       className={cn(
                         "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
+                        !field.value && "text-muted-foreground",
                       )}
                     >
                       {field.value ? (

@@ -189,7 +189,7 @@ export async function inviteUser(data: unknown): Promise<ActionResult<User>> {
  */
 export async function updateUserRole(
   userId: string,
-  newRole: UserRole
+  newRole: UserRole,
 ): Promise<ActionResult<User>> {
   try {
     // Check permission
@@ -229,8 +229,8 @@ export async function updateUserRole(
           and(
             eq(users.tenant_id, tenantId),
             eq(users.role, "owner"),
-            eq(users.is_active, true)
-          )
+            eq(users.is_active, true),
+          ),
         );
 
       if (ownerCount.count <= 1) {
@@ -274,7 +274,7 @@ export async function updateUserRole(
  * Validation: Cannot deactivate self, must maintain at least one owner
  */
 export async function deactivateUser(
-  userId: string
+  userId: string,
 ): Promise<ActionResult<User>> {
   try {
     await requirePermission(MANAGE_USERS);
@@ -308,8 +308,8 @@ export async function deactivateUser(
           and(
             eq(users.tenant_id, tenantId),
             eq(users.role, "owner"),
-            eq(users.is_active, true)
-          )
+            eq(users.is_active, true),
+          ),
         );
 
       if (ownerCount.count <= 1) {
@@ -352,7 +352,7 @@ export async function deactivateUser(
  * Permission: MANAGE_USERS (owner, admin)
  */
 export async function reactivateUser(
-  userId: string
+  userId: string,
 ): Promise<ActionResult<User>> {
   try {
     await requirePermission(MANAGE_USERS);

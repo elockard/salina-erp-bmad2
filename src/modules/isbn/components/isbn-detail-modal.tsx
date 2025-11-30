@@ -131,7 +131,7 @@ export function ISBNDetailModal({
   const [titles, setTitles] = useState<TitleWithAuthor[]>([]);
   const [titlesLoading, setTitlesLoading] = useState(false);
   const [selectedTitle, setSelectedTitle] = useState<TitleWithAuthor | null>(
-    null
+    null,
   );
   const [titleSearchOpen, setTitleSearchOpen] = useState(false);
   const [assigning, setAssigning] = useState(false);
@@ -400,7 +400,7 @@ export function ISBNDetailModal({
                                       "mr-2 h-4 w-4",
                                       selectedTitle?.id === title.id
                                         ? "opacity-100"
-                                        : "opacity-0"
+                                        : "opacity-0",
                                     )}
                                   />
                                   <div className="flex-1 truncate">

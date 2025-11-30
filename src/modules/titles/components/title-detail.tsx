@@ -1,9 +1,11 @@
 "use client";
 
-import { BookOpen, Calendar, FileText, Hash, Pencil, User } from "lucide-react";
+import { BookOpen, Calendar, DollarSign, FileText, Hash, Pencil, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
-import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
+import { CREATE_AUTHORS_TITLES, MANAGE_CONTRACTS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { updateTitle } from "../actions";
 import type { PublicationStatus, TitleWithAuthor } from "../types";
@@ -82,7 +84,7 @@ function formatIsbn(isbn: string | null): string {
   // Format as 978-X-XXXX-XXXX-X
   return `${digits.slice(0, 3)}-${digits.slice(3, 4)}-${digits.slice(
     4,
-    8
+    8,
   )}-${digits.slice(8, 12)}-${digits.slice(12)}`;
 }
 
@@ -215,12 +217,16 @@ function EditableField({
  * AC 6: Inline edit controls disabled for unauthorized users
  */
 export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
+  const router = useRouter();
   const canEdit = useHasPermission(CREATE_AUTHORS_TITLES);
+  const canManageContracts = useHasPermission(MANAGE_CONTRACTS);
   const [isbnModalOpen, setIsbnModalOpen] = useState(false);
+  // Story 4.2: Contract creation modal state
+  const [showContractWizard, setShowContractWizard] = useState(false);
 
   const handleSaveField = async (
     field: string,
-    value: string | number | null
+    value: string | number | null,
   ) => {
     const result = await updateTitle(title.id, { [field]: value });
     if (result.success) {
@@ -503,6 +509,39 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
           </p>
         </CardContent>
       </Card>
+
+      {/* Contracts Section - Story 4.2: Create Contract entry point */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Contracts
+          </CardTitle>
+          {canManageContracts && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowContractWizard(true)}
+            >
+              Create Contract
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-muted-foreground text-center py-4">
+            No contracts yet. Contract list will appear here.
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Story 4.2/4.3: Contract Creation Wizard Modal */}
+      <ContractWizardModal
+        open={showContractWizard}
+        onOpenChange={setShowContractWizard}
+        defaultTitleId={title.id}
+        defaultTitleName={title.title}
+        onSuccess={(contractId) => router.push(`/royalties/${contractId}`)}
+      />
 
       {/* Timestamps */}
       <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t">

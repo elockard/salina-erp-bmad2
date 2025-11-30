@@ -12,10 +12,17 @@ loadEnv({ path: ".env" });
  *
  * Framework: Next.js 16 App Router + React Server Components
  * Testing Strategy: Risk-based, role-segregated test suites
+ *
+ * Auth Setup: Tests use Clerk authentication via auth.setup.ts
+ * Storage state is saved to tests/e2e/.auth/user.json
  */
+
+// Path to authenticated session storage
+const authFile = "tests/e2e/.auth/user.json";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  testMatch: /.*\.spec\.ts$/,
 
   /**
    * Parallel Execution Strategy
@@ -79,25 +86,42 @@ export default defineConfig({
   /**
    * Browser Projects
    *
+   * Setup: Auth setup project runs first, saves session state
    * Chromium: Primary browser for CI/CD (Clerk auth compatibility)
    * Firefox: Secondary validation
    * WebKit: Safari compatibility (author portal mobile users)
    */
   projects: [
+    // Auth setup project - runs first to authenticate
+    {
+      name: "setup",
+      testMatch: /.*\.setup\.ts$/,
+    },
+
+    // Main test projects - depend on setup for authenticated session
     {
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        // Clerk authentication requires Chrome-like browser
+        storageState: authFile,
       },
+      dependencies: ["setup"],
     },
     {
       name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
+      use: {
+        ...devices["Desktop Firefox"],
+        storageState: authFile,
+      },
+      dependencies: ["setup"],
     },
     {
       name: "webkit",
-      use: { ...devices["Desktop Safari"] },
+      use: {
+        ...devices["Desktop Safari"],
+        storageState: authFile,
+      },
+      dependencies: ["setup"],
     },
 
     /**
@@ -106,11 +130,19 @@ export default defineConfig({
      */
     {
       name: "mobile-chrome",
-      use: { ...devices["Pixel 5"] },
+      use: {
+        ...devices["Pixel 5"],
+        storageState: authFile,
+      },
+      dependencies: ["setup"],
     },
     {
       name: "mobile-safari",
-      use: { ...devices["iPhone 13"] },
+      use: {
+        ...devices["iPhone 13"],
+        storageState: authFile,
+      },
+      dependencies: ["setup"],
     },
   ],
 

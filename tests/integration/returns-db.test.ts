@@ -185,6 +185,7 @@ describe("Returns Database Schema", () => {
         status: "pending",
         reviewed_by_user_id: null,
         reviewed_at: null,
+        internal_note: null,
         created_by_user_id: "880e8400-e29b-41d4-a716-446655440003",
         created_at: new Date(),
         updated_at: new Date(),

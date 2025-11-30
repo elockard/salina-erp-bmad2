@@ -1,0 +1,222 @@
+<story-context id="4-1" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>1</storyId>
+    <title>Create Royalty Contract Database Schema with Tiered Rates</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-1-create-royalty-contract-database-schema-with-tiered-rates.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform architect</asA>
+    <iWant>establish contract schema supporting tiered royalty rates</iWant>
+    <soThat>complex publishing contracts can be modeled accurately</soThat>
+    <tasks>
+      <task id="1" acs="1,5,6">Create contracts schema file - src/db/schema/contracts.ts with contracts table, foreign keys, CHECK constraints, status enum, types</task>
+      <task id="2" acs="2,5,6">Create contract_tiers schema - add contractTiers table with cascade delete, CHECK constraints for rate/quantity, types</task>
+      <task id="3" acs="3,4">Add database indexes - tenant_id, author_id, title_id, status, contract_id, composite indexes, unique constraint</task>
+      <task id="4" acs="7">Update schema index exports - export contracts, contractTiers tables and types from index.ts</task>
+      <task id="5" acs="8">Define Drizzle relations - add contractsRelations and contractTiersRelations to relations.ts</task>
+      <task id="6" acs="1-5">Generate and run migration - npm run db:generate, review SQL, npm run db:push</task>
+      <task id="7" acs="9">Write unit tests - tests/unit/contracts-schema.test.ts covering constraints and validation</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Contracts table exists with columns: id, tenant_id, author_id, title_id, advance_amount, advance_paid, advance_recouped, status, created_at, updated_at. UUID primary key, foreign keys to tenants (cascade), authors (restrict), titles (restrict). DECIMAL(10,2) for currency. Status: active/terminated/suspended, default active.</ac>
+    <ac id="2">Contract_tiers table exists with columns: id, contract_id, format, min_quantity, max_quantity, rate, created_at. UUID primary key, FK to contracts (cascade). Format: physical/ebook/audiobook. DECIMAL(5,4) for rate (0.1000 = 10%).</ac>
+    <ac id="3">Database indexes: tenant_id, author_id, title_id, status on contracts; contract_id on contract_tiers; composite tenant_id+author_id on contracts.</ac>
+    <ac id="4">Unique constraint on (tenant_id, author_id, title_id) - one contract per author-title per tenant.</ac>
+    <ac id="5">CHECK constraints: advance fields >= 0, min_quantity >= 0, max_quantity > min_quantity when not null, rate between 0 and 1.</ac>
+    <ac id="6">TypeScript types: Contract, InsertContract, ContractTier, InsertContractTier, ContractStatus union type.</ac>
+    <ac id="7">Schema exports in index.ts: contracts table, contractTiers table, Contract type, ContractTier type.</ac>
+    <ac id="8">Drizzle relations: contracts → tenants/authors/titles/contractTiers; contractTiers → contracts.</ac>
+    <ac id="9">Unit tests: valid contract insertion, FK constraints, unique constraint, CHECK constraints, tier rate boundaries, cascade delete.</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Royalty Contract Management (FR38-44)</section>
+        <snippet>FR38: Create contracts linking authors to titles. FR39-40: Configure tiered rates by format/volume. FR41-42: Track advance payments. FR43-44: Contract status and history.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Contracts Schema (lines 1701-1744)</section>
+        <snippet>Complete Drizzle schema definitions for contracts and contract_tiers tables with exact column types, foreign keys, and relationships.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories</title>
+        <section>Epic 4: Royalty Contracts - Story 4.1</section>
+        <snippet>Story definition with Given/When/Then ACs, prerequisites (Story 2.2, 2.4), technical notes for FR38-44 implementation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/3-7-build-returns-history-view-with-status-filtering.md</path>
+        <title>Previous Story Reference</title>
+        <section>Learnings and patterns</section>
+        <snippet>Schema patterns, index naming conventions, CHECK constraint naming, unit test patterns, foreign key reference patterns with onDelete behavior.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/db/schema/returns.ts</path>
+        <kind>schema</kind>
+        <symbol>returns, Return, InsertReturn</symbol>
+        <lines>1-237</lines>
+        <reason>Pattern reference: comprehensive schema with FK constraints, CHECK constraints, indexes, types. Use same documentation style and structure.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/authors.ts</path>
+        <kind>schema</kind>
+        <symbol>authors</symbol>
+        <lines>53-136</lines>
+        <reason>Foreign key target: contracts.author_id references authors.id with RESTRICT delete.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/titles.ts</path>
+        <kind>schema</kind>
+        <symbol>titles</symbol>
+        <lines>71-164</lines>
+        <reason>Foreign key target: contracts.title_id references titles.id with RESTRICT delete.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/tenants.ts</path>
+        <kind>schema</kind>
+        <symbol>tenants</symbol>
+        <reason>Foreign key target: contracts.tenant_id references tenants.id with CASCADE delete.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/index.ts</path>
+        <kind>exports</kind>
+        <symbol>module exports</symbol>
+        <lines>1-26</lines>
+        <reason>MODIFY: Add exports for contracts, contractTiers tables and types. Follow existing pattern.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/relations.ts</path>
+        <kind>relations</kind>
+        <symbol>tenantsRelations, authorsRelations, titlesRelations</symbol>
+        <lines>1-168</lines>
+        <reason>MODIFY: Add contractsRelations and contractTiersRelations. Update tenantsRelations to include contracts. Update authorsRelations and titlesRelations to include contracts.</reason>
+      </file>
+      <file>
+        <path>tests/unit/returns-schema.test.ts</path>
+        <kind>test</kind>
+        <symbol>Vitest test patterns</symbol>
+        <lines>1-100</lines>
+        <reason>Pattern reference: Unit test structure for Zod schemas with describe/it blocks, valid/invalid value testing, safeParse pattern.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="drizzle-orm" version="^0.44.7">Database ORM - pgTable, uuid, text, decimal, integer, timestamp, index, unique, check, relations</package>
+        <package name="@neondatabase/serverless" version="^1.0.2">Neon Postgres driver</package>
+        <package name="decimal.js" version="^10.6.0">Decimal arithmetic for financial calculations</package>
+        <package name="zod" version="^4.1.13">Schema validation</package>
+        <package name="vitest" version="4.0.14">Unit testing framework</package>
+        <package name="drizzle-kit" version="^0.31.7">Migration generation and database push</package>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface>
+      <name>contracts</name>
+      <kind>Drizzle pgTable</kind>
+      <signature>export const contracts = pgTable("contracts", { id, tenant_id, author_id, title_id, advance_amount, advance_paid, advance_recouped, status, created_at, updated_at }, (table) => ({ ...indexes, ...constraints }))</signature>
+      <path>src/db/schema/contracts.ts</path>
+    </interface>
+    <interface>
+      <name>contractTiers</name>
+      <kind>Drizzle pgTable</kind>
+      <signature>export const contractTiers = pgTable("contract_tiers", { id, contract_id, format, min_quantity, max_quantity, rate, created_at }, (table) => ({ ...indexes, ...constraints }))</signature>
+      <path>src/db/schema/contracts.ts</path>
+    </interface>
+    <interface>
+      <name>Contract</name>
+      <kind>TypeScript type</kind>
+      <signature>export type Contract = typeof contracts.$inferSelect</signature>
+      <path>src/db/schema/contracts.ts</path>
+    </interface>
+    <interface>
+      <name>InsertContract</name>
+      <kind>TypeScript type</kind>
+      <signature>export type InsertContract = typeof contracts.$inferInsert</signature>
+      <path>src/db/schema/contracts.ts</path>
+    </interface>
+    <interface>
+      <name>ContractTier</name>
+      <kind>TypeScript type</kind>
+      <signature>export type ContractTier = typeof contractTiers.$inferSelect</signature>
+      <path>src/db/schema/contracts.ts</path>
+    </interface>
+    <interface>
+      <name>InsertContractTier</name>
+      <kind>TypeScript type</kind>
+      <signature>export type InsertContractTier = typeof contractTiers.$inferInsert</signature>
+      <path>src/db/schema/contracts.ts</path>
+    </interface>
+    <interface>
+      <name>ContractStatus</name>
+      <kind>TypeScript union type</kind>
+      <signature>export type ContractStatus = 'active' | 'terminated' | 'suspended'</signature>
+      <path>src/db/schema/contracts.ts</path>
+    </interface>
+    <interface>
+      <name>contractsRelations</name>
+      <kind>Drizzle relations</kind>
+      <signature>export const contractsRelations = relations(contracts, ({ one, many }) => ({ tenant, author, title, tiers }))</signature>
+      <path>src/db/schema/relations.ts</path>
+    </interface>
+    <interface>
+      <name>contractTiersRelations</name>
+      <kind>Drizzle relations</kind>
+      <signature>export const contractTiersRelations = relations(contractTiers, ({ one }) => ({ contract }))</signature>
+      <path>src/db/schema/relations.ts</path>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint type="pattern">Follow existing schema file structure from returns.ts: JSDoc header with FR references, Epic/Story reference, architecture references, multi-tenant isolation notes.</constraint>
+    <constraint type="pattern">Index naming convention: {table}_{column}_idx (e.g., contracts_tenant_id_idx).</constraint>
+    <constraint type="pattern">Composite index naming: {table}_{col1}_{col2}_idx.</constraint>
+    <constraint type="pattern">CHECK constraint naming: {table}_{constraint_name} (e.g., contracts_advance_amount_nonnegative).</constraint>
+    <constraint type="pattern">Type exports at bottom of schema file using $inferSelect and $inferInsert.</constraint>
+    <constraint type="fk">tenants → CASCADE delete (tenant deletion removes all tenant data including contracts).</constraint>
+    <constraint type="fk">authors → RESTRICT delete (cannot delete author with active contracts).</constraint>
+    <constraint type="fk">titles → RESTRICT delete (cannot delete title with active contracts).</constraint>
+    <constraint type="fk">contracts → contract_tiers CASCADE delete (contract deletion removes all tiers).</constraint>
+    <constraint type="decimal">Use DECIMAL(10,2) for currency amounts (advance_amount, advance_paid, advance_recouped).</constraint>
+    <constraint type="decimal">Use DECIMAL(5,4) for percentage rates (0.1000 = 10%).</constraint>
+    <constraint type="multi-tenant">All tenant-scoped tables MUST include tenant_id foreign key. Contract_tiers are implicitly tenant-scoped via contract relationship.</constraint>
+    <constraint type="testing">Unit tests must cover: valid insertion, FK constraint enforcement, unique constraint, CHECK constraint violations, cascade delete behavior.</constraint>
+  </constraints>
+
+  <tests>
+    <standards>Vitest for unit tests. Tests in tests/unit/ directory. Use describe/it blocks with clear test names. Test both valid and invalid scenarios using safeParse pattern for Zod schemas. Mock Drizzle operations for schema validation logic tests.</standards>
+    <locations>
+      <location>tests/unit/contracts-schema.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Test valid contract creation with all required fields</idea>
+      <idea ac="1">Test foreign key constraint enforcement for tenant_id, author_id, title_id</idea>
+      <idea ac="4">Test unique constraint prevents duplicate (tenant_id, author_id, title_id)</idea>
+      <idea ac="5">Test CHECK constraint rejects negative advance_amount</idea>
+      <idea ac="5">Test CHECK constraint rejects negative advance_paid</idea>
+      <idea ac="5">Test CHECK constraint rejects negative advance_recouped</idea>
+      <idea ac="2">Test tier rate boundaries (0-1 range)</idea>
+      <idea ac="5">Test CHECK constraint rejects max_quantity <= min_quantity</idea>
+      <idea ac="2">Test cascade delete removes tiers when contract deleted</idea>
+      <idea ac="6">Test ContractStatus type accepts valid values</idea>
+      <idea ac="6">Test ContractStatus type rejects invalid values</idea>
+    </ideas>
+  </tests>
+</story-context>

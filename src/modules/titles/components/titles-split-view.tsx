@@ -26,7 +26,7 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
   const [titles, setTitles] = useState<TitleWithAuthor[]>(initialTitles);
   const [selectedTitleId, setSelectedTitleId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | "all">(
-    "all"
+    "all",
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -100,7 +100,7 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
           "flex flex-col border-r bg-background",
           "w-[320px] lg:w-[320px] md:w-[280px]",
           "max-md:w-full max-md:border-r-0",
-          mobileDetailOpen && "max-md:hidden"
+          mobileDetailOpen && "max-md:hidden",
         )}
       >
         {/* Header with Create Button */}
@@ -131,7 +131,7 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
         className={cn(
           "flex-1 overflow-auto bg-muted/30",
           "max-md:fixed max-md:inset-0 max-md:z-50 max-md:bg-background",
-          !mobileDetailOpen && "max-md:hidden"
+          !mobileDetailOpen && "max-md:hidden",
         )}
       >
         {/* Mobile Back Button */}

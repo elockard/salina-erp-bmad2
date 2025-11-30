@@ -25,7 +25,7 @@ export async function getAuthors(filters?: AuthorFilters): Promise<Author[]> {
     const searchTerm = `%${filters.searchQuery}%`;
     const searchCondition = or(
       ilike(authors.name, searchTerm),
-      ilike(authors.email, searchTerm)
+      ilike(authors.email, searchTerm),
     );
     if (searchCondition) {
       conditions.push(searchCondition);
@@ -46,7 +46,7 @@ export async function getAuthors(filters?: AuthorFilters): Promise<Author[]> {
  * @returns Author with titles or null if not found
  */
 export async function getAuthorById(
-  id: string
+  id: string,
 ): Promise<AuthorWithTitles | null> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
@@ -75,7 +75,7 @@ export async function getAuthorById(
  * @returns Author with decrypted tax_id or null
  */
 export async function getAuthorWithDecryptedTaxId(
-  id: string
+  id: string,
 ): Promise<Author | null> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();

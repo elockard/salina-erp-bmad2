@@ -58,25 +58,30 @@ development_status:
   2-9-implement-smart-isbn-assignment-with-row-locking: done
   epic-2-retrospective: completed
 
-  epic-3: backlog
+  epic-3: contexted
   3-1-create-sales-transaction-database-schema: done
   3-2-build-sales-transaction-entry-form: done
   3-3-build-sales-transaction-history-view: done
   3-4-create-returns-database-schema-with-approval-workflow: done
-  3-5-build-return-request-entry-form: drafted
-  3-6-build-return-approval-queue-for-finance: backlog
-  3-7-build-returns-history-view-with-status-filtering: backlog
-  epic-3-retrospective: optional
+  3-5-build-return-request-entry-form: done
+  3-6-build-return-approval-queue-for-finance: done
+  3-7-build-returns-history-view-with-status-filtering: done
+  epic-3-retrospective: completed
 
-  epic-4: backlog
-  4-1-create-royalty-contract-database-schema-with-tiered-rates: backlog
-  4-2-build-contract-creation-form-with-tiered-royalty-configuration: backlog
-  4-3-build-contract-detail-view-and-management: backlog
-  4-4-implement-tiered-royalty-calculation-engine: backlog
-  4-5-build-manual-royalty-calculation-trigger-testing: backlog
-  epic-4-retrospective: optional
+  # INFRASTRUCTURE SPRINT - Blocking Epic 4
+  # Decision: BMad (2025-11-26) - Epic 4 blocked until auth testing fixed
+  epic-0-infrastructure: contexted
+  0-1-fix-auth-testing-infrastructure: done
 
-  epic-5: backlog
+  epic-4: blocked  # Blocked pending Story 0.1 completion
+  4-1-create-royalty-contract-database-schema-with-tiered-rates: done
+  4-2-build-contract-creation-form-with-tiered-royalty-configuration: done
+  4-3-build-contract-detail-view-and-management: done
+  4-4-implement-tiered-royalty-calculation-engine: done
+  4-5-build-manual-royalty-calculation-trigger-testing: done
+  epic-4-retrospective: done
+
+  epic-5: contexted
   5-1-create-statements-database-schema-and-pdf-storage: backlog
   5-2-implement-pdf-statement-generation-with-react-email: backlog
   5-3-build-statement-generation-wizard-for-finance: backlog

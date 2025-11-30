@@ -1,9 +1,15 @@
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { User } from "@/db/schema";
+
+// Unmock @/lib/auth to test the real implementation
+// The global setup.ts mocks it for integration tests, but this unit test
+// needs to test the actual auth module behavior
+vi.unmock("@/lib/auth");
+
 import { getCurrentUser, hasPermission, requirePermission } from "@/lib/auth";
 
-// Mock dependencies
+// Mock dependencies that auth module uses
 vi.mock("@clerk/nextjs/server", () => ({
   currentUser: vi.fn(),
 }));

@@ -1,0 +1,149 @@
+<story-context id="bmm/workflows/4-implementation/story-context" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>7</storyId>
+    <title>Build Returns History View with Status Filtering</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-7-build-returns-history-view-with-status-filtering.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>view all returns with status filtering</iWant>
+    <soThat>I can track approved, rejected, and pending returns</soThat>
+    <tasks>
+      <task id="1" ac="1,12">Create returns history page route at /returns</task>
+      <task id="2" ac="2,3,4,5,6,7,8">Create returns queries for history (getReturnsHistory, getReturnsCount)</task>
+      <task id="3" ac="2,10">Create returns types for history (ReturnHistoryItem, ReturnsHistoryFilters)</task>
+      <task id="4" ac="12">Create VIEW_RETURNS permission constant</task>
+      <task id="5" ac="1,2,11,14">Create ReturnsHistoryView component</task>
+      <task id="6" ac="3,4,5,6">Create ReturnsFilters component</task>
+      <task id="7" ac="2,7,8,9">Create ReturnsTable component</task>
+      <task id="8" ac="2">Create StatusBadge component</task>
+      <task id="9" ac="10">Create return detail page at /returns/[id]</task>
+      <task id="10" ac="10">Create ReturnDetailView component</task>
+      <task id="11" ac="10">Create getReturnById query</task>
+      <task id="12" ac="1">Update returns list placeholder with full implementation</task>
+      <task id="13" ac="3,4,5,6,7">Write unit tests for filter query building</task>
+      <task id="14" ac="1-14">Write E2E tests for returns history</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Returns history page exists at /returns with Data Table layout, TanStack Table, VIEW_RETURNS permission</ac>
+    <ac id="2">Table displays columns: Date, Title, Format, Quantity (negative), Amount (negative), Reason, Status badge, Reviewed By, Actions</ac>
+    <ac id="3">Status filter dropdown: All, Pending, Approved, Rejected with URL query param ?status=</ac>
+    <ac id="4">Date range filter: Start/end date pickers, default last 30 days, URL params ?from=&amp;to=</ac>
+    <ac id="5">Title search filter: Debounced 300ms text input, URL param ?search=</ac>
+    <ac id="6">Format filter dropdown: All, Physical, Ebook, Audiobook, URL param ?format=</ac>
+    <ac id="7">Table sorting: Sortable by Date, Amount, Status. Default date descending. URL params ?sort=&amp;order=</ac>
+    <ac id="8">Pagination: Default 20 rows, options 10/20/50, prev/next navigation, URL params ?page=&amp;size=</ac>
+    <ac id="9">View Detail action: Row click or button navigates to /returns/[id], back preserves filters</ac>
+    <ac id="10">Return detail page at /returns/[id]: Status badge, Return Info card, submission/review metadata</ac>
+    <ac id="11">Empty state: "No returns found" with filter adjustment suggestion, "Record a Return" link</ac>
+    <ac id="12">Permission enforcement: VIEW_RETURNS for all authenticated users (Editor, Finance, Admin, Owner)</ac>
+    <ac id="13">Responsive design: Horizontal scroll on mobile, stacked filters, essential columns visible</ac>
+    <ac id="14">Loading states: Skeleton loader, filter change indicator, smooth pagination</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="FR27, FR37" snippet="FR27: Users can view transaction history with filtering. FR37: Rejected returns excluded from financial calculations." />
+      <doc path="docs/architecture.md" title="Architecture Document" section="Data Tables" snippet="TanStack Table 8.21+ for headless table functionality. Use useReactTable hook with column definitions." />
+      <doc path="docs/architecture.md" title="Architecture Document" section="Server Actions Pattern" snippet="Server Actions validate with Zod, check permissions via requirePermission(), inject tenant_id, return ActionResult." />
+      <doc path="docs/epics.md" title="Epics" section="Story 3.7" snippet="Build Returns History View with Status Filtering - table with filters, sorting, pagination, detail view." />
+      <doc path="docs/sprint-artifacts/3-5-build-return-request-entry-form.md" title="Story 3.5" section="Dev Notes" snippet="Returns module structure established. Form redirects to /returns after submission." />
+      <doc path="docs/sprint-artifacts/3-6-build-return-approval-queue-for-finance.md" title="Story 3.6" section="Dev Notes" snippet="Approval queue at /returns/pending uses Split View pattern. Same module structure." />
+    </docs>
+
+    <code>
+      <file path="src/db/schema/returns.ts" kind="schema" symbol="returns" lines="67-217" reason="Returns table schema with status enum, indexes for tenant+status queries, CHECK constraints" />
+      <file path="src/modules/returns/types.ts" kind="types" symbol="ReturnWithRelations, PaginatedReturns" lines="55-166" reason="Types for history view already defined: ReturnWithRelations, PaginatedReturns, ReturnsStats" />
+      <file path="src/modules/returns/schema.ts" kind="schema" symbol="returnStatusSchema, returnFormatSchema, returnFilterSchema" lines="51-186" reason="Zod schemas for validation - returnFilterSchema available for history queries" />
+      <file path="src/modules/returns/queries.ts" kind="queries" symbol="searchTitlesForReturns, getTitleForReturn" lines="1-157" reason="Existing queries for returns module - add getReturnsHistory, getReturnsCount, getReturnById" />
+      <file path="src/modules/returns/actions.ts" kind="actions" symbol="recordReturn" lines="1-207" reason="Existing Server Actions pattern - add getReturnsHistoryAction, getReturnByIdAction" />
+      <file path="src/app/(dashboard)/returns/page.tsx" kind="page" symbol="ReturnsPage" lines="1-78" reason="Placeholder page to UPDATE with full history view implementation" />
+      <file path="src/lib/permissions.ts" kind="permissions" symbol="RECORD_RETURNS, APPROVE_RETURNS" lines="1-47" reason="Add VIEW_RETURNS permission constant following existing pattern" />
+      <file path="src/modules/sales/components/sales-table.tsx" kind="component" symbol="SalesTable" lines="1-323" reason="PATTERN: TanStack Table implementation with sortable columns, pagination, loading skeleton, empty state" />
+      <file path="src/modules/sales/components/sales-filters.tsx" kind="component" symbol="SalesFilters" reason="PATTERN: Filter components with URL query param sync, date range picker, dropdowns" />
+      <file path="src/app/(dashboard)/sales/page.tsx" kind="page" symbol="SalesHistoryPage" lines="1-212" reason="PATTERN: History page with filters, table, stats cards, modal detail view" />
+      <file path="src/components/ui/table.tsx" kind="ui" symbol="Table, TableHeader, TableBody, TableRow, TableCell" reason="shadcn/ui table components for data grid" />
+      <file path="src/components/ui/badge.tsx" kind="ui" symbol="Badge" reason="Badge component for status indicators (Pending/Approved/Rejected)" />
+      <file path="src/components/ui/skeleton.tsx" kind="ui" symbol="Skeleton" reason="Loading skeleton for table loading state" />
+      <file path="src/components/ui/select.tsx" kind="ui" symbol="Select" reason="Dropdown component for status/format filters" />
+      <file path="src/components/ui/calendar.tsx" kind="ui" symbol="Calendar" reason="Date picker for date range filter" />
+      <file path="src/components/ui/popover.tsx" kind="ui" symbol="Popover" reason="Used with calendar for date picker" />
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="@tanstack/react-table" version="8.21.3">Headless table library for data grids</package>
+        <package name="@tanstack/react-query" version="5.90.11">Server state management</package>
+        <package name="date-fns" version="4.1.0">Date formatting (format function for MMM dd, yyyy)</package>
+        <package name="decimal.js" version="10.6.0">Currency formatting (formatCurrency helper)</package>
+        <package name="zod" version="4.1.13">Schema validation for filter params</package>
+        <package name="react-hook-form" version="7.66.1">Form handling for filter inputs</package>
+        <package name="react-day-picker" version="9.11.2">Date range picker component</package>
+        <package name="lucide-react" version="0.554.0">Icons (ChevronLeft, ChevronRight, ArrowUpDown, Eye)</package>
+        <package name="sonner" version="2.0.7">Toast notifications</package>
+        <package name="drizzle-orm" version="0.44.7">Database queries with and, eq, gte, lte, ilike</package>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow Server Action pattern: requirePermission() -> getCurrentUser() -> validate with Zod -> getCurrentTenantId() -> DB query with tenant filter</constraint>
+    <constraint type="pattern">Use TanStack Table with useReactTable hook, column definitions, getCoreRowModel, getSortedRowModel</constraint>
+    <constraint type="pattern">URL query param sync: useSearchParams for reading, router.push for updating with shallow routing</constraint>
+    <constraint type="pattern">Format currency with Intl.NumberFormat, display returns as negative (-$312.50)</constraint>
+    <constraint type="pattern">Status badge colors: pending=warning/amber, approved=success/green, rejected=destructive/red</constraint>
+    <constraint type="layer">Pages in src/app/(dashboard)/returns/, components in src/modules/returns/components/</constraint>
+    <constraint type="security">Server-side permission check on page AND action level, tenant_id filter on all queries</constraint>
+    <constraint type="ux">Server-side filtering/sorting/pagination for large datasets, client receives only current page</constraint>
+    <constraint type="testing">Unit tests in tests/unit/, E2E tests in tests/e2e/, use vitest for unit, playwright for E2E</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="getReturnsHistoryAction" kind="Server Action" path="src/modules/returns/actions.ts">
+      <signature>async function getReturnsHistoryAction(filters: ReturnsHistoryFilters, page: number, pageSize: number): Promise&lt;ActionResult&lt;PaginatedReturns&gt;&gt;</signature>
+    </interface>
+    <interface name="getReturnByIdAction" kind="Server Action" path="src/modules/returns/actions.ts">
+      <signature>async function getReturnByIdAction(returnId: string): Promise&lt;ActionResult&lt;ReturnWithRelations&gt;&gt;</signature>
+    </interface>
+    <interface name="VIEW_RETURNS" kind="Permission" path="src/lib/permissions.ts">
+      <signature>export const VIEW_RETURNS: UserRole[] = ["owner", "admin", "editor", "finance"]</signature>
+    </interface>
+    <interface name="ReturnsHistoryFilters" kind="Type" path="src/modules/returns/types.ts">
+      <signature>interface ReturnsHistoryFilters { status?: 'all' | 'pending' | 'approved' | 'rejected'; from_date?: string; to_date?: string; search?: string; format?: 'all' | 'physical' | 'ebook' | 'audiobook'; sort?: 'date' | 'amount' | 'status'; order?: 'asc' | 'desc'; }</signature>
+    </interface>
+    <interface name="Drizzle Query Builder" kind="ORM" path="src/modules/returns/queries.ts">
+      <signature>db.query.returns.findMany({ where: and(eq(returns.tenant_id, tenantId), ...), with: { title: true, createdBy: true, reviewedBy: true }, limit, offset, orderBy })</signature>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests use Vitest with @testing-library/react for component testing. E2E tests use Playwright. Tests located in tests/unit/ and tests/e2e/ directories. Schema validation tests cover edge cases. Follow existing patterns from returns-schema.test.ts (93 tests passing).
+    </standards>
+    <locations>
+      <location>tests/unit/returns-history.test.ts (NEW)</location>
+      <location>tests/e2e/returns.spec.ts (UPDATE)</location>
+      <location>tests/unit/returns-schema.test.ts (existing, 93 tests)</location>
+    </locations>
+    <ideas>
+      <idea ac="2">Test table column rendering: negative values, date formatting, status badges</idea>
+      <idea ac="3">Test status filter updates URL and filters data correctly</idea>
+      <idea ac="4">Test date range filter with edge cases (same day, past dates)</idea>
+      <idea ac="5">Test search debounce (300ms) and URL sync</idea>
+      <idea ac="7">Test sorting toggles asc/desc, updates URL params</idea>
+      <idea ac="8">Test pagination: page navigation, page size change, bounds checking</idea>
+      <idea ac="9">Test row click navigates to detail page with correct ID</idea>
+      <idea ac="10">Test detail page renders all metadata sections</idea>
+      <idea ac="11">Test empty state displays when no returns match filters</idea>
+      <idea ac="12">Test unauthorized user redirected to dashboard</idea>
+      <idea ac="14">Test skeleton loader shows during data fetch</idea>
+    </ideas>
+  </tests>
+</story-context>

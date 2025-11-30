@@ -1,0 +1,223 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>0</epicId>
+    <storyId>0.1</storyId>
+    <title>Fix Auth Testing Infrastructure</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/0-1-fix-auth-testing-infrastructure.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>development team</asA>
+    <iWant>to fix the authentication testing infrastructure</iWant>
+    <soThat>E2E and integration tests can run against authenticated sessions and we can confidently proceed to Epic 4</soThat>
+    <tasks>
+      <task id="1" title="Configure Playwright auth setup">
+        <subtasks>
+          <subtask>Create tests/e2e/auth.setup.ts with Clerk sign-in flow</subtask>
+          <subtask>Configure storageState path in playwright.config.ts</subtask>
+          <subtask>Add auth setup as globalSetup or project dependency</subtask>
+          <subtask>Verify auth state file is created after setup runs</subtask>
+          <subtask>Add .gitignore entry for auth state files</subtask>
+        </subtasks>
+      </task>
+      <task id="2" title="Create test user fixtures">
+        <subtasks>
+          <subtask>Determine approach: seeded test DB vs mocked Clerk</subtask>
+          <subtask>If seeded: Create migration/seed script for test tenant + users</subtask>
+          <subtask>If mocked: Configure Clerk test mode or bypass</subtask>
+          <subtask>Create test users for all 5 roles (owner, admin, editor, finance, author)</subtask>
+          <subtask>Document test credentials in secure location</subtask>
+          <subtask>Verify fixtures work with auth setup</subtask>
+        </subtasks>
+      </task>
+      <task id="3" title="Fix integration test auth mocking">
+        <subtasks>
+          <subtask>Update tests/setup.ts with comprehensive auth mocks</subtask>
+          <subtask>Mock getCurrentTenantId() to return consistent test UUID</subtask>
+          <subtask>Mock getCurrentUser() with role parameter support</subtask>
+          <subtask>Mock requirePermission() to validate against mocked role</subtask>
+          <subtask>Run tests/integration/users-actions.test.ts - verify passes</subtask>
+          <subtask>Run tests/integration/tenant-settings.test.ts - verify passes</subtask>
+          <subtask>Run all integration tests - verify 0 failures</subtask>
+        </subtasks>
+      </task>
+      <task id="4" title="Unskip and fix Epic 3 E2E tests">
+        <subtasks>
+          <subtask>Update tests/e2e/returns-form.spec.ts - remove .skip(), fix failures</subtask>
+          <subtask>Update tests/e2e/returns-approval.spec.ts - remove .skip(), fix failures</subtask>
+          <subtask>Update tests/e2e/returns-history.spec.ts - remove .skip(), fix failures</subtask>
+          <subtask>Run full E2E suite for returns module - all pass</subtask>
+        </subtasks>
+      </task>
+      <task id="5" title="Validate Epic 2 E2E tests">
+        <subtasks>
+          <subtask>Audit tests/e2e/authors.spec.ts for skipped tests</subtask>
+          <subtask>Audit tests/e2e/titles.spec.ts for skipped tests</subtask>
+          <subtask>Audit tests/e2e/isbn-*.spec.ts for skipped tests</subtask>
+          <subtask>Unskip and fix any auth-related skips</subtask>
+          <subtask>Run full E2E suite - all pass</subtask>
+        </subtasks>
+      </task>
+      <task id="6" title="Configure CI pipeline">
+        <subtasks>
+          <subtask>Create .github/workflows/ci.yml</subtask>
+          <subtask>Add Playwright install step</subtask>
+          <subtask>Add E2E test run step</subtask>
+          <subtask>Configure test database for CI (Neon branch or test instance)</subtask>
+          <subtask>Verify PR checks include E2E tests</subtask>
+          <subtask>Test with a sample PR</subtask>
+        </subtasks>
+      </task>
+      <task id="7" title="Implement root URL redirect">
+        <subtasks>
+          <subtask>Update src/app/page.tsx to redirect to /dashboard</subtask>
+          <subtask>Or add redirect in next.config.js</subtask>
+          <subtask>Verify unauthenticated users go to sign-in</subtask>
+          <subtask>Verify authenticated users land on dashboard</subtask>
+          <subtask>Test both flows manually</subtask>
+        </subtasks>
+      </task>
+      <task id="8" title="Create testing documentation">
+        <subtasks>
+          <subtask>Create docs/testing.md</subtask>
+          <subtask>Document local E2E test setup</subtask>
+          <subtask>Document auth fixture architecture</subtask>
+          <subtask>Document how to add new authenticated tests</subtask>
+          <subtask>Document CI pipeline configuration</subtask>
+          <subtask>Add troubleshooting section</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" title="Playwright auth fixtures configured and working">
+      <description>tests/e2e/auth.setup.ts created with authentication flow, storageState configured for reusable authenticated sessions, playwright.config.ts updated to use auth setup as dependency</description>
+    </criterion>
+    <criterion id="AC2" title="Test user fixtures established">
+      <description>Test tenant seeded or mocked, test users for all 5 roles (owner, admin, editor, finance, author), credentials documented securely</description>
+    </criterion>
+    <criterion id="AC3" title="Integration test auth mocking fixed">
+      <description>tests/setup.ts mocks getCurrentTenantId, getCurrentUser, requirePermission; all 13+ previously failing integration tests pass</description>
+    </criterion>
+    <criterion id="AC4" title="Epic 3 E2E tests unskipped and passing">
+      <description>returns-form.spec.ts, returns-approval.spec.ts, returns-history.spec.ts all run and pass</description>
+    </criterion>
+    <criterion id="AC5" title="Epic 2 E2E tests validated">
+      <description>Existing E2E tests for authors, titles, ISBN verified working; any skipped tests unskipped</description>
+    </criterion>
+    <criterion id="AC6" title="CI pipeline runs E2E tests">
+      <description>GitHub Actions workflow includes E2E test step, tests run on PR and main branch, failure blocks merge</description>
+    </criterion>
+    <criterion id="AC7" title="Root URL redirect implemented">
+      <description>Navigating to / redirects to /dashboard, authenticated users land on dashboard, unauthenticated redirected to sign-in</description>
+    </criterion>
+    <criterion id="AC8" title="Documentation updated">
+      <description>docs/testing.md created with E2E setup, auth fixtures, CI configuration, troubleshooting</description>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/epic-2-retrospective.md" title="Epic 2 Retrospective" section="Action Items" snippet="Original action item: Fix Integration Test Auth Mocking (HIGH priority). Recommended vi.mock pattern for auth functions." />
+      <doc path="docs/sprint-artifacts/epic-3-retrospective.md" title="Epic 3 Retrospective" section="Critical Issue" snippet="Auth testing infrastructure blocked E2E tests for 16 stories across Epic 2 and 3. Epic 4 blocked until resolved." />
+      <doc path="docs/architecture.md" title="Architecture" section="Testing Strategy" snippet="E2E tests using Playwright, unit tests with Vitest. Role-based test scenarios required." />
+    </docs>
+    <code>
+      <file path="playwright.config.ts" kind="config" symbol="defineConfig" reason="Current Playwright configuration - needs auth setup project added">
+        <notes>Missing: auth setup project, storageState configuration, dependencies between projects</notes>
+      </file>
+      <file path="tests/setup.ts" kind="test-setup" symbol="vi.mock" lines="1-31" reason="Current Vitest setup - mocks next/navigation but NOT auth functions">
+        <notes>Needs: vi.mock('@/lib/auth') with getCurrentTenantId, getCurrentUser, requirePermission, hasPermission, checkPermission</notes>
+      </file>
+      <file path="src/lib/auth.ts" kind="utility" symbol="getCurrentTenantId, getCurrentUser, requirePermission, hasPermission, checkPermission, getDb" lines="12-128" reason="Auth utility functions that need mocking in tests">
+        <notes>All depend on headers() and Clerk currentUser() - must be mocked for tests</notes>
+      </file>
+      <file path="tests/e2e/returns-form.spec.ts" kind="e2e-test" symbol="test.skip" lines="17-22" reason="Example of skipped E2E test pattern - needs auth fixtures">
+        <notes>Pattern: test.skip(() => true, "E2E tests require authentication fixtures")</notes>
+      </file>
+      <file path="tests/e2e/returns-approval.spec.ts" kind="e2e-test" symbol="test.skip" reason="Skipped E2E test for approval queue" />
+      <file path="tests/e2e/returns-history.spec.ts" kind="e2e-test" symbol="test.skip" reason="Skipped E2E test for returns history" />
+      <file path="tests/integration/users-actions.test.ts" kind="integration-test" reason="Failing integration test - needs auth mocking" />
+      <file path="tests/integration/tenant-settings.test.ts" kind="integration-test" reason="Failing integration test - needs auth mocking" />
+      <file path="src/app/page.tsx" kind="page" lines="1-9" reason="Root page placeholder - needs redirect to /dashboard">
+        <notes>Currently renders static "Salina ERP" text with no navigation or redirect</notes>
+      </file>
+      <file path="tests/support/fixtures/factories/" kind="factory" reason="Test data factories for tenant, user, author, title, ISBN, sales">
+        <notes>Can be leveraged for seeded test data</notes>
+      </file>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="@playwright/test" version="^1.57.0" purpose="E2E testing framework" />
+        <package name="vitest" version="4.0.14" purpose="Unit/integration testing framework" />
+        <package name="@testing-library/react" version="16.3.0" purpose="React component testing utilities" />
+        <package name="@clerk/nextjs" version="^6.35.5" purpose="Authentication - needs test mode configuration" />
+        <package name="dotenv" version="17.2.3" purpose="Environment variable loading for tests" />
+        <package name="@faker-js/faker" version="^10.1.0" purpose="Test data generation" />
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="security">Test credentials must not be committed to repository - use environment variables or .env.local</constraint>
+    <constraint type="pattern">Auth mocking must return consistent test tenant UUID across all tests for isolation</constraint>
+    <constraint type="pattern">E2E auth setup must use Clerk sign-in flow - no bypassing production auth patterns</constraint>
+    <constraint type="ci">CI pipeline must run tests against dedicated test database - not production Neon instance</constraint>
+    <constraint type="isolation">Multi-tenant isolation must be preserved in tests - each test tenant is independent</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="getCurrentTenantId" kind="function" path="src/lib/auth.ts">
+      <signature>async function getCurrentTenantId(): Promise&lt;string&gt;</signature>
+      <mockPattern>vi.fn(() => 'test-tenant-uuid')</mockPattern>
+    </interface>
+    <interface name="getCurrentUser" kind="function" path="src/lib/auth.ts">
+      <signature>async function getCurrentUser(): Promise&lt;User | null&gt;</signature>
+      <mockPattern>vi.fn(() => ({ id: 'test-user-uuid', role: 'admin', email: 'test@example.com', tenant_id: 'test-tenant-uuid', is_active: true }))</mockPattern>
+    </interface>
+    <interface name="requirePermission" kind="function" path="src/lib/auth.ts">
+      <signature>async function requirePermission(allowedRoles: UserRole[]): Promise&lt;void&gt;</signature>
+      <mockPattern>vi.fn((roles) => { /* validate mock user role against roles, throw if not allowed */ })</mockPattern>
+    </interface>
+    <interface name="hasPermission" kind="function" path="src/lib/auth.ts">
+      <signature>async function hasPermission(allowedRoles: UserRole[]): Promise&lt;boolean&gt;</signature>
+      <mockPattern>vi.fn((roles) => roles.includes(mockUser.role))</mockPattern>
+    </interface>
+    <interface name="checkPermission" kind="function" path="src/lib/auth.ts">
+      <signature>async function checkPermission(allowedRoles: UserRole[]): Promise&lt;boolean&gt;</signature>
+      <mockPattern>vi.fn((roles) => roles.includes(mockUser.role))</mockPattern>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests use Vitest with React Testing Library. Integration tests mock external dependencies (Clerk, database) while testing Server Action logic. E2E tests use Playwright with authenticated browser sessions via storageState. All tests must be isolated - no shared state between tests. Factory pattern used for test data generation via tests/support/fixtures/factories/.
+    </standards>
+    <locations>
+      <location pattern="tests/unit/**/*.test.ts" purpose="Unit tests" />
+      <location pattern="tests/integration/**/*.test.ts" purpose="Integration tests" />
+      <location pattern="tests/e2e/**/*.spec.ts" purpose="E2E tests" />
+      <location pattern="tests/e2e/auth.setup.ts" purpose="Auth setup fixture (TO CREATE)" />
+      <location pattern="tests/setup.ts" purpose="Vitest global setup" />
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test that auth.setup.ts successfully logs in and creates storageState file</idea>
+      <idea ac="AC1">Test that subsequent tests can use storageState without re-authenticating</idea>
+      <idea ac="AC2">Test that each role fixture (owner, admin, editor, finance, author) can be used independently</idea>
+      <idea ac="AC3">Test that mocked getCurrentUser returns expected user object</idea>
+      <idea ac="AC3">Test that mocked requirePermission throws for unauthorized roles</idea>
+      <idea ac="AC4">Run returns-form.spec.ts and verify all tests pass</idea>
+      <idea ac="AC4">Run returns-approval.spec.ts and verify all tests pass</idea>
+      <idea ac="AC4">Run returns-history.spec.ts and verify all tests pass</idea>
+      <idea ac="AC5">Audit all e2e spec files for .skip() patterns and fix</idea>
+      <idea ac="AC6">Test that CI workflow triggers on PR</idea>
+      <idea ac="AC6">Test that CI workflow blocks merge on test failure</idea>
+      <idea ac="AC7">Test redirect from / to /dashboard when authenticated</idea>
+      <idea ac="AC7">Test redirect from / to /sign-in when unauthenticated</idea>
+    </ideas>
+  </tests>
+</story-context>

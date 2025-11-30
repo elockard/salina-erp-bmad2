@@ -132,7 +132,7 @@ export function AuthorList({
                     selectedAuthorId === author.id &&
                       "bg-primary/10 border-l-2 border-l-primary",
                     // AC 24: Inactive authors with reduced opacity
-                    !author.is_active && "opacity-60"
+                    !author.is_active && "opacity-60",
                   )}
                   role="option"
                   aria-selected={selectedAuthorId === author.id}
@@ -143,8 +143,7 @@ export function AuthorList({
                       {/* AC 32: Portal icon for authors with active portal access */}
                       {author.portal_user_id && (
                         <span className="text-xs" title="Has portal access">
-                          🔑
-                          <span className="sr-only">Has portal access</span>
+                          🔑<span className="sr-only">Has portal access</span>
                         </span>
                       )}
                     </div>
@@ -162,7 +161,7 @@ export function AuthorList({
                       "shrink-0",
                       author.is_active
                         ? "bg-green-50 text-green-700 border-green-200"
-                        : "bg-gray-50 text-gray-500 border-gray-200"
+                        : "bg-gray-50 text-gray-500 border-gray-200",
                     )}
                   >
                     {author.is_active ? "Active" : "Inactive"}
