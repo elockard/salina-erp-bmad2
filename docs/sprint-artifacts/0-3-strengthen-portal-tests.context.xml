@@ -1,0 +1,213 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>0</epicId>
+    <storyId>3</storyId>
+    <title>Strengthen Portal Tests</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/0-3-strengthen-portal-tests.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>development team</asA>
+    <iWant>strengthen the portal test assertions that were weakened during Story 5.6 implementation</iWant>
+    <soThat>the test suite provides reliable regression detection for the author portal functionality</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <title>Investigate PortalStatementList component rendering</title>
+        <subtasks>
+          <subtask>Examine src/modules/statements/components/portal-statement-list.tsx for dual-layout implementation</subtask>
+          <subtask>Check for conditional rendering of Desktop (table) and Mobile (cards) views</subtask>
+          <subtask>Determine if both views render simultaneously or based on CSS breakpoints</subtask>
+          <subtask>Verify if JSDOM can detect both views (CSS media queries don't work in JSDOM)</subtask>
+          <subtask>Document findings in Dev Notes</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="1,2">
+        <title>Analyze current weakened assertions</title>
+        <subtasks>
+          <subtask>Review tests/unit/portal-statement-list.test.tsx for all weakened assertions</subtask>
+          <subtask>List each toBeGreaterThanOrEqual(1) and its original expected value</subtask>
+          <subtask>List each toBeDefined() that should be toBeInTheDocument()</subtask>
+          <subtask>Identify root cause for each weakening</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="2,3">
+        <title>Fix component or test setup based on findings</title>
+        <subtasks>
+          <subtask>If component renders both views: Restore toHaveLength(2) assertions</subtask>
+          <subtask>If component uses CSS breakpoints only: Restructure tests to verify each view separately</subtask>
+          <subtask>If JSDOM limitation: Use role-based queries or data-testid attributes</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="3,4">
+        <title>Strengthen assertion quality</title>
+        <subtasks>
+          <subtask>Replace toBeGreaterThanOrEqual(1) with exact count or role-based assertions</subtask>
+          <subtask>Replace toBeDefined() with toBeInTheDocument() for DOM presence checks</subtask>
+          <subtask>Add specific element queries where vague queries exist</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="4,5">
+        <title>Review and strengthen integration tests</title>
+        <subtasks>
+          <subtask>Review tests/integration/portal-statement-access.test.tsx assertions</subtask>
+          <subtask>Ensure all assertions are specific and meaningful</subtask>
+          <subtask>Verify mock setup correctly represents actual behavior</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="5,6">
+        <title>Run full test suite and verify no regressions</title>
+        <subtasks>
+          <subtask>Run npm test tests/unit/portal-statement-list.test.tsx</subtask>
+          <subtask>Run npm test tests/integration/portal-statement-access.test.tsx</subtask>
+          <subtask>Run npm test for full unit test suite</subtask>
+          <subtask>Document any new test cases added</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Portal component rendering is investigated and understood - determine why tests expecting 2 elements (Desktop + Mobile) were failing, document whether issue is in component, test setup, or JSDOM limitations</criterion>
+    <criterion id="2">Test assertions restored to original strength OR component fixed - if component issue fix component, if test setup issue fix test setup, if JSDOM limitation document and implement alternative verification</criterion>
+    <criterion id="3">PortalStatementList tests verify both desktop and mobile views - toBeGreaterThanOrEqual(1) assertions replaced with exact count assertions, tests verify both responsive layouts render expected elements</criterion>
+    <criterion id="4">Assertion quality improved across all portal tests - toBeDefined() assertions replaced with toBeInTheDocument() where appropriate, tests verify actual DOM presence not just variable existence</criterion>
+    <criterion id="5">All portal tests pass with strengthened assertions - tests/unit/portal-statement-list.test.tsx passes, tests/integration/portal-statement-access.test.tsx passes, no regressions in other test files</criterion>
+    <criterion id="6">Test coverage maintained or improved - existing test cases preserved, any new edge cases discovered during investigation are tested</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic-5-retro-2025-11-30.md</path>
+        <title>Epic 5 Retrospective</title>
+        <section>What Could Be Improved - Story 5.6 Test Quality</section>
+        <snippet>Test assertions weakened to pass rather than fixing component. Original: toHaveLength(2) for Desktop + Mobile views → Changed to: toBeGreaterThanOrEqual(1). toBeDefined() changed from toBeInTheDocument().</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>UI Patterns - Loading States and Testing</section>
+        <snippet>Tests should use role-based queries when possible for accessibility. Avoid testing implementation details (CSS classes) when behavior can be verified.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/0-2-fix-typescript-and-lint-issues.md</path>
+        <title>Story 0.2 - Fix TypeScript and Lint Issues</title>
+        <section>Completion Notes</section>
+        <snippet>Unit tests (982/982) all pass with current mocking infrastructure. Test setup in tests/setup.ts provides comprehensive auth mocking. No portal-specific changes were made in Story 0.2.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/modules/statements/components/portal-statement-list.tsx</path>
+        <kind>component</kind>
+        <symbol>PortalStatementList</symbol>
+        <lines>180-258</lines>
+        <reason>Primary component under test - implements dual layout with md:hidden and hidden md:block CSS classes for responsive design. Both mobile cards and desktop table render in DOM simultaneously.</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/components/portal-statement-list.tsx</path>
+        <kind>component</kind>
+        <symbol>StatementCard</symbol>
+        <lines>126-172</lines>
+        <reason>Mobile card layout component used in md:hidden div - renders View Details button with min-h-[44px] for touch targets.</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/components/portal-statement-list.tsx</path>
+        <kind>component</kind>
+        <symbol>PortalStatusBadge</symbol>
+        <lines>74-119</lines>
+        <reason>Status badge component rendering Paid/Pending Payment/New states - tested for presence in assertions.</reason>
+      </file>
+      <file>
+        <path>tests/unit/portal-statement-list.test.tsx</path>
+        <kind>test</kind>
+        <symbol>PortalStatementList unit tests</symbol>
+        <lines>1-288</lines>
+        <reason>Primary test file with weakened assertions. Contains toBeGreaterThanOrEqual(1) on lines 142, 157, 174, 189, 212. Contains toBeDefined() on lines 220-225.</reason>
+      </file>
+      <file>
+        <path>tests/integration/portal-statement-access.test.tsx</path>
+        <kind>test</kind>
+        <symbol>Portal Statement Access integration tests</symbol>
+        <lines>1-393</lines>
+        <reason>Integration tests for portal statement queries and actions - tests use proper mocking patterns, assertions are specific. May need review for consistency.</reason>
+      </file>
+      <file>
+        <path>tests/setup.ts</path>
+        <kind>test-setup</kind>
+        <symbol>Test Auth Context and Mocks</symbol>
+        <lines>1-225</lines>
+        <reason>Provides resetTestAuthContext, setTestUserRole helpers and comprehensive mocking for @/lib/auth, next/navigation, @clerk/nextjs/server.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>vitest</package>
+        <version>4.0.14</version>
+        <purpose>Test runner - provides describe, it, expect, vi for mocking</purpose>
+      </node>
+      <node>
+        <package>@testing-library/react</package>
+        <version>16.3.0</version>
+        <purpose>React testing utilities - provides render, screen, queries</purpose>
+      </node>
+      <node>
+        <package>jsdom</package>
+        <version>27.2.0</version>
+        <purpose>DOM implementation for tests - CSS media queries do NOT work in JSDOM</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="JSDOM">CSS media queries (like md:hidden, hidden md:block) do not work in JSDOM - both mobile and desktop views render simultaneously in the DOM during tests. This is a known limitation, not a bug.</constraint>
+    <constraint source="Testing-Library">Prefer toBeInTheDocument() over toBeDefined() for DOM presence checks - toBeDefined() only checks JavaScript variable existence, not DOM presence.</constraint>
+    <constraint source="Testing-Library">Use role-based queries (getByRole) when possible for accessibility-focused testing rather than implementation details like CSS classes.</constraint>
+    <constraint source="Architecture">Component uses Tailwind responsive classes: mobile view has className="md:hidden", desktop view has className="hidden md:block". Both are always in DOM.</constraint>
+    <constraint source="DevNotes">When testing responsive layouts in JSDOM, accept that both views are rendered. Use data-testid or role queries to distinguish desktop vs mobile elements if needed.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>PortalStatementListProps</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface PortalStatementListProps { statements: StatementWithRelations[]; }</signature>
+      <path>src/modules/statements/components/portal-statement-list.tsx</path>
+    </interface>
+    <interface>
+      <name>StatementWithRelations</name>
+      <kind>TypeScript type</kind>
+      <signature>Type includes: id, tenant_id, author_id, contract_id, period_start, period_end, total_royalty_earned, recoupment, net_payable, calculations, pdf_s3_key, status, email_sent_at, created_at, updated_at, author, contract</signature>
+      <path>src/modules/statements/types.ts</path>
+    </interface>
+    <interface>
+      <name>Test Setup Helpers</name>
+      <kind>Exported functions</kind>
+      <signature>resetTestAuthContext(): void; setTestUserRole(role): void; setTestTenantId(tenantId): void; setTestUser(user): void;</signature>
+      <path>tests/setup.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing uses Vitest + Testing Library for unit/integration tests. Tests should use role-based queries for accessibility, prefer toBeInTheDocument() for DOM presence, and avoid testing CSS implementation details. Mock external dependencies (next/link, sonner) at module level. Use beforeEach to reset test auth context. Test both happy path and edge cases (empty state, error conditions).
+    </standards>
+    <locations>
+      <location>tests/unit/*.test.tsx - Unit tests for components</location>
+      <location>tests/integration/*.test.tsx - Integration tests for actions/queries</location>
+      <location>tests/setup.ts - Global test setup and mocks</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Add test that explicitly documents component renders both mobile and desktop views in JSDOM</idea>
+      <idea ac="3">Replace toBeGreaterThanOrEqual(1) with toHaveLength(2) for currency format tests since both mobile and desktop render the same values</idea>
+      <idea ac="3">Replace toBeGreaterThanOrEqual(1) with toHaveLength(2) for badge tests since both views show badges</idea>
+      <idea ac="4">Replace toBeDefined() with toBeInTheDocument() for empty state message verification</idea>
+      <idea ac="3">Add explicit test for mobile card View Details buttons using getAllByText("View Details")</idea>
+      <idea ac="3">Add explicit test for desktop table View buttons using getAllByRole("button", { name: /view/i })</idea>
+      <idea ac="6">Ensure test count does not decrease - current: portal-statement-list.test.tsx has ~12 test cases</idea>
+    </ideas>
+  </tests>
+</story-context>

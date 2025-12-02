@@ -233,7 +233,7 @@ test.describe("RBAC System - Role-Based Access Control", () => {
       await page.goto("/portal/statements");
 
       // Get statements visible to Author 1
-      const statementsAuthor1 = await page
+      const _statementsAuthor1 = await page
         .locator('[data-testid="statement-row"]')
         .count();
 
@@ -250,7 +250,7 @@ test.describe("RBAC System - Role-Based Access Control", () => {
       await page.goto("/portal/statements");
 
       // Get statements visible to Author 2
-      const statementsAuthor2 = await page
+      const _statementsAuthor2 = await page
         .locator('[data-testid="statement-row"]')
         .count();
 

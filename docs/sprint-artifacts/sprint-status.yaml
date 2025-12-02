@@ -82,20 +82,25 @@ development_status:
   epic-4-retrospective: done
 
   epic-5: contexted
-  5-1-create-statements-database-schema-and-pdf-storage: backlog
-  5-2-implement-pdf-statement-generation-with-react-email: backlog
-  5-3-build-statement-generation-wizard-for-finance: backlog
-  5-4-implement-statement-email-delivery-with-resend: backlog
-  5-5-build-statements-list-and-detail-view-for-finance: backlog
-  5-6-build-author-portal-statement-access: backlog
-  epic-5-retrospective: optional
+  5-1-create-statements-database-schema-and-pdf-storage: done
+  5-2-implement-pdf-statement-generation-with-react-email: done
+  5-3-build-statement-generation-wizard-for-finance: done
+  5-4-implement-statement-email-delivery-with-resend: done
+  5-5-build-statements-list-and-detail-view-for-finance: done
+  5-6-build-author-portal-statement-access: done
+  epic-5-retrospective: done
 
-  epic-6: backlog
-  6-1-implement-revenue-and-liability-tracking: backlog
-  6-2-build-sales-reports-with-multi-dimensional-filtering: backlog
-  6-3-build-isbn-pool-status-report: backlog
-  6-4-build-royalty-liability-summary-report: backlog
-  6-5-implement-audit-logging-for-compliance: backlog
-  6-6-build-background-job-monitoring-for-system-administration: backlog
-  6-7-enhance-all-dashboards-with-role-specific-analytics: backlog
+  # INFRASTRUCTURE SPRINT 2 - Before Epic 6
+  # Decision: BMad (2025-11-30) - Technical debt cleanup before Epic 6
+  0-2-fix-typescript-and-lint-issues: done
+  0-3-strengthen-portal-tests: done
+
+  epic-6: contexted
+  6-1-implement-revenue-and-liability-tracking: done
+  6-2-build-sales-reports-with-multi-dimensional-filtering: done
+  6-3-build-isbn-pool-status-report: done
+  6-4-build-royalty-liability-summary-report: done
+  6-5-implement-audit-logging-for-compliance: done
+  6-6-build-background-job-monitoring-for-system-administration: done
+  6-7-enhance-all-dashboards-with-role-specific-analytics: done
   epic-6-retrospective: optional

@@ -56,10 +56,10 @@ const calculationFormSchema = z
     author_id: z.string().min(1, "Please select an author"),
     author_name: z.string().optional(),
     start_date: z.date({
-      required_error: "Please select a start date",
+      message: "Please select a start date",
     }),
     end_date: z.date({
-      required_error: "Please select an end date",
+      message: "Please select an end date",
     }),
   })
   .refine((data) => !isFuture(data.start_date), {

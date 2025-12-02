@@ -28,6 +28,7 @@ import {
   getDb,
   requirePermission,
 } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/audit";
 import {
   APPROVE_RETURNS,
   RECORD_RETURNS,
@@ -35,7 +36,6 @@ import {
 } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
 import {
-  getPendingReturnById,
   getPendingReturns,
   getReturnById,
   getReturnsHistory,
@@ -178,11 +178,34 @@ export async function recordReturn(
       })
       .returning();
 
-    // 9. Revalidate returns-related paths
+    // 9. Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: user.id,
+      actionType: "CREATE",
+      resourceType: "return",
+      resourceId: returnRecord.id,
+      changes: {
+        after: {
+          id: returnRecord.id,
+          title_id: returnRecord.title_id,
+          title_name: title.title,
+          format: returnRecord.format,
+          quantity: returnRecord.quantity,
+          unit_price: returnRecord.unit_price,
+          total_amount: returnRecord.total_amount,
+          return_date: validated.return_date,
+          reason: reasonText,
+          status: "pending",
+        },
+      },
+    });
+
+    // 10. Revalidate returns-related paths
     revalidatePath("/returns");
     revalidatePath("/dashboard");
 
-    // 10. Return success with return details for toast message (AC 11)
+    // 11. Return success with return details for toast message (AC 11)
     return {
       success: true,
       data: {
@@ -371,7 +394,23 @@ export async function approveReturn(data: {
       })
       .where(eq(returns.id, returnId));
 
-    // 6. Revalidate paths
+    // 6. Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: user.id,
+      actionType: "APPROVE",
+      resourceType: "return",
+      resourceId: returnId,
+      changes: {
+        before: { status: "pending" },
+        after: { status: "approved", internal_note: internalNote },
+      },
+      metadata: {
+        reviewed_by_user_id: user.id,
+      },
+    });
+
+    // 7. Revalidate paths
     revalidatePath("/returns");
     revalidatePath("/returns/pending");
     revalidatePath("/dashboard");
@@ -488,7 +527,24 @@ export async function rejectReturn(data: {
       })
       .where(eq(returns.id, returnId));
 
-    // 6. Revalidate paths
+    // 6. Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: user.id,
+      actionType: "REJECT",
+      resourceType: "return",
+      resourceId: returnId,
+      changes: {
+        before: { status: "pending", reason: originalReason },
+        after: { status: "rejected", reason: updatedReason },
+      },
+      metadata: {
+        reviewed_by_user_id: user.id,
+        rejection_reason: reason,
+      },
+    });
+
+    // 7. Revalidate paths
     revalidatePath("/returns");
     revalidatePath("/returns/pending");
     revalidatePath("/dashboard");

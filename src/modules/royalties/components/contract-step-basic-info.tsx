@@ -52,7 +52,7 @@ import type { AuthorOption, TitleOption } from "../types";
  */
 function useDebounce<T extends (...args: Parameters<T>) => void>(
   callback: T,
-  delay: number
+  delay: number,
 ): T {
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
@@ -64,7 +64,7 @@ function useDebounce<T extends (...args: Parameters<T>) => void>(
       const id = setTimeout(() => callback(...args), delay);
       setTimeoutId(id);
     }) as T,
-    [callback, delay, timeoutId]
+    [],
   );
 }
 
@@ -168,7 +168,7 @@ export function ContractStepBasicInfo() {
                     aria-expanded={authorOpen}
                     className={cn(
                       "w-full justify-between",
-                      !selectedAuthorId && "text-muted-foreground"
+                      !selectedAuthorId && "text-muted-foreground",
                     )}
                   >
                     {selectedAuthorName || "Select author..."}
@@ -203,7 +203,7 @@ export function ContractStepBasicInfo() {
                                 "mr-2 h-4 w-4",
                                 selectedAuthorId === author.id
                                   ? "opacity-100"
-                                  : "opacity-0"
+                                  : "opacity-0",
                               )}
                             />
                             <div>
@@ -246,7 +246,7 @@ export function ContractStepBasicInfo() {
                     aria-expanded={titleOpen}
                     className={cn(
                       "w-full justify-between",
-                      !selectedTitleId && "text-muted-foreground"
+                      !selectedTitleId && "text-muted-foreground",
                     )}
                   >
                     {selectedTitleName || "Select title..."}
@@ -281,7 +281,7 @@ export function ContractStepBasicInfo() {
                                 "mr-2 h-4 w-4",
                                 selectedTitleId === title.id
                                   ? "opacity-100"
-                                  : "opacity-0"
+                                  : "opacity-0",
                               )}
                             />
                             <div>
@@ -392,9 +392,7 @@ export function ContractStepBasicInfo() {
                   />
                 </div>
               </FormControl>
-              <FormDescription>
-                Amount already paid to author
-              </FormDescription>
+              <FormDescription>Amount already paid to author</FormDescription>
               <FormMessage />
             </FormItem>
           )}

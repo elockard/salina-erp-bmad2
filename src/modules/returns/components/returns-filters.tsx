@@ -121,7 +121,7 @@ export function ReturnsFilters({ onFiltersChange }: ReturnsFiltersProps) {
       if (effectiveDateRange?.to) {
         params.set("to", format(effectiveDateRange.to, "yyyy-MM-dd"));
       }
-      if (effectiveSearch && effectiveSearch.trim()) {
+      if (effectiveSearch?.trim()) {
         params.set("search", effectiveSearch.trim());
       }
       if (effectiveFormat && effectiveFormat !== "all") {
@@ -143,7 +143,7 @@ export function ReturnsFilters({ onFiltersChange }: ReturnsFiltersProps) {
       if (effectiveDateRange?.to) {
         filters.to_date = format(effectiveDateRange.to, "yyyy-MM-dd");
       }
-      if (effectiveSearch && effectiveSearch.trim()) {
+      if (effectiveSearch?.trim()) {
         filters.search = effectiveSearch.trim();
       }
       if (effectiveFormat && effectiveFormat !== "all") {
@@ -232,7 +232,7 @@ export function ReturnsFilters({ onFiltersChange }: ReturnsFiltersProps) {
     if (dateRange?.to) {
       filters.to_date = format(dateRange.to, "yyyy-MM-dd");
     }
-    if (searchTerm && searchTerm.trim()) {
+    if (searchTerm?.trim()) {
       filters.search = searchTerm.trim();
     }
     if (selectedFormat && selectedFormat !== "all") {
@@ -240,7 +240,14 @@ export function ReturnsFilters({ onFiltersChange }: ReturnsFiltersProps) {
     }
     onFiltersChange(filters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    dateRange?.from,
+    dateRange?.to,
+    onFiltersChange,
+    searchTerm,
+    selectedFormat,
+    selectedStatus,
+  ]);
 
   // Cleanup debounce on unmount
   React.useEffect(() => {

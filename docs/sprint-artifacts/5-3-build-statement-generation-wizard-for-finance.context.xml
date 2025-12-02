@@ -1,0 +1,328 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>3</storyId>
+    <title>Build Statement Generation Wizard for Finance</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-3-build-statement-generation-wizard-for-finance.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance user</asA>
+    <iWant>generate royalty statements for one or all authors via guided wizard</iWant>
+    <soThat>I can produce quarterly/annual statements efficiently</soThat>
+    <tasks>
+      <task id="1" ac="1">Create wizard modal component structure
+        <subtask>1.1: Create statement-wizard-modal.tsx following contract-wizard-modal.tsx pattern</subtask>
+        <subtask>1.2: Define 4-step wizard state management (period, authors, preview, generate)</subtask>
+        <subtask>1.3: Implement step navigation (back/next) with validation per step</subtask>
+        <subtask>1.4: Create step indicator component showing progress</subtask>
+      </task>
+      <task id="2" ac="2">Implement Step 1 - Period Selection
+        <subtask>2.1: Create statement-step-period.tsx</subtask>
+        <subtask>2.2: Add period type radio buttons: Quarterly, Annual, Custom</subtask>
+        <subtask>2.3-2.5: Implement conditional date pickers per type</subtask>
+        <subtask>2.6: Store resolved periodStart/periodEnd in form state</subtask>
+      </task>
+      <task id="3" ac="3">Implement Step 2 - Author Selection
+        <subtask>3.1: Create statement-step-authors.tsx</subtask>
+        <subtask>3.2-3.3: Add "Select All" and individual checkboxes</subtask>
+        <subtask>3.4-3.5: Display author list with pending royalties, search/filter</subtask>
+        <subtask>3.6-3.7: Show selection summary, create getAuthorsWithPendingRoyalties action</subtask>
+      </task>
+      <task id="4" ac="4">Implement Step 3 - Preview Calculations
+        <subtask>4.1: Create statement-step-preview.tsx</subtask>
+        <subtask>4.2: Create previewStatementCalculations server action</subtask>
+        <subtask>4.3-4.4: Display preview table with totals</subtask>
+        <subtask>4.5-4.6: Add warning callouts, handle loading state</subtask>
+      </task>
+      <task id="5" ac="5,6">Implement Step 4 - Generate and Send
+        <subtask>5.1: Create statement-step-generate.tsx</subtask>
+        <subtask>5.2-5.3: Display confirmation summary with delivery options</subtask>
+        <subtask>5.4-5.5: Create Generate button, call generateStatements action</subtask>
+      </task>
+      <task id="6" ac="5">Create server actions for wizard
+        <subtask>6.1: Add generateStatements action</subtask>
+        <subtask>6.2-6.3: Validate period/authors, enforce permissions</subtask>
+        <subtask>6.4-6.5: Enqueue Inngest job, return jobId</subtask>
+      </task>
+      <task id="7" ac="5">Create Inngest batch generation function
+        <subtask>7.1: Create generate-statements-batch.ts</subtask>
+        <subtask>7.2-7.3: Define event type, implement batch processing steps</subtask>
+        <subtask>7.4-7.6: Emit progress events, handle failures, register function</subtask>
+      </task>
+      <task id="8" ac="6">Implement progress tracking UI
+        <subtask>8.1-8.2: Create progress modal, poll job status</subtask>
+        <subtask>8.3-8.5: Allow background operation, show completion, link to list</subtask>
+      </task>
+      <task id="9" ac="7">Add wizard trigger to UI
+        <subtask>9.1-9.2: Add "Generate Statements" button with role check</subtask>
+        <subtask>9.3-9.4: Create statements page, add nav item</subtask>
+      </task>
+      <task id="10" ac="1-7">Write unit tests</task>
+      <task id="11" ac="5,6,7">Write integration tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-5.3.1">4-step wizard flow: Period → Authors → Preview → Generate</criterion>
+    <criterion id="AC-5.3.2">Period selection supports Quarterly, Annual, Custom date range options</criterion>
+    <criterion id="AC-5.3.3">Author selection allows "Select All" or individual checkboxes with search/filter</criterion>
+    <criterion id="AC-5.3.4">Preview step shows calculation estimates before generation (author, sales, returns, royalty earned, advance recouped, net payable)</criterion>
+    <criterion id="AC-5.3.5">Submit enqueues Inngest job for background processing via statements/generate.batch event</criterion>
+    <criterion id="AC-5.3.6">Progress indicator shows completion status during generation</criterion>
+    <criterion id="AC-5.3.7">Only Finance, Admin, Owner roles can access wizard (enforced via requirePermission)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-5.md" title="Epic 5 Technical Specification">
+        <section name="Story 5.3: Build Statement Generation Wizard for Finance">
+          Primary technical reference. Defines 4-step wizard flow: Period → Authors → Preview → Generate.
+          Specifies Inngest event "statements/generate.batch" for background processing.
+          Authorization: Finance, Admin, Owner roles only.
+        </section>
+        <section name="Data Models">
+          statements table schema with calculations JSONB field, pdf_s3_key, status.
+          StatementCalculations interface defines period, formatBreakdowns, advanceRecoupment, netPayable.
+        </section>
+        <section name="Inngest Batch Job Pattern">
+          generateStatementsBatch function structure with step.run for calculate-royalties, create-statements, generate-pdfs, send-emails.
+        </section>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture">
+        <section name="Project Structure">
+          Module pattern: src/modules/statements/{components, actions.ts, queries.ts, types.ts}.
+          Inngest jobs in src/inngest/*.ts, registered in functions.ts.
+        </section>
+        <section name="Implementation Patterns">
+          Server Actions with requirePermission(), tenant scoping via getCurrentTenantId().
+          ActionResult type: {success: true, data} | {success: false, error}.
+          Form handling: React Hook Form + Zod validation.
+        </section>
+        <section name="Background Jobs">
+          Inngest pattern: inngest.send({name, data}) triggers createFunction handler.
+          Step-based execution for durability and retry.
+        </section>
+      </doc>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification">
+        <section name="Statement Generation Wizard (Journey 3)">
+          4-step wizard modal: Period (Quarterly/Annual/Custom) → Authors (Select All or checkboxes with search) → Preview (calculation table) → Generate (delivery options).
+          Pattern: Wizard-Guided Modal per Direction 6.
+        </section>
+      </doc>
+    </docs>
+    <code>
+      <!-- Wizard Pattern Reference -->
+      <file path="src/modules/royalties/components/contract-wizard-modal.tsx" kind="component" reason="Primary wizard pattern reference">
+        <symbol>ContractWizardModal</symbol>
+        <notes>5-step wizard with FormProvider, step navigation, validation per step. Copy structure for 4-step statement wizard.</notes>
+      </file>
+      <file path="src/modules/royalties/components/contract-step-basic-info.tsx" kind="component" reason="Step component pattern">
+        <symbol>ContractStepBasicInfo</symbol>
+        <notes>Uses useFormContext for form state. Follow pattern for statement-step-*.tsx files.</notes>
+      </file>
+      <file path="src/modules/royalties/components/contract-step-review.tsx" kind="component" reason="Review step pattern">
+        <symbol>ContractStepReview</symbol>
+        <notes>Displays form summary before submission. Use for statement-step-generate.tsx.</notes>
+      </file>
+
+      <!-- Existing Statements Module -->
+      <file path="src/modules/statements/actions.ts" kind="actions" reason="Extend with wizard actions">
+        <symbol>generateStatementPDF, getStatementPDFUrl</symbol>
+        <notes>Add generateStatements, getAuthorsWithPendingRoyalties, previewStatementCalculations.</notes>
+      </file>
+      <file path="src/modules/statements/types.ts" kind="types" reason="Extend with wizard types">
+        <symbol>StatementGenerationRequest, StatementGenerationResult, StatementCalculations</symbol>
+        <notes>Types already defined for wizard. Add WizardFormData, PreviewCalculation types.</notes>
+      </file>
+      <file path="src/modules/statements/storage.ts" kind="utility" reason="S3 utilities for PDF">
+        <symbol>uploadStatementPDF, getStatementDownloadUrl, generateStatementS3Key</symbol>
+      </file>
+      <file path="src/modules/statements/pdf-generator.tsx" kind="utility" reason="PDF generation for batch job">
+        <symbol>generateStatementPDF, generatePDFBuffer</symbol>
+      </file>
+
+      <!-- Royalty Calculator (Epic 4) -->
+      <file path="src/modules/royalties/calculator.ts" kind="service" reason="Core calculation for preview and batch">
+        <symbol>calculateRoyaltyForPeriod</symbol>
+        <notes>Returns RoyaltyCalculationResult with full breakdown. Use for preview step and batch generation.</notes>
+      </file>
+      <file path="src/modules/royalties/queries.ts" kind="queries" reason="Sales/returns data">
+        <symbol>getSalesByFormatForPeriod, getApprovedReturnsByFormatForPeriod, getContractByAuthorAndTenant</symbol>
+      </file>
+
+      <!-- Authors Module -->
+      <file path="src/modules/authors/queries.ts" kind="queries" reason="Author list for selection">
+        <symbol>getAuthors</symbol>
+        <notes>Returns authors with search filter. Extend or create getAuthorsWithPendingRoyalties.</notes>
+      </file>
+
+      <!-- Inngest Infrastructure -->
+      <file path="src/inngest/client.ts" kind="config" reason="Inngest client singleton">
+        <symbol>inngest, InngestEvents</symbol>
+        <notes>Add "statements/generate.batch" event type to InngestEvents.</notes>
+      </file>
+      <file path="src/inngest/functions.ts" kind="registry" reason="Function registration">
+        <symbol>functions</symbol>
+        <notes>Add generateStatementsBatch to functions array.</notes>
+      </file>
+      <file path="src/inngest/generate-statement-pdf.ts" kind="job" reason="Single PDF job pattern">
+        <symbol>generateStatementPdf</symbol>
+        <notes>Pattern for step-based execution. Batch job will iterate over authors.</notes>
+      </file>
+
+      <!-- Auth Utilities -->
+      <file path="src/lib/auth.ts" kind="utility" reason="Permission enforcement">
+        <symbol>requirePermission, getCurrentTenantId, getDb, getCurrentUser</symbol>
+        <notes>Use requirePermission(["finance", "admin", "owner"]) for AC-5.3.7.</notes>
+      </file>
+    </code>
+    <dependencies>
+      <ecosystem name="node" manifest="package.json">
+        <!-- Core Framework -->
+        <package name="next" version="^16.0.4" purpose="App Router, Server Actions, Server Components" />
+        <package name="react" version="^19.2.0" purpose="UI library with useTransition, useFormStatus" />
+        <package name="react-dom" version="^19.2.0" />
+
+        <!-- Form Handling -->
+        <package name="react-hook-form" version="^7.66.1" purpose="Form state management for wizard" />
+        <package name="@hookform/resolvers" version="^5.2.2" purpose="Zod resolver for validation" />
+        <package name="zod" version="^4.1.13" purpose="Schema validation" />
+
+        <!-- UI Components -->
+        <package name="@radix-ui/react-dialog" version="1.1.15" purpose="Modal dialog for wizard" />
+        <package name="@radix-ui/react-checkbox" version="1.3.3" purpose="Author selection checkboxes" />
+        <package name="@radix-ui/react-radio-group" version="1.3.8" purpose="Period type selection" />
+        <package name="@radix-ui/react-select" version="2.2.6" purpose="Quarter/Year dropdowns" />
+        <package name="@radix-ui/react-progress" version="1.1.8" purpose="Generation progress indicator" />
+        <package name="lucide-react" version="0.554.0" purpose="Icons" />
+        <package name="sonner" version="2.0.7" purpose="Toast notifications" />
+        <package name="class-variance-authority" version="0.7.1" purpose="Component variants" />
+        <package name="clsx" version="2.1.1" purpose="Class merging" />
+        <package name="tailwind-merge" version="3.4.0" purpose="Tailwind class merging" />
+
+        <!-- Date Handling -->
+        <package name="date-fns" version="^4.1.0" purpose="Date formatting, quarter resolution" />
+        <package name="@date-fns/tz" version="1.4.1" purpose="Timezone support" />
+        <package name="react-day-picker" version="9.11.2" purpose="Custom date range picker" />
+
+        <!-- Financial Calculations -->
+        <package name="decimal.js" version="^10.6.0" purpose="Precise royalty calculations" />
+
+        <!-- Background Jobs -->
+        <package name="inngest" version="^3.46.0" purpose="Batch statement generation job" />
+
+        <!-- PDF and Storage -->
+        <package name="@react-pdf/renderer" version="4.3.1" purpose="PDF generation" />
+        <package name="@aws-sdk/client-s3" version="^3.940.0" purpose="S3 upload" />
+        <package name="@aws-sdk/s3-request-presigner" version="^3.940.0" purpose="Presigned URLs" />
+
+        <!-- Email -->
+        <package name="resend" version="^6.5.2" purpose="Email delivery (Story 5.4)" />
+        <package name="react-email" version="^5.0.5" purpose="Email templates" />
+
+        <!-- Database -->
+        <package name="drizzle-orm" version="^0.44.7" purpose="Database queries" />
+        <package name="@neondatabase/serverless" version="^1.0.2" purpose="Neon driver" />
+
+        <!-- Auth -->
+        <package name="@clerk/nextjs" version="^6.35.5" purpose="Authentication" />
+
+        <!-- Data Tables -->
+        <package name="@tanstack/react-table" version="8.21.3" purpose="Preview table" />
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md" type="pattern">Server Actions must use requirePermission() before database access</constraint>
+    <constraint source="architecture.md" type="pattern">All queries must include tenant_id filter via getCurrentTenantId()</constraint>
+    <constraint source="architecture.md" type="pattern">Use Decimal.js for ALL financial calculations (no floating-point)</constraint>
+    <constraint source="architecture.md" type="pattern">ActionResult type: {success: true, data} | {success: false, error}</constraint>
+    <constraint source="tech-spec-epic-5.md" type="authorization">Only Finance, Admin, Owner roles can access wizard</constraint>
+    <constraint source="tech-spec-epic-5.md" type="event">Use Inngest event "statements/generate.batch" for background processing</constraint>
+    <constraint source="ux-design-specification.md" type="ux">4-step wizard modal: Period → Authors → Preview → Generate</constraint>
+    <constraint source="story-dev-notes" type="pattern">Follow contract-wizard-modal.tsx structure with FormProvider</constraint>
+  </constraints>
+  <interfaces>
+    <interface name="calculateRoyaltyForPeriod" kind="function" path="src/modules/royalties/calculator.ts">
+      <signature>calculateRoyaltyForPeriod(authorId: string, tenantId: string, startDate: Date, endDate: Date): Promise&lt;RoyaltyCalculationResult&gt;</signature>
+      <notes>Returns {success: true, calculation} or {success: false, error}. calculation contains formatCalculations, totalRoyaltyEarned, advanceRecoupment, netPayable.</notes>
+    </interface>
+    <interface name="inngest.send" kind="function" path="src/inngest/client.ts">
+      <signature>inngest.send({ name: "statements/generate.batch", data: { tenantId, periodStart, periodEnd, authorIds, sendEmail, userId } })</signature>
+      <notes>Returns { ids: string[] } with event IDs for tracking.</notes>
+    </interface>
+    <interface name="requirePermission" kind="function" path="src/lib/auth.ts">
+      <signature>requirePermission(allowedRoles: UserRole[]): Promise&lt;void&gt;</signature>
+      <notes>Throws Error("UNAUTHORIZED") if permission denied. Use ["finance", "admin", "owner"].</notes>
+    </interface>
+    <interface name="getAuthors" kind="function" path="src/modules/authors/queries.ts">
+      <signature>getAuthors(filters?: AuthorFilters): Promise&lt;Author[]&gt;</signature>
+      <notes>Returns authors for current tenant. Supports searchQuery filter.</notes>
+    </interface>
+    <interface name="StatementGenerationRequest" kind="type" path="src/modules/statements/types.ts">
+      <signature>{ periodStart: Date, periodEnd: Date, authorIds: string[], sendEmail: boolean }</signature>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      Vitest with jsdom environment for React component tests. Use @testing-library/react for component rendering.
+      Test structure: describe() blocks per AC, it() blocks per scenario. Use safeParse for schema validation tests.
+      Mock auth utilities (requirePermission, getCurrentTenantId) for action tests.
+      Integration tests use real database with test tenant isolation.
+      E2E tests use Playwright (tests/e2e/).
+    </standards>
+    <locations>
+      <location pattern="tests/unit/**/*.test.{ts,tsx}">Unit tests for schemas, validation, pure functions</location>
+      <location pattern="tests/integration/**/*.test.{ts,tsx}">Integration tests with database</location>
+      <location pattern="tests/e2e/**/*.spec.ts">Playwright E2E tests</location>
+    </locations>
+    <ideas>
+      <!-- AC-5.3.1: 4-step wizard flow -->
+      <test ac="AC-5.3.1" file="tests/unit/statement-wizard.test.tsx">Wizard renders with 4 steps and step indicator</test>
+      <test ac="AC-5.3.1" file="tests/unit/statement-wizard.test.tsx">Step navigation works (next, back buttons)</test>
+      <test ac="AC-5.3.1" file="tests/unit/statement-wizard.test.tsx">Cannot advance from step without required data</test>
+
+      <!-- AC-5.3.2: Period selection -->
+      <test ac="AC-5.3.2" file="tests/unit/statement-wizard.test.tsx">Period type selection (Quarterly, Annual, Custom) renders correctly</test>
+      <test ac="AC-5.3.2" file="tests/unit/statement-wizard.test.tsx">Quarter selection resolves correct date range (Q1 2025 → Jan 1 - Mar 31)</test>
+      <test ac="AC-5.3.2" file="tests/unit/statement-wizard.test.tsx">Annual selection resolves correct date range (2024 → Jan 1 - Dec 31)</test>
+      <test ac="AC-5.3.2" file="tests/unit/statement-wizard.test.tsx">Custom date picker validates end > start</test>
+
+      <!-- AC-5.3.3: Author selection -->
+      <test ac="AC-5.3.3" file="tests/unit/statement-wizard.test.tsx">Author list renders with checkboxes</test>
+      <test ac="AC-5.3.3" file="tests/unit/statement-wizard.test.tsx">"Select All" checkbox selects/deselects all authors</test>
+      <test ac="AC-5.3.3" file="tests/unit/statement-wizard.test.tsx">Search filter filters author list by name</test>
+      <test ac="AC-5.3.3" file="tests/unit/statement-wizard.test.tsx">Selection summary shows count and total pending</test>
+
+      <!-- AC-5.3.4: Preview calculations -->
+      <test ac="AC-5.3.4" file="tests/unit/statement-wizard.test.tsx">Preview table displays calculation data for each author</test>
+      <test ac="AC-5.3.4" file="tests/unit/statement-wizard.test.tsx">Preview shows totals row with aggregated values</test>
+      <test ac="AC-5.3.4" file="tests/unit/statement-wizard.test.tsx">Warning callouts appear for edge cases (negative net, zero net)</test>
+
+      <!-- AC-5.3.5: Inngest job enqueue -->
+      <test ac="AC-5.3.5" file="tests/unit/statement-actions.test.ts">generateStatements action validates input</test>
+      <test ac="AC-5.3.5" file="tests/unit/statement-actions.test.ts">generateStatements enqueues Inngest job with correct event name</test>
+      <test ac="AC-5.3.5" file="tests/integration/statement-wizard.test.tsx">Full wizard flow ends with job enqueue</test>
+
+      <!-- AC-5.3.6: Progress indicator -->
+      <test ac="AC-5.3.6" file="tests/unit/statement-wizard.test.tsx">Progress modal shows during generation</test>
+      <test ac="AC-5.3.6" file="tests/unit/statement-wizard.test.tsx">Completion toast appears on success</test>
+
+      <!-- AC-5.3.7: Role enforcement -->
+      <test ac="AC-5.3.7" file="tests/unit/statement-actions.test.ts">generateStatements rejects unauthorized roles (Editor, Author)</test>
+      <test ac="AC-5.3.7" file="tests/unit/statement-actions.test.ts">generateStatements accepts Finance role</test>
+      <test ac="AC-5.3.7" file="tests/unit/statement-actions.test.ts">generateStatements accepts Admin role</test>
+      <test ac="AC-5.3.7" file="tests/unit/statement-actions.test.ts">generateStatements accepts Owner role</test>
+
+      <!-- Inngest batch job -->
+      <test ac="AC-5.3.5" file="tests/integration/statement-batch-job.test.ts">Batch job creates statement records for each author</test>
+      <test ac="AC-5.3.5" file="tests/integration/statement-batch-job.test.ts">Batch job generates PDFs and uploads to S3</test>
+      <test ac="AC-5.3.5" file="tests/integration/statement-batch-job.test.ts">Batch job handles partial failures gracefully</test>
+    </ideas>
+  </tests>
+</story-context>

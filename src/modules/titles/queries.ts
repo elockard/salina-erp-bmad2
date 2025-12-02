@@ -1,7 +1,6 @@
 "use server";
 
 import { and, desc, eq, ilike, or } from "drizzle-orm";
-import { authors } from "@/db/schema/authors";
 import { titles } from "@/db/schema/titles";
 import { getCurrentTenantId, getDb } from "@/lib/auth";
 import type { PublicationStatus, TitleWithAuthor } from "./types";

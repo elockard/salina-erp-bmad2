@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { hasPermission } from "@/lib/auth";
+import { checkUserPermission } from "@/lib/auth-actions";
 import { CALCULATE_ROYALTIES } from "@/lib/permissions";
 import { CalculationResults } from "@/modules/royalties/components/calculation-results";
 import { CalculationTestForm } from "@/modules/royalties/components/calculation-test-form";
@@ -32,7 +32,7 @@ export default function RoyaltyCalculatePage() {
   // Permission check on mount - AC 1
   useEffect(() => {
     async function checkPermission() {
-      const permitted = await hasPermission(CALCULATE_ROYALTIES);
+      const permitted = await checkUserPermission(CALCULATE_ROYALTIES);
       if (!permitted) {
         router.replace("/dashboard");
         return;

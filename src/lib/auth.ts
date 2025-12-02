@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { adminDb, getAuthenticatedDb } from "@/db";
+import { getAuthenticatedDb } from "@/db";
 import type { User, UserRole } from "@/db/schema";
 import { users } from "@/db/schema/users";
 
@@ -35,7 +35,12 @@ export async function getDb() {
   }
 
   // Debug: Log JWT info (first 50 chars only for security)
-  console.log("[Auth] JWT present, length:", jwt.length, "starts with:", jwt.substring(0, 50) + "...");
+  console.log(
+    "[Auth] JWT present, length:",
+    jwt.length,
+    "starts with:",
+    `${jwt.substring(0, 50)}...`,
+  );
 
   return getAuthenticatedDb(jwt);
 }

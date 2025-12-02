@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 /**
  * Integration tests for Returns Database Schema
@@ -34,7 +34,6 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-import { sales, tenants, titles, users } from "@/db/schema";
 // Import schema for type checking
 import {
   type InsertReturn,

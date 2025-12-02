@@ -154,7 +154,9 @@ test.describe("Returns History Page - Story 3.7", () => {
       await expect(page.getByRole("grid")).toBeVisible(); // Calendar grid
     });
 
-    test("selecting date range updates URL query params", async ({ page }) => {
+    test("selecting date range updates URL query params", async ({
+      page: _page,
+    }) => {
       // Test interaction with date range picker
       // Implementation depends on calendar component
     });
@@ -249,7 +251,7 @@ test.describe("Returns History Page - Story 3.7", () => {
       await expect(page).toHaveURL(/sort=date/);
     });
 
-    test("default sort is date descending", async ({ page }) => {
+    test("default sort is date descending", async ({ page: _page }) => {
       // Default page load should show newest first
       // This test verifies the default sort order
     });
@@ -342,7 +344,9 @@ test.describe("Returns History Page - Story 3.7", () => {
   });
 
   test.describe("AC 12: Permission Enforcement", () => {
-    test.skip("redirects unauthorized users to dashboard", async ({ page }) => {
+    test.skip("redirects unauthorized users to dashboard", async ({
+      page: _page,
+    }) => {
       // Test with viewer role user (no VIEW_RETURNS permission)
       // Should redirect to /dashboard?error=unauthorized
     });
@@ -366,10 +370,13 @@ test.describe("Returns History Page - Story 3.7", () => {
   test.describe("AC 14: Loading States", () => {
     test("shows loading skeleton while fetching data", async ({ page }) => {
       // Intercept and delay the API response
-      await page.route("**/api/**", async (route) => {
-        await new Promise((r) => setTimeout(r, 500));
-        await route.continue();
-      });
+      await page.route(
+        "**/api/**",
+        async (route: { continue: () => Promise<void> }) => {
+          await new Promise((r) => setTimeout(r, 500));
+          await route.continue();
+        },
+      );
 
       await page.goto("/returns");
       // Skeleton should be visible during loading
@@ -379,7 +386,7 @@ test.describe("Returns History Page - Story 3.7", () => {
 
 test.describe("Return Detail Page - Story 3.7 AC 10", () => {
   test.describe("Page Structure", () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page: _page }) => {
       // Navigate to a return detail page (requires valid return ID)
       // This would need to be set up with test data
     });
@@ -400,11 +407,11 @@ test.describe("Return Detail Page - Story 3.7 AC 10", () => {
       await expect(page.getByText("Return Information")).toBeVisible();
     });
 
-    test("displays title name", async ({ page }) => {
+    test("displays title name", async ({ page: _page }) => {
       // Title name should be displayed in the info card
     });
 
-    test("displays format", async ({ page }) => {
+    test("displays format", async ({ page: _page }) => {
       // Format badge should be visible
     });
 
@@ -433,7 +440,7 @@ test.describe("Return Detail Page - Story 3.7 AC 10", () => {
     });
 
     test("shows review metadata for approved/rejected status", async ({
-      page,
+      page: _page,
     }) => {
       // If status is approved or rejected, review info should be visible
       // This test should conditionally check based on status
@@ -445,7 +452,7 @@ test.describe("Return Detail Page - Story 3.7 AC 10", () => {
       ).toBeVisible();
     });
 
-    test("back link preserves filter state", async ({ page }) => {
+    test("back link preserves filter state", async ({ page: _page }) => {
       // Navigate from history with filters to detail
       // Back link should return to filtered view
     });

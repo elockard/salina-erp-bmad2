@@ -1,15 +1,16 @@
 "use server";
 
 import { clerkClient } from "@clerk/nextjs/server";
-import { and, count, desc, eq, ilike, or } from "drizzle-orm";
-import { db } from "@/db";
+import { and, count, desc, eq, ilike } from "drizzle-orm";
 import { tenants } from "@/db/schema/tenants";
 import { users } from "@/db/schema/users";
 import {
+  getDb,
   getCurrentTenantId,
   getCurrentUser,
   requirePermission,
 } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/audit";
 import { MANAGE_USERS } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
 import { inviteUserSchema } from "./schema";
@@ -35,6 +36,7 @@ export async function getUsers(options?: {
   try {
     await requirePermission(MANAGE_USERS);
 
+    const db = await getDb();
     const tenantId = await getCurrentTenantId();
     const page = options?.page || 1;
     const pageSize = options?.pageSize || 20;
@@ -105,7 +107,8 @@ export async function inviteUser(data: unknown): Promise<ActionResult<User>> {
     // Check permission
     await requirePermission(MANAGE_USERS);
 
-    // Get tenant context
+    // Get authenticated db and tenant context
+    const db = await getDb();
     const tenantId = await getCurrentTenantId();
 
     // Check if user already exists
@@ -165,6 +168,29 @@ export async function inviteUser(data: unknown): Promise<ActionResult<User>> {
       })
       .returning();
 
+    // Get current user for audit log
+    const currentUser = await getCurrentUser();
+
+    // Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: currentUser?.id ?? null,
+      actionType: "CREATE",
+      resourceType: "user",
+      resourceId: newUser.id,
+      changes: {
+        after: {
+          id: newUser.id,
+          email: newUser.email,
+          role: newUser.role,
+          is_active: false,
+        },
+      },
+      metadata: {
+        operation: "invite",
+      },
+    });
+
     return { success: true, data: newUser };
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
@@ -195,7 +221,8 @@ export async function updateUserRole(
     // Check permission
     await requirePermission(MANAGE_USERS);
 
-    // Get context
+    // Get authenticated db and context
+    const db = await getDb();
     const tenantId = await getCurrentTenantId();
     const currentUser = await getCurrentUser();
 
@@ -242,6 +269,7 @@ export async function updateUserRole(
     }
 
     // Update role
+    const oldRole = targetUser.role;
     const [updatedUser] = await db
       .update(users)
       .set({
@@ -250,6 +278,23 @@ export async function updateUserRole(
       })
       .where(and(eq(users.id, userId), eq(users.tenant_id, tenantId)))
       .returning();
+
+    // Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: currentUser?.id ?? null,
+      actionType: "UPDATE",
+      resourceType: "user",
+      resourceId: userId,
+      changes: {
+        before: { role: oldRole },
+        after: { role: newRole },
+      },
+      metadata: {
+        operation: "role_change",
+        target_user_email: targetUser.email,
+      },
+    });
 
     return { success: true, data: updatedUser };
   } catch (error) {
@@ -279,6 +324,7 @@ export async function deactivateUser(
   try {
     await requirePermission(MANAGE_USERS);
 
+    const db = await getDb();
     const tenantId = await getCurrentTenantId();
     const currentUser = await getCurrentUser();
 
@@ -330,6 +376,23 @@ export async function deactivateUser(
       .where(eq(users.id, userId))
       .returning();
 
+    // Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: currentUser?.id ?? null,
+      actionType: "UPDATE",
+      resourceType: "user",
+      resourceId: userId,
+      changes: {
+        before: { is_active: true },
+        after: { is_active: false },
+      },
+      metadata: {
+        operation: "deactivate",
+        target_user_email: targetUser.email,
+      },
+    });
+
     return { success: true, data: updatedUser };
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
@@ -357,7 +420,14 @@ export async function reactivateUser(
   try {
     await requirePermission(MANAGE_USERS);
 
+    const db = await getDb();
     const tenantId = await getCurrentTenantId();
+    const currentUser = await getCurrentUser();
+
+    // Get target user for audit log
+    const targetUser = await db.query.users.findFirst({
+      where: and(eq(users.id, userId), eq(users.tenant_id, tenantId)),
+    });
 
     const [updatedUser] = await db
       .update(users)
@@ -371,6 +441,23 @@ export async function reactivateUser(
     if (!updatedUser) {
       return { success: false, error: "User not found" };
     }
+
+    // Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: currentUser?.id ?? null,
+      actionType: "UPDATE",
+      resourceType: "user",
+      resourceId: userId,
+      changes: {
+        before: { is_active: false },
+        after: { is_active: true },
+      },
+      metadata: {
+        operation: "reactivate",
+        target_user_email: targetUser?.email,
+      },
+    });
 
     return { success: true, data: updatedUser };
   } catch (error) {

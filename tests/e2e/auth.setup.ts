@@ -18,8 +18,8 @@
  * - TEST_USER_EMAIL / TEST_USER_PASSWORD (default user)
  */
 
-import { test as setup, expect, Page } from "@playwright/test";
-import fs from "fs";
+import fs from "node:fs";
+import { expect, type Page, test as setup } from "@playwright/test";
 
 // Storage state file paths for different roles
 export const AUTH_FILES = {
@@ -61,7 +61,7 @@ async function authenticateUser(
   page: Page,
   email: string,
   password: string,
-  authFile: string
+  authFile: string,
 ): Promise<void> {
   // Navigate to sign-in page
   await page.goto("/sign-in");
@@ -78,7 +78,7 @@ async function authenticateUser(
 
   // Click continue to proceed to password step
   const continueButton = page.locator(
-    'button[data-localization-key="formButtonPrimary"]'
+    'button[data-localization-key="formButtonPrimary"]',
   );
   await continueButton.click();
 
@@ -103,7 +103,9 @@ async function authenticateUser(
 /**
  * Get credentials from environment for a role
  */
-function getCredentials(role: string): { email: string; password: string } | null {
+function getCredentials(
+  role: string,
+): { email: string; password: string } | null {
   const roleUpper = role.toUpperCase();
   const email = process.env[`TEST_${roleUpper}_EMAIL`];
   const password = process.env[`TEST_${roleUpper}_PASSWORD`];
@@ -118,7 +120,9 @@ function getCredentials(role: string): { email: string; password: string } | nul
 setup("authenticate as default test user", async ({ page }) => {
   // Skip if auth file already exists and is valid (avoids device verification on every run)
   if (isAuthValid(AUTH_FILES.default)) {
-    console.log(`[Auth] Reusing existing auth state from ${AUTH_FILES.default}`);
+    console.log(
+      `[Auth] Reusing existing auth state from ${AUTH_FILES.default}`,
+    );
     return;
   }
 
@@ -128,16 +132,24 @@ setup("authenticate as default test user", async ({ page }) => {
     getCredentials("ADMIN") ||
     getCredentials("USER") ||
     (process.env.TEST_USER_EMAIL && process.env.TEST_USER_PASSWORD
-      ? { email: process.env.TEST_USER_EMAIL, password: process.env.TEST_USER_PASSWORD }
+      ? {
+          email: process.env.TEST_USER_EMAIL,
+          password: process.env.TEST_USER_PASSWORD,
+        }
       : null);
 
   if (!credentials) {
     throw new Error(
-      "Test user credentials not found. Set TEST_USER_EMAIL/TEST_USER_PASSWORD or TEST_OWNER_EMAIL/TEST_OWNER_PASSWORD in .env.local"
+      "Test user credentials not found. Set TEST_USER_EMAIL/TEST_USER_PASSWORD or TEST_OWNER_EMAIL/TEST_OWNER_PASSWORD in .env.local",
     );
   }
 
-  await authenticateUser(page, credentials.email, credentials.password, AUTH_FILES.default);
+  await authenticateUser(
+    page,
+    credentials.email,
+    credentials.password,
+    AUTH_FILES.default,
+  );
 });
 
 // Role-specific authentication (optional - only runs if credentials are set)
@@ -157,7 +169,7 @@ for (const role of roles) {
       page,
       credentials.email,
       credentials.password,
-      AUTH_FILES[role]
+      AUTH_FILES[role],
     );
   });
 }

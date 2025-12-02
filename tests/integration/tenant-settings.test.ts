@@ -107,7 +107,7 @@ describe("Tenant Settings Server Actions", () => {
             returning: vi.fn().mockResolvedValue([updatedTenant]),
           }),
         }),
-      } as any);
+      } as unknown as ReturnType<typeof mockDb.update>);
 
       const result = await updateTenantSettings({
         timezone: "America/Los_Angeles",
@@ -158,7 +158,7 @@ describe("Tenant Settings Server Actions", () => {
       const result = await updateTenantSettings({
         timezone: "America/New_York",
         fiscal_year_start: null,
-        default_currency: "INVALID" as any,
+        default_currency: "INVALID" as "USD",
         statement_frequency: "quarterly",
       });
 
@@ -182,7 +182,7 @@ describe("Tenant Settings Server Actions", () => {
             returning: vi.fn().mockResolvedValue([updatedTenant]),
           }),
         }),
-      } as any);
+      } as unknown as ReturnType<typeof mockDb.update>);
 
       const updateResult = await updateTenantSettings({
         timezone: "Europe/London",

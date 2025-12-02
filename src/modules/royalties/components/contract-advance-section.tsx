@@ -16,7 +16,13 @@
 
 import Decimal from "decimal.js";
 import { DollarSign, Info } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { ContractWithRelations } from "../types";
 
@@ -35,10 +41,12 @@ function formatCurrency(amount: string): string {
   }).format(num);
 }
 
-export function ContractAdvanceSection({ contract }: ContractAdvanceSectionProps) {
+export function ContractAdvanceSection({
+  contract,
+}: ContractAdvanceSectionProps) {
   // Use Decimal.js for precise financial calculations
   const advanceAmount = new Decimal(contract.advance_amount || "0");
-  const advancePaid = new Decimal(contract.advance_paid || "0");
+  const _advancePaid = new Decimal(contract.advance_paid || "0");
   const advanceRecouped = new Decimal(contract.advance_recouped || "0");
 
   // Calculate remaining balance: advance_amount - advance_recouped
@@ -49,7 +57,7 @@ export function ContractAdvanceSection({ contract }: ContractAdvanceSectionProps
   if (advanceAmount.greaterThan(0)) {
     progressPercentage = Math.min(
       100,
-      advanceRecouped.dividedBy(advanceAmount).times(100).toNumber()
+      advanceRecouped.dividedBy(advanceAmount).times(100).toNumber(),
     );
   } else if (advanceRecouped.greaterThan(0)) {
     // Edge case: recouped amount exists but no advance amount
@@ -77,23 +85,39 @@ export function ContractAdvanceSection({ contract }: ContractAdvanceSectionProps
         {/* Amount Details */}
         <div className="grid gap-3">
           <div className="flex justify-between items-center py-2 border-b">
-            <span className="text-sm text-muted-foreground">Advance Amount</span>
-            <span className="font-medium">{formatCurrency(contract.advance_amount)}</span>
+            <span className="text-sm text-muted-foreground">
+              Advance Amount
+            </span>
+            <span className="font-medium">
+              {formatCurrency(contract.advance_amount)}
+            </span>
           </div>
           <div className="flex justify-between items-center py-2 border-b">
             <span className="text-sm text-muted-foreground">Advance Paid</span>
-            <span className="font-medium">{formatCurrency(contract.advance_paid)}</span>
+            <span className="font-medium">
+              {formatCurrency(contract.advance_paid)}
+            </span>
           </div>
           <div className="flex justify-between items-center py-2 border-b">
-            <span className="text-sm text-muted-foreground">Recouped to Date</span>
-            <span className="font-medium">{formatCurrency(contract.advance_recouped)}</span>
+            <span className="text-sm text-muted-foreground">
+              Recouped to Date
+            </span>
+            <span className="font-medium">
+              {formatCurrency(contract.advance_recouped)}
+            </span>
           </div>
           <div className="flex justify-between items-center py-2">
             <span className="text-sm font-medium">Remaining Balance</span>
-            <span className={`font-bold ${isFullyRecouped ? "text-green-600" : ""}`}>
-              {isFullyRecouped ? "$0.00" : formatCurrency(remainingBalance.toString())}
+            <span
+              className={`font-bold ${isFullyRecouped ? "text-green-600" : ""}`}
+            >
+              {isFullyRecouped
+                ? "$0.00"
+                : formatCurrency(remainingBalance.toString())}
               {hasExcessRecoupment && (
-                <span className="text-xs text-muted-foreground ml-1">(over-recouped)</span>
+                <span className="text-xs text-muted-foreground ml-1">
+                  (over-recouped)
+                </span>
               )}
             </span>
           </div>
@@ -103,7 +127,9 @@ export function ContractAdvanceSection({ contract }: ContractAdvanceSectionProps
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Recoupment Progress</span>
-            <span className="font-medium">{progressPercentage.toFixed(1)}%</span>
+            <span className="font-medium">
+              {progressPercentage.toFixed(1)}%
+            </span>
           </div>
           <Progress
             value={progressPercentage}
@@ -124,7 +150,8 @@ export function ContractAdvanceSection({ contract }: ContractAdvanceSectionProps
         <div className="flex items-start gap-2 text-xs text-muted-foreground">
           <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
           <span>
-            Recoupment is updated automatically with each royalty statement generation.
+            Recoupment is updated automatically with each royalty statement
+            generation.
           </span>
         </div>
       </CardContent>

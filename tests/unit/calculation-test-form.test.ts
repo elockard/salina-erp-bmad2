@@ -13,7 +13,7 @@
  * - Clear button functionality (AC 11)
  */
 
-import { addYears, subDays, addDays } from "date-fns";
+import { addDays, addYears, subDays } from "date-fns";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -23,10 +23,10 @@ const calculationFormSchema = z
     author_id: z.string().min(1, "Please select an author"),
     author_name: z.string().optional(),
     start_date: z.date({
-      required_error: "Please select a start date",
+      message: "Please select a start date",
     }),
     end_date: z.date({
-      required_error: "Please select an end date",
+      message: "Please select an end date",
     }),
   })
   .refine((data) => data.start_date <= new Date(), {
@@ -135,10 +135,12 @@ describe("CalculationTestForm Schema Validation (AC 3)", () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const startDateError = result.error.issues.find(
-          (i) => i.path.includes("start_date")
+        const startDateError = result.error.issues.find((i) =>
+          i.path.includes("start_date"),
         );
-        expect(startDateError?.message).toBe("Start date cannot be in the future");
+        expect(startDateError?.message).toBe(
+          "Start date cannot be in the future",
+        );
       }
     });
 
@@ -172,11 +174,11 @@ describe("CalculationTestForm Schema Validation (AC 3)", () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const endDateError = result.error.issues.find(
-          (i) => i.path.includes("end_date")
+        const endDateError = result.error.issues.find((i) =>
+          i.path.includes("end_date"),
         );
         expect(endDateError?.message).toBe(
-          "End date cannot be before start date"
+          "End date cannot be before start date",
         );
       }
     });
@@ -191,11 +193,11 @@ describe("CalculationTestForm Schema Validation (AC 3)", () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const endDateError = result.error.issues.find(
-          (i) => i.path.includes("end_date")
+        const endDateError = result.error.issues.find((i) =>
+          i.path.includes("end_date"),
         );
         expect(endDateError?.message).toBe(
-          "End date cannot be more than 1 year after start date"
+          "End date cannot be more than 1 year after start date",
         );
       }
     });
@@ -346,7 +348,7 @@ describe("Calculation Results Structure (AC 5, 6)", () => {
 
   it("physical format has correct structure", () => {
     const physical = mockCalculation.formatCalculations.find(
-      (f) => f.format === "physical"
+      (f) => f.format === "physical",
     );
     expect(physical).toBeDefined();
     expect(physical?.netSales.grossQuantity).toBe(1000);
@@ -357,7 +359,7 @@ describe("Calculation Results Structure (AC 5, 6)", () => {
 
   it("ebook format has correct structure", () => {
     const ebook = mockCalculation.formatCalculations.find(
-      (f) => f.format === "ebook"
+      (f) => f.format === "ebook",
     );
     expect(ebook).toBeDefined();
     expect(ebook?.netSales.netQuantity).toBe(490);
@@ -366,7 +368,7 @@ describe("Calculation Results Structure (AC 5, 6)", () => {
 
   it("tier breakdowns have correct structure", () => {
     const physical = mockCalculation.formatCalculations.find(
-      (f) => f.format === "physical"
+      (f) => f.format === "physical",
     );
     expect(physical?.tierBreakdowns.length).toBe(1);
     const tier = physical?.tierBreakdowns[0];

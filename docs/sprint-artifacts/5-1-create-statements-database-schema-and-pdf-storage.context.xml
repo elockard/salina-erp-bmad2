@@ -1,0 +1,172 @@
+<story-context id="5-1-create-statements-database-schema-and-pdf-storage" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>1</storyId>
+    <title>Create Statements Database Schema and PDF Storage</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-1-create-statements-database-schema-and-pdf-storage.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance user</asA>
+    <iWant>a database schema to store royalty statements with PDF storage references</iWant>
+    <soThat>I can generate, track, and retrieve author royalty statements</soThat>
+    <tasks>
+      <task id="1" ac="1,2,3">Create statements schema file
+        <subtask>Create src/db/schema/statements.ts</subtask>
+        <subtask>Define statements table with all columns per tech spec</subtask>
+        <subtask>Add status enum: 'draft' | 'sent' | 'failed'</subtask>
+        <subtask>Add foreign key references with proper constraints</subtask>
+        <subtask>Export table and types</subtask>
+      </task>
+      <task id="2" ac="2">Create TypeScript types for calculations JSONB
+        <subtask>Create src/modules/statements/types.ts</subtask>
+        <subtask>Define StatementCalculations interface</subtask>
+        <subtask>Define FormatBreakdown interface</subtask>
+        <subtask>Define TierBreakdown interface</subtask>
+        <subtask>Define AdvanceRecoupment interface</subtask>
+        <subtask>Export all types</subtask>
+      </task>
+      <task id="3" ac="3">Add relations to schema
+        <subtask>Update src/db/schema/relations.ts</subtask>
+        <subtask>Add statements relations to authors</subtask>
+        <subtask>Add statements relations to contracts</subtask>
+        <subtask>Add statements relations to users (generated_by)</subtask>
+        <subtask>Add statements relations to tenants</subtask>
+      </task>
+      <task id="4" ac="6">Create database indexes
+        <subtask>Add index on tenant_id</subtask>
+        <subtask>Add index on author_id</subtask>
+        <subtask>Add composite index on (period_start, period_end)</subtask>
+        <subtask>Add index on status</subtask>
+      </task>
+      <task id="5" ac="1,3,6">Generate and run migration
+        <subtask>Run drizzle-kit generate</subtask>
+        <subtask>Review generated migration SQL</subtask>
+        <subtask>Run migration against development database</subtask>
+        <subtask>Verify table structure with drizzle-kit studio</subtask>
+      </task>
+      <task id="6" ac="4,5">Add RLS policies via migration
+        <subtask>Create custom SQL migration for RLS</subtask>
+        <subtask>Enable RLS on statements table</subtask>
+        <subtask>Create tenant_isolation policy</subtask>
+        <subtask>Create author_portal_access policy for SELECT</subtask>
+        <subtask>Test policies manually with different tenant/user contexts</subtask>
+      </task>
+      <task id="7" ac="1">Export schema from index
+        <subtask>Update src/db/schema/index.ts to export statements</subtask>
+        <subtask>Verify TypeScript compilation passes</subtask>
+        <subtask>Verify drizzle can introspect the schema</subtask>
+      </task>
+      <task id="8" ac="1,2">Write unit tests for schema
+        <subtask>Create tests/unit/statements-schema.test.ts</subtask>
+        <subtask>Test StatementCalculations type validation</subtask>
+        <subtask>Test schema column definitions</subtask>
+        <subtask>Test status enum values</subtask>
+      </task>
+      <task id="9" ac="4,5">Write integration tests for RLS
+        <subtask>Create tests/integration/statements-rls.test.ts</subtask>
+        <subtask>Test tenant isolation (Tenant A cannot see Tenant B statements)</subtask>
+        <subtask>Test author portal access (Author can only see own statements)</subtask>
+        <subtask>Test Finance role can see all tenant statements</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-5.1.1">statements table created with all 16 columns: id, tenant_id, author_id, contract_id, period_start, period_end, total_royalty_earned, recoupment, net_payable, calculations (jsonb), pdf_s3_key, status, email_sent_at, generated_by_user_id, created_at, updated_at</criterion>
+    <criterion id="AC-5.1.2">JSONB calculations field stores StatementCalculations interface with period, formatBreakdowns, tierBreakdowns, returnsDeduction, grossRoyalty, advanceRecoupment, netPayable - TypeScript type exported from types.ts</criterion>
+    <criterion id="AC-5.1.3">Foreign keys enforced: author_id->authors.id, contract_id->contracts.id, generated_by_user_id->users.id, tenant_id->tenants.id</criterion>
+    <criterion id="AC-5.1.4">RLS tenant_isolation policy: USING (tenant_id = current_setting('app.current_tenant_id')::uuid)</criterion>
+    <criterion id="AC-5.1.5">RLS author_portal_access policy: FOR SELECT restricts authors to own statements via portal_user_id subquery</criterion>
+    <criterion id="AC-5.1.6">Indexes created: tenant_id, author_id, (period_start, period_end) composite, status</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-5.md" title="Epic 5 Tech Spec" section="Data Models and Contracts" snippet="Complete statements table schema with JSONB calculations structure, RLS policies, and indexes. StatementCalculations interface definition with formatBreakdowns and advanceRecoupment." />
+      <doc path="docs/architecture.md" title="Architecture Document" section="Database Schema" snippet="Standard tenant-scoped table patterns with uuid PKs, FK references, created_at/updated_at timestamps. RLS defense-in-depth pattern for multi-tenancy." />
+      <doc path="docs/architecture.md" title="Architecture Document" section="Novel Architectural Patterns - Pattern 2" snippet="Multi-Tenant Row-Level Security with three layers: middleware tenant context, application layer query injection, database RLS policies." />
+      <doc path="docs/sprint-artifacts/4-5-build-manual-royalty-calculation-trigger-testing.md" title="Story 4.5" section="Dev Agent Record" snippet="Calculator types available from src/modules/royalties/types.ts - RoyaltyCalculation, FormatCalculation, TierBreakdown. Pure calculation function returns numbers (converted from Decimal.js)." />
+    </docs>
+    <code>
+      <file path="src/db/schema/contracts.ts" kind="schema" symbol="contracts, contractTiers" lines="94-307" reason="Pattern reference for tenant-scoped table with FK references, indexes, CHECK constraints, and tiered child table. Same FK pattern to authors/titles needed for statements." />
+      <file path="src/db/schema/relations.ts" kind="relations" symbol="contractsRelations, authorsRelations" lines="1-207" reason="Must add statementsRelations following same pattern. Statements relate to tenants, authors, contracts, users (generated_by)." />
+      <file path="src/db/schema/index.ts" kind="barrel" symbol="exports" lines="1-30" reason="Must add export * from ./statements and Statement type to existing pattern." />
+      <file path="src/modules/royalties/types.ts" kind="types" symbol="RoyaltyCalculation, FormatCalculation, TierBreakdown, NetSalesData" lines="95-201" reason="Existing calculation types that StatementCalculations must align with. Similar structure for formatBreakdowns and tierBreakdowns." />
+      <file path="src/db/schema/authors.ts" kind="schema" symbol="authors" lines="53-136" reason="FK target for statements.author_id. Has portal_user_id for author portal RLS policy subquery." />
+      <file path="src/db/schema/tenants.ts" kind="schema" symbol="tenants" reason="FK target for statements.tenant_id with CASCADE delete." />
+      <file path="src/db/schema/users.ts" kind="schema" symbol="users" reason="FK target for statements.generated_by_user_id. Has clerk_user_id for RLS policy." />
+    </code>
+    <dependencies>
+      <node>
+        <pkg name="drizzle-orm" version="^0.44.7" />
+        <pkg name="@neondatabase/serverless" version="^1.0.2" />
+        <pkg name="zod" version="^4.1.13" />
+        <pkg name="decimal.js" version="^10.6.0" />
+        <pkg name="@aws-sdk/client-s3" version="^3.940.0" />
+        <pkg name="@aws-sdk/s3-request-presigner" version="^3.940.0" />
+      </node>
+      <devNode>
+        <pkg name="drizzle-kit" version="^0.31.7" />
+        <pkg name="vitest" version="4.0.14" />
+        <pkg name="@testing-library/react" version="16.3.0" />
+        <pkg name="@faker-js/faker" version="^10.1.0" />
+      </devNode>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow existing schema pattern from contracts.ts: uuid PK with defaultRandom(), tenant_id FK with CASCADE delete, indexes defined in table config callback, CHECK constraints via sql template literal</constraint>
+    <constraint type="pattern">JSONB column defined as jsonb("calculations").notNull() - TypeScript interface for type safety at app layer</constraint>
+    <constraint type="pattern">Status values as const array with type extraction: export const statementStatusValues = ["draft", "sent", "failed"] as const</constraint>
+    <constraint type="pattern">Index naming convention: {table}_{column}_idx (e.g., statements_tenant_id_idx)</constraint>
+    <constraint type="pattern">Relations follow pattern: one(table, { fields: [statements.column], references: [table.id] })</constraint>
+    <constraint type="rls">RLS policies require custom SQL migration - Drizzle Kit generates table but not RLS. Create separate migration file.</constraint>
+    <constraint type="rls">Author portal RLS uses subquery: author_id = (SELECT a.id FROM authors a JOIN users u ON u.id = a.portal_user_id WHERE u.clerk_user_id = current_setting('app.current_user_id'))</constraint>
+    <constraint type="test">Unit tests use vitest with describe/it blocks. Test file location: tests/unit/{feature}-schema.test.ts</constraint>
+    <constraint type="test">Integration tests for RLS require test database with RLS enabled. Use @faker-js/faker for test data.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="statements table" kind="database">
+      <signature>pgTable("statements", { id, tenant_id, author_id, contract_id, period_start, period_end, total_royalty_earned, recoupment, net_payable, calculations, pdf_s3_key, status, email_sent_at, generated_by_user_id, created_at, updated_at }, (table) => ({ indexes, checks }))</signature>
+      <path>src/db/schema/statements.ts</path>
+    </interface>
+    <interface name="StatementCalculations" kind="typescript">
+      <signature>interface StatementCalculations { period: { startDate: string; endDate: string }; formatBreakdowns: FormatBreakdown[]; returnsDeduction: number; grossRoyalty: number; advanceRecoupment: AdvanceRecoupment; netPayable: number; }</signature>
+      <path>src/modules/statements/types.ts</path>
+    </interface>
+    <interface name="statementsRelations" kind="drizzle-relation">
+      <signature>relations(statements, ({ one }) => ({ tenant: one(tenants), author: one(authors), contract: one(contracts), generatedByUser: one(users) }))</signature>
+      <path>src/db/schema/relations.ts</path>
+    </interface>
+    <interface name="Statement type" kind="typescript">
+      <signature>export type Statement = typeof statements.$inferSelect;</signature>
+      <path>src/db/schema/index.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use Vitest for unit tests (npm run test). Tests follow describe/it pattern with expect assertions. Schema tests validate column types, constraints, and type exports. Integration tests for RLS require database with RLS enabled and SET app.current_tenant_id before queries. Use @faker-js/faker for generating test data.</standards>
+    <locations>
+      <location>tests/unit/*.test.ts</location>
+      <location>tests/integration/*.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-5.1.1">Test statements table column definitions match spec (16 columns with correct types)</idea>
+      <idea ac="AC-5.1.1">Test Statement and InsertStatement types are exported</idea>
+      <idea ac="AC-5.1.2">Test StatementCalculations interface structure matches JSONB spec</idea>
+      <idea ac="AC-5.1.2">Test formatBreakdowns array structure with tierBreakdowns</idea>
+      <idea ac="AC-5.1.2">Test advanceRecoupment object structure</idea>
+      <idea ac="AC-5.1.3">Test FK references exist to authors, contracts, users, tenants</idea>
+      <idea ac="AC-5.1.4">Integration: Insert statement in Tenant A, query as Tenant B returns empty</idea>
+      <idea ac="AC-5.1.5">Integration: Author portal query returns only own statements via RLS</idea>
+      <idea ac="AC-5.1.5">Integration: Finance role can see all tenant statements</idea>
+      <idea ac="AC-5.1.6">Test indexes defined: tenant_id, author_id, period composite, status</idea>
+      <idea ac="AC-5.1.1">Test status enum values: draft, sent, failed</idea>
+    </ideas>
+  </tests>
+</story-context>

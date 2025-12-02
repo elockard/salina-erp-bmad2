@@ -1,4 +1,6 @@
 import { SignOutButton } from "@clerk/nextjs";
+import { FileText } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
@@ -6,12 +8,10 @@ import { getCurrentUser } from "@/lib/auth";
 /**
  * Portal Layout - For Author Portal Users
  *
- * Story 2.3 - Author Portal Access Provisioning
+ * Story 5.6 - Build Author Portal Statement Access
+ * AC-5.6.1: Portal accessible at /portal with simplified nav (Logo, "My Statements", Logout)
  *
- * AC 20: (portal) route group directory created at /app/(portal)/
- * AC 21: Protected by middleware requiring role="author"
- * AC 22: Layout includes minimal header with "Author Portal" title and sign-out link
- * AC 23: Only portal-specific routes accessible; dashboard returns redirect
+ * Previously Story 2.3 - Updated with simplified navigation
  */
 export default async function PortalLayout({
   children,
@@ -25,29 +25,53 @@ export default async function PortalLayout({
     redirect("/sign-in");
   }
 
-  // AC 21: Only allow author role users
+  // Only allow author role users
   if (user.role !== "author") {
     // Non-author users should use the dashboard
     redirect("/dashboard");
   }
 
-  // AC 22: Check if user is active
+  // Check if user is active
   if (!user.is_active) {
     // Inactive users cannot access the portal
     redirect("/sign-in?error=account-inactive");
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* AC 22: Minimal header with Author Portal title and sign-out */}
-      <header className="border-b bg-background">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      {/* AC-5.6.1: Simplified header with Logo, My Statements, Logout */}
+      <header className="border-b bg-white shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Author Portal</h1>
-          <SignOutButton>
-            <Button variant="ghost" size="sm">
-              Sign Out
-            </Button>
-          </SignOutButton>
+          {/* Logo / Brand */}
+          <Link
+            href="/portal"
+            className="flex items-center gap-2 text-lg font-semibold text-slate-800 hover:text-slate-600"
+          >
+            <FileText className="h-5 w-5" />
+            Author Portal
+          </Link>
+
+          {/* Navigation */}
+          <nav className="flex items-center gap-4">
+            {/* My Statements link */}
+            <Link
+              href="/portal"
+              className="text-sm font-medium text-slate-600 hover:text-slate-900 min-h-[44px] flex items-center px-2"
+            >
+              My Statements
+            </Link>
+
+            {/* Logout button */}
+            <SignOutButton>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="min-h-[44px]" // Touch target
+              >
+                Logout
+              </Button>
+            </SignOutButton>
+          </nav>
         </div>
       </header>
 
@@ -55,7 +79,7 @@ export default async function PortalLayout({
       <main className="flex-1 container mx-auto px-4 py-6">{children}</main>
 
       {/* Footer */}
-      <footer className="border-t py-4 text-center text-sm text-muted-foreground">
+      <footer className="border-t bg-white py-4 text-center text-sm text-muted-foreground">
         <p>Salina ERP Author Portal</p>
       </footer>
     </div>

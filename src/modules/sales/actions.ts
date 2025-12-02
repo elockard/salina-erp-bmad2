@@ -22,6 +22,7 @@ import {
   getDb,
   requirePermission,
 } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/audit";
 import { RECORD_SALES } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
 import {
@@ -35,7 +36,6 @@ import type { SalesFilterInput } from "./schema";
 import { createSaleSchema, salesFilterSchema } from "./schema";
 import type {
   PaginatedSales,
-  Sale,
   SaleRecordResult,
   SalesStats,
   SaleWithRelations,
@@ -160,11 +160,33 @@ export async function recordSale(
       })
       .returning();
 
-    // 8. Revalidate sales-related paths
+    // 8. Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: user.id,
+      actionType: "CREATE",
+      resourceType: "sale",
+      resourceId: sale.id,
+      changes: {
+        after: {
+          id: sale.id,
+          title_id: sale.title_id,
+          title_name: title.title,
+          format: sale.format,
+          quantity: sale.quantity,
+          unit_price: sale.unit_price,
+          total_amount: sale.total_amount,
+          sale_date: validated.sale_date,
+          channel: sale.channel,
+        },
+      },
+    });
+
+    // 9. Revalidate sales-related paths
     revalidatePath("/sales");
     revalidatePath("/dashboard");
 
-    // 9. Return success with sale details for toast message
+    // 10. Return success with sale details for toast message
     return {
       success: true,
       data: {

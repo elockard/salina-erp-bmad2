@@ -298,7 +298,7 @@ describe("Acceptance Criteria Mapping", () => {
   it("AC 7: CREATE_AUTHORS_TITLES permission includes correct roles", () => {
     // Verify expected roles for ISBN assignment
     const allowedRoles = ["owner", "admin", "editor"];
-    const deniedRoles = ["finance", "author"];
+    const _deniedRoles = ["finance", "author"];
 
     expect(allowedRoles).toContain("owner");
     expect(allowedRoles).toContain("admin");

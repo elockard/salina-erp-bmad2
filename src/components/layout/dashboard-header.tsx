@@ -6,12 +6,14 @@ import {
   BarChart,
   BookOpen,
   DollarSign,
+  FileText,
   Hash,
   Home,
   LogOut,
   Menu,
   Receipt,
   RotateCcw,
+  Server,
   Settings,
   User,
   Users,
@@ -47,8 +49,10 @@ const iconMap: Record<IconName, LucideIcon> = {
   Receipt,
   RotateCcw,
   DollarSign,
+  FileText,
   BarChart,
   Settings,
+  Server,
 };
 
 interface DashboardHeaderProps {

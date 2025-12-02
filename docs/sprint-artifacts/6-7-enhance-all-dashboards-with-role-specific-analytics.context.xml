@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context XML
+  Story: 6.7 - Enhance All Dashboards with Role-Specific Analytics
+  Generated: 2025-12-01
+  Purpose: Comprehensive technical context for dev agent implementation
+-->
+<story-context version="1.0">
+  <!-- ============================================================ -->
+  <!-- METADATA -->
+  <!-- ============================================================ -->
+  <metadata>
+    <story-id>6.7</story-id>
+    <story-name>Enhance All Dashboards with Role-Specific Analytics</story-name>
+    <status>ready-for-dev</status>
+    <epic>Epic 6: Reporting, Compliance, and Monitoring</epic>
+    <story-file>docs/sprint-artifacts/6-7-enhance-all-dashboards-with-role-specific-analytics.md</story-file>
+    <context-generated>2025-12-01</context-generated>
+    <task-count>10</task-count>
+    <subtask-count>47</subtask-count>
+  </metadata>
+
+  <!-- ============================================================ -->
+  <!-- ACCEPTANCE CRITERIA -->
+  <!-- ============================================================ -->
+  <acceptance-criteria>
+    <criterion id="1">Owner/Admin dashboard shows: Revenue trend (6 months), Top selling titles, Author performance, ISBN utilization trend</criterion>
+    <criterion id="2">Finance dashboard shows: Liability trend (12 months), Pending returns with urgency, Upcoming deadlines, Top authors by royalty</criterion>
+    <criterion id="3">Editor dashboard shows: My titles this quarter, Recent sales, My ISBN assignments, Pending tasks</criterion>
+    <criterion id="4">Author portal dashboard shows: Earnings timeline, Best performing titles, Advance recoupment progress, Next statement date</criterion>
+    <criterion id="5">All charts are interactive with hover tooltips</criterion>
+    <criterion id="6">Dashboard widgets load independently with skeleton loaders</criterion>
+    <criterion id="7">Failed widgets show error state without blocking others</criterion>
+    <criterion id="8">Manual refresh button available on dashboard</criterion>
+  </acceptance-criteria>
+
+  <!-- ============================================================ -->
+  <!-- DOCUMENTATION REFERENCES -->
+  <!-- ============================================================ -->
+  <documentation>
+    <doc type="tech-spec" path="docs/sprint-artifacts/tech-spec-epic-6.md">
+      <section>Story 6.7 - Enhanced Role-Based Dashboards</section>
+      <section>Dashboard Queries</section>
+      <section>Permission Matrix</section>
+    </doc>
+    <doc type="architecture" path="docs/architecture.md">
+      <section>UI Patterns - Loading states, Suspense boundaries</section>
+      <section>Technology Stack - Recharts usage</section>
+    </doc>
+    <doc type="previous-story" path="docs/sprint-artifacts/6-6-build-background-job-monitoring-for-system-administration.md">
+      <section>Suspense boundary patterns</section>
+      <section>Client component patterns</section>
+      <section>Error handling patterns</section>
+    </doc>
+  </documentation>
+
+  <!-- ============================================================ -->
+  <!-- CODE ARTIFACTS - Existing Files to Modify -->
+  <!-- ============================================================ -->
+  <code-artifacts>
+    <!-- Dashboard components to enhance -->
+    <artifact type="modify" path="src/app/(dashboard)/dashboard/components/owner-admin-dashboard.tsx">
+      <description>Add chart widgets for revenue trend, top titles, author performance, ISBN utilization</description>
+      <current-lines>122</current-lines>
+      <pattern>Grid layout with Card components, receives stats/user/isbnStats props</pattern>
+    </artifact>
+
+    <artifact type="modify" path="src/app/(dashboard)/dashboard/components/finance-dashboard.tsx">
+      <description>Add chart widgets for liability trend, pending returns urgency, deadlines, top authors</description>
+      <current-lines>241</current-lines>
+      <pattern>Grid layout with clickable Link-wrapped stat cards</pattern>
+    </artifact>
+
+    <artifact type="modify" path="src/app/(dashboard)/dashboard/components/editor-dashboard.tsx">
+      <description>Add widgets for my titles, recent sales, ISBN assignments, pending tasks</description>
+      <current-lines>132</current-lines>
+      <pattern>Grid layout with stat cards and quick actions</pattern>
+    </artifact>
+
+    <artifact type="modify" path="src/app/(portal)/portal/page.tsx">
+      <description>Add analytics widgets above statement list: earnings timeline, best titles, advance progress, next statement</description>
+      <current-lines>114</current-lines>
+      <pattern>Server component with author lookup and PortalStatementList</pattern>
+    </artifact>
+
+    <artifact type="modify" path="src/modules/reports/queries.ts">
+      <description>Add 4 new dashboard query functions</description>
+      <current-lines>~1289</current-lines>
+      <pattern>tenant_id FIRST in all queries, requirePermission() for access control</pattern>
+    </artifact>
+
+    <artifact type="modify" path="src/modules/reports/types.ts">
+      <description>Add type definitions for dashboard data shapes</description>
+      <current-lines>378</current-lines>
+      <pattern>Export interfaces with JSDoc comments referencing story/AC</pattern>
+    </artifact>
+
+    <artifact type="modify" path="src/app/(dashboard)/dashboard/page.tsx">
+      <description>Add refresh button to dashboard header</description>
+      <pattern>Server component that renders role-specific dashboard</pattern>
+    </artifact>
+
+    <!-- Reports module queries - reference patterns -->
+    <artifact type="reference" path="src/modules/dashboard/actions.ts">
+      <description>Existing dashboard stats fetching logic - maintain for basic stats</description>
+      <pattern>Server action with role-based switch, uses getCurrentUser/getCurrentTenantId</pattern>
+      <key-function>getDashboardStats() - lines 22-208</key-function>
+    </artifact>
+
+    <!-- Existing chart components - reuse these -->
+    <artifact type="reference" path="src/components/charts/line-chart.tsx">
+      <description>Reusable line chart for trends</description>
+      <interface>LineChartDataPoint { name: string; value: number; [key]: string|number }</interface>
+      <props>data, dataKey, strokeColor, height, yAxisFormatter, tooltipFormatter, showLegend</props>
+    </artifact>
+
+    <artifact type="reference" path="src/components/charts/area-chart.tsx">
+      <description>Reusable area chart for cumulative trends</description>
+      <interface>AreaChartDataPoint { name: string; value: number; [key]: string|number }</interface>
+      <props>data, dataKey, strokeColor, fillColor, height, fillOpacity, strokeWidth</props>
+    </artifact>
+
+    <artifact type="reference" path="src/components/charts/bar-chart.tsx">
+      <description>Reusable bar chart for comparisons</description>
+      <interface>BarChartDataPoint { name: string; value: number; [key]: string|number }</interface>
+      <props>data, dataKey, fillColor, height, yAxisFormatter, tooltipFormatter, showLegend</props>
+    </artifact>
+
+    <artifact type="reference" path="src/components/charts/pie-chart.tsx">
+      <description>Reusable pie chart for distributions</description>
+      <interface>PieChartDataPoint { name: string; value: number; percentage?: number }</interface>
+      <props>data, height, colors, showLegend, showLabels, innerRadius, outerRadius</props>
+    </artifact>
+
+    <!-- Refresh pattern reference -->
+    <artifact type="reference" path="src/app/(dashboard)/admin/system/client.tsx">
+      <description>Refresh button pattern with useTransition</description>
+      <pattern>
+        const [isPending, startTransition] = useTransition();
+        const handleRefresh = useCallback(() =&gt; {
+          startTransition(async () =&gt; { await fetchData(); });
+        }, [fetchData]);
+        &lt;Button onClick={handleRefresh} disabled={isPending}&gt;
+          &lt;RefreshCw className={isPending ? "animate-spin" : ""} /&gt;
+        &lt;/Button&gt;
+      </pattern>
+    </artifact>
+  </code-artifacts>
+
+  <!-- ============================================================ -->
+  <!-- FILES TO CREATE -->
+  <!-- ============================================================ -->
+  <files-to-create>
+    <!-- Dashboard wrapper component -->
+    <file path="src/components/charts/dashboard-chart-wrapper.tsx">
+      <description>Suspense + ErrorBoundary wrapper for independent widget loading (AC 6, 7)</description>
+      <pattern>
+        Wraps children in ErrorBoundary with fallback UI and retry button.
+        Accepts title prop for error message context.
+        ChartSkeleton component for loading state.
+      </pattern>
+    </file>
+
+    <!-- Refresh button component -->
+    <file path="src/components/ui/refresh-button.tsx">
+      <description>Reusable refresh button with loading state (AC 8)</description>
+      <pattern>Uses useTransition, shows RefreshCw icon with animate-spin during pending</pattern>
+    </file>
+
+    <!-- Owner/Admin dashboard widgets (AC 1) -->
+    <file path="src/app/(dashboard)/dashboard/components/revenue-trend-chart.tsx">
+      <description>6-month revenue line/area chart</description>
+    </file>
+    <file path="src/app/(dashboard)/dashboard/components/top-selling-titles.tsx">
+      <description>Bar chart showing top titles by units/revenue</description>
+    </file>
+    <file path="src/app/(dashboard)/dashboard/components/author-performance.tsx">
+      <description>Horizontal bar chart ranking authors by revenue</description>
+    </file>
+    <file path="src/app/(dashboard)/dashboard/components/isbn-utilization-trend.tsx">
+      <description>Line chart showing utilization % over time</description>
+    </file>
+
+    <!-- Finance dashboard widgets (AC 2) -->
+    <file path="src/app/(dashboard)/dashboard/components/liability-trend-chart.tsx">
+      <description>12-month liability area chart</description>
+    </file>
+    <file path="src/app/(dashboard)/dashboard/components/pending-returns-urgency.tsx">
+      <description>Table with urgency badges based on days pending</description>
+    </file>
+    <file path="src/app/(dashboard)/dashboard/components/upcoming-deadlines.tsx">
+      <description>List with countdown indicators</description>
+    </file>
+    <file path="src/app/(dashboard)/dashboard/components/top-authors-royalty.tsx">
+      <description>Horizontal bar chart showing top authors by royalty owed</description>
+    </file>
+
+    <!-- Editor dashboard widgets (AC 3) -->
+    <file path="src/app/(dashboard)/dashboard/components/my-titles-quarter.tsx">
+      <description>Stat card with list of titles created this quarter</description>
+    </file>
+    <file path="src/app/(dashboard)/dashboard/components/recent-sales-chart.tsx">
+      <description>Mini bar chart for recent sales activity</description>
+    </file>
+    <file path="src/app/(dashboard)/dashboard/components/my-isbn-assignments.tsx">
+      <description>Count with recent assignment list</description>
+    </file>
+    <file path="src/app/(dashboard)/dashboard/components/pending-tasks.tsx">
+      <description>Task list (titles without ISBNs, etc.)</description>
+    </file>
+
+    <!-- Author portal widgets (AC 4) -->
+    <file path="src/app/(portal)/portal/components/earnings-timeline.tsx">
+      <description>Quarterly earnings line/area chart</description>
+    </file>
+    <file path="src/app/(portal)/portal/components/best-performing-titles.tsx">
+      <description>Bar chart showing top titles by units sold</description>
+    </file>
+    <file path="src/app/(portal)/portal/components/advance-recoupment-progress.tsx">
+      <description>Progress bar with amounts (total, recouped, remaining)</description>
+    </file>
+    <file path="src/app/(portal)/portal/components/next-statement-date.tsx">
+      <description>Countdown card showing days until next statement</description>
+    </file>
+
+    <!-- Test files -->
+    <file path="tests/unit/dashboard-queries.test.ts">
+      <description>Unit tests for 4 new dashboard query functions</description>
+    </file>
+    <file path="tests/integration/enhanced-dashboard.test.tsx">
+      <description>Integration tests for dashboard components</description>
+    </file>
+    <file path="tests/e2e/enhanced-dashboard.spec.ts">
+      <description>E2E tests for role-specific dashboard views</description>
+    </file>
+  </files-to-create>
+
+  <!-- ============================================================ -->
+  <!-- INTERFACE SPECIFICATIONS -->
+  <!-- ============================================================ -->
+  <interfaces>
+    <!-- Query function signatures from tech-spec -->
+    <interface name="getOwnerAdminDashboardData">
+      <signature>
+async function getOwnerAdminDashboardData(tenantId: string): Promise&lt;{
+  revenueTrend: { month: string; revenue: number }[];
+  topSellingTitles: { titleId: string; title: string; units: number; revenue: number }[];
+  authorPerformance: { authorId: string; name: string; revenue: number }[];
+  isbnUtilizationTrend: { month: string; utilization: number }[];
+  recentActivity: AuditLogEntry[];
+}&gt;
+      </signature>
+    </interface>
+
+    <interface name="getFinanceDashboardData">
+      <signature>
+async function getFinanceDashboardData(tenantId: string): Promise&lt;{
+  liabilityTrend: { month: string; liability: number }[];
+  pendingReturns: { count: number; urgent: number };
+  upcomingDeadlines: { date: Date; description: string }[];
+  topAuthorsByRoyalty: { authorId: string; name: string; amount: number }[];
+}&gt;
+      </signature>
+    </interface>
+
+    <interface name="getEditorDashboardData">
+      <signature>
+async function getEditorDashboardData(tenantId: string, userId: string): Promise&lt;{
+  myTitlesThisQuarter: number;
+  recentSales: { titleId: string; title: string; units: number }[];
+  myISBNAssignments: number;
+  pendingTasks: { type: string; count: number }[];
+}&gt;
+      </signature>
+    </interface>
+
+    <interface name="getAuthorPortalDashboardData">
+      <signature>
+async function getAuthorPortalDashboardData(
+  tenantId: string,
+  authorId: string
+): Promise&lt;{
+  earningsTimeline: { quarter: string; earnings: number }[];
+  bestPerformingTitles: { titleId: string; title: string; units: number }[];
+  advanceRecoupmentProgress: { total: number; recouped: number; remaining: number };
+  nextStatementDate: Date | null;
+}&gt;
+      </signature>
+    </interface>
+
+    <!-- Type definitions to add to types.ts -->
+    <interface name="OwnerAdminDashboardData" location="src/modules/reports/types.ts">
+      <signature>
+export interface OwnerAdminDashboardData {
+  revenueTrend: { month: string; revenue: number }[];
+  topSellingTitles: { titleId: string; title: string; units: number; revenue: number }[];
+  authorPerformance: { authorId: string; name: string; revenue: number }[];
+  isbnUtilizationTrend: { month: string; utilization: number }[];
+}
+      </signature>
+    </interface>
+
+    <interface name="FinanceDashboardData" location="src/modules/reports/types.ts">
+      <signature>
+export interface FinanceDashboardData {
+  liabilityTrend: { month: string; liability: number }[];
+  pendingReturns: { count: number; urgent: number };
+  upcomingDeadlines: { date: Date; description: string }[];
+  topAuthorsByRoyalty: { authorId: string; name: string; amount: number }[];
+}
+      </signature>
+    </interface>
+
+    <interface name="EditorDashboardData" location="src/modules/reports/types.ts">
+      <signature>
+export interface EditorDashboardData {
+  myTitlesThisQuarter: number;
+  recentSales: { titleId: string; title: string; units: number }[];
+  myISBNAssignments: number;
+  pendingTasks: { type: string; count: number }[];
+}
+      </signature>
+    </interface>
+
+    <interface name="AuthorPortalDashboardData" location="src/modules/reports/types.ts">
+      <signature>
+export interface AuthorPortalDashboardData {
+  earningsTimeline: { quarter: string; earnings: number }[];
+  bestPerformingTitles: { titleId: string; title: string; units: number }[];
+  advanceRecoupmentProgress: { total: number; recouped: number; remaining: number };
+  nextStatementDate: Date | null;
+}
+      </signature>
+    </interface>
+  </interfaces>
+
+  <!-- ============================================================ -->
+  <!-- CONSTRAINTS AND PATTERNS -->
+  <!-- ============================================================ -->
+  <constraints>
+    <!-- Database query patterns -->
+    <constraint type="query">
+      <name>Tenant Isolation</name>
+      <rule>tenant_id MUST be the FIRST condition in all WHERE clauses</rule>
+      <example>
+.where(
+  and(
+    eq(table.tenant_id, tenantId),  // FIRST
+    eq(table.other_column, value)   // additional conditions
+  )
+)
+      </example>
+    </constraint>
+
+    <constraint type="auth">
+      <name>Permission Checks</name>
+      <rule>Use requirePermission() for role-based access in queries</rule>
+      <reference>src/modules/reports/queries.ts - all query functions use this pattern</reference>
+    </constraint>
+
+    <!-- UI patterns -->
+    <constraint type="ui">
+      <name>Independent Widget Loading</name>
+      <rule>Each widget must be wrapped in its own Suspense boundary with ErrorBoundary</rule>
+      <pattern>
+&lt;ErrorBoundary fallback={&lt;WidgetError title="Widget Name" /&gt;}&gt;
+  &lt;Suspense fallback={&lt;ChartSkeleton /&gt;}&gt;
+    &lt;WidgetComponent /&gt;
+  &lt;/Suspense&gt;
+&lt;/ErrorBoundary&gt;
+      </pattern>
+    </constraint>
+
+    <constraint type="ui">
+      <name>Chart Tooltips</name>
+      <rule>All Recharts charts must include Tooltip component with custom formatter</rule>
+      <reference>See existing chart components for pattern</reference>
+    </constraint>
+
+    <constraint type="styling">
+      <name>Brand Colors</name>
+      <rule>Use Editorial Navy (#1e3a5f) as primary chart color</rule>
+      <palette>
+        #1e3a5f (Editorial Navy - primary)
+        #2d5a87 (Lighter navy)
+        #4a7ab0 (Medium blue)
+        #7ba3cf (Light blue)
+        #a8c5e0 (Very light blue)
+      </palette>
+    </constraint>
+
+    <constraint type="caching">
+      <name>Dashboard Data Caching</name>
+      <rule>60-second revalidation for dashboard data</rule>
+      <reference>Per tech-spec-epic-6.md</reference>
+    </constraint>
+  </constraints>
+
+  <!-- ============================================================ -->
+  <!-- PERMISSION MATRIX -->
+  <!-- ============================================================ -->
+  <permissions>
+    <matrix>
+      <row dashboard="Owner/Admin" owner="✅" admin="✅" finance="❌" editor="❌" author="❌" />
+      <row dashboard="Finance" owner="✅" admin="✅" finance="✅" editor="❌" author="❌" />
+      <row dashboard="Editor" owner="✅" admin="✅" finance="✅" editor="✅" author="❌" />
+      <row dashboard="Author Portal" owner="❌" admin="❌" finance="❌" editor="❌" author="✅ (own data)" />
+    </matrix>
+    <note>Author portal data is filtered by author_id - authors only see their own data</note>
+  </permissions>
+
+  <!-- ============================================================ -->
+  <!-- DEPENDENCIES -->
+  <!-- ============================================================ -->
+  <dependencies>
+    <runtime>
+      <dep name="recharts" version="3.5.1">Charting library - already installed and in use</dep>
+      <dep name="date-fns" version="^4.1.0">Date manipulation for trend calculations</dep>
+      <dep name="decimal.js" version="^10.6.0">Precise financial calculations</dep>
+      <dep name="drizzle-orm" version="^0.44.7">Database ORM</dep>
+      <dep name="lucide-react" version="0.555.0">Icons (RefreshCw for refresh button)</dep>
+    </runtime>
+    <dev>
+      <dep name="vitest" version="4.0.14">Unit/integration testing</dep>
+      <dep name="@testing-library/react" version="16.3.0">Component testing</dep>
+      <dep name="@playwright/test" version="^1.57.0">E2E testing</dep>
+    </dev>
+  </dependencies>
+
+  <!-- ============================================================ -->
+  <!-- TESTING REQUIREMENTS -->
+  <!-- ============================================================ -->
+  <testing>
+    <unit location="tests/unit/dashboard-queries.test.ts">
+      <test>getOwnerAdminDashboardData() returns correct data shape</test>
+      <test>getFinanceDashboardData() returns correct data shape</test>
+      <test>getEditorDashboardData() filters by current user</test>
+      <test>getAuthorPortalDashboardData() filters by author_id</test>
+      <test>All queries enforce tenant isolation</test>
+    </unit>
+
+    <integration location="tests/integration/enhanced-dashboard.test.tsx">
+      <test>Owner/Admin dashboard renders all 4 chart widgets</test>
+      <test>Finance dashboard renders all 4 widgets</test>
+      <test>Editor dashboard renders all 4 widgets</test>
+      <test>Author portal renders all 4 widgets</test>
+      <test>Skeleton loaders appear during loading</test>
+      <test>Error states render without blocking other widgets</test>
+      <test>Refresh button triggers data reload</test>
+    </integration>
+
+    <e2e location="tests/e2e/enhanced-dashboard.spec.ts">
+      <test>Owner/Admin sees revenue trend, top titles, author performance, ISBN utilization</test>
+      <test>Finance sees liability trend, pending returns, deadlines, top authors</test>
+      <test>Editor sees my titles, recent sales, ISBN assignments, pending tasks</test>
+      <test>Author portal sees earnings, best titles, advance progress, next statement</test>
+      <test>Chart tooltips appear on hover</test>
+      <test>Refresh button functionality</test>
+    </e2e>
+
+    <baseline>
+      <note>~1215+ unit/integration tests currently pass - maintain this baseline</note>
+      <note>18 tests in permissions.test.ts, tenant-settings.test.ts, users-actions.test.ts are pre-existing failures - do not fix</note>
+    </baseline>
+  </testing>
+
+  <!-- ============================================================ -->
+  <!-- SQL EXAMPLES -->
+  <!-- ============================================================ -->
+  <sql-examples>
+    <query name="Revenue Trend (6 months)">
+SELECT DATE_TRUNC('month', sale_date) as month,
+       SUM(total_amount) as revenue
+FROM sales
+WHERE tenant_id = $1
+  AND sale_date >= NOW() - INTERVAL '6 months'
+GROUP BY DATE_TRUNC('month', sale_date)
+ORDER BY month;
+    </query>
+
+    <query name="Liability Trend (12 months)">
+SELECT DATE_TRUNC('month', created_at) as month,
+       SUM(net_payable) as liability
+FROM statements
+WHERE tenant_id = $1
+  AND status = 'unpaid'
+  AND created_at >= NOW() - INTERVAL '12 months'
+GROUP BY DATE_TRUNC('month', created_at)
+ORDER BY month;
+    </query>
+
+    <query name="ISBN Utilization Trend">
+SELECT DATE_TRUNC('month', assigned_at) as month,
+       COUNT(*) FILTER (WHERE status = 'assigned') * 100.0 / COUNT(*) as utilization
+FROM isbns
+WHERE tenant_id = $1
+  AND assigned_at IS NOT NULL
+GROUP BY DATE_TRUNC('month', assigned_at)
+ORDER BY month;
+    </query>
+
+    <query name="Top Selling Titles">
+SELECT t.id as title_id, t.title,
+       SUM(s.quantity) as units,
+       SUM(s.total_amount) as revenue
+FROM sales s
+JOIN titles t ON s.title_id = t.id
+WHERE s.tenant_id = $1
+  AND s.sale_date >= NOW() - INTERVAL '6 months'
+GROUP BY t.id, t.title
+ORDER BY revenue DESC
+LIMIT 5;
+    </query>
+
+    <query name="Author Earnings (portal)">
+SELECT DATE_TRUNC('quarter', st.period_end) as quarter,
+       SUM(st.net_payable) as earnings
+FROM statements st
+JOIN authors a ON st.author_id = a.id
+WHERE st.tenant_id = $1
+  AND a.portal_user_id = $2
+GROUP BY DATE_TRUNC('quarter', st.period_end)
+ORDER BY quarter;
+    </query>
+  </sql-examples>
+
+  <!-- ============================================================ -->
+  <!-- LEARNINGS FROM PREVIOUS STORIES -->
+  <!-- ============================================================ -->
+  <learnings>
+    <learning source="Story 6.6">
+      <item>Reports module at src/modules/reports/ established patterns for types, queries, actions, components</item>
+      <item>Use hasPermission() or requirePermission() for role checks</item>
+      <item>Use getAllByTestId for elements that may appear multiple times</item>
+      <item>Suspense boundaries already implemented in admin/system page - follow same pattern</item>
+      <item>Client component pattern in src/modules/reports/components/audit-logs-client.tsx</item>
+    </learning>
+
+    <learning source="Story 6.1">
+      <item>Chart components created and working - reuse LineChart, AreaChart, BarChart, PieChart</item>
+      <item>Dashboard stats already fetch revenue/liability in getDashboardStats()</item>
+    </learning>
+  </learnings>
+</story-context>

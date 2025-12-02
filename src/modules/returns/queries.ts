@@ -230,7 +230,7 @@ export async function getReturnsHistory(
 
   // Build order clause (AC 7)
   const sortOrder = filters.order === "asc" ? asc : desc;
-  let orderClause;
+  let orderClause: ReturnType<typeof asc>;
   switch (filters.sort) {
     case "amount":
       orderClause = sortOrder(returns.total_amount);
@@ -238,7 +238,6 @@ export async function getReturnsHistory(
     case "status":
       orderClause = sortOrder(returns.status);
       break;
-    case "date":
     default:
       orderClause = sortOrder(returns.return_date);
       break;
@@ -250,7 +249,7 @@ export async function getReturnsHistory(
   let whereClause = and(...conditions);
 
   // If search filter is provided, add title name search
-  if (filters.search && filters.search.trim()) {
+  if (filters.search?.trim()) {
     const searchPattern = `%${filters.search.trim()}%`;
     // Get title IDs that match the search
     const matchingTitles = await db

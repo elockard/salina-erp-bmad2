@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  contractStatusSchema,
   contractFormatSchema,
+  contractStatusSchema,
+  createContractSchema,
   currencySchema,
   rateSchema,
   tierInputSchema,
-  createContractSchema,
 } from "@/modules/royalties/schema";
 
 /**
@@ -313,7 +313,12 @@ describe("createContractSchema", () => {
         author_id: validUUID,
         title_id: validUUID,
         tiers: [
-          { format: "physical", min_quantity: 0, max_quantity: 5000, rate: 0.1 },
+          {
+            format: "physical",
+            min_quantity: 0,
+            max_quantity: 5000,
+            rate: 0.1,
+          },
           {
             format: "physical",
             min_quantity: 5001,
@@ -336,7 +341,12 @@ describe("createContractSchema", () => {
         author_id: validUUID,
         title_id: validUUID,
         tiers: [
-          { format: "physical", min_quantity: 0, max_quantity: 5000, rate: 0.1 },
+          {
+            format: "physical",
+            min_quantity: 0,
+            max_quantity: 5000,
+            rate: 0.1,
+          },
           {
             format: "physical",
             min_quantity: 5001,
@@ -453,7 +463,12 @@ describe("createContractSchema", () => {
         author_id: validUUID,
         title_id: validUUID,
         tiers: [
-          { format: "physical", min_quantity: 0, max_quantity: 5000, rate: 0.1 },
+          {
+            format: "physical",
+            min_quantity: 0,
+            max_quantity: 5000,
+            rate: 0.1,
+          },
           {
             format: "physical",
             min_quantity: 6000,
@@ -470,7 +485,12 @@ describe("createContractSchema", () => {
         author_id: validUUID,
         title_id: validUUID,
         tiers: [
-          { format: "physical", min_quantity: 0, max_quantity: 5000, rate: 0.1 },
+          {
+            format: "physical",
+            min_quantity: 0,
+            max_quantity: 5000,
+            rate: 0.1,
+          },
           {
             format: "physical",
             min_quantity: 4500,

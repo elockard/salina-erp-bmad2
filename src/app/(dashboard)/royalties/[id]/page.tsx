@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser, hasPermission } from "@/lib/auth";
 import { MANAGE_CONTRACTS } from "@/lib/permissions";
-import { getContractById } from "@/modules/royalties/queries";
 import { ContractDetail } from "@/modules/royalties/components/contract-detail";
+import { getContractById } from "@/modules/royalties/queries";
 
 /**
  * Contract Detail Page

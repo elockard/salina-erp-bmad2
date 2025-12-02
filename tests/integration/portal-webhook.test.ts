@@ -1,4 +1,3 @@
-import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
@@ -31,7 +30,7 @@ vi.mock("@/db", () => ({
 
 vi.mock("svix", () => ({
   Webhook: vi.fn().mockImplementation(() => ({
-    verify: vi.fn().mockImplementation((body, headers) => JSON.parse(body)),
+    verify: vi.fn().mockImplementation((body, _headers) => JSON.parse(body)),
   })),
 }));
 

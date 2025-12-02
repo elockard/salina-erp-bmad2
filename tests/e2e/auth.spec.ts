@@ -117,7 +117,7 @@ test.describe("Multi-Tenant Isolation", () => {
     });
 
     // Create author in Tenant 1
-    const author1 = await authorFactory.createAuthor(tenant1, {
+    const _author1 = await authorFactory.createAuthor(tenant1, {
       name: "Jane Doe",
     });
 

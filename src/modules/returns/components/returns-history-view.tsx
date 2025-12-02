@@ -135,7 +135,7 @@ export function ReturnsHistoryView() {
   // Refetch when pagination or sort changes
   React.useEffect(() => {
     fetchData(currentFilters);
-  }, [page, pageSize, sort, order, fetchData, currentFilters]);
+  }, [fetchData, currentFilters]);
 
   return (
     <div className="space-y-6">

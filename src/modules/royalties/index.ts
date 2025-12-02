@@ -14,29 +14,33 @@ export {
   createContract,
   searchAuthorsAction,
   searchTitlesAction,
-  updateContract,
-  updateContractStatus,
-  updateAdvancePaid,
   // Story 4.5: Calculation testing
   triggerTestCalculation,
+  updateAdvancePaid,
+  updateContract,
+  updateContractStatus,
 } from "./actions";
-
-// Queries
-export {
-  getContractById,
-  getContracts,
-  searchAuthorsForContract,
-  searchTitlesForContract,
-  // Story 4.4: Royalty calculation queries
-  getContractByAuthorAndTenant,
-  getSalesByFormatForPeriod,
-  getApprovedReturnsByFormatForPeriod,
-  type FormatSalesData,
-} from "./queries";
-
 // Calculator (Story 4.4)
 export { calculateRoyaltyForPeriod } from "./calculator";
-
+// Components
+export {
+  CalculationResults,
+  // Story 4.5: Calculation testing
+  CalculationTestForm,
+  ContractWizardModal,
+} from "./components";
+// Queries
+export {
+  type FormatSalesData,
+  getApprovedReturnsByFormatForPeriod,
+  // Story 4.4: Royalty calculation queries
+  getContractByAuthorAndTenant,
+  getContractById,
+  getContracts,
+  getSalesByFormatForPeriod,
+  searchAuthorsForContract,
+  searchTitlesForContract,
+} from "./queries";
 // Types
 export type {
   AuthorOption,
@@ -46,21 +50,13 @@ export type {
   ContractStatus,
   ContractTier,
   ContractWithRelations,
-  PaginatedContracts,
-  TierInput,
-  TitleOption,
+  FormatCalculation,
   // Story 4.4: Royalty calculation types
   NetSalesData,
-  TierBreakdown,
-  FormatCalculation,
+  PaginatedContracts,
   RoyaltyCalculation,
   RoyaltyCalculationResult,
+  TierBreakdown,
+  TierInput,
+  TitleOption,
 } from "./types";
-
-// Components
-export {
-  ContractWizardModal,
-  // Story 4.5: Calculation testing
-  CalculationTestForm,
-  CalculationResults,
-} from "./components";

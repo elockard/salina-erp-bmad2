@@ -6,10 +6,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
+import { RefreshButton } from "@/components/dashboard/refresh-button";
 import type { User } from "@/db/schema";
 import type { DashboardStats } from "@/modules/dashboard/actions";
 import { ISBNPoolWidget } from "@/modules/isbn/components/isbn-pool-widget";
 import type { ISBNPoolStats } from "@/modules/isbn/types";
+import { AuthorPerformance } from "./author-performance";
+import { IsbnUtilizationTrend } from "./isbn-utilization-trend";
+import { RevenueTrendChart } from "./revenue-trend-chart";
+import { TopSellingTitles } from "./top-selling-titles";
 
 interface OwnerAdminDashboardProps {
   stats: DashboardStats["stats"];
@@ -24,13 +30,16 @@ export function OwnerAdminDashboard({
 }: OwnerAdminDashboardProps) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {user.email.split("@")[0]} ({user.role})
-        </h1>
-        <p className="text-muted-foreground">
-          Here's an overview of your publishing platform
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Welcome back, {user.email.split("@")[0]} ({user.role})
+          </h1>
+          <p className="text-muted-foreground">
+            Here's an overview of your publishing platform
+          </p>
+        </div>
+        <RefreshButton />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -75,6 +84,25 @@ export function OwnerAdminDashboard({
         </Card>
 
         {isbnStats && <ISBNPoolWidget stats={isbnStats} />}
+      </div>
+
+      {/* Analytics Charts - AC-1: Revenue trend, Top selling titles, Author performance, ISBN utilization */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <DashboardChartWrapper title="Revenue Trend" height={200}>
+          <RevenueTrendChart />
+        </DashboardChartWrapper>
+
+        <DashboardChartWrapper title="Top Selling Titles" height={200}>
+          <TopSellingTitles />
+        </DashboardChartWrapper>
+
+        <DashboardChartWrapper title="Author Performance" height={200}>
+          <AuthorPerformance />
+        </DashboardChartWrapper>
+
+        <DashboardChartWrapper title="ISBN Utilization Trend" height={200}>
+          <IsbnUtilizationTrend />
+        </DashboardChartWrapper>
       </div>
 
       <Card>

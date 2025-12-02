@@ -1,5 +1,4 @@
 import { and, eq } from "drizzle-orm";
-import { FileText } from "lucide-react";
 import { redirect } from "next/navigation";
 import {
   Card,
@@ -8,17 +7,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
+import { RefreshButton } from "@/components/dashboard/refresh-button";
 import { authors } from "@/db/schema/authors";
 import { getCurrentUser, getDb } from "@/lib/auth";
+import { PortalStatementList } from "@/modules/statements/components/portal-statement-list";
+import { getMyStatements } from "@/modules/statements/queries";
+import { AuthorAdvanceProgress } from "./components/author-advance-progress";
+import { AuthorBestTitles } from "./components/author-best-titles";
+import { AuthorEarningsTimeline } from "./components/author-earnings-timeline";
+import { AuthorNextStatement } from "./components/author-next-statement";
 
 /**
  * Author Portal Landing Page
  *
- * Story 2.3 - Author Portal Access Provisioning
+ * Story 5.6 - Build Author Portal Statement Access
  *
- * AC 24: /portal route displays "Welcome, {author_name}" message
- * AC 25: Page shows placeholder for future royalty statement functionality
- * AC 26: Page only accessible to authenticated author users (enforced by layout)
+ * AC-5.6.1: Portal accessible at /portal with simplified nav
+ * AC-5.6.2: Statement list shows only author's own statements
+ *
+ * Previously Story 2.3 - Updated from placeholder to statement list
  */
 export default async function PortalPage() {
   const user = await getCurrentUser();
@@ -53,91 +61,79 @@ export default async function PortalPage() {
     );
   }
 
+  // Fetch author's statements
+  const statements = await getMyStatements();
+
   return (
     <div className="space-y-6">
-      {/* AC 24: Welcome message with author name */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome, {author.name}
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Access your royalty statements and account information
-        </p>
+      {/* Page header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Your Royalty Statements
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Welcome back, {author.name}. View and download your royalty statements
+            below.
+          </p>
+        </div>
+        <RefreshButton />
       </div>
 
-      {/* AC 25: Placeholder for future royalty statement functionality */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Royalty Statements
-            </CardTitle>
-            <CardDescription>
-              View and download your royalty statements
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="text-4xl mb-4">📄</div>
-              <p className="text-muted-foreground">
-                No statements available yet.
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Royalty statements will appear here once they are generated.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Analytics Dashboard - AC-4: Earnings timeline, Best titles, Advance progress, Next statement */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <DashboardChartWrapper title="Earnings Timeline" height={200}>
+          <AuthorEarningsTimeline authorId={author.id} />
+        </DashboardChartWrapper>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>
-              Your registered details with the publisher
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Name</div>
-              <div className="font-medium">{author.name}</div>
-            </div>
-            {author.email && (
-              <div>
-                <div className="text-sm text-muted-foreground">Email</div>
-                <div className="font-medium">{author.email}</div>
-              </div>
-            )}
-            {author.payment_method && (
-              <div>
-                <div className="text-sm text-muted-foreground">
-                  Payment Method
-                </div>
-                <div className="font-medium capitalize">
-                  {author.payment_method.replace("_", " ")}
-                </div>
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground pt-4">
-              To update your information, please contact your publisher.
-            </p>
-          </CardContent>
-        </Card>
+        <DashboardChartWrapper title="Best Performing Titles" height={200}>
+          <AuthorBestTitles authorId={author.id} />
+        </DashboardChartWrapper>
+
+        <DashboardChartWrapper title="Advance Recoupment" height={180}>
+          <AuthorAdvanceProgress authorId={author.id} />
+        </DashboardChartWrapper>
+
+        <DashboardChartWrapper title="Next Statement" height={180}>
+          <AuthorNextStatement authorId={author.id} />
+        </DashboardChartWrapper>
       </div>
 
-      {/* Coming soon notice */}
-      <Card className="bg-muted/50">
-        <CardContent className="py-6">
-          <div className="flex items-center gap-4">
-            <div className="text-4xl">🚀</div>
-            <div>
-              <h3 className="font-semibold">More Features Coming Soon</h3>
-              <p className="text-sm text-muted-foreground">
-                We&apos;re working on bringing you more features including
-                statement downloads, payment history, and title analytics.
-              </p>
-            </div>
+      {/* Statement list - AC-5.6.2 */}
+      <PortalStatementList statements={statements} />
+
+      {/* Account information card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Information</CardTitle>
+          <CardDescription>
+            Your registered details with the publisher
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="text-sm text-muted-foreground">Name</div>
+            <div className="font-medium">{author.name}</div>
           </div>
+          {author.email && (
+            <div>
+              <div className="text-sm text-muted-foreground">Email</div>
+              <div className="font-medium">{author.email}</div>
+            </div>
+          )}
+          {author.payment_method && (
+            <div>
+              <div className="text-sm text-muted-foreground">
+                Payment Method
+              </div>
+              <div className="font-medium capitalize">
+                {author.payment_method.replace("_", " ")}
+              </div>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground pt-4">
+            To update your information, please contact your publisher.
+          </p>
         </CardContent>
       </Card>
     </div>

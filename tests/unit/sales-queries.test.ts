@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 /**
  * Unit tests for Sales History View

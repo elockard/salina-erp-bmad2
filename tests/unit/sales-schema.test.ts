@@ -384,7 +384,7 @@ describe("createSaleSchema", () => {
 
   describe("invalid inputs", () => {
     it("rejects missing title_id", () => {
-      const { title_id, ...inputWithoutTitleId } = validSaleInput;
+      const { title_id: _title_id, ...inputWithoutTitleId } = validSaleInput;
       const result = createSaleSchema.safeParse(inputWithoutTitleId);
       expect(result.success).toBe(false);
     });
@@ -398,7 +398,7 @@ describe("createSaleSchema", () => {
     });
 
     it("rejects missing format", () => {
-      const { format, ...inputWithoutFormat } = validSaleInput;
+      const { format: _format, ...inputWithoutFormat } = validSaleInput;
       const result = createSaleSchema.safeParse(inputWithoutFormat);
       expect(result.success).toBe(false);
     });
@@ -476,7 +476,7 @@ describe("createSaleSchema", () => {
     });
 
     it("rejects missing sale_date", () => {
-      const { sale_date, ...inputWithoutDate } = validSaleInput;
+      const { sale_date: _sale_date, ...inputWithoutDate } = validSaleInput;
       const result = createSaleSchema.safeParse(inputWithoutDate);
       expect(result.success).toBe(false);
     });

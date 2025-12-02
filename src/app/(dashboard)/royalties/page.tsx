@@ -34,9 +34,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
 import { getContracts } from "@/modules/royalties/queries";
 import type { ContractWithRelations } from "@/modules/royalties/types";
-import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
 
 const STATUS_BADGES: Record<
   string,
@@ -85,7 +85,7 @@ export default function RoyaltiesPage() {
   }, [fetchContracts]);
 
   // Handle page change
-  const handlePageChange = (page: number) => {
+  const _handlePageChange = (page: number) => {
     setCurrentPage(page);
     fetchContracts(page);
   };
@@ -183,9 +183,9 @@ export default function RoyaltiesPage() {
                 contracts
                   .reduce(
                     (sum, c) => sum + parseFloat(c.advance_amount || "0"),
-                    0
+                    0,
                   )
-                  .toString()
+                  .toString(),
               )}
             </div>
           </CardContent>
@@ -242,7 +242,8 @@ export default function RoyaltiesPage() {
               </TableHeader>
               <TableBody>
                 {filteredContracts.map((contract) => {
-                  const status = STATUS_BADGES[contract.status] || STATUS_BADGES.active;
+                  const status =
+                    STATUS_BADGES[contract.status] || STATUS_BADGES.active;
                   const formats = [
                     ...new Set(contract.tiers.map((t) => t.format)),
                   ];
@@ -269,7 +270,11 @@ export default function RoyaltiesPage() {
                       <TableCell>
                         <div className="flex gap-1">
                           {formats.map((format) => (
-                            <Badge key={format} variant="outline" className="text-xs">
+                            <Badge
+                              key={format}
+                              variant="outline"
+                              className="text-xs"
+                            >
                               {format}
                             </Badge>
                           ))}

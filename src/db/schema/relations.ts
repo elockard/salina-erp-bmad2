@@ -9,21 +9,25 @@
  * Story 2.6: Added isbnsRelations for ISBN pool management
  * Story 3.1: Added salesRelations for sales transaction ledger
  * Story 4.1: Added contractsRelations and contractTiersRelations for royalty contracts
+ * Story 5.1: Added statementsRelations for royalty statements
+ * Story 6.5: Added auditLogsRelations for compliance audit logging
  */
 
 import { relations } from "drizzle-orm";
+import { auditLogs } from "./audit-logs";
 import { authors } from "./authors";
 import { contracts, contractTiers } from "./contracts";
 import { isbns } from "./isbns";
 import { returns } from "./returns";
 import { sales } from "./sales";
+import { statements } from "./statements";
 import { tenants } from "./tenants";
 import { titles } from "./titles";
 import { users } from "./users";
 
 /**
  * Tenant relations
- * One tenant has many users, authors, titles, isbns, sales, returns, and contracts
+ * One tenant has many users, authors, titles, isbns, sales, returns, contracts, statements, and audit logs
  */
 export const tenantsRelations = relations(tenants, ({ many }) => ({
   users: many(users),
@@ -33,6 +37,8 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   sales: many(sales),
   returns: many(returns),
   contracts: many(contracts),
+  statements: many(statements),
+  auditLogs: many(auditLogs),
 }));
 
 /**
@@ -41,6 +47,8 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
  * Each user may be linked to one author (for portal users)
  * Each user may have created many sales records
  * Each user may have created or reviewed many returns
+ * Each user may have generated many statements
+ * Each user may have many audit log entries
  */
 export const usersRelations = relations(users, ({ one, many }) => ({
   tenant: one(tenants, {
@@ -50,13 +58,15 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   createdSales: many(sales),
   createdReturns: many(returns, { relationName: "createdByUser" }),
   reviewedReturns: many(returns, { relationName: "reviewedByUser" }),
+  generatedStatements: many(statements),
+  auditLogs: many(auditLogs),
 }));
 
 /**
  * Author relations
  * Each author belongs to one tenant
  * Each author may have one portal user account (via portal_user_id)
- * Each author can have many titles and contracts
+ * Each author can have many titles, contracts, and statements
  */
 export const authorsRelations = relations(authors, ({ one, many }) => ({
   tenant: one(tenants, {
@@ -69,6 +79,7 @@ export const authorsRelations = relations(authors, ({ one, many }) => ({
   }),
   titles: many(titles),
   contracts: many(contracts),
+  statements: many(statements),
 }));
 
 /**
@@ -175,8 +186,9 @@ export const returnsRelations = relations(returns, ({ one }) => ({
 /**
  * Contracts relations
  * Each contract belongs to one tenant, one author, and one title
- * Each contract can have many tiers (tiered royalty rates)
+ * Each contract can have many tiers (tiered royalty rates) and statements
  * Story 4.1: Royalty contract management with tiered rates
+ * Story 5.1: Added statements relation
  */
 export const contractsRelations = relations(contracts, ({ one, many }) => ({
   tenant: one(tenants, {
@@ -192,6 +204,7 @@ export const contractsRelations = relations(contracts, ({ one, many }) => ({
     references: [titles.id],
   }),
   tiers: many(contractTiers),
+  statements: many(statements),
 }));
 
 /**
@@ -203,5 +216,47 @@ export const contractTiersRelations = relations(contractTiers, ({ one }) => ({
   contract: one(contracts, {
     fields: [contractTiers.contract_id],
     references: [contracts.id],
+  }),
+}));
+
+/**
+ * Statements relations
+ * Each statement belongs to one tenant, one author, one contract, and one user (generator)
+ * Story 5.1: Royalty statements with PDF storage
+ */
+export const statementsRelations = relations(statements, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [statements.tenant_id],
+    references: [tenants.id],
+  }),
+  author: one(authors, {
+    fields: [statements.author_id],
+    references: [authors.id],
+  }),
+  contract: one(contracts, {
+    fields: [statements.contract_id],
+    references: [contracts.id],
+  }),
+  generatedByUser: one(users, {
+    fields: [statements.generated_by_user_id],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * Audit Logs relations
+ * Each audit log entry belongs to one tenant and optionally one user (actor)
+ * Story 6.5: Compliance audit logging
+ *
+ * APPEND-ONLY: Audit logs are immutable - no update or delete operations
+ */
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [auditLogs.tenant_id],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [auditLogs.user_id],
+    references: [users.id],
   }),
 }));

@@ -152,7 +152,7 @@ test.describe("Author Management - Split View Layout", () => {
   test("AC26: Empty state shows when no authors exist", async ({ page }) => {
     // This test depends on having a clean tenant with no authors
     // Check for empty state message
-    const emptyState = page.getByText("No authors yet");
+    const _emptyState = page.getByText("No authors yet");
     // await expect(emptyState).toBeVisible();
   });
 });

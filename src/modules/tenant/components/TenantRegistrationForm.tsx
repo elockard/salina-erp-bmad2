@@ -16,24 +16,23 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { checkSubdomainAvailability, registerTenant } from "../actions";
 import { type CreateTenantInput, createTenantSchema } from "../schema";
 
 // Debounce helper
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
+function debounce<Args extends unknown[]>(
+  func: (...args: Args) => void,
   wait: number,
-): (...args: Parameters<T>) => void {
+): (...args: Args) => void {
   let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
+  return (...args: Args) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
 }
 
 export function TenantRegistrationForm() {
-  const router = useRouter();
+  const _router = useRouter();
   const [subdomainStatus, setSubdomainStatus] = useState<
     "idle" | "checking" | "available" | "taken"
   >("idle");

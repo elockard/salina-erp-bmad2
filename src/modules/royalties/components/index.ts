@@ -7,21 +7,20 @@
  * Story 4.5: Build Manual Royalty Calculation Trigger (Testing)
  */
 
-// Story 4.2 - Contract Creation
-export { ContractWizardModal } from "./contract-wizard-modal";
-export { ContractStepBasicInfo } from "./contract-step-basic-info";
-export { ContractTierBuilder } from "./contract-tier-builder";
-export { ContractStepReview } from "./contract-step-review";
+export { CalculationResults } from "./calculation-results";
+// Story 4.5 - Calculation Testing
+export { CalculationTestForm } from "./calculation-test-form";
+export { ContractAdvanceModal } from "./contract-advance-modal";
+export { ContractAdvanceSection } from "./contract-advance-section";
 
 // Story 4.3 - Contract Detail View
 export { ContractDetail } from "./contract-detail";
-export { ContractAdvanceSection } from "./contract-advance-section";
-export { ContractTiersSection } from "./contract-tiers-section";
-export { ContractStatsSection } from "./contract-stats-section";
 export { ContractEditModal } from "./contract-edit-modal";
-export { ContractAdvanceModal } from "./contract-advance-modal";
+export { ContractStatsSection } from "./contract-stats-section";
 export { ContractStatusDropdown } from "./contract-status-dropdown";
-
-// Story 4.5 - Calculation Testing
-export { CalculationTestForm } from "./calculation-test-form";
-export { CalculationResults } from "./calculation-results";
+export { ContractStepBasicInfo } from "./contract-step-basic-info";
+export { ContractStepReview } from "./contract-step-review";
+export { ContractTierBuilder } from "./contract-tier-builder";
+export { ContractTiersSection } from "./contract-tiers-section";
+// Story 4.2 - Contract Creation
+export { ContractWizardModal } from "./contract-wizard-modal";

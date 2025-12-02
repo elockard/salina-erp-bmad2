@@ -83,7 +83,7 @@ export function ContractAdvanceModal({
 
       if (result.success) {
         toast.success(
-          `Recorded additional payment of ${formatCurrency(additionalPayment)}`
+          `Recorded additional payment of ${formatCurrency(additionalPayment)}`,
         );
         setAdditionalPayment("");
         onOpenChange(false);
@@ -115,7 +115,9 @@ export function ContractAdvanceModal({
         <div className="space-y-4 py-4">
           {/* Current Advance Amount (read-only) */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground">Total Advance Amount</Label>
+            <Label className="text-muted-foreground">
+              Total Advance Amount
+            </Label>
             <div className="text-lg font-medium">
               {formatCurrency(contract.advance_amount)}
             </div>
@@ -159,7 +161,8 @@ export function ContractAdvanceModal({
               </div>
               {wouldExceedLimit && parseFloat(additionalPayment) > 0 && (
                 <p className="text-sm text-destructive">
-                  Payment cannot exceed remaining advance ({formatCurrency(remainingAdvance.toString())})
+                  Payment cannot exceed remaining advance (
+                  {formatCurrency(remainingAdvance.toString())})
                 </p>
               )}
             </div>

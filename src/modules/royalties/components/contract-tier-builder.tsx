@@ -12,7 +12,7 @@
  */
 
 import { AlertCircle, Plus, Trash2 } from "lucide-react";
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -51,7 +51,7 @@ export function ContractTierBuilder({
   title,
   description,
 }: ContractTierBuilderProps) {
-  const { control, watch, setValue, getValues } = useFormContext();
+  const { control, watch, setValue } = useFormContext();
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -110,7 +110,7 @@ export function ContractTierBuilder({
   // Convert percent input to rate (10 -> 0.10)
   const percentToRate = (percent: string): number => {
     const num = parseFloat(percent);
-    if (isNaN(num)) return 0;
+    if (Number.isNaN(num)) return 0;
     return Math.min(1, Math.max(0, num / 100));
   };
 
@@ -131,8 +131,7 @@ export function ContractTierBuilder({
   const canAddTier =
     isEnabled &&
     fields.length < MAX_TIERS &&
-    (tiers.length === 0 ||
-      tiers[tiers.length - 1]?.max_quantity !== null);
+    (tiers.length === 0 || tiers[tiers.length - 1]?.max_quantity !== null);
 
   // Validate tiers (AC 4)
   const getTierValidationError = (): string | null => {
@@ -198,7 +197,8 @@ export function ContractTierBuilder({
       {/* Example display (AC 3) */}
       {isEnabled && (
         <div className="p-3 bg-muted/50 rounded-md text-sm text-muted-foreground">
-          <strong>Example:</strong> 0-5,000 units @ 10%, 5,001-10,000 units @ 12%, 10,001+ units @ 15%
+          <strong>Example:</strong> 0-5,000 units @ 10%, 5,001-10,000 units @
+          12%, 10,001+ units @ 15%
         </div>
       )}
 
@@ -220,10 +220,7 @@ export function ContractTierBuilder({
             return (
               <div
                 key={field.id}
-                className={cn(
-                  "p-4 border rounded-lg space-y-4",
-                  "bg-card"
-                )}
+                className={cn("p-4 border rounded-lg space-y-4", "bg-card")}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Tier {index + 1}</span>
@@ -255,7 +252,9 @@ export function ContractTierBuilder({
                             {...inputField}
                             value={inputField.value ?? 0}
                             onChange={(e) =>
-                              inputField.onChange(parseInt(e.target.value, 10) || 0)
+                              inputField.onChange(
+                                parseInt(e.target.value, 10) || 0,
+                              )
                             }
                           />
                         </FormControl>
@@ -315,7 +314,9 @@ export function ContractTierBuilder({
                               className="pr-8"
                               value={rateToPercent(inputField.value ?? 0)}
                               onChange={(e) =>
-                                inputField.onChange(percentToRate(e.target.value))
+                                inputField.onChange(
+                                  percentToRate(e.target.value),
+                                )
                               }
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -331,8 +332,8 @@ export function ContractTierBuilder({
 
                 {/* Tier summary */}
                 <div className="text-sm text-muted-foreground pt-2 border-t">
-                  {tier?.min_quantity ?? 0} - {tier?.max_quantity ?? "∞"} units @{" "}
-                  {rateToPercent(tier?.rate ?? 0)}% royalty
+                  {tier?.min_quantity ?? 0} - {tier?.max_quantity ?? "∞"} units
+                  @ {rateToPercent(tier?.rate ?? 0)}% royalty
                 </div>
               </div>
             );

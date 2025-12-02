@@ -1,0 +1,319 @@
+<story-context id="5-2-implement-pdf-statement-generation-with-react-email" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>2</storyId>
+    <title>Implement PDF Statement Generation with React Email</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-2-implement-pdf-statement-generation-with-react-email.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform architect</asA>
+    <iWant>to generate professional PDF royalty statements</iWant>
+    <soThat>authors receive formal documentation of earnings</soThat>
+    <tasks>
+      <task id="1" ac="1,2,3,4,5">Install and configure @react-pdf/renderer
+        <subtask id="1.1">Add @react-pdf/renderer to package.json</subtask>
+        <subtask id="1.2">Verify compatibility with existing React/Next.js versions</subtask>
+        <subtask id="1.3">Create basic test to verify PDF generation works</subtask>
+      </task>
+      <task id="2" ac="1,2,3,4,5">Create PDF template components
+        <subtask id="2.1">Create src/modules/statements/pdf/statement-pdf.tsx main template</subtask>
+        <subtask id="2.2">Create header component with logo placeholder, company name, period dates</subtask>
+        <subtask id="2.3">Create author info section (name, address, contact)</subtask>
+        <subtask id="2.4">Create summary section component (net payable, gross royalties, recoupment)</subtask>
+        <subtask id="2.5">Create sales breakdown table component</subtask>
+        <subtask id="2.6">Create returns section component (conditional rendering)</subtask>
+        <subtask id="2.7">Create advance recoupment section component</subtask>
+        <subtask id="2.8">Create footer component with generation timestamp and statement ID</subtask>
+      </task>
+      <task id="3" ac="6">Create PDF generator service
+        <subtask id="3.1">Create src/modules/statements/pdf-generator.ts</subtask>
+        <subtask id="3.2">Implement generateStatementPDF(statement: StatementWithDetails) function</subtask>
+        <subtask id="3.3">Convert React PDF document to buffer</subtask>
+        <subtask id="3.4">Implement S3 upload with key pattern statements/{tenant_id}/{statement_id}.pdf</subtask>
+        <subtask id="3.5">Return S3 key on successful upload</subtask>
+        <subtask id="3.6">Handle errors with proper logging and error types</subtask>
+      </task>
+      <task id="4" ac="6">Create S3 storage utilities
+        <subtask id="4.1">Create src/modules/statements/storage.ts</subtask>
+        <subtask id="4.2">Implement uploadStatementPDF(buffer, tenantId, statementId) function</subtask>
+        <subtask id="4.3">Implement getStatementDownloadUrl(s3Key) for presigned URLs (15-min expiry)</subtask>
+        <subtask id="4.4">Add error handling for S3 operations</subtask>
+      </task>
+      <task id="5" ac="7">Create Inngest background job
+        <subtask id="5.1">Create src/inngest/generate-statement-pdf.ts</subtask>
+        <subtask id="5.2">Define event type statements/pdf.generate</subtask>
+        <subtask id="5.3">Implement job function with steps: load, generate, upload, update</subtask>
+        <subtask id="5.4">Add retry logic (3 retries with exponential backoff)</subtask>
+        <subtask id="5.5">Update statement.pdf_s3_key after successful upload</subtask>
+        <subtask id="5.6">Log success/failure with statement ID and timing metrics</subtask>
+        <subtask id="5.7">Register function in Inngest client</subtask>
+      </task>
+      <task id="6" ac="7">Create server action to trigger PDF generation
+        <subtask id="6.1">Add generateStatementPDF action to src/modules/statements/actions.ts</subtask>
+        <subtask id="6.2">Validate statement exists and belongs to tenant</subtask>
+        <subtask id="6.3">Enqueue Inngest job</subtask>
+        <subtask id="6.4">Return job ID for status tracking</subtask>
+      </task>
+      <task id="7" ac="1-5">Create type definitions
+        <subtask id="7.1">Update src/modules/statements/types.ts with PDF-related types</subtask>
+        <subtask id="7.2">Define StatementPDFData interface</subtask>
+        <subtask id="7.3">Define PDFGenerationResult type</subtask>
+      </task>
+      <task id="8" ac="1-6">Write unit tests
+        <subtask id="8.1">Create tests/unit/statement-pdf-template.test.ts</subtask>
+        <subtask id="8.2">Test PDF template renders with complete data</subtask>
+        <subtask id="8.3">Test PDF template handles missing returns gracefully</subtask>
+        <subtask id="8.4">Test PDF template handles zero advance correctly</subtask>
+        <subtask id="8.5">Test S3 key generation follows pattern</subtask>
+        <subtask id="8.6">Test presigned URL generation</subtask>
+      </task>
+      <task id="9" ac="6,7">Write integration tests
+        <subtask id="9.1">Create tests/integration/statement-pdf-generation.test.ts</subtask>
+        <subtask id="9.2">Test full generation flow with S3 mock</subtask>
+        <subtask id="9.3">Test Inngest job completion updates statement record</subtask>
+        <subtask id="9.4">Test error handling and retry behavior</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-5.2.1">PDF template includes company logo placeholder, period dates, and author information (name, address)</criterion>
+    <criterion id="AC-5.2.2">Summary section shows net payable, gross royalties, recoupment amounts prominently</criterion>
+    <criterion id="AC-5.2.3">Sales breakdown table shows title, format, units sold, royalty rate, royalty earned</criterion>
+    <criterion id="AC-5.2.4">Returns section (if applicable) shows quantity, value, and impact on net royalty</criterion>
+    <criterion id="AC-5.2.5">Advance recoupment section shows original advance, previously recouped, this period's recoupment, remaining balance</criterion>
+    <criterion id="AC-5.2.6">PDF uploads to S3 with key pattern statements/{tenant_id}/{statement_id}.pdf</criterion>
+    <criterion id="AC-5.2.7">Generation runs as Inngest background job with proper error handling and retry logic</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic 5 Technical Specification</title>
+        <section>Story 5.2: Implement PDF Statement Generation</section>
+        <snippet>Defines acceptance criteria AC-5.2.1 through AC-5.2.7, PDF template requirements, S3 integration pattern, and Inngest job structure for statement generation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Technology Stack Details - Backend</section>
+        <snippet>Specifies AWS S3 (@aws-sdk/client-s3 v3) for object storage with presigned URLs, Inngest for serverless background jobs, and React Email for templates.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Integration Points - File Storage</section>
+        <snippet>Pattern: Generate PDF → Upload to S3 → Store S3 key in database → Generate presigned URL (15 min expiry) → User downloads</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina ERP Decision Architecture</title>
+        <section>Integration Points - Background Job Flow</section>
+        <snippet>User triggers action → Server Action enqueues Inngest job → Inngest executes async → Job updates database → User notified via toast/email</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/5-1-create-statements-database-schema-and-pdf-storage.md</path>
+        <title>Story 5.1 - Completed</title>
+        <section>Dev Agent Record</section>
+        <snippet>Schema deployed with pdf_s3_key column, StatementCalculations types created at src/modules/statements/types.ts, RLS policies configured, 66 tests passing.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/db/schema/statements.ts</path>
+        <kind>schema</kind>
+        <symbol>statements</symbol>
+        <lines>71-199</lines>
+        <reason>Statements table schema with pdf_s3_key column (text, nullable) - UPDATE this column after PDF upload</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/types.ts</path>
+        <kind>types</kind>
+        <symbol>StatementCalculations, StatementFormatBreakdown, StatementTierBreakdown, StatementAdvanceRecoupment</symbol>
+        <lines>88-106</lines>
+        <reason>REUSE these types for PDF template data - they map directly to PDF sections (summary, breakdowns, recoupment)</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/types.ts</path>
+        <kind>types</kind>
+        <symbol>StatementWithRelations, StatementGenerationRequest, StatementGenerationResult</symbol>
+        <lines>111-149</lines>
+        <reason>Statement types with relations - use StatementWithRelations for PDF generation input</reason>
+      </file>
+      <file>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentTenantId, getCurrentUser, requirePermission</symbol>
+        <lines>12-137</lines>
+        <reason>Auth utilities for server actions - use requirePermission(['finance', 'admin', 'owner']) for PDF generation</reason>
+      </file>
+      <file>
+        <path>src/db/schema/authors.ts</path>
+        <kind>schema</kind>
+        <symbol>authors</symbol>
+        <reason>Author table - PDF template needs author.name, author.address for header section</reason>
+      </file>
+      <file>
+        <path>src/db/schema/contracts.ts</path>
+        <kind>schema</kind>
+        <symbol>contracts, ContractFormat</symbol>
+        <reason>Contract table - PDF needs contract.advance_amount for recoupment section</reason>
+      </file>
+      <file>
+        <path>tests/unit/statements-schema.test.ts</path>
+        <kind>test</kind>
+        <symbol>statements schema tests</symbol>
+        <reason>Test pattern reference - follow same structure for PDF template tests using vitest</reason>
+      </file>
+      <file>
+        <path>tests/setup.ts</path>
+        <kind>test-config</kind>
+        <symbol>testAuthContext, setTestUserRole, vi.mock patterns</symbol>
+        <lines>1-225</lines>
+        <reason>Test setup with mocks for auth, next/headers, Clerk - use these patterns for PDF generation tests</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <existing>
+          <package name="@aws-sdk/client-s3" version="^3.940.0">S3 client for PDF upload - PutObjectCommand</package>
+          <package name="@aws-sdk/s3-request-presigner" version="^3.940.0">Presigned URL generation - getSignedUrl</package>
+          <package name="react-email" version="^5.0.5">Email template rendering (NOT used for PDF, use @react-pdf/renderer instead)</package>
+          <package name="inngest" version="^3.46.0">Background job processing - createFunction, step.run</package>
+          <package name="decimal.js" version="^10.6.0">Financial calculations precision</package>
+          <package name="vitest" version="4.0.14">Unit and integration testing</package>
+        </existing>
+        <toInstall>
+          <package name="@react-pdf/renderer" version="latest">React-based PDF generation - Document, Page, View, Text, StyleSheet</package>
+        </toInstall>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface>
+      <name>StatementCalculations</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface StatementCalculations {
+  period: { startDate: string; endDate: string };
+  formatBreakdowns: StatementFormatBreakdown[];
+  returnsDeduction: number;
+  grossRoyalty: number;
+  advanceRecoupment: StatementAdvanceRecoupment;
+  netPayable: number;
+}
+      </signature>
+      <path>src/modules/statements/types.ts</path>
+    </interface>
+    <interface>
+      <name>S3 Upload Pattern</name>
+      <kind>AWS SDK</kind>
+      <signature>
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
+const command = new PutObjectCommand({
+  Bucket: process.env.AWS_S3_BUCKET,
+  Key: `statements/${tenantId}/${statementId}.pdf`,
+  Body: pdfBuffer,
+  ContentType: 'application/pdf',
+});
+await s3Client.send(command);
+      </signature>
+      <path>src/modules/statements/storage.ts (to create)</path>
+    </interface>
+    <interface>
+      <name>Presigned URL Pattern</name>
+      <kind>AWS SDK</kind>
+      <signature>
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+
+const url = await getSignedUrl(s3Client, new GetObjectCommand({
+  Bucket: process.env.AWS_S3_BUCKET,
+  Key: s3Key,
+}), { expiresIn: 900 }); // 15 minutes
+      </signature>
+      <path>src/modules/statements/storage.ts (to create)</path>
+    </interface>
+    <interface>
+      <name>Inngest Function Pattern</name>
+      <kind>Inngest SDK</kind>
+      <signature>
+export const generateStatementPdf = inngest.createFunction(
+  { id: "generate-statement-pdf", retries: 3 },
+  { event: "statements/pdf.generate" },
+  async ({ event, step }) => {
+    const { statementId, tenantId } = event.data;
+    const statement = await step.run("load-statement", async () => { ... });
+    const pdfBuffer = await step.run("generate-pdf", async () => { ... });
+    const s3Key = await step.run("upload-to-s3", async () => { ... });
+    await step.run("update-statement", async () => { ... });
+    return { success: true, s3Key };
+  }
+);
+      </signature>
+      <path>src/inngest/generate-statement-pdf.ts (to create)</path>
+    </interface>
+    <interface>
+      <name>React PDF Document Pattern</name>
+      <kind>@react-pdf/renderer</kind>
+      <signature>
+import { Document, Page, Text, View, StyleSheet, renderToBuffer } from '@react-pdf/renderer';
+
+const StatementPDF = ({ data }: { data: StatementPDFData }) => (
+  &lt;Document&gt;
+    &lt;Page size="A4" style={styles.page}&gt;
+      &lt;View style={styles.header}&gt;...&lt;/View&gt;
+      &lt;View style={styles.summary}&gt;...&lt;/View&gt;
+      &lt;View style={styles.breakdown}&gt;...&lt;/View&gt;
+    &lt;/Page&gt;
+  &lt;/Document&gt;
+);
+
+const buffer = await renderToBuffer(&lt;StatementPDF data={data} /&gt;);
+      </signature>
+      <path>src/modules/statements/pdf/statement-pdf.tsx (to create)</path>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint source="architecture.md">All database queries must include tenant_id filter for multi-tenant isolation</constraint>
+    <constraint source="architecture.md">Server Actions require permission check: requirePermission(['finance', 'admin', 'owner'])</constraint>
+    <constraint source="architecture.md">Financial values stored as DECIMAL(10,2) - use decimal.js for calculations, Intl.NumberFormat for display</constraint>
+    <constraint source="tech-spec-epic-5.md">PDF generation runs async via Inngest - do not block user request</constraint>
+    <constraint source="tech-spec-epic-5.md">S3 key pattern must be: statements/{tenant_id}/{statement_id}.pdf</constraint>
+    <constraint source="tech-spec-epic-5.md">Presigned URLs must expire in 15 minutes (900 seconds)</constraint>
+    <constraint source="tech-spec-epic-5.md">Retry 3x on PDF generation failure with exponential backoff</constraint>
+    <constraint source="story-5-1">REUSE existing StatementCalculations types from src/modules/statements/types.ts - DO NOT recreate</constraint>
+    <constraint source="story-5-1">pdf_s3_key column already exists - just UPDATE it after successful S3 upload</constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      Testing follows Vitest framework with @testing-library/react for component tests. Unit tests mock external dependencies (@/lib/auth, next/headers, AWS SDK). Integration tests use testAuthContext from tests/setup.ts for configurable auth state. All tests import from @/ alias paths. PDF generation tests should mock @react-pdf/renderer renderToBuffer and S3 client operations.
+    </standards>
+    <locations>
+      <location>tests/unit/</location>
+      <location>tests/integration/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-5.2.1">Test PDF template renders header with logo placeholder, period dates, author name/address</idea>
+      <idea ac="AC-5.2.2">Test summary section displays net payable, gross royalties, recoupment formatted as currency</idea>
+      <idea ac="AC-5.2.3">Test sales breakdown table renders rows from formatBreakdowns array with correct columns</idea>
+      <idea ac="AC-5.2.4">Test returns section renders only when returnsDeduction > 0, hidden otherwise</idea>
+      <idea ac="AC-5.2.5">Test advance recoupment section shows all 4 values, handles $0 advance gracefully</idea>
+      <idea ac="AC-5.2.6">Test S3 upload uses correct key pattern with tenant and statement IDs</idea>
+      <idea ac="AC-5.2.6">Test presigned URL generation with 15-minute expiry</idea>
+      <idea ac="AC-5.2.7">Test Inngest job updates statement.pdf_s3_key after successful upload</idea>
+      <idea ac="AC-5.2.7">Test Inngest job retries on S3 upload failure</idea>
+      <idea ac="AC-5.2.7">Test Inngest job logs success/failure with statement ID</idea>
+    </ideas>
+  </tests>
+</story-context>

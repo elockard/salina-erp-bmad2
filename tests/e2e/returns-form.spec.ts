@@ -40,7 +40,9 @@ test.describe("Returns Entry Form - Story 3.5", () => {
       const main = page.getByRole("main");
       await expect(main.getByRole("link", { name: "Dashboard" })).toBeVisible();
       await expect(main.getByRole("link", { name: "Returns" })).toBeVisible();
-      await expect(main.getByText("Record Return", { exact: true })).toBeVisible();
+      await expect(
+        main.getByText("Record Return", { exact: true }),
+      ).toBeVisible();
     });
   });
 
@@ -248,20 +250,24 @@ test.describe("Returns Entry Form - Story 3.5", () => {
 
   test.describe("AC 11: Successful Submission", () => {
     test.skip("redirects to /returns after successful submission", async ({
-      page,
+      page: _page,
     }) => {
       // This test requires a full form submission with valid title
       // Requires test data setup
     });
 
-    test.skip("shows success toast after submission", async ({ page }) => {
+    test.skip("shows success toast after submission", async ({
+      page: _page,
+    }) => {
       // This test requires a full form submission
       // Should show: "Return request submitted for approval"
     });
   });
 
   test.describe("AC 12: Permission Enforcement", () => {
-    test.skip("redirects unauthorized users to dashboard", async ({ page }) => {
+    test.skip("redirects unauthorized users to dashboard", async ({
+      page: _page,
+    }) => {
       // Test with viewer role user
       // Should redirect to /dashboard?error=unauthorized
     });

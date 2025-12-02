@@ -31,7 +31,10 @@ interface TierData {
   rate: number;
 }
 
-const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
+const STATUS_LABELS: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" }
+> = {
   active: { label: "Active", variant: "default" },
   suspended: { label: "Suspended", variant: "secondary" },
   terminated: { label: "Terminated", variant: "destructive" },
@@ -92,7 +95,7 @@ export function ContractStepReview() {
   const renderTierTable = (
     format: string,
     tiers: TierData[],
-    enabled: boolean
+    enabled: boolean,
   ) => {
     if (!enabled || tiers.length === 0) return null;
 
@@ -114,7 +117,7 @@ export function ContractStepReview() {
           </TableHeader>
           <TableBody>
             {tiers.map((tier, index) => (
-              <TableRow key={index}>
+              <TableRow key={`tier-${tier.min_quantity}-${tier.rate}`}>
                 <TableCell className="font-medium">Tier {index + 1}</TableCell>
                 <TableCell>
                   {formatRange(tier.min_quantity, tier.max_quantity)}
@@ -215,8 +218,8 @@ export function ContractStepReview() {
                   {formatCurrency(
                     String(
                       parseFloat(advanceAmount || "0") -
-                        parseFloat(advancePaid || "0")
-                    )
+                        parseFloat(advancePaid || "0"),
+                    ),
                   )}
                 </span>
               </p>

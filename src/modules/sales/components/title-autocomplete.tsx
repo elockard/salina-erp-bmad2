@@ -107,7 +107,7 @@ export function TitleAutocomplete({
   };
 
   // Clear selection
-  const handleClear = () => {
+  const _handleClear = () => {
     onSelect(null);
     setSearchQuery("");
   };

@@ -1,0 +1,249 @@
+<story-context id="6-2-build-sales-reports-with-multi-dimensional-filtering" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>2</storyId>
+    <title>Build Sales Reports with Multi-Dimensional Filtering</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-2-build-sales-reports-with-multi-dimensional-filtering.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to generate sales reports with flexible filtering</iWant>
+    <soThat>I can analyze sales patterns</soThat>
+    <tasks>
+      <task id="1" ac="1,10">Create sales report page and route structure
+        <subtask>1.1 Create src/app/(dashboard)/reports/page.tsx - Reports index/overview page</subtask>
+        <subtask>1.2 Create src/app/(dashboard)/reports/sales/page.tsx - Sales report builder page</subtask>
+        <subtask>1.3 Add permission check: block Author role from accessing sales reports</subtask>
+        <subtask>1.4 Add reports route to sidebar navigation</subtask>
+      </task>
+      <task id="2" ac="2,3,4">Implement sales report filters component
+        <subtask>2.1 Create src/modules/reports/components/sales-report-filters.tsx</subtask>
+        <subtask>2.2 Implement date range picker using react-day-picker with shadcn/ui Calendar</subtask>
+        <subtask>2.3 Implement Title multi-select dropdown (searchable, fetches from titles table)</subtask>
+        <subtask>2.4 Implement Author multi-select dropdown (searchable, fetches from authors table)</subtask>
+        <subtask>2.5 Implement Format filter dropdown (Physical/Ebook/Audiobook/All)</subtask>
+        <subtask>2.6 Implement Channel filter dropdown (Retail/Wholesale/Direct/Distributor/All)</subtask>
+        <subtask>2.7 Implement Grouping radio/select (by Title/by Format/by Channel/by Date)</subtask>
+        <subtask>2.8 Create Zod schema for filter validation in src/modules/reports/schema.ts</subtask>
+        <subtask>2.9 Add "Generate Report" button with loading state</subtask>
+      </task>
+      <task id="3" ac="5,6">Implement sales report query function
+        <subtask>3.1 Add getSalesReport(tenantId, filters) to src/modules/reports/queries.ts</subtask>
+        <subtask>3.2 Implement dynamic GROUP BY based on grouping parameter</subtask>
+        <subtask>3.3 Calculate Total Units (SUM of quantity)</subtask>
+        <subtask>3.4 Calculate Total Revenue (SUM of total_amount) using Decimal.js</subtask>
+        <subtask>3.5 Calculate Avg Unit Price (Total Revenue / Total Units)</subtask>
+        <subtask>3.6 Apply date range filter (sale_date BETWEEN start AND end)</subtask>
+        <subtask>3.7 Apply title filter (IN clause for titleIds)</subtask>
+        <subtask>3.8 Apply author filter (JOIN contracts, filter by authorIds)</subtask>
+        <subtask>3.9 Apply format filter (WHERE format = ?)</subtask>
+        <subtask>3.10 Apply channel filter (WHERE channel = ?)</subtask>
+        <subtask>3.11 Add tenant_id filter FIRST (CRITICAL: tenant isolation)</subtask>
+        <subtask>3.12 Return rows array with totals object</subtask>
+      </task>
+      <task id="4" ac="5,6">Build sales report results table
+        <subtask>4.1 Create src/modules/reports/components/sales-report-table.tsx</subtask>
+        <subtask>4.2 Use TanStack Table with columns: Group, Total Units, Total Revenue, Avg Unit Price</subtask>
+        <subtask>4.3 Format currency using local formatCurrency function</subtask>
+        <subtask>4.4 Add sortable columns (default: Total Revenue DESC)</subtask>
+        <subtask>4.5 Add pagination (20 rows per page)</subtask>
+        <subtask>4.6 Implement sticky totals row at bottom</subtask>
+        <subtask>4.7 Add loading skeleton state</subtask>
+      </task>
+      <task id="5" ac="7,8">Implement sales report visualizations
+        <subtask>5.1 Create src/modules/reports/components/sales-report-charts.tsx</subtask>
+        <subtask>5.2 Implement Bar chart showing top 10 groups by revenue using existing BarChart component</subtask>
+        <subtask>5.3 Implement Pie chart showing distribution using existing PieChart component</subtask>
+        <subtask>5.4 Use Editorial Navy color scheme (#1e3a5f) - already configured in chart components</subtask>
+        <subtask>5.5 Add hover tooltips with exact amounts and percentages</subtask>
+        <subtask>5.6 Handle empty data state with appropriate messaging</subtask>
+      </task>
+      <task id="6" ac="9">Implement CSV export functionality
+        <subtask>6.1 Add exportSalesReportCSV(filters) Server Action to src/modules/reports/actions.ts</subtask>
+        <subtask>6.2 Generate CSV string with headers: Group, Total Units, Total Revenue, Avg Unit Price</subtask>
+        <subtask>6.3 Format currency and numbers appropriately for CSV</subtask>
+        <subtask>6.4 Create src/modules/reports/components/export-button.tsx with download logic</subtask>
+        <subtask>6.5 Trigger browser download with filename: sales-report-{date}.csv</subtask>
+        <subtask>6.6 Add loading state to export button</subtask>
+      </task>
+      <task id="7" ac="1-10">Assemble sales report page with all components
+        <subtask>7.1 Compose filters, table, and charts in sales page layout</subtask>
+        <subtask>7.2 Implement filter state management (URL params or React state)</subtask>
+        <subtask>7.3 Wire up "Generate Report" button to fetch data</subtask>
+        <subtask>7.4 Add responsive layout: filters on top, table and charts below</subtask>
+        <subtask>7.5 Add Suspense boundaries for independent loading</subtask>
+      </task>
+      <task id="8" ac="5,6">Write unit tests for sales report queries
+        <subtask>8.1 Create tests/unit/sales-report-queries.test.ts</subtask>
+        <subtask>8.2 Test grouping by title</subtask>
+        <subtask>8.3 Test grouping by format</subtask>
+        <subtask>8.4 Test grouping by channel</subtask>
+        <subtask>8.5 Test grouping by date</subtask>
+        <subtask>8.6 Test date range filtering</subtask>
+        <subtask>8.7 Test multi-select title filtering</subtask>
+        <subtask>8.8 Test multi-select author filtering</subtask>
+        <subtask>8.9 Test totals calculation accuracy with Decimal.js</subtask>
+        <subtask>8.10 Test empty results handling</subtask>
+      </task>
+      <task id="9" ac="1,10">Write integration tests for sales report page
+        <subtask>9.1 Create tests/integration/sales-report.test.tsx</subtask>
+        <subtask>9.2 Test page renders for Finance user</subtask>
+        <subtask>9.3 Test page renders for Admin user</subtask>
+        <subtask>9.4 Test page renders for Editor user</subtask>
+        <subtask>9.5 Test page blocked for Author user (returns 403 or redirect)</subtask>
+        <subtask>9.6 Test filter components render and update state</subtask>
+        <subtask>9.7 Test table renders with mock data</subtask>
+      </task>
+      <task id="10" ac="2,9">Write E2E tests for full report flow
+        <subtask>10.1 Create tests/e2e/sales-report.spec.ts</subtask>
+        <subtask>10.2 Test selecting date range</subtask>
+        <subtask>10.3 Test applying filters</subtask>
+        <subtask>10.4 Test generating report</subtask>
+        <subtask>10.5 Test CSV export download</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Users can access /reports/sales page</criterion>
+    <criterion id="2">Date range picker (required) allows custom period selection with start/end date</criterion>
+    <criterion id="3">Multi-select filters available for Title, Author, Format, Channel</criterion>
+    <criterion id="4">Grouping options available: by Title, by Format, by Channel, by Date</criterion>
+    <criterion id="5">Results table shows: Group, Total Units, Total Revenue, Avg Unit Price</criterion>
+    <criterion id="6">Totals row displays at bottom of table summing all visible rows</criterion>
+    <criterion id="7">Bar chart shows top 10 items by revenue</criterion>
+    <criterion id="8">Pie chart shows distribution by selected grouping</criterion>
+    <criterion id="9">CSV export downloads report data with all filtered results</criterion>
+    <criterion id="10">All users (except Author role) can access sales reports</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-6.md" title="Tech Spec Epic 6" section="Story 6.2: Sales Reports" snippet="Detailed acceptance criteria, type definitions (SalesReportFilters, SalesReportRow), query signatures (getSalesReport), and traceability mapping for sales report implementation."/>
+      <doc path="docs/architecture.md" title="Architecture" section="Data Access Patterns" snippet="Tenant scoping patterns, CRUD patterns with tenant_id FIRST condition, transaction patterns for multi-step operations, Decimal.js for financial calculations."/>
+      <doc path="docs/architecture.md" title="Architecture" section="Technology Stack Details" snippet="TanStack Table 8.21+, React Hook Form 7.60+, Zod 3.25+, date-fns 4.1+, Decimal.js for financial precision."/>
+      <doc path="docs/prd.md" title="PRD" section="FR72, FR75" snippet="FR72: Sales reports with filtering by period, title, author, format, channel with grouping options. FR75: CSV export functionality for all reports."/>
+      <doc path="docs/sprint-artifacts/6-1-implement-revenue-and-liability-tracking.md" title="Story 6.1 Learnings" section="Completion Notes" snippet="Recharts@2.15.3 installed, reusable chart components at src/components/charts/, Editorial Navy (#1e3a5f), reports module structure established."/>
+    </docs>
+    <code>
+      <file path="src/modules/reports/types.ts" kind="types" symbol="RevenueMetrics, LiabilityMetrics, DateRangeFilter" lines="1-132" reason="Existing type definitions for reports module - extend with SalesReportFilters and SalesReportRow"/>
+      <file path="src/modules/reports/schema.ts" kind="schema" symbol="reportPeriodSchema, dateRangeFilterSchema, revenueFilterSchema" lines="1-76" reason="Existing Zod schemas - extend with salesReportFilterSchema"/>
+      <file path="src/modules/reports/queries.ts" kind="queries" symbol="getRevenueMetrics, getLiabilityMetrics, generatePeriodBuckets" lines="1-429" reason="Existing query patterns with Decimal.js, tenant isolation, period aggregation - follow same patterns for getSalesReport"/>
+      <file path="src/modules/reports/actions.ts" kind="actions" symbol="ActionResult, fetchRevenueMetrics, fetchLiabilityMetrics" lines="1-138" reason="Existing action patterns with error handling and permission checks - follow same patterns for exportSalesReportCSV"/>
+      <file path="src/modules/reports/components/index.ts" kind="component-index" symbol="exports" lines="all" reason="Export new sales report components here"/>
+      <file path="src/components/charts/bar-chart.tsx" kind="component" symbol="BarChart, BarChartDataPoint" lines="1-102" reason="Reusable bar chart component - use for top 10 revenue chart"/>
+      <file path="src/components/charts/pie-chart.tsx" kind="component" symbol="PieChart, PieChartDataPoint" lines="1-163" reason="Reusable pie chart component - use for distribution chart"/>
+      <file path="src/db/schema/sales.ts" kind="schema" symbol="sales, Sale, InsertSale, salesChannelValues, salesFormatValues" lines="1-215" reason="Sales table schema with format/channel enums, indexes on tenant_id, sale_date, channel, format"/>
+      <file path="src/lib/auth.ts" kind="auth" symbol="getCurrentTenantId, getDb, requirePermission, hasPermission" lines="1-138" reason="Auth utilities for permission checks and tenant isolation"/>
+      <file path="src/modules/sales/components/sales-table.tsx" kind="component" symbol="SalesTable, formatCurrency" lines="59-179" reason="Existing sales table implementation with TanStack Table and local formatCurrency function"/>
+    </code>
+    <dependencies>
+      <node>
+        <package name="recharts" version="3.5.1" purpose="Charts (BarChart, PieChart already configured)"/>
+        <package name="@tanstack/react-table" version="8.21.3" purpose="Data tables with sorting, pagination"/>
+        <package name="react-day-picker" version="9.11.3" purpose="Date range picker"/>
+        <package name="date-fns" version="^4.1.0" purpose="Date manipulation and formatting"/>
+        <package name="decimal.js" version="^10.6.0" purpose="Financial calculations"/>
+        <package name="zod" version="^4.1.13" purpose="Schema validation"/>
+        <package name="react-hook-form" version="^7.67.0" purpose="Form state management"/>
+        <package name="@hookform/resolvers" version="^5.2.2" purpose="Zod resolver for forms"/>
+        <package name="papaparse" version="5.5.3" purpose="CSV parsing (can use for CSV generation)"/>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture" type="critical">ALWAYS include tenant_id filter as FIRST condition in all database queries</constraint>
+    <constraint source="architecture" type="critical">Use Decimal.js for ALL financial calculations - never JavaScript arithmetic</constraint>
+    <constraint source="tech-spec" type="security">Author role must NOT have access to sales reports - check in requirePermission with ["finance", "admin", "owner", "editor"]</constraint>
+    <constraint source="story-6.1" type="pattern">Follow existing reports module patterns from Story 6.1</constraint>
+    <constraint source="architecture" type="pattern">Use dynamic = "force-dynamic" for reports pages (real-time data, no caching)</constraint>
+    <constraint source="tech-spec" type="performance">Report generation must complete in less than 3 seconds</constraint>
+    <constraint source="architecture" type="pattern">Use Server Actions for mutations (exportSalesReportCSV), Server Components for reads</constraint>
+    <constraint source="tech-spec" type="format">CSV export must include headers: Group, Total Units, Total Revenue, Avg Unit Price</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="SalesReportFilters" kind="type" path="src/modules/reports/types.ts">
+      <signature>
+interface SalesReportFilters {
+  startDate: Date;
+  endDate: Date;
+  titleIds?: string[];
+  authorIds?: string[];
+  format?: "physical" | "ebook" | "audiobook" | "all";
+  channel?: "retail" | "wholesale" | "direct" | "distributor" | "all";
+  groupBy: "title" | "format" | "channel" | "date";
+}
+      </signature>
+    </interface>
+    <interface name="SalesReportRow" kind="type" path="src/modules/reports/types.ts">
+      <signature>
+interface SalesReportRow {
+  groupKey: string;
+  groupLabel: string;
+  totalUnits: number;
+  totalRevenue: number;
+  avgUnitPrice: number;
+}
+      </signature>
+    </interface>
+    <interface name="getSalesReport" kind="function" path="src/modules/reports/queries.ts">
+      <signature>
+async function getSalesReport(
+  tenantId: string,
+  filters: SalesReportFilters
+): Promise&lt;{ rows: SalesReportRow[]; totals: SalesReportRow }&gt;
+      </signature>
+    </interface>
+    <interface name="exportSalesReportCSV" kind="server-action" path="src/modules/reports/actions.ts">
+      <signature>
+"use server";
+async function exportSalesReportCSV(
+  filters: SalesReportFilters
+): Promise&lt;ActionResult&lt;string&gt;&gt;; // Returns CSV string
+      </signature>
+    </interface>
+    <interface name="requirePermission" kind="function" path="src/lib/auth.ts">
+      <signature>
+async function requirePermission(
+  allowedRoles: UserRole[]
+): Promise&lt;void&gt;; // Throws "UNAUTHORIZED" if permission denied
+      </signature>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing follows Vitest for unit/integration tests and Playwright for E2E. Unit tests use pure function testing without database mocks where possible. Integration tests use @testing-library/react. Follow existing patterns in tests/unit/report-queries.test.ts which demonstrates Decimal.js calculations, grouping logic, and permission validation. All tests must use Vitest's describe/it/expect. Pre-existing test failures in permissions.test.ts, tenant-settings.test.ts, users-actions.test.ts are documented and should not be addressed in this story.
+    </standards>
+    <locations>
+      <location>tests/unit/ - Unit tests for query logic and calculations</location>
+      <location>tests/integration/ - React component integration tests</location>
+      <location>tests/e2e/ - Playwright end-to-end tests</location>
+    </locations>
+    <ideas>
+      <idea ac="5,6">Test getSalesReport grouping by title returns correct GROUP BY results</idea>
+      <idea ac="5,6">Test getSalesReport grouping by format returns physical/ebook/audiobook groups</idea>
+      <idea ac="5,6">Test getSalesReport grouping by channel returns all four channel types</idea>
+      <idea ac="5,6">Test getSalesReport grouping by date returns period-grouped results</idea>
+      <idea ac="5,6">Test getSalesReport totals calculation uses Decimal.js correctly</idea>
+      <idea ac="5,6">Test avgUnitPrice = totalRevenue / totalUnits calculation</idea>
+      <idea ac="2">Test date range filtering excludes sales outside range</idea>
+      <idea ac="3">Test titleIds filter returns only matching titles</idea>
+      <idea ac="3">Test authorIds filter correctly JOINs through contracts</idea>
+      <idea ac="3">Test format filter excludes other formats</idea>
+      <idea ac="3">Test channel filter excludes other channels</idea>
+      <idea ac="10">Test Finance/Admin/Owner/Editor can access reports</idea>
+      <idea ac="10">Test Author role is blocked from accessing reports</idea>
+      <idea ac="9">Test CSV export contains correct headers</idea>
+      <idea ac="9">Test CSV export formats currency correctly</idea>
+      <idea ac="1">E2E: Test navigation to /reports/sales</idea>
+      <idea ac="2,9">E2E: Test selecting date range and exporting CSV</idea>
+    </ideas>
+  </tests>
+</story-context>

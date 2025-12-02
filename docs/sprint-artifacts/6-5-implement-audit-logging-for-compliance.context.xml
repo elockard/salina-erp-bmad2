@@ -1,0 +1,251 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>5</storyId>
+    <title>Implement Audit Logging for Compliance</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-5-implement-audit-logging-for-compliance.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>system architect</asA>
+    <iWant>to log all data modifications for audit trail</iWant>
+    <soThat>we have compliance and security visibility</soThat>
+    <tasks>
+      <task n="1" ac="1">Create audit_logs database schema
+        <subtask>1.1 Create src/db/schema/audit-logs.ts with auditLogs table definition per tech-spec</subtask>
+        <subtask>1.2 Add columns: id, tenant_id, user_id, action_type, resource_type, resource_id, changes (jsonb), metadata (jsonb), status, created_at</subtask>
+        <subtask>1.3 Add indexes: tenant_idx, user_idx, resource_type_idx, created_at_idx</subtask>
+        <subtask>1.4 Export from src/db/schema/index.ts</subtask>
+        <subtask>1.5 Run npm run db:push to apply schema to database</subtask>
+      </task>
+      <task n="2" ac="2,10">Implement logAuditEvent() utility function
+        <subtask>2.1 Create src/lib/audit.ts with logAuditEvent() function</subtask>
+        <subtask>2.2 Function signature per tech-spec: tenantId, userId, actionType, resourceType, resourceId?, changes?, metadata?, status?</subtask>
+        <subtask>2.3 ActionType enum: CREATE, UPDATE, DELETE, APPROVE, REJECT, VIEW</subtask>
+        <subtask>2.4 Implement async insertion (non-blocking) - fire and forget pattern</subtask>
+        <subtask>2.5 Add try/catch with logging on failure (don't throw to caller)</subtask>
+        <subtask>2.6 Mask sensitive data in changes object (tax_id shows last 4 only)</subtask>
+      </task>
+      <task n="3" ac="3">Integrate audit logging into financial transaction actions
+        <subtask>3.1 Add logAuditEvent() call to createSale() in src/modules/sales/actions.ts</subtask>
+        <subtask>3.2 Add logAuditEvent() call to updateSale() if exists</subtask>
+        <subtask>3.3 Add logAuditEvent() call to deleteSale() if exists</subtask>
+        <subtask>3.4 Add logAuditEvent() call to statement generation in src/modules/statements/actions.ts</subtask>
+        <subtask>3.5 Add logAuditEvent() call to statement email delivery</subtask>
+      </task>
+      <task n="4" ac="3,6">Integrate audit logging into returns workflow
+        <subtask>4.1 Add logAuditEvent() call to createReturn() in src/modules/returns/actions.ts</subtask>
+        <subtask>4.2 Add logAuditEvent() call to approveReturn() with APPROVE action type</subtask>
+        <subtask>4.3 Add logAuditEvent() call to rejectReturn() with REJECT action type</subtask>
+        <subtask>4.4 Include before/after status in changes object for approval/rejection</subtask>
+      </task>
+      <task n="5" ac="4">Integrate audit logging into user management actions
+        <subtask>5.1 Add logAuditEvent() call to user invitation in src/modules/users/actions.ts</subtask>
+        <subtask>5.2 Add logAuditEvent() call to role change action</subtask>
+        <subtask>5.3 Add logAuditEvent() call to user deactivation</subtask>
+        <subtask>5.4 Add logAuditEvent() call to user deletion (if soft delete, log UPDATE)</subtask>
+      </task>
+      <task n="6" ac="5">Integrate audit logging into contract modifications
+        <subtask>6.1 Add logAuditEvent() call to createContract() in src/modules/royalties/actions.ts</subtask>
+        <subtask>6.2 Add logAuditEvent() call to updateContract()</subtask>
+        <subtask>6.3 Add logAuditEvent() call to contract status changes (active, terminated, suspended)</subtask>
+        <subtask>6.4 Add logAuditEvent() call to tier modifications</subtask>
+        <subtask>6.5 Include before/after contract state in changes object</subtask>
+      </task>
+      <task n="7" ac="7,8">Implement audit log query function
+        <subtask>7.1 Create src/modules/admin/queries.ts with getAuditLogs() function</subtask>
+        <subtask>7.2 Implement filters: userId, actionType, resourceType, startDate, endDate</subtask>
+        <subtask>7.3 Implement pagination with page and pageSize parameters</subtask>
+        <subtask>7.4 Return { logs: AuditLogEntry[], total: number }</subtask>
+        <subtask>7.5 Add tenant_id filter FIRST (CRITICAL: tenant isolation)</subtask>
+        <subtask>7.6 JOIN with users table to get userName for display</subtask>
+      </task>
+      <task n="8" ac="7">Create audit log viewer page
+        <subtask>8.1 Create src/app/(dashboard)/admin/audit-logs/page.tsx</subtask>
+        <subtask>8.2 Add permission check: Admin and Owner only</subtask>
+        <subtask>8.3 Use dynamic = "force-dynamic" (real-time data, no caching)</subtask>
+        <subtask>8.4 Add page title and description</subtask>
+      </task>
+      <task n="9" ac="8">Build audit log filters component
+        <subtask>9.1 Create src/modules/admin/components/audit-log-filters.tsx</subtask>
+        <subtask>9.2 User filter: dropdown populated from users query</subtask>
+        <subtask>9.3 Action Type filter: dropdown with CREATE, UPDATE, DELETE, APPROVE, REJECT, VIEW</subtask>
+        <subtask>9.4 Resource Type filter: dropdown with author, title, sale, return, statement, contract, user</subtask>
+        <subtask>9.5 Date Range filter: date picker for start/end dates</subtask>
+        <subtask>9.6 Apply filters on change (controlled form state)</subtask>
+      </task>
+      <task n="10" ac="8">Build audit log table component
+        <subtask>10.1 Create src/modules/admin/components/audit-log-table.tsx</subtask>
+        <subtask>10.2 Use TanStack Table with columns: Timestamp, User, Action, Resource Type, Resource ID, Status</subtask>
+        <subtask>10.3 Add expandable row to show changes (before/after) and metadata</subtask>
+        <subtask>10.4 Format timestamp with date-fns</subtask>
+        <subtask>10.5 Add pagination controls</subtask>
+        <subtask>10.6 Handle empty state (no audit logs match filters)</subtask>
+      </task>
+      <task n="11" ac="9">Implement CSV export for audit logs
+        <subtask>11.1 Add exportAuditLogsCSV() to src/modules/admin/actions.ts</subtask>
+        <subtask>11.2 Accept same filters as getAuditLogs()</subtask>
+        <subtask>11.3 Generate CSV with headers: Timestamp, User, Action, Resource Type, Resource ID, Changes, Status</subtask>
+        <subtask>11.4 JSON stringify changes column for CSV</subtask>
+        <subtask>11.5 Add permission check (Admin, Owner only)</subtask>
+        <subtask>11.6 Create export button component that triggers download</subtask>
+      </task>
+      <task n="12" ac="7,8,9">Assemble audit logs page
+        <subtask>12.1 Compose filters, table, and export button in page layout</subtask>
+        <subtask>12.2 Add Suspense boundary for table loading</subtask>
+        <subtask>12.3 Connect filters to table via URL search params or state</subtask>
+        <subtask>12.4 Add navigation link in admin sidebar</subtask>
+      </task>
+      <task n="13" ac="2,10">Write unit tests for audit logging
+        <subtask>13.1 Create tests/unit/audit-logging.test.ts</subtask>
+        <subtask>13.2 Test logAuditEvent() creates log entry</subtask>
+        <subtask>13.3 Test sensitive data masking (tax_id)</subtask>
+        <subtask>13.4 Test async non-blocking behavior</subtask>
+        <subtask>13.5 Test error handling (failure doesn't throw)</subtask>
+        <subtask>13.6 Test all action types (CREATE, UPDATE, DELETE, APPROVE, REJECT, VIEW)</subtask>
+      </task>
+      <task n="14" ac="7,8">Write integration tests for audit queries
+        <subtask>14.1 Create tests/integration/audit-logs.test.tsx</subtask>
+        <subtask>14.2 Test getAuditLogs() returns correct filtered results</subtask>
+        <subtask>14.3 Test pagination works correctly</subtask>
+        <subtask>14.4 Test tenant isolation (no cross-tenant logs returned)</subtask>
+        <subtask>14.5 Test date range filtering</subtask>
+        <subtask>14.6 Test page renders for Admin user</subtask>
+        <subtask>14.7 Test page renders for Owner user</subtask>
+        <subtask>14.8 Test page blocks Finance/Editor/Author roles</subtask>
+      </task>
+      <task n="15" ac="7,8,9">Write E2E tests for audit log viewer
+        <subtask>15.1 Create tests/e2e/audit-logs.spec.ts</subtask>
+        <subtask>15.2 Test page navigation to /admin/audit-logs</subtask>
+        <subtask>15.3 Test filter interactions</subtask>
+        <subtask>15.4 Test CSV export triggers download</subtask>
+        <subtask>15.5 Test expandable row shows changes</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">audit_logs table created with schema per tech-spec-epic-6.md Data Models section</criterion>
+    <criterion id="AC2">logAuditEvent() function available for all Server Actions</criterion>
+    <criterion id="AC3">Financial transactions (sales, returns, statements) are logged</criterion>
+    <criterion id="AC4">User management actions (invites, role changes) are logged</criterion>
+    <criterion id="AC5">Contract modifications are logged</criterion>
+    <criterion id="AC6">Return approvals/rejections are logged</criterion>
+    <criterion id="AC7">Admin/Owner users can access /admin/audit-logs</criterion>
+    <criterion id="AC8">Audit log viewer supports filters: User, Action Type, Resource Type, Date Range</criterion>
+    <criterion id="AC9">Audit logs are exportable to CSV</criterion>
+    <criterion id="AC10">Audit logging is async and does not block user operations</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-6.md" title="Epic 6 Technical Specification" section="Story 6.5: Audit Logging for Compliance">
+        Defines audit_logs table schema, AuditLogEntry types, AuditLogFilters interface, logAuditEvent() function signature, permission matrix (Admin/Owner only), and acceptance criteria 6.5.1-6.5.10.
+      </doc>
+      <doc path="docs/architecture.md" title="Salina ERP Decision Architecture" section="Implementation Patterns">
+        CRUD patterns, Server Action structure, error handling patterns, logging strategy, tenant scoping (tenant_id FIRST in WHERE clause), ActionResult type definition, permission checks.
+      </doc>
+      <doc path="docs/architecture.md" title="Salina ERP Decision Architecture" section="Security Architecture">
+        Multi-tenant RLS, authorization patterns, permission enforcement in Server Actions.
+      </doc>
+    </docs>
+    <code>
+      <artifact path="src/db/schema/index.ts" kind="schema-exports" symbol="exports" reason="Export pattern for new auditLogs table - add export line"/>
+      <artifact path="src/lib/auth.ts" kind="auth-utility" symbol="getCurrentTenantId, getCurrentUser, requirePermission, hasPermission" reason="Auth functions for permission checks and tenant context"/>
+      <artifact path="src/lib/types.ts" kind="types" symbol="ActionResult" reason="Standard action result type for Server Actions"/>
+      <artifact path="src/modules/sales/actions.ts" kind="server-actions" symbol="recordSale" lines="89-206" reason="Integration point for audit logging - CREATE sale"/>
+      <artifact path="src/modules/returns/actions.ts" kind="server-actions" symbol="recordReturn, approveReturn, rejectReturn" reason="Integration points for audit logging - CREATE return, APPROVE, REJECT"/>
+      <artifact path="src/modules/users/actions.ts" kind="server-actions" symbol="inviteUser, updateUserRole, deactivateUser" reason="Integration points for audit logging - user management actions"/>
+      <artifact path="src/modules/royalties/actions.ts" kind="server-actions" symbol="createContract, updateContract" reason="Integration points for audit logging - contract modifications"/>
+      <artifact path="src/modules/statements/actions.ts" kind="server-actions" symbol="generateStatements, sendStatementEmails" reason="Integration points for audit logging - statement generation and delivery"/>
+      <artifact path="src/modules/reports/actions.ts" kind="server-actions" symbol="fetchRevenueMetrics" lines="46-73" reason="Reference pattern for Server Action structure with permission checks"/>
+      <artifact path="src/lib/permissions.ts" kind="constants" symbol="RECORD_SALES, APPROVE_RETURNS, VIEW_RETURNS" reason="Permission constants pattern - add ADMIN_ACCESS for audit logs"/>
+    </code>
+    <dependencies>
+      <ecosystem name="node" manifest="package.json">
+        <package name="drizzle-orm" version="^0.44.7" usage="Database ORM for audit_logs table"/>
+        <package name="@tanstack/react-table" version="8.21.3" usage="Audit log viewer table"/>
+        <package name="date-fns" version="^4.1.0" usage="Timestamp formatting in audit logs"/>
+        <package name="zod" version="^4.1.13" usage="Filter validation schemas"/>
+        <package name="react-day-picker" version="9.11.3" usage="Date range picker for filters"/>
+        <package name="vitest" version="4.0.14" usage="Unit/integration testing"/>
+        <package name="@playwright/test" version="^1.57.0" usage="E2E testing"/>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="security">TENANT ISOLATION: All audit log queries MUST have tenant_id as FIRST WHERE condition</constraint>
+    <constraint type="security">PERMISSION: Audit logs viewable by Admin and Owner roles only</constraint>
+    <constraint type="security">APPEND-ONLY: Audit logs have no UPDATE/DELETE operations exposed</constraint>
+    <constraint type="security">SENSITIVE DATA: Tax IDs show only last 4 digits in changes object</constraint>
+    <constraint type="performance">NON-BLOCKING: logAuditEvent() uses fire-and-forget pattern - async insertion doesn't block caller</constraint>
+    <constraint type="performance">ERROR HANDLING: Audit log failures don't throw to caller - log error and continue</constraint>
+    <constraint type="architecture">MODULE STRUCTURE: Follow src/modules/admin/ pattern with components/, queries.ts, actions.ts, types.ts</constraint>
+    <constraint type="architecture">SERVER ACTIONS: All actions use "use server" directive, requirePermission checks, ActionResult return type</constraint>
+    <constraint type="architecture">CSV EXPORT: Follow pattern from exportSalesCsvAction() in sales/actions.ts</constraint>
+    <constraint type="testing">TEST BASELINE: ~1215+ unit/integration tests pass - maintain baseline</constraint>
+    <constraint type="testing">KNOWN FAILURES: 18 tests in permissions.test.ts, tenant-settings.test.ts, users-actions.test.ts fail (pre-existing)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="logAuditEvent" kind="function" path="src/lib/audit.ts">
+      <signature>async function logAuditEvent(params: { tenantId: string; userId: string | null; actionType: AuditActionType; resourceType: AuditResourceType; resourceId?: string; changes?: { before?: unknown; after?: unknown }; metadata?: Record&lt;string, unknown&gt;; status?: "success" | "failure"; }): Promise&lt;void&gt;</signature>
+    </interface>
+    <interface name="getAuditLogs" kind="query" path="src/modules/admin/queries.ts">
+      <signature>async function getAuditLogs(tenantId: string, filters: AuditLogFilters, page: number, pageSize: number): Promise&lt;{ logs: AuditLogEntry[]; total: number }&gt;</signature>
+    </interface>
+    <interface name="exportAuditLogsCSV" kind="action" path="src/modules/admin/actions.ts">
+      <signature>async function exportAuditLogsCSV(filters: AuditLogFilters): Promise&lt;ActionResult&lt;string&gt;&gt;</signature>
+    </interface>
+    <interface name="AuditLogEntry" kind="type" path="src/modules/admin/types.ts">
+      <definition>{ id: string; userId: string | null; userName: string | null; actionType: string; resourceType: string; resourceId: string | null; changes: { before?: Record&lt;string, unknown&gt;; after?: Record&lt;string, unknown&gt; } | null; metadata: Record&lt;string, unknown&gt; | null; status: string; createdAt: Date; }</definition>
+    </interface>
+    <interface name="AuditLogFilters" kind="type" path="src/modules/admin/types.ts">
+      <definition>{ userId?: string; actionType?: string; resourceType?: string; startDate?: Date; endDate?: Date; }</definition>
+    </interface>
+    <interface name="AuditActionType" kind="enum" path="src/modules/admin/types.ts">
+      <values>CREATE, UPDATE, DELETE, APPROVE, REJECT, VIEW</values>
+    </interface>
+    <interface name="AuditResourceType" kind="enum" path="src/modules/admin/types.ts">
+      <values>author, title, sale, return, statement, contract, user</values>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Vitest for unit and integration tests. Playwright for E2E tests. Mock database using vi.mock() pattern from existing tests. Use @testing-library/react for component tests. Follow existing patterns in tests/unit/returns-approval.test.ts and tests/integration/royalty-liability-report.test.tsx for reference.
+    </standards>
+    <locations>
+      <location type="unit">tests/unit/audit-logging.test.ts</location>
+      <location type="integration">tests/integration/audit-logs.test.tsx</location>
+      <location type="e2e">tests/e2e/audit-logs.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test auditLogs table has all required columns with correct types</idea>
+      <idea ac="AC2">Test logAuditEvent() inserts record with all fields populated correctly</idea>
+      <idea ac="AC2">Test logAuditEvent() masks tax_id to show only last 4 digits</idea>
+      <idea ac="AC10">Test logAuditEvent() doesn't throw on insertion failure</idea>
+      <idea ac="AC10">Test logAuditEvent() returns before insert completes (non-blocking)</idea>
+      <idea ac="AC3">Test recordSale() creates audit log with action=CREATE, resource=sale</idea>
+      <idea ac="AC6">Test approveReturn() creates audit log with action=APPROVE, includes before/after status</idea>
+      <idea ac="AC6">Test rejectReturn() creates audit log with action=REJECT, includes rejection reason</idea>
+      <idea ac="AC4">Test user invite creates audit log with action=CREATE, resource=user</idea>
+      <idea ac="AC5">Test createContract() creates audit log with action=CREATE, resource=contract</idea>
+      <idea ac="AC7">Test /admin/audit-logs page renders for Admin role</idea>
+      <idea ac="AC7">Test /admin/audit-logs page renders for Owner role</idea>
+      <idea ac="AC7">Test /admin/audit-logs page returns 403 for Finance/Editor/Author</idea>
+      <idea ac="AC8">Test filter by userId returns only matching logs</idea>
+      <idea ac="AC8">Test filter by actionType returns correct logs</idea>
+      <idea ac="AC8">Test filter by date range returns logs within range</idea>
+      <idea ac="AC8">Test pagination returns correct page of results</idea>
+      <idea ac="AC8">Test tenant isolation - no cross-tenant logs returned</idea>
+      <idea ac="AC9">Test CSV export includes all filtered data</idea>
+      <idea ac="AC9">Test CSV export has correct headers</idea>
+      <idea ac="AC9">Test CSV changes column contains JSON stringified data</idea>
+    </ideas>
+  </tests>
+</story-context>

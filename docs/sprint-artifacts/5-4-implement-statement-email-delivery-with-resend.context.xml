@@ -1,0 +1,269 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>4</storyId>
+    <title>Implement Statement Email Delivery with Resend</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-4-implement-statement-email-delivery-with-resend.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform architect</asA>
+    <iWant>email PDF statements to authors automatically</iWant>
+    <soThat>authors receive timely notifications of their royalty statements</soThat>
+    <tasks>
+      <task id="1" ac="1,2">Create Resend email utility
+        <subtask id="1.1">Create src/lib/email.ts with Resend client initialization</subtask>
+        <subtask id="1.2">Export sendEmail function with attachment support</subtask>
+        <subtask id="1.3">Add error handling and logging for delivery failures</subtask>
+        <subtask id="1.4">Verify RESEND_API_KEY environment variable configured</subtask>
+      </task>
+      <task id="2" ac="1">Create React Email template for statements
+        <subtask id="2.1">Create src/modules/statements/email-template.tsx using React Email</subtask>
+        <subtask id="2.2">Add subject line format: "Your Q4 2025 Royalty Statement is Ready - [Publisher Name]"</subtask>
+        <subtask id="2.3">Add preheader: "Total earned: $X | Net payable: $Y"</subtask>
+        <subtask id="2.4">Add body structure: logo, greeting, message, summary, CTA, footer</subtask>
+        <subtask id="2.5">Create renderStatementEmail function for HTML output</subtask>
+      </task>
+      <task id="3" ac="1,2,3">Create statement email service
+        <subtask id="3.1">Create src/modules/statements/email-service.ts</subtask>
+        <subtask id="3.2">Implement sendStatementEmail function (fetch statement, download PDF, render email, send via Resend)</subtask>
+        <subtask id="3.3">Export types for email service result</subtask>
+      </task>
+      <task id="4" ac="2,3,4">Integrate email sending into Inngest batch job
+        <subtask id="4.1">Update src/inngest/generate-statements-batch.ts to import email service</subtask>
+        <subtask id="4.2">Replace TODO comment (line 284) with email sending logic</subtask>
+        <subtask id="4.3">Add step for each author: send-email-${statementId}</subtask>
+        <subtask id="4.4">Implement retry logic (3 attempts with exponential backoff via Inngest)</subtask>
+        <subtask id="4.5">Update statement status to "sent" after email success</subtask>
+        <subtask id="4.6">Update email_sent_at timestamp on successful delivery</subtask>
+        <subtask id="4.7">Handle email failures gracefully (statement still saved, log error)</subtask>
+      </task>
+      <task id="5" ac="5">Add manual resend action
+        <subtask id="5.1">Add resendStatementEmail server action to src/modules/statements/actions.ts</subtask>
+        <subtask id="5.2">Validate statement exists and has PDF generated</subtask>
+        <subtask id="5.3">Enforce Finance/Admin/Owner permission</subtask>
+        <subtask id="5.4">Call email service to resend</subtask>
+        <subtask id="5.5">Update email_sent_at on success</subtask>
+        <subtask id="5.6">Return success/failure result to UI</subtask>
+      </task>
+      <task id="6" ac="1-5">Add email service exports
+        <subtask id="6.1">Update src/modules/statements/index.ts to export email service</subtask>
+        <subtask id="6.2">Update src/modules/statements/types.ts with email-related types</subtask>
+      </task>
+      <task id="7" ac="1-5">Write unit tests
+        <subtask id="7.1">Create tests/unit/statement-email-template.test.tsx</subtask>
+        <subtask id="7.2">Test email template renders with correct subject, preheader, body</subtask>
+        <subtask id="7.3">Test email template handles missing data gracefully</subtask>
+        <subtask id="7.4">Test email service formats attachment correctly</subtask>
+        <subtask id="7.5">Test resendStatementEmail action permission enforcement</subtask>
+        <subtask id="7.6">Test retry logic configuration</subtask>
+      </task>
+      <task id="8" ac="3,4,5">Write integration tests
+        <subtask id="8.1">Create tests/integration/statement-email-delivery.test.tsx</subtask>
+        <subtask id="8.2">Test full flow: batch job -> email sent -> timestamp recorded</subtask>
+        <subtask id="8.3">Test manual resend updates email_sent_at</subtask>
+        <subtask id="8.4">Test email failure does not block statement creation</subtask>
+        <subtask id="8.5">Test Inngest retry behavior on failures</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-5.4.1">Email template created using React Email with subject, summary, and CTA button</criterion>
+    <criterion id="AC-5.4.2">PDF statement attached to email</criterion>
+    <criterion id="AC-5.4.3">email_sent_at timestamp recorded in database after successful delivery</criterion>
+    <criterion id="AC-5.4.4">Failed deliveries retry 3x with exponential backoff</criterion>
+    <criterion id="AC-5.4.5">Failed emails allow manual resend from statement detail UI</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Royalty Statements and Author Portal</title>
+        <section>Story 5.4 Acceptance Criteria, Email Service Architecture</section>
+        <snippet>AC-5.4.1-5.4.5 define email template, PDF attachment, timestamp recording, retry logic, and manual resend requirements. Email service uses Resend API with React Email templates.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Salina Bookshelf ERP - Decision Architecture</title>
+        <section>Email Service, Background Jobs, File Storage</section>
+        <snippet>Resend + React Email for transactional emails. Inngest for background job processing. AWS S3 with presigned URLs (15-minute expiry) for PDF storage.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/5-3-build-statement-generation-wizard-for-finance.md</path>
+        <title>Story 5.3 Dev Agent Record</title>
+        <section>Learnings from Previous Story</section>
+        <snippet>Inngest infrastructure ready at src/inngest/. S3 storage utilities at src/modules/statements/storage.ts. Server action patterns at src/modules/statements/actions.ts.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/inngest/generate-statements-batch.ts</path>
+        <kind>inngest-function</kind>
+        <symbol>generateStatementsBatch</symbol>
+        <lines>284</lines>
+        <reason>Contains TODO at line 284 for email integration. This is the primary file to modify for email sending in batch job.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/statements/storage.ts</path>
+        <kind>service</kind>
+        <symbol>getStatementDownloadUrl, uploadStatementPDF, generateStatementS3Key</symbol>
+        <lines>all</lines>
+        <reason>Use getStatementDownloadUrl to retrieve PDF buffer for email attachment. S3 client and bucket configuration patterns to follow.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/statements/actions.ts</path>
+        <kind>server-actions</kind>
+        <symbol>generateStatementPDF, getStatementPDFUrl, generateStatements</symbol>
+        <lines>all</lines>
+        <reason>Follow requirePermission pattern for resendStatementEmail action. Server action error handling pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/statements/types.ts</path>
+        <kind>types</kind>
+        <symbol>StatementWithDetails, StatementCalculations, PDFGenerationResult</symbol>
+        <lines>all</lines>
+        <reason>Extend with email-related types: EmailDeliveryResult, StatementEmailData.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/statements/index.ts</path>
+        <kind>module-exports</kind>
+        <symbol>module exports</symbol>
+        <lines>all</lines>
+        <reason>Add email service exports after implementation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/inngest/client.ts</path>
+        <kind>config</kind>
+        <symbol>inngest</symbol>
+        <lines>all</lines>
+        <reason>Inngest client singleton for background job integration.</reason>
+      </artifact>
+      <artifact>
+        <path>src/inngest/functions.ts</path>
+        <kind>registry</kind>
+        <symbol>functions</symbol>
+        <lines>all</lines>
+        <reason>Functions registry - no changes needed if email logic added to existing batch function.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>requirePermission, getCurrentUser, getCurrentTenantId</symbol>
+        <lines>all</lines>
+        <reason>Permission enforcement pattern for resendStatementEmail action.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/statements.ts</path>
+        <kind>schema</kind>
+        <symbol>statements</symbol>
+        <lines>all</lines>
+        <reason>statements table has email_sent_at column (nullable timestamp) and status column to update.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>resend</package>
+        <version>^6.5.2</version>
+        <purpose>Email delivery API</purpose>
+      </node>
+      <node>
+        <package>react-email</package>
+        <version>^5.0.5</version>
+        <purpose>React Email template components (Body, Button, Container, etc.)</purpose>
+      </node>
+      <node>
+        <package>inngest</package>
+        <version>^3.46.0</version>
+        <purpose>Background job processing with retry support</purpose>
+      </node>
+      <node>
+        <package>@aws-sdk/client-s3</package>
+        <version>^3.940.0</version>
+        <purpose>PDF retrieval from S3 for email attachment</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="tech-spec-epic-5.md">Email failure should NOT fail the entire batch job - statement is created regardless of email status</constraint>
+    <constraint source="tech-spec-epic-5.md">Retry 3x with exponential backoff for failed email deliveries</constraint>
+    <constraint source="architecture.md">Store RESEND_API_KEY in environment variables</constraint>
+    <constraint source="architecture.md">Presigned S3 URLs expire after 15 minutes</constraint>
+    <constraint source="story">Finance/Admin/Owner roles only for resendStatementEmail action</constraint>
+    <constraint source="story">email_sent_at only set after Resend API confirms acceptance</constraint>
+    <constraint source="story">Update statement status to "sent" after successful email delivery</constraint>
+    <constraint source="architecture.md">All email operations logged for audit trail</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Resend.emails.send</name>
+      <kind>REST API</kind>
+      <signature>resend.emails.send({ from, to, subject, html, attachments: [{ filename, content }] })</signature>
+      <path>node_modules/resend</path>
+    </interface>
+    <interface>
+      <name>getStatementDownloadUrl</name>
+      <kind>function</kind>
+      <signature>async function getStatementDownloadUrl(s3Key: string): Promise&lt;string&gt;</signature>
+      <path>src/modules/statements/storage.ts</path>
+    </interface>
+    <interface>
+      <name>requirePermission</name>
+      <kind>function</kind>
+      <signature>async function requirePermission(roles: string[]): Promise&lt;void&gt;</signature>
+      <path>src/lib/auth.ts</path>
+    </interface>
+    <interface>
+      <name>inngest.send</name>
+      <kind>function</kind>
+      <signature>async function send(event: { name: string, data: object }): Promise&lt;{ ids: string[] }&gt;</signature>
+      <path>src/inngest/client.ts</path>
+    </interface>
+    <interface>
+      <name>step.run</name>
+      <kind>inngest-step</kind>
+      <signature>await step.run(stepId: string, async () =&gt; { ... })</signature>
+      <path>inngest runtime</path>
+    </interface>
+    <interface>
+      <name>GetObjectCommand</name>
+      <kind>class</kind>
+      <signature>new GetObjectCommand({ Bucket, Key })</signature>
+      <path>@aws-sdk/client-s3</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing uses Vitest for unit tests and Playwright for E2E tests. Unit tests mock external dependencies (Resend API, S3, database). Integration tests may use actual database with test data. React Email templates tested by rendering to HTML string and asserting content. Server actions tested with mocked auth context.
+    </standards>
+    <locations>
+      <location>tests/unit/statement-email-template.test.tsx</location>
+      <location>tests/integration/statement-email-delivery.test.tsx</location>
+      <location>tests/unit/*.test.ts - existing patterns</location>
+      <location>tests/integration/*.test.ts - existing patterns</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-5.4.1">Test email template renders subject line with period label and publisher name</idea>
+      <idea ac="AC-5.4.1">Test preheader includes formatted gross royalties and net payable amounts</idea>
+      <idea ac="AC-5.4.1">Test CTA button URL points to portal statement view</idea>
+      <idea ac="AC-5.4.2">Test PDF buffer attached to email with correct filename format</idea>
+      <idea ac="AC-5.4.3">Test email_sent_at timestamp set after successful Resend API response</idea>
+      <idea ac="AC-5.4.3">Test statement status updated to "sent" after email delivery</idea>
+      <idea ac="AC-5.4.4">Test Inngest step retries on Resend API failure (mock 3 failures then success)</idea>
+      <idea ac="AC-5.4.4">Test exponential backoff configuration in Inngest function</idea>
+      <idea ac="AC-5.4.5">Test resendStatementEmail action enforces Finance/Admin/Owner roles</idea>
+      <idea ac="AC-5.4.5">Test manual resend succeeds for statement with existing PDF</idea>
+      <idea ac="AC-5.4.5">Test manual resend fails gracefully for statement without PDF</idea>
+      <idea ac="all">Test email failure does not fail statement creation in batch job</idea>
+    </ideas>
+  </tests>
+</story-context>

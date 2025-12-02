@@ -95,7 +95,7 @@ test.describe("Title Management - Split View Layout", () => {
 
   test("AC2: Empty state shows when no titles exist", async ({ page }) => {
     // This test depends on having a clean tenant with no titles
-    const emptyState = page.getByText("No titles yet");
+    const _emptyState = page.getByText("No titles yet");
     // await expect(emptyState).toBeVisible();
   });
 });
@@ -252,7 +252,7 @@ test.describe("Title Management - Detail View", () => {
     await titleItem.click();
 
     // Assign ISBN buttons should be present but disabled
-    const assignIsbnButtons = page.getByRole("button", {
+    const _assignIsbnButtons = page.getByRole("button", {
       name: /Assign.*ISBN/i,
     });
     // await expect(assignIsbnButtons.first()).toBeDisabled();
@@ -298,7 +298,7 @@ test.describe("Title Management - Inline Editing", () => {
     await titleItem.click();
 
     // Status dropdown should be visible for users with edit permission
-    const statusDropdown = page.locator('[role="combobox"]').nth(1); // Second combobox after filter
+    const _statusDropdown = page.locator('[role="combobox"]').nth(1); // Second combobox after filter
     // Should be able to change status
   });
 });

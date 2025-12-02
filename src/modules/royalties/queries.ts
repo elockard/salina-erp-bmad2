@@ -10,14 +10,14 @@
  * Related FRs: FR38-FR40 (Royalty Contract Management)
  */
 
-import { and, asc, desc, eq, gte, ilike, lte, or, sql, sum } from "drizzle-orm";
-import { contracts, contractTiers } from "@/db/schema/contracts";
+import { and, asc, desc, eq, gte, ilike, lte, or, sum } from "drizzle-orm";
 import { authors } from "@/db/schema/authors";
-import { titles } from "@/db/schema/titles";
-import { sales } from "@/db/schema/sales";
-import { returns } from "@/db/schema/returns";
-import { getCurrentTenantId, getDb } from "@/lib/auth";
 import type { ContractFormat } from "@/db/schema/contracts";
+import { contracts, contractTiers } from "@/db/schema/contracts";
+import { returns } from "@/db/schema/returns";
+import { sales } from "@/db/schema/sales";
+import { titles } from "@/db/schema/titles";
+import { getCurrentTenantId, getDb } from "@/lib/auth";
 import type {
   AuthorOption,
   ContractWithRelations,
@@ -35,7 +35,7 @@ import type {
  */
 export async function searchAuthorsForContract(
   searchTerm: string,
-  limit = 10
+  limit = 10,
 ): Promise<AuthorOption[]> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
@@ -49,7 +49,7 @@ export async function searchAuthorsForContract(
     const term = `%${searchTerm.trim()}%`;
     const searchCondition = or(
       ilike(authors.name, term),
-      ilike(authors.email, term)
+      ilike(authors.email, term),
     );
     if (searchCondition) {
       conditions.push(searchCondition);
@@ -80,7 +80,7 @@ export async function searchAuthorsForContract(
  */
 export async function searchTitlesForContract(
   searchTerm: string,
-  limit = 10
+  limit = 10,
 ): Promise<TitleOption[]> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
@@ -126,7 +126,7 @@ export async function searchTitlesForContract(
  * @returns Contract with author, title, and tiers or null
  */
 export async function getContractById(
-  contractId: string
+  contractId: string,
 ): Promise<ContractWithRelations | null> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
@@ -154,7 +154,7 @@ export async function getContractById(
  */
 export async function getContracts(
   page = 1,
-  pageSize = 20
+  pageSize = 20,
 ): Promise<PaginatedContracts> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
@@ -202,7 +202,7 @@ export async function getContracts(
  */
 export async function checkDuplicateContract(
   authorId: string,
-  titleId: string
+  titleId: string,
 ): Promise<boolean> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
@@ -211,7 +211,7 @@ export async function checkDuplicateContract(
     where: and(
       eq(contracts.tenant_id, tenantId),
       eq(contracts.author_id, authorId),
-      eq(contracts.title_id, titleId)
+      eq(contracts.title_id, titleId),
     ),
     columns: {
       id: true,
@@ -296,7 +296,7 @@ export async function getSalesByFormatForPeriod(
   tenantId: string,
   titleId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<FormatSalesData[]> {
   const db = await getDb();
 
@@ -315,8 +315,8 @@ export async function getSalesByFormatForPeriod(
         eq(sales.tenant_id, tenantId),
         eq(sales.title_id, titleId),
         gte(sales.sale_date, startDateStr),
-        lte(sales.sale_date, endDateStr)
-      )
+        lte(sales.sale_date, endDateStr),
+      ),
     )
     .groupBy(sales.format);
 
@@ -343,7 +343,7 @@ export async function getApprovedReturnsByFormatForPeriod(
   tenantId: string,
   titleId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<FormatSalesData[]> {
   const db = await getDb();
 
@@ -363,8 +363,8 @@ export async function getApprovedReturnsByFormatForPeriod(
         eq(returns.title_id, titleId),
         eq(returns.status, "approved"),
         gte(returns.return_date, startDateStr),
-        lte(returns.return_date, endDateStr)
-      )
+        lte(returns.return_date, endDateStr),
+      ),
     )
     .groupBy(returns.format);
 
@@ -387,7 +387,7 @@ export async function getApprovedReturnsByFormatForPeriod(
  */
 export async function getContractByAuthorAndTenant(
   authorId: string,
-  tenantId: string
+  tenantId: string,
 ): Promise<ContractWithRelations | null> {
   const db = await getDb();
 
@@ -395,7 +395,7 @@ export async function getContractByAuthorAndTenant(
     where: and(
       eq(contracts.author_id, authorId),
       eq(contracts.tenant_id, tenantId),
-      eq(contracts.status, "active")
+      eq(contracts.status, "active"),
     ),
     with: {
       author: true,

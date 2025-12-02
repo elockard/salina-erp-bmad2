@@ -10,25 +10,19 @@
  * AC 6: Actions section provides management capabilities
  */
 
-import { ArrowLeft, Edit, DollarSign, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, DollarSign, Edit } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ContractWithRelations } from "../types";
-import { ContractAdvanceSection } from "./contract-advance-section";
-import { ContractTiersSection } from "./contract-tiers-section";
-import { ContractStatsSection } from "./contract-stats-section";
-import { ContractEditModal } from "./contract-edit-modal";
 import { ContractAdvanceModal } from "./contract-advance-modal";
+import { ContractAdvanceSection } from "./contract-advance-section";
+import { ContractEditModal } from "./contract-edit-modal";
+import { ContractStatsSection } from "./contract-stats-section";
 import { ContractStatusDropdown } from "./contract-status-dropdown";
+import { ContractTiersSection } from "./contract-tiers-section";
 
 /**
  * Status badge styling mapping
@@ -111,7 +105,9 @@ export function ContractDetail({ contract, canEdit }: ContractDetailProps) {
                   </Button>
                   <ContractStatusDropdown
                     contractId={contract.id}
-                    currentStatus={contract.status as "active" | "suspended" | "terminated"}
+                    currentStatus={
+                      contract.status as "active" | "suspended" | "terminated"
+                    }
                   />
                 </>
               )}

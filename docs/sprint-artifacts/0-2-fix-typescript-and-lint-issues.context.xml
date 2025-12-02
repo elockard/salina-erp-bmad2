@@ -1,0 +1,296 @@
+<story-context id="0-2-fix-typescript-and-lint-issues" v="1.0">
+  <metadata>
+    <epicId>0</epicId>
+    <storyId>0.2</storyId>
+    <title>Fix TypeScript and Lint Issues</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/0-2-fix-typescript-and-lint-issues.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>development team</asA>
+    <iWant>to resolve all TypeScript errors and lint issues accumulated during Epic 5</iWant>
+    <soThat>the codebase is clean, type-safe, and ready for Epic 6 development</soThat>
+    <tasks>
+      <task id="1">Fix TypeScript errors in Inngest batch processing (AC: 1)
+        <subtask>Fix src/inngest/generate-statement-pdf.ts:133 - Date vs string type for created_at</subtask>
+        <subtask>Fix src/inngest/generate-statements-batch.ts - Add proper type narrowing for union types (lines 331-406)</subtask>
+        <subtask>Ensure statementId property access only occurs after success check</subtask>
+        <subtask>Ensure error property access only occurs after failure check</subtask>
+      </task>
+      <task id="2">Fix TypeScript errors in royalty components (AC: 1)
+        <subtask>Fix src/modules/royalties/components/calculation-test-form.tsx:59,62 - Replace required_error with Zod 4.x syntax</subtask>
+        <subtask>Fix src/modules/royalties/components/calculation-results.tsx:25 - Add missing collapsible component or remove import</subtask>
+      </task>
+      <task id="3">Fix TypeScript errors in test files (AC: 1)
+        <subtask>Fix tests/integration/portal-statement-access.test.tsx - ActionResult narrowing (4 locations)</subtask>
+        <subtask>Fix tests/integration/statement-wizard.test.tsx - RoyaltyCalculationResult narrowing (4 locations)</subtask>
+        <subtask>Fix tests/integration/statement-wizard.test.tsx:567,571,575 - Add undefined checks</subtask>
+        <subtask>Fix tests/integration/statement-pdf-generation.test.tsx:195 - Spread type issue</subtask>
+        <subtask>Fix tests/unit/calculation-test-form.test.ts:26,29 - Zod required_error syntax</subtask>
+        <subtask>Fix tests/unit/statements-schema.test.ts:204 - Type assertion issue</subtask>
+      </task>
+      <task id="4">Fix lint errors - Unused imports (AC: 2)
+        <subtask>Fix src/app/(dashboard)/dashboard/components/finance-dashboard.tsx:1 - Remove unused FileText</subtask>
+        <subtask>Fix src/modules/returns/actions.ts:38 - Remove unused getPendingReturnById</subtask>
+        <subtask>Fix src/modules/titles/components/title-form.tsx:38-43 - Remove unused Tooltip imports</subtask>
+        <subtask>Fix tests/unit/statement-wizard.test.tsx:65 - Remove unused toast import</subtask>
+      </task>
+      <task id="5">Fix lint errors - Unused variables (AC: 2)
+        <subtask>Fix src/app/(dashboard)/royalties/page.tsx:88 - Handle unused handlePageChange</subtask>
+        <subtask>Fix src/app/(dashboard)/sales/page.tsx:44 - Handle unused router</subtask>
+        <subtask>Fix src/modules/isbn/components/isbn-detail-modal.tsx:128 - Handle unused isPending</subtask>
+        <subtask>Fix tests/unit/statements-list.test.tsx:282 - Handle unused filters</subtask>
+      </task>
+      <task id="6">Fix lint errors - Other issues (AC: 2)
+        <subtask>Fix scripts/run-sql-migration.ts:8 - Use node:fs protocol</subtask>
+        <subtask>Fix scripts/run-sql-migration.ts:30 - Address non-null assertion on databaseUrl</subtask>
+        <subtask>Fix src/modules/returns/components/reject-confirm-dialog.tsx:40 - Handle unused returnItem parameter</subtask>
+      </task>
+      <task id="7">Fix lint warnings - noExplicitAny (AC: 3)
+        <subtask>Fix tests/unit/statements-list.test.tsx:349 - Replace as any with proper type</subtask>
+      </task>
+      <task id="8">Apply formatting fixes (AC: 4)
+        <subtask>Run npx biome check --write . to auto-fix formatting</subtask>
+        <subtask>Verify src/lib/auth.ts trailing commas fixed</subtask>
+        <subtask>Verify no remaining formatting suggestions</subtask>
+      </task>
+      <task id="9">Verify build and tests (AC: 5, 6)
+        <subtask>Run npm run lint - verify 0 errors, 0 warnings</subtask>
+        <subtask>Run npx tsc --noEmit - verify 0 TypeScript errors</subtask>
+        <subtask>Run npm run build - verify successful build</subtask>
+        <subtask>Run npm test - verify all unit tests pass</subtask>
+        <subtask>Run integration tests where applicable</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">All TypeScript errors resolved (currently 29)
+      - src/inngest/generate-statement-pdf.ts - Date/string type mismatch fixed
+      - src/inngest/generate-statements-batch.ts - Union type narrowing for statementId (11 errors)
+      - src/modules/royalties/components/calculation-test-form.tsx - Zod required_error syntax
+      - src/modules/royalties/components/calculation-results.tsx - Missing collapsible component import
+      - All test files with ActionResult type narrowing fixed</ac>
+    <ac id="2">All lint errors resolved (currently 23 errors)
+      - Unused imports removed
+      - Unused variables fixed (removed or prefixed with underscore)
+      - Node.js import protocol issues fixed (fs → node:fs)
+      - Non-null assertions addressed</ac>
+    <ac id="3">All lint warnings resolved (currently 129 warnings)
+      - noExplicitAny warnings addressed with proper types
+      - Unused function parameters handled
+      - Additional unused imports/variables cleaned up</ac>
+    <ac id="4">Formatting issues resolved (currently 6 infos)
+      - src/lib/auth.ts trailing comma formatting applied
+      - All files pass biome check without formatting suggestions</ac>
+    <ac id="5">Build succeeds without errors
+      - npm run build completes successfully
+      - No TypeScript compilation errors
+      - No lint errors during build</ac>
+    <ac id="6">All existing tests continue to pass
+      - Unit tests: All 565+ tests pass
+      - Integration tests: No regressions introduced
+      - Test files themselves are lint-clean</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>ADR-003: Biome over ESLint + Prettier</section>
+        <snippet>Uses Biome for all-in-one linting and formatting. Significantly faster than ESLint + Prettier. Configured in biome.json with recommended rules enabled.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-5-retro-2025-11-30.md</path>
+        <title>Epic 5 Retrospective</title>
+        <section>Technical Debt Carried Forward</section>
+        <snippet>29 TypeScript errors and 152 lint issues accumulated during Epic 5. Story 0.2 created for cleanup before Epic 6. Critical priority.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/0-1-fix-auth-testing-infrastructure.md</path>
+        <title>Story 0.1: Fix Auth Testing Infrastructure</title>
+        <section>Completion Notes</section>
+        <snippet>Previous infrastructure story patterns. Unit tests (565+) pass with proper mocking. tests/setup.ts provides comprehensive auth mocking helpers.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/inngest/generate-statements-batch.ts</path>
+        <kind>background-job</kind>
+        <symbol>generateStatementsBatch</symbol>
+        <lines>320-410</lines>
+        <reason>11 TypeScript errors - union type narrowing for statementId/error properties on result object</reason>
+      </file>
+      <file>
+        <path>src/inngest/generate-statement-pdf.ts</path>
+        <kind>background-job</kind>
+        <symbol>generateStatementPdf</symbol>
+        <lines>133</lines>
+        <reason>Date vs string type mismatch for created_at field</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/components/calculation-test-form.tsx</path>
+        <kind>component</kind>
+        <symbol>calculationFormSchema</symbol>
+        <lines>54-76</lines>
+        <reason>Zod 4.x required_error syntax change needed</reason>
+      </file>
+      <file>
+        <path>src/modules/royalties/components/calculation-results.tsx</path>
+        <kind>component</kind>
+        <symbol>CalculationResults</symbol>
+        <lines>25</lines>
+        <reason>Missing collapsible component import</reason>
+      </file>
+      <file>
+        <path>src/lib/types.ts</path>
+        <kind>types</kind>
+        <symbol>ActionResult</symbol>
+        <lines>1-3</lines>
+        <reason>Discriminated union pattern - tests must narrow before accessing .error or .data</reason>
+      </file>
+      <file>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentUser, checkPermission, hasPermission, requirePermission</symbol>
+        <lines>40-122</lines>
+        <reason>Formatting issues - trailing commas needed</reason>
+      </file>
+      <file>
+        <path>scripts/run-sql-migration.ts</path>
+        <kind>script</kind>
+        <symbol>runMigration</symbol>
+        <lines>8,30</lines>
+        <reason>Node.js import protocol (node:fs) and non-null assertion on databaseUrl</reason>
+      </file>
+      <file>
+        <path>tests/setup.ts</path>
+        <kind>test-setup</kind>
+        <symbol>testAuthContext, setTestUserRole, setTestTenantId</symbol>
+        <lines>1-225</lines>
+        <reason>Test infrastructure - all unit tests use these mocks</reason>
+      </file>
+      <file>
+        <path>tests/integration/portal-statement-access.test.tsx</path>
+        <kind>test</kind>
+        <symbol>portal-statement-access tests</symbol>
+        <lines>279,307,319,344</lines>
+        <reason>ActionResult type narrowing - check success before accessing error</reason>
+      </file>
+      <file>
+        <path>tests/integration/statement-wizard.test.tsx</path>
+        <kind>test</kind>
+        <symbol>statement-wizard tests</symbol>
+        <lines>270,434,567-585,617</lines>
+        <reason>RoyaltyCalculationResult narrowing and undefined checks</reason>
+      </file>
+      <file>
+        <path>tests/integration/statement-pdf-generation.test.tsx</path>
+        <kind>test</kind>
+        <symbol>statement-pdf-generation tests</symbol>
+        <lines>195</lines>
+        <reason>Spread type issue - ensure spreading object type</reason>
+      </file>
+      <file>
+        <path>tests/unit/calculation-test-form.test.ts</path>
+        <kind>test</kind>
+        <symbol>calculation-test-form tests</symbol>
+        <lines>26,29</lines>
+        <reason>Zod required_error syntax in test schema</reason>
+      </file>
+      <file>
+        <path>tests/unit/statements-schema.test.ts</path>
+        <kind>test</kind>
+        <symbol>statements-schema tests</symbol>
+        <lines>204</lines>
+        <reason>Type assertion issue - PgTable to Record conversion</reason>
+      </file>
+      <file>
+        <path>tests/unit/statements-list.test.tsx</path>
+        <kind>test</kind>
+        <symbol>statements-list tests</symbol>
+        <lines>282,349</lines>
+        <reason>Unused filters variable and as any type assertion</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>zod</package>
+        <version>^4.1.13</version>
+        <note>Zod 4.x uses different error message syntax - use message instead of required_error</note>
+      </node>
+      <node>
+        <package>@biomejs/biome</package>
+        <version>2.3.8</version>
+        <note>Linting and formatting tool - run with biome check --write</note>
+      </node>
+      <node>
+        <package>typescript</package>
+        <version>^5.9.3</version>
+        <note>TypeScript 5.x with strict mode</note>
+      </node>
+      <node>
+        <package>vitest</package>
+        <version>4.0.14</version>
+        <note>Test runner - npm test runs vitest run</note>
+      </node>
+      <node>
+        <package>inngest</package>
+        <version>^3.46.0</version>
+        <note>Background job processing - step-based execution pattern</note>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md">ADR-003: Use Biome for all linting and formatting. No ESLint or Prettier.</constraint>
+    <constraint source="architecture.md">ADR-006: Server Actions as primary API pattern - ActionResult type for all mutations.</constraint>
+    <constraint source="story">Must not introduce regressions - all 565+ unit tests must continue passing.</constraint>
+    <constraint source="story">Integration tests may fail due to database connection - this is expected and not in scope.</constraint>
+    <constraint source="biome.json">Biome configured with recommended rules, double quotes, 2-space indent.</constraint>
+    <constraint source="story">Prefer removing unused code over prefixing with underscore when safe to do so.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ActionResult&lt;T&gt;</name>
+      <kind>type</kind>
+      <signature>type ActionResult&lt;T&gt; = { success: true; data: T } | { success: false; error: string; fields?: Record&lt;string, string&gt; }</signature>
+      <path>src/lib/types.ts</path>
+    </interface>
+    <interface>
+      <name>Zod date schema (4.x)</name>
+      <kind>schema</kind>
+      <signature>z.date({ message: "Error message" }) OR z.date().min(minDate, "Error message")</signature>
+      <path>N/A - Zod library pattern</path>
+    </interface>
+    <interface>
+      <name>Node.js import protocol</name>
+      <kind>import</kind>
+      <signature>import { readFileSync } from "node:fs"</signature>
+      <path>scripts/run-sql-migration.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Tests use Vitest as the test runner with React Testing Library for component tests. Unit tests are in tests/unit/, integration tests in tests/integration/, and E2E tests in tests/e2e/. The tests/setup.ts file provides comprehensive auth mocking with testAuthContext object and helper functions (setTestUserRole, setTestTenantId, setTestUser). All server-side modules (next/navigation, next/cache, next/headers, @clerk/nextjs/server, @/lib/auth) are mocked globally. Test files should be lint-clean with no TypeScript errors.
+    </standards>
+    <locations>
+      <location>tests/unit/**/*.ts</location>
+      <location>tests/unit/**/*.tsx</location>
+      <location>tests/integration/**/*.ts</location>
+      <location>tests/integration/**/*.tsx</location>
+      <location>tests/e2e/**/*.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="5">After all fixes, run npm run build to verify no compilation errors</idea>
+      <idea ac="6">After all fixes, run npm test to verify all 565+ unit tests pass</idea>
+      <idea ac="1-4">Use npx tsc --noEmit and npm run lint iteratively to verify each batch of fixes</idea>
+    </ideas>
+  </tests>
+</story-context>

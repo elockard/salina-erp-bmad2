@@ -73,7 +73,7 @@ test.describe("Sales Entry Page - Layout and Elements", () => {
     await expect(page.getByText("Format *")).toBeVisible();
 
     // Format dropdown should be disabled
-    const formatTrigger = page.locator('[name="format"]').locator("..");
+    const _formatTrigger = page.locator('[name="format"]').locator("..");
     // The select should be disabled
     await expect(page.getByText("Select a title first")).toBeVisible();
   });

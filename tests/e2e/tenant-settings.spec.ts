@@ -1,7 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { test } from "@playwright/test";
 
 test.describe("Tenant Settings Page", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page: _page }) => {
     // Note: In a real test environment, we would:
     // 1. Seed test database with tenant and users
     // 2. Authenticate as owner/admin user
@@ -10,7 +10,7 @@ test.describe("Tenant Settings Page", () => {
   });
 
   test("Owner can access settings page and form loads with current values", async ({
-    page,
+    page: _page,
   }) => {
     // TODO: Implement when test environment is set up
     // Expected: Page loads at /settings
@@ -19,7 +19,7 @@ test.describe("Tenant Settings Page", () => {
   });
 
   test("Editor cannot access settings page (403 or redirect)", async ({
-    page,
+    page: _page,
   }) => {
     // TODO: Implement when test environment is set up
     // Expected: Editor role redirected to /welcome or sees 403 error
@@ -27,7 +27,7 @@ test.describe("Tenant Settings Page", () => {
   });
 
   test("Owner can update timezone and settings persist after save", async ({
-    page,
+    page: _page,
   }) => {
     // TODO: Implement when test environment is set up
     // Expected: Select new timezone from dropdown
@@ -37,7 +37,7 @@ test.describe("Tenant Settings Page", () => {
   });
 
   test("Owner can update fiscal year start and settings persist", async ({
-    page,
+    page: _page,
   }) => {
     // TODO: Implement when test environment is set up
     // Expected: Pick new date from date picker
@@ -45,7 +45,9 @@ test.describe("Tenant Settings Page", () => {
     // Expected: Value persists after reload
   });
 
-  test("Owner can update currency and settings persist", async ({ page }) => {
+  test("Owner can update currency and settings persist", async ({
+    page: _page,
+  }) => {
     // TODO: Implement when test environment is set up
     // Expected: Select EUR from currency dropdown
     // Expected: Save succeeds
@@ -53,7 +55,7 @@ test.describe("Tenant Settings Page", () => {
   });
 
   test("Owner can update statement frequency and settings persist", async ({
-    page,
+    page: _page,
   }) => {
     // TODO: Implement when test environment is set up
     // Expected: Select Annual radio button
@@ -62,14 +64,16 @@ test.describe("Tenant Settings Page", () => {
   });
 
   test("Validation errors prevent save (invalid timezone)", async ({
-    page,
+    page: _page,
   }) => {
     // TODO: Implement when test environment is set up
     // Expected: Attempting to submit invalid data shows validation error
     // Expected: Save button disabled when form invalid
   });
 
-  test("Cancel button resets form to original values", async ({ page }) => {
+  test("Cancel button resets form to original values", async ({
+    page: _page,
+  }) => {
     // TODO: Implement when test environment is set up
     // Expected: Change timezone
     // Expected: Click Cancel
@@ -77,20 +81,22 @@ test.describe("Tenant Settings Page", () => {
     // Expected: Save button disabled (no dirty fields)
   });
 
-  test("Save button disabled when form unchanged", async ({ page }) => {
+  test("Save button disabled when form unchanged", async ({ page: _page }) => {
     // TODO: Implement when test environment is set up
     // Expected: On initial page load, Save button disabled
     // Expected: After making change, Save button enabled
     // Expected: After saving, Save button disabled again
   });
 
-  test("Save button disabled when form invalid", async ({ page }) => {
+  test("Save button disabled when form invalid", async ({ page: _page }) => {
     // TODO: Implement when test environment is set up
     // Expected: Manually set invalid value (if possible)
     // Expected: Save button disabled
   });
 
-  test("Toast notifications appear on success/error", async ({ page }) => {
+  test("Toast notifications appear on success/error", async ({
+    page: _page,
+  }) => {
     // TODO: Implement when test environment is set up
     // Expected: Successful save shows success toast
     // Expected: Network error shows error toast
@@ -98,7 +104,7 @@ test.describe("Tenant Settings Page", () => {
   });
 
   test("Form adapts to mobile viewport (responsive design)", async ({
-    page,
+    page: _page,
   }) => {
     // TODO: Implement when test environment is set up
     // Expected: Set mobile viewport
@@ -107,7 +113,7 @@ test.describe("Tenant Settings Page", () => {
   });
 
   test("All form fields keyboard navigable (accessibility)", async ({
-    page,
+    page: _page,
   }) => {
     // TODO: Implement when test environment is set up
     // Expected: Tab through all fields

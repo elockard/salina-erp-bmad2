@@ -1,8 +1,12 @@
 "use server";
 
+import { endOfQuarter } from "date-fns";
+import Decimal from "decimal.js";
 import { and, count, eq, sql, sum } from "drizzle-orm";
 import { isbns } from "@/db/schema/isbns";
 import { returns } from "@/db/schema/returns";
+import { sales } from "@/db/schema/sales";
+import { statements } from "@/db/schema/statements";
 import { users } from "@/db/schema/users";
 import { getCurrentTenantId, getCurrentUser, getDb } from "@/lib/auth";
 import type { ActionResult } from "@/lib/types";
@@ -106,7 +110,7 @@ export async function getDashboardStats(): Promise<
         const pendingData = pendingReturnsResult[0];
         const pendingCount = pendingData?.count ?? 0;
         const pendingTotal = pendingData?.total ?? "0.00";
-        const formattedTotal = parseFloat(pendingTotal).toLocaleString(
+        const formattedPendingTotal = parseFloat(pendingTotal).toLocaleString(
           "en-US",
           {
             style: "currency",
@@ -114,11 +118,70 @@ export async function getDashboardStats(): Promise<
           },
         );
 
+        // AC-7: Fetch current month revenue (Story 6.1)
+        const now = new Date();
+        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+          .toISOString()
+          .split("T")[0];
+        const currentMonthEnd = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+        )
+          .toISOString()
+          .split("T")[0];
+
+        const [revenueResult] = await db
+          .select({ total: sum(sales.total_amount) })
+          .from(sales)
+          .where(
+            and(
+              eq(sales.tenant_id, tenantId),
+              sql`${sales.sale_date} >= ${currentMonthStart}`,
+              sql`${sales.sale_date} <= ${currentMonthEnd}`,
+            ),
+          );
+
+        const currentRevenue = new Decimal(
+          revenueResult?.total ?? "0",
+        ).toNumber();
+        const formattedRevenue = currentRevenue.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+        });
+
+        // AC-7: Fetch total liability (Story 6.1)
+        const [liabilityResult] = await db
+          .select({ total: sum(statements.net_payable) })
+          .from(statements)
+          .where(eq(statements.tenant_id, tenantId));
+
+        const totalLiability = new Decimal(
+          liabilityResult?.total ?? "0",
+        ).toNumber();
+        const formattedLiability = totalLiability.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+        });
+
+        // AC-7: Calculate next statement deadline (end of current quarter + 30 days)
+        const currentQuarterEnd = endOfQuarter(now);
+        const nextDeadline = new Date(currentQuarterEnd);
+        nextDeadline.setDate(nextDeadline.getDate() + 30);
+        const daysUntilDeadline = Math.max(
+          0,
+          Math.ceil(
+            (nextDeadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        );
+
         stats = {
           pendingReturns: pendingCount,
-          pendingReturnsTotal: formattedTotal,
-          royaltyLiability: "$0.00 (coming soon)", // Placeholder - Epic 4
-          lastStatementDate: "No statements generated yet", // Placeholder - Epic 5
+          pendingReturnsTotal: formattedPendingTotal,
+          currentRevenue: formattedRevenue,
+          royaltyLiability: formattedLiability,
+          nextStatementDeadline: nextDeadline.toISOString(),
+          daysUntilDeadline: daysUntilDeadline,
         };
         break;
       }

@@ -131,15 +131,11 @@ export function TenantSettingsForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Tenant Settings</h1>
-          <p className="text-muted-foreground mt-2">
-            Configure your publishing company's operational settings. These
-            settings affect how dates are displayed, when financial periods
-            start, and how royalty statements are generated.
-          </p>
-        </div>
+        <p className="text-muted-foreground">
+          Configure your publishing company's operational settings. These
+          settings affect how dates are displayed, when financial periods
+          start, and how royalty statements are generated.
+        </p>
 
         {/* Timezone Field */}
         <FormField

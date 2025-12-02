@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,8 +43,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -61,6 +58,7 @@ import {
   VIEW_TAX_ID,
 } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
 import {
   deactivateAuthor,
   getMaskedTaxIdAction,
@@ -70,7 +68,7 @@ import {
   updateAuthor,
 } from "../actions";
 import { type UpdateAuthorInput, updateAuthorSchema } from "../schema";
-import type { Author, AuthorWithPortalStatus, PaymentMethod } from "../types";
+import type { Author, PaymentMethod } from "../types";
 
 interface AuthorDetailProps {
   author: Author;

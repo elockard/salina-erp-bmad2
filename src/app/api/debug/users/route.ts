@@ -31,7 +31,8 @@ export async function GET() {
     return NextResponse.json({
       users: allUsers,
       tenants: allTenants,
-      message: "Compare your Clerk userId (user_35rqIjoXQZkhEWkPciKgo6XtIlO) with clerk_user_id values",
+      message:
+        "Compare your Clerk userId (user_35rqIjoXQZkhEWkPciKgo6XtIlO) with clerk_user_id values",
     });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });

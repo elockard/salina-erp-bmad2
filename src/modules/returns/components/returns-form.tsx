@@ -58,11 +58,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { salesFormatValues } from "@/db/schema/sales";
 import { cn } from "@/lib/utils";
 import { recordReturn } from "../actions";
-import {
-  RETURN_REASON_LABELS,
-  type ReturnReason,
-  returnReasonValues,
-} from "../schema";
+import { RETURN_REASON_LABELS, returnReasonValues } from "../schema";
 import type { SelectedTitleForReturn } from "../types";
 import { TitleSearchCombobox } from "./title-search-combobox";
 

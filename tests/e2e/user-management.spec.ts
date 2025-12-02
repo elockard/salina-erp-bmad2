@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
  */
 
 test.describe("User Management", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page: _page }) => {
     // Authenticate as owner/admin (adjust based on test setup)
     // For now, assume authentication is handled by test fixtures
   });
@@ -20,7 +20,7 @@ test.describe("User Management", () => {
     ).toBeVisible();
 
     // Check invite button (permission-gated)
-    const inviteButton = page.getByRole("button", { name: "Invite User" });
+    const _inviteButton = page.getByRole("button", { name: "Invite User" });
     // May or may not be visible depending on role
   });
 

@@ -22,7 +22,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 // Mock the database
-const mockDb = {
+const _mockDb = {
   select: vi.fn().mockReturnThis(),
   from: vi.fn().mockReturnThis(),
   where: vi.fn().mockReturnThis(),
@@ -40,7 +40,7 @@ describe("ISBN Pool Stats", () => {
   describe("getISBNPoolStats", () => {
     it("should return stats with correct structure", async () => {
       // Mock implementation to test return structure
-      const mockStats = {
+      const _mockStats = {
         total: 100,
         available: 50,
         assigned: 30,

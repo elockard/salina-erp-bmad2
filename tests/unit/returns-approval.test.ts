@@ -221,7 +221,7 @@ describe("Rejection reason validation (AC 12)", () => {
 
 describe("ApprovalConfirmData type", () => {
   test("type exists and can be imported", async () => {
-    const { ApprovalConfirmData } = await import(
+    const { ApprovalConfirmData: _ApprovalConfirmData } = await import(
       "@/modules/returns/types"
     ).then(() => ({ ApprovalConfirmData: {} }));
     // Type-level test - just verify import doesn't throw
@@ -231,7 +231,7 @@ describe("ApprovalConfirmData type", () => {
 
 describe("RejectionConfirmData type", () => {
   test("type exists and can be imported", async () => {
-    const { RejectionConfirmData } = await import(
+    const { RejectionConfirmData: _RejectionConfirmData } = await import(
       "@/modules/returns/types"
     ).then(() => ({ RejectionConfirmData: {} }));
     // Type-level test - just verify import doesn't throw

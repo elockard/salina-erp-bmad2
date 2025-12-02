@@ -172,11 +172,17 @@ export async function POST(req: Request) {
       }
 
       // Create user record
+      const userRole = (metadata.role || "owner") as
+        | "owner"
+        | "admin"
+        | "editor"
+        | "finance"
+        | "author";
       await adminDb.insert(users).values({
         clerk_user_id: id,
         email: email,
         tenant_id: tenant_id,
-        role: (metadata.role as any) || "owner", // Default to owner for first user
+        role: userRole, // Default to owner for first user
         is_active: true,
       });
 

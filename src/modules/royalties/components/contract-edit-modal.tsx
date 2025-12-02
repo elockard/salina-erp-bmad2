@@ -17,7 +17,7 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -46,16 +46,32 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateContract } from "../actions";
-import type { ContractWithRelations, ContractFormat, TierInput } from "../types";
+import type {
+  ContractFormat,
+  ContractWithRelations,
+  TierInput,
+} from "../types";
 import { ContractTierBuilder } from "./contract-tier-builder";
 
 interface EditFormData {
   status: "active" | "suspended" | "terminated";
   advance_amount: string;
   advance_paid: string;
-  physical_tiers: { min_quantity: number; max_quantity: number | null; rate: number }[];
-  ebook_tiers: { min_quantity: number; max_quantity: number | null; rate: number }[];
-  audiobook_tiers: { min_quantity: number; max_quantity: number | null; rate: number }[];
+  physical_tiers: {
+    min_quantity: number;
+    max_quantity: number | null;
+    rate: number;
+  }[];
+  ebook_tiers: {
+    min_quantity: number;
+    max_quantity: number | null;
+    rate: number;
+  }[];
+  audiobook_tiers: {
+    min_quantity: number;
+    max_quantity: number | null;
+    rate: number;
+  }[];
   physical_enabled: boolean;
   ebook_enabled: boolean;
   audiobook_enabled: boolean;
@@ -88,7 +104,10 @@ export function ContractEditModal({
       });
       return acc;
     },
-    {} as Record<string, { min_quantity: number; max_quantity: number | null; rate: number }[]>
+    {} as Record<
+      string,
+      { min_quantity: number; max_quantity: number | null; rate: number }[]
+    >,
   );
 
   const methods = useForm<EditFormData>({
@@ -106,7 +125,7 @@ export function ContractEditModal({
   });
 
   const { handleSubmit, watch } = methods;
-  const formData = watch();
+  const _formData = watch();
 
   // TODO: Check if statements exist for this contract (Epic 5)
   // For now, we'll show the warning if any tiers exist
@@ -121,7 +140,7 @@ export function ContractEditModal({
         ...data.physical_tiers.map((t) => ({
           ...t,
           format: "physical" as ContractFormat,
-        }))
+        })),
       );
     }
 
@@ -130,7 +149,7 @@ export function ContractEditModal({
         ...data.ebook_tiers.map((t) => ({
           ...t,
           format: "ebook" as ContractFormat,
-        }))
+        })),
       );
     }
 
@@ -139,7 +158,7 @@ export function ContractEditModal({
         ...data.audiobook_tiers.map((t) => ({
           ...t,
           format: "audiobook" as ContractFormat,
-        }))
+        })),
       );
     }
 

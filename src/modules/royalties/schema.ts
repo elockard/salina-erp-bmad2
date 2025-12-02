@@ -52,7 +52,7 @@ export const currencySchema = z
       const num = parseFloat(val);
       return !Number.isNaN(num) && num >= 0;
     },
-    { message: "Amount must be a non-negative number" }
+    { message: "Amount must be a non-negative number" },
   )
   .refine(
     (val) => {
@@ -60,7 +60,7 @@ export const currencySchema = z
       const parts = val.split(".");
       return parts.length === 1 || (parts[1]?.length ?? 0) <= 2;
     },
-    { message: "Amount cannot have more than 2 decimal places" }
+    { message: "Amount cannot have more than 2 decimal places" },
   );
 
 /**
@@ -98,7 +98,7 @@ export const tierInputSchema = z
     {
       message: "Maximum quantity must be greater than minimum quantity",
       path: ["max_quantity"],
-    }
+    },
   );
 
 /**
@@ -156,7 +156,10 @@ export const createContractSchema = z
   .refine(
     (data) => {
       // Group tiers by format
-      const tiersByFormat = new Map<string, z.infer<typeof tierInputSchema>[]>();
+      const tiersByFormat = new Map<
+        string,
+        z.infer<typeof tierInputSchema>[]
+      >();
       for (const tier of data.tiers) {
         const existing = tiersByFormat.get(tier.format) || [];
         existing.push(tier);
@@ -176,7 +179,7 @@ export const createContractSchema = z
       message:
         "Tiers must be sequential and non-overlapping. First tier must start at 0, last tier must have no maximum (infinity).",
       path: ["tiers"],
-    }
+    },
   );
 
 export type CreateContractInput = z.infer<typeof createContractSchema>;

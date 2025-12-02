@@ -1,0 +1,322 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>5</storyId>
+    <title>Build Statements List and Detail View for Finance</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-5-build-statements-list-and-detail-view-for-finance.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance user</asA>
+    <iWant>view all generated statements with filtering</iWant>
+    <soThat>I can manage and resend statements as needed</soThat>
+    <tasks>
+      <task id="1" ac="1,2">Create statements list server actions
+        <subtask id="1.1">Add getStatements query function to src/modules/statements/queries.ts</subtask>
+        <subtask id="1.2">Implement pagination with page/pageSize parameters</subtask>
+        <subtask id="1.3">Add filter support for period, author, status, and date range</subtask>
+        <subtask id="1.4">Return statements with author relations using StatementWithRelations type</subtask>
+        <subtask id="1.5">Add getStatementById query for detail view</subtask>
+      </task>
+      <task id="2" ac="1">Create stats aggregation queries
+        <subtask id="2.1">Add getStatementStats function for dashboard stats</subtask>
+        <subtask id="2.2">Calculate "Statements Generated This Quarter" count</subtask>
+        <subtask id="2.3">Calculate "Total Liability" (sum of net_payable for current period)</subtask>
+        <subtask id="2.4">Calculate "Pending Emails" (count where status != 'sent')</subtask>
+      </task>
+      <task id="3" ac="1,2">Build statements list page
+        <subtask id="3.1">Create src/app/(dashboard)/statements/page.tsx as Server Component</subtask>
+        <subtask id="3.2">Add permission check (Finance/Admin/Owner only)</subtask>
+        <subtask id="3.3">Create stats cards section at top of page</subtask>
+        <subtask id="3.4">Integrate with TanStack Table for data grid</subtask>
+      </task>
+      <task id="4" ac="1">Build statements list table component
+        <subtask id="4.1">Create src/modules/statements/components/statements-list.tsx</subtask>
+        <subtask id="4.2">Define columns: Period, Author, Generated On, Status, Net Payable, Actions</subtask>
+        <subtask id="4.3">Format period as "Q4 2025" pattern</subtask>
+        <subtask id="4.4">Format net_payable with currency formatting (bold)</subtask>
+        <subtask id="4.5">Create status badge component (Sent=green, Draft=gray, Failed=red)</subtask>
+        <subtask id="4.6">Add row actions: View, Download PDF, Resend Email</subtask>
+      </task>
+      <task id="5" ac="2">Build filter components
+        <subtask id="5.1">Create src/modules/statements/components/statements-filters.tsx</subtask>
+        <subtask id="5.2">Add Period filter dropdown (populated from unique periods)</subtask>
+        <subtask id="5.3">Add Author search filter with autocomplete</subtask>
+        <subtask id="5.4">Add Status filter (All/Sent/Draft/Failed)</subtask>
+        <subtask id="5.5">Add Date range filter for generated_at</subtask>
+        <subtask id="5.6">Wire filters to URL search params for shareable links</subtask>
+      </task>
+      <task id="6" ac="3">Build statement detail modal
+        <subtask id="6.1">Create src/modules/statements/components/statement-detail-modal.tsx</subtask>
+        <subtask id="6.2">Display statement header (author, period, status, generated date)</subtask>
+        <subtask id="6.3">Display summary section (net payable, gross royalties, recoupment)</subtask>
+        <subtask id="6.4">Display calculation breakdown (format breakdowns with tier details)</subtask>
+        <subtask id="6.5">Add expandable JSON view for full calculations object</subtask>
+        <subtask id="6.6">Display email delivery status and timestamp</subtask>
+      </task>
+      <task id="7" ac="4">Implement PDF download action
+        <subtask id="7.1">Create download button in both list and detail views</subtask>
+        <subtask id="7.2">Use existing getStatementPDFUrl action from actions.ts</subtask>
+        <subtask id="7.3">Open presigned URL in new tab for download</subtask>
+        <subtask id="7.4">Show error toast if PDF not yet generated</subtask>
+        <subtask id="7.5">Display warning about 15-minute URL expiry</subtask>
+      </task>
+      <task id="8" ac="5">Implement resend email action
+        <subtask id="8.1">Add Resend Email button to list row actions and detail modal</subtask>
+        <subtask id="8.2">Use existing resendStatementEmail action from actions.ts</subtask>
+        <subtask id="8.3">Show confirmation dialog before resending</subtask>
+        <subtask id="8.4">Display success/error toast notification</subtask>
+        <subtask id="8.5">Refresh statement data after successful resend</subtask>
+      </task>
+      <task id="9" ac="1-5">Update module exports
+        <subtask id="9.1">Export new components from src/modules/statements/components/index.ts</subtask>
+        <subtask id="9.2">Export new queries from src/modules/statements/queries.ts</subtask>
+        <subtask id="9.3">Update src/modules/statements/index.ts with all exports</subtask>
+      </task>
+      <task id="10" ac="1-5">Write unit tests
+        <subtask id="10.1">Create tests/unit/statements-list.test.tsx</subtask>
+        <subtask id="10.2">Test table renders with correct columns</subtask>
+        <subtask id="10.3">Test period formatting ("Q4 2025" format)</subtask>
+        <subtask id="10.4">Test currency formatting for net_payable</subtask>
+        <subtask id="10.5">Test status badge rendering</subtask>
+        <subtask id="10.6">Test filter state management</subtask>
+        <subtask id="10.7">Test detail modal opens with correct data</subtask>
+      </task>
+      <task id="11" ac="3,4,5">Write integration tests
+        <subtask id="11.1">Create tests/integration/statements-list-view.test.tsx</subtask>
+        <subtask id="11.2">Test Finance role can access /statements</subtask>
+        <subtask id="11.3">Test Editor/Author roles are blocked</subtask>
+        <subtask id="11.4">Test PDF download generates presigned URL</subtask>
+        <subtask id="11.5">Test resend email updates email_sent_at</subtask>
+        <subtask id="11.6">Test filter combinations return correct results</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-5.5.1">Table displays period, author, generated on date, status badge, net payable, and actions (View/Download PDF/Resend Email)</criterion>
+    <criterion id="AC-5.5.2">Filters available: Period (dropdown), Author (search), Status (All/Sent/Draft/Failed), Date range generated</criterion>
+    <criterion id="AC-5.5.3">Detail modal shows full calculation breakdown with expandable JSON</criterion>
+    <criterion id="AC-5.5.4">Download PDF button generates presigned URL (15-minute expiry)</criterion>
+    <criterion id="AC-5.5.5">Resend Email action available for sent statements</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-5.md" title="Epic 5 Technical Specification">
+        <section name="Story 5.5 Acceptance Criteria">AC-5.5.1 through AC-5.5.5 define table columns, filters, detail modal, PDF download, and resend email requirements.</section>
+        <section name="Authorization Matrix">Finance, Admin, Owner can view all statements, download PDF, resend email. Editor/Author cannot access Finance features.</section>
+        <section name="Data Models - statements table">Schema includes tenant_id, author_id, contract_id, period_start, period_end, total_royalty_earned, recoupment, net_payable, calculations (JSONB), pdf_s3_key, status, email_sent_at.</section>
+        <section name="StatementCalculations Interface">JSONB structure with period, formatBreakdowns array (format, totalQuantity, totalRevenue, tierBreakdowns, formatRoyalty), returnsDeduction, grossRoyalty, advanceRecoupment object, netPayable.</section>
+        <section name="Server Actions">getStatementById, getStatements with pagination/filters, resendStatementEmail, getStatementDownloadUrl already defined.</section>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture">
+        <section name="Split View Explorer Pattern">Left panel 320px for browsing/filtering, right panel for detail. Show 8-10 items visible at once.</section>
+        <section name="Data Tables">TanStack Table 8.21+ for headless data grids. Define columns with ColumnDef type.</section>
+        <section name="Currency Formatting">Use Intl.NumberFormat for currency display. Decimal.js for calculations.</section>
+        <section name="Date Formatting">date-fns 4.1+ with @date-fns/tz. Format patterns: "MMM dd, yyyy" for dates.</section>
+        <section name="ActionResult Pattern">Return {success: true, data} or {success: false, error, fields?} from all server actions.</section>
+        <section name="Toast Notifications">Use sonner via shadcn/ui for toast.success, toast.error, toast.promise patterns.</section>
+        <section name="RBAC">Permission checks in every Server Action before database access.</section>
+      </doc>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification">
+        <section name="Split View Explorer">Master-detail pattern. Left panel for browsing/filtering, right panel for detailed viewing.</section>
+        <section name="TanStack Table">Required for complex data grids like statements list.</section>
+        <section name="Semantic Colors">Success=#2d7d3e (green), Warning=#d97706 (amber), Error=#b91c1c (red) for status badges.</section>
+      </doc>
+      <doc path="docs/sprint-artifacts/5-4-implement-statement-email-delivery-with-resend.md" title="Story 5.4 (Previous Story)">
+        <section name="Learnings">resendStatementEmail action complete at actions.ts:523-613. getStatementPDFUrl generates presigned S3 URLs with 15-min expiry. StatementWithRelations type defined in types.ts.</section>
+      </doc>
+    </docs>
+    <code>
+      <file path="src/db/schema/statements.ts" kind="schema" reason="Database schema with all columns and indexes for statements table">
+        <symbol>statements</symbol>
+        <symbol>StatementStatus</symbol>
+        <symbol>statementStatusValues</symbol>
+        <symbol>Statement</symbol>
+        <symbol>InsertStatement</symbol>
+      </file>
+      <file path="src/modules/statements/types.ts" kind="types" reason="All TypeScript types for statements including StatementWithRelations, PaginatedStatements, StatementCalculations">
+        <symbol>StatementWithRelations</symbol>
+        <symbol>PaginatedStatements</symbol>
+        <symbol>StatementCalculations</symbol>
+        <symbol>StatementFormatBreakdown</symbol>
+        <symbol>StatementTierBreakdown</symbol>
+        <symbol>StatementAdvanceRecoupment</symbol>
+        <symbol>StatementWithDetails</symbol>
+      </file>
+      <file path="src/modules/statements/actions.ts" kind="server-actions" reason="Existing actions to reuse: getStatementPDFUrl (lines 147-207), resendStatementEmail (lines 523-613)">
+        <symbol>getStatementPDFUrl</symbol>
+        <symbol>resendStatementEmail</symbol>
+        <symbol>requirePermission</symbol>
+      </file>
+      <file path="src/modules/statements/storage.ts" kind="utility" reason="S3 storage utilities for PDF download URLs">
+        <symbol>getStatementDownloadUrl</symbol>
+      </file>
+      <file path="src/modules/statements/index.ts" kind="barrel" reason="Module exports - add new components and queries here">
+        <note>Currently exports wizard components, actions, email, PDF, storage, and types</note>
+      </file>
+      <file path="src/app/(dashboard)/statements/page.tsx" kind="page" reason="Existing page with wizard modal - MODIFY to add list/detail view">
+        <note>Currently has placeholder content for Story 5.5</note>
+      </file>
+      <file path="src/modules/authors/components/author-list.tsx" kind="component" lines="1-177" reason="Reference pattern for list component with search, filters, loading states, empty states">
+        <pattern>Search input with icon</pattern>
+        <pattern>Filter toggle checkbox</pattern>
+        <pattern>Skeleton loaders for loading state</pattern>
+        <pattern>Empty state and no results state</pattern>
+        <pattern>Badge component for status</pattern>
+        <pattern>cn() utility for conditional classes</pattern>
+      </file>
+      <file path="src/lib/auth.ts" kind="utility" reason="Auth utilities for permission checks">
+        <symbol>getCurrentTenantId</symbol>
+        <symbol>getCurrentUser</symbol>
+        <symbol>getDb</symbol>
+        <symbol>requirePermission</symbol>
+        <symbol>checkPermission</symbol>
+      </file>
+    </code>
+    <dependencies>
+      <npm>
+        <package name="@tanstack/react-table" version="8.21.3" purpose="Headless data table for statements list grid" />
+        <package name="@tanstack/react-query" version="^5.90.11" purpose="Server state management for list data fetching" />
+        <package name="date-fns" version="^4.1.0" purpose="Date formatting - format() for 'MMM dd, yyyy' and quarter calculation" />
+        <package name="sonner" version="2.0.7" purpose="Toast notifications for action feedback" />
+        <package name="lucide-react" version="0.555.0" purpose="Icons - FileText, Download, Mail, MoreHorizontal, Search, Filter" />
+        <package name="drizzle-orm" version="^0.44.7" purpose="Database queries with type safety" />
+        <package name="zod" version="^4.1.13" purpose="Schema validation for filter params" />
+      </npm>
+      <shadcn>
+        <component name="Badge" purpose="Status badge (Sent/Draft/Failed)" />
+        <component name="Button" purpose="Action buttons" />
+        <component name="Card" purpose="Stats cards container" />
+        <component name="Dialog" purpose="Detail modal wrapper" />
+        <component name="DropdownMenu" purpose="Row actions menu" />
+        <component name="Input" purpose="Search/filter inputs" />
+        <component name="Select" purpose="Period and status filter dropdowns" />
+        <component name="Skeleton" purpose="Loading state placeholders" />
+        <component name="Table" purpose="Base table styling (with TanStack)" />
+        <component name="Tabs" purpose="Optional for detail modal sections" />
+        <component name="AlertDialog" purpose="Resend email confirmation" />
+        <component name="Popover" purpose="Date range picker" />
+      </shadcn>
+      <internal>
+        <module name="@/lib/auth" purpose="getCurrentTenantId, getDb, requirePermission" />
+        <module name="@/lib/utils" purpose="cn() for class merging" />
+        <module name="@/db/schema/statements" purpose="statements table, Statement type" />
+        <module name="@/modules/statements/types" purpose="StatementWithRelations, PaginatedStatements, StatementCalculations" />
+        <module name="@/modules/statements/actions" purpose="getStatementPDFUrl, resendStatementEmail" />
+      </internal>
+      <note>No new npm dependencies required - all packages already installed</note>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="authorization">Only Finance, Admin, Owner roles can access statements list and actions. Use requirePermission(['finance', 'admin', 'owner']) in all server actions.</constraint>
+    <constraint type="tenant-isolation">All queries MUST include tenant_id filter. Use getDb() for authenticated connection with RLS.</constraint>
+    <constraint type="data-pattern">Follow existing module patterns: queries.ts for read operations, actions.ts for mutations. Return ActionResult type.</constraint>
+    <constraint type="ui-pattern">Use TanStack Table for data grid. Follow Split View pattern if detail modal becomes inline panel.</constraint>
+    <constraint type="formatting">Period display as "Q4 2025" format. Currency via Intl.NumberFormat. Dates via date-fns format().</constraint>
+    <constraint type="state">Wire filters to URL search params using useSearchParams() for shareable/bookmarkable links.</constraint>
+    <constraint type="status-colors">Sent=green (#2d7d3e), Draft=gray, Failed=red (#b91c1c) per UX semantic colors.</constraint>
+    <constraint type="toast">Use sonner toast for success/error feedback on PDF download and email resend actions.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="getStatementPDFUrl" path="src/modules/statements/actions.ts:147-207" kind="server-action">
+      <signature>async function getStatementPDFUrl(statementId: string): Promise&lt;ActionResult&lt;{ url: string }&gt;&gt;</signature>
+      <usage>Call to get presigned S3 URL for PDF download. Returns { success: true, data: { url } } or error.</usage>
+    </interface>
+    <interface name="resendStatementEmail" path="src/modules/statements/actions.ts:523-613" kind="server-action">
+      <signature>async function resendStatementEmail(statementId: string): Promise&lt;ActionResult&lt;{ messageId: string }&gt;&gt;</signature>
+      <usage>Call to resend statement email. Updates email_sent_at and status to 'sent' on success.</usage>
+    </interface>
+    <interface name="StatementWithRelations" path="src/modules/statements/types.ts:111-114" kind="type">
+      <definition>interface StatementWithRelations extends Statement { author: Author; contract: Contract; }</definition>
+      <usage>Use for list items that need author name display.</usage>
+    </interface>
+    <interface name="PaginatedStatements" path="src/modules/statements/types.ts:119-125" kind="type">
+      <definition>interface PaginatedStatements { items: StatementWithRelations[]; total: number; page: number; pageSize: number; totalPages: number; }</definition>
+      <usage>Return type for paginated list queries.</usage>
+    </interface>
+    <interface name="StatementCalculations" path="src/modules/statements/types.ts:88-106" kind="type">
+      <definition>Full JSONB breakdown with period, formatBreakdowns[], returnsDeduction, grossRoyalty, advanceRecoupment, netPayable</definition>
+      <usage>Parse from statement.calculations for detail modal breakdown display.</usage>
+    </interface>
+    <interface name="requirePermission" path="src/lib/auth.ts" kind="utility">
+      <signature>async function requirePermission(allowedRoles: UserRole[]): Promise&lt;void&gt;</signature>
+      <usage>Throws 'UNAUTHORIZED' error if user lacks required role. Use in all server actions.</usage>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <framework>Vitest with @testing-library/react for component tests</framework>
+      <environment>jsdom with global cleanup after each test</environment>
+      <setup>tests/setup.ts provides testAuthContext, setTestUserRole(), resetTestAuthContext()</setup>
+      <mocking>vi.mock() for @/lib/auth, next/navigation, sonner, @clerk/nextjs/server</mocking>
+      <pattern>Describe blocks per AC, it() for specific scenarios</pattern>
+      <pattern>Mock server actions with vi.fn().mockResolvedValue()</pattern>
+      <pattern>Use setTestUserRole('finance') to configure permission tests</pattern>
+      <command>npm run test (vitest run) or npm run test:watch</command>
+    </standards>
+    <locations>
+      <unit>tests/unit/statements-list.test.tsx - Table, filters, formatting</unit>
+      <unit>tests/unit/statement-detail-modal.test.tsx - Detail modal rendering</unit>
+      <integration>tests/integration/statements-list-view.test.tsx - Permission checks, actions</integration>
+    </locations>
+    <ideas>
+      <group name="AC-5.5.1: Table displays correct columns">
+        <test>should render Period column with "Q4 2025" format</test>
+        <test>should render Author column with author.name</test>
+        <test>should render Generated On date with "MMM dd, yyyy" format</test>
+        <test>should render Status badge with correct color (sent=green, draft=gray, failed=red)</test>
+        <test>should render Net Payable with currency formatting and bold</test>
+        <test>should render Actions dropdown with View, Download PDF, Resend Email</test>
+      </group>
+      <group name="AC-5.5.2: Filters">
+        <test>should render Period dropdown populated with unique periods</test>
+        <test>should render Author search input with autocomplete</test>
+        <test>should render Status dropdown with All/Sent/Draft/Failed</test>
+        <test>should render Date range picker for generated_at</test>
+        <test>should update URL search params when filters change</test>
+        <test>should filter table results when filters applied</test>
+      </group>
+      <group name="AC-5.5.3: Detail modal">
+        <test>should open modal when View action clicked</test>
+        <test>should display statement header (author, period, status, date)</test>
+        <test>should display summary section (net payable, gross, recoupment)</test>
+        <test>should display format breakdown with tier details</test>
+        <test>should have expandable JSON view for calculations</test>
+        <test>should display email delivery status and timestamp</test>
+      </group>
+      <group name="AC-5.5.4: PDF download">
+        <test>should call getStatementPDFUrl when Download PDF clicked</test>
+        <test>should open presigned URL in new tab on success</test>
+        <test>should show error toast if PDF not generated</test>
+      </group>
+      <group name="AC-5.5.5: Resend email">
+        <test>should show confirmation dialog before resending</test>
+        <test>should call resendStatementEmail on confirm</test>
+        <test>should show success toast on successful resend</test>
+        <test>should show error toast on failed resend</test>
+        <test>should refresh statement data after successful resend</test>
+      </group>
+      <group name="Permissions">
+        <test>should allow Finance role to access statements list</test>
+        <test>should allow Admin role to access statements list</test>
+        <test>should allow Owner role to access statements list</test>
+        <test>should deny Editor role access to statements list</test>
+        <test>should deny Author role access to statements list</test>
+      </group>
+      <group name="Edge cases">
+        <test>should show empty state when no statements exist</test>
+        <test>should show loading skeletons while fetching</test>
+        <test>should show "No results" when filters return empty</test>
+        <test>should handle pagination correctly</test>
+      </group>
+    </ideas>
+  </tests>
+</story-context>

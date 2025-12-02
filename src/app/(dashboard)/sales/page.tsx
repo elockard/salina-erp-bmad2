@@ -41,7 +41,7 @@ import type {
 import { downloadSalesCsv } from "@/modules/sales/utils/csv-export";
 
 export default function SalesHistoryPage() {
-  const router = useRouter();
+  const _router = useRouter();
 
   // Filter state
   const [filters, setFilters] = React.useState<SalesFilterInput>({});
@@ -49,7 +49,7 @@ export default function SalesHistoryPage() {
   // Data state
   const [salesData, setSalesData] = React.useState<PaginatedSales | null>(null);
   const [statsData, setStatsData] = React.useState<SalesStats | null>(null);
-  const [currentPage, setCurrentPage] = React.useState(1);
+  const [_currentPage, setCurrentPage] = React.useState(1);
 
   // Loading states
   const [isLoadingSales, setIsLoadingSales] = React.useState(true);

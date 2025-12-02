@@ -284,7 +284,9 @@ export const contractTiers = pgTable(
   },
   (table) => ({
     /** Index on contract_id for join performance */
-    contractIdIdx: index("contract_tiers_contract_id_idx").on(table.contract_id),
+    contractIdIdx: index("contract_tiers_contract_id_idx").on(
+      table.contract_id,
+    ),
 
     /** CHECK constraint: min_quantity must be non-negative */
     minQuantityNonnegative: check(
@@ -299,10 +301,7 @@ export const contractTiers = pgTable(
     ),
 
     /** CHECK constraint: rate must be between 0 and 1 (0-100%) */
-    rateValid: check(
-      "contract_tiers_rate_valid",
-      sql`rate >= 0 AND rate <= 1`,
-    ),
+    rateValid: check("contract_tiers_rate_valid", sql`rate >= 0 AND rate <= 1`),
   }),
 );
 

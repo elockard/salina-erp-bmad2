@@ -31,7 +31,7 @@ test.describe("Portal Access - Grant Portal Access (AC: 35)", () => {
 
     // Grant Portal Access button should be visible (if author has email and no portal access)
     // Note: Depends on test data - author must have email but no portal_user_id
-    const grantButton = page.getByRole("button", {
+    const _grantButton = page.getByRole("button", {
       name: /Grant Portal Access/i,
     });
     // await expect(grantButton).toBeVisible();
@@ -43,7 +43,7 @@ test.describe("Portal Access - Grant Portal Access (AC: 35)", () => {
     // TODO: Create/select an author without email
     // Navigate to author detail
     // Button should be disabled with tooltip
-    const grantButton = page.getByRole("button", {
+    const _grantButton = page.getByRole("button", {
       name: /Grant Portal Access/i,
     });
     // Check disabled state
@@ -114,7 +114,7 @@ test.describe("Portal Access - Grant Portal Access (AC: 35)", () => {
     await authorItem.click();
 
     // Portal Access section should show status badge
-    const portalAccessSection = page
+    const _portalAccessSection = page
       .locator("text=Portal Access")
       .locator("..");
 
@@ -125,7 +125,7 @@ test.describe("Portal Access - Grant Portal Access (AC: 35)", () => {
   });
 
   test("AC32: Portal icon shows in author list for authors with access", async ({
-    page,
+    page: _page,
   }) => {
     // Authors with portal access should show key icon in list
     // Look for the portal icon in the author list
@@ -142,7 +142,7 @@ test.describe("Portal Access - Revoke Portal Access (AC: 35)", () => {
   });
 
   test("AC15: Revoke Portal Access button visible when author has access", async ({
-    page,
+    page: _page,
   }) => {
     // Select author with portal access
     // const authorWithAccess = page.locator('[role="option"]').filter({ hasText: "🔑" }).first();
@@ -151,7 +151,9 @@ test.describe("Portal Access - Revoke Portal Access (AC: 35)", () => {
     // await expect(page.getByRole("button", { name: /Revoke Portal Access/i })).toBeVisible();
   });
 
-  test("AC16: Clicking Revoke shows confirmation dialog", async ({ page }) => {
+  test("AC16: Clicking Revoke shows confirmation dialog", async ({
+    page: _page,
+  }) => {
     // Select author with portal access
     // Click Revoke button
     // await page.getByRole("button", { name: /Revoke Portal Access/i }).click();
@@ -160,7 +162,9 @@ test.describe("Portal Access - Revoke Portal Access (AC: 35)", () => {
     // await expect(page.getByText(/Are you sure/i)).toBeVisible();
   });
 
-  test("AC18: Success toast shows after revoking access", async ({ page }) => {
+  test("AC18: Success toast shows after revoking access", async ({
+    page: _page,
+  }) => {
     // Select author with portal access
     // Click Revoke and confirm
     // Toast should appear
@@ -267,7 +271,7 @@ test.describe("Portal Access - Permission Checks", () => {
     await authorItem.click();
 
     // Grant Portal Access button should NOT be visible to editor
-    const grantButton = page.getByRole("button", {
+    const _grantButton = page.getByRole("button", {
       name: /Grant Portal Access/i,
     });
     // await expect(grantButton).not.toBeVisible();

@@ -108,7 +108,9 @@ function TierTable({
             {tiers.map((tier, index) => (
               <TableRow key={tier.id}>
                 <TableCell className="font-medium">{index + 1}</TableCell>
-                <TableCell>{formatRange(tier.min_quantity, tier.max_quantity)}</TableCell>
+                <TableCell>
+                  {formatRange(tier.min_quantity, tier.max_quantity)}
+                </TableCell>
                 <TableCell className="text-right font-mono">
                   {formatRate(tier.rate)}
                 </TableCell>
@@ -132,7 +134,7 @@ export function ContractTiersSection({ tiers }: ContractTiersSectionProps) {
       acc[format].push(tier);
       return acc;
     },
-    {} as Record<string, ContractTier[]>
+    {} as Record<string, ContractTier[]>,
   );
 
   // Sort tiers within each format by min_quantity
@@ -142,7 +144,9 @@ export function ContractTiersSection({ tiers }: ContractTiersSectionProps) {
 
   // Get formats in display order
   const formatOrder = ["physical", "ebook", "audiobook"];
-  const availableFormats = formatOrder.filter((format) => tiersByFormat[format]);
+  const availableFormats = formatOrder.filter(
+    (format) => tiersByFormat[format],
+  );
 
   if (availableFormats.length === 0) {
     return (
@@ -159,7 +163,11 @@ export function ContractTiersSection({ tiers }: ContractTiersSectionProps) {
       <h2 className="text-lg font-semibold">Royalty Rate Tables</h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {availableFormats.map((format) => (
-          <TierTable key={format} format={format} tiers={tiersByFormat[format]} />
+          <TierTable
+            key={format}
+            format={format}
+            tiers={tiersByFormat[format]}
+          />
         ))}
       </div>
     </div>

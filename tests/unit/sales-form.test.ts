@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
 import { salesChannelValues, salesFormatValues } from "@/db/schema/sales";
 import { RECORD_SALES } from "@/lib/permissions";
-import type { SalesChannel, SalesFormat } from "@/modules/sales/types";
+import type { SalesFormat } from "@/modules/sales/types";
 
 /**
  * Unit tests for Sales Form logic

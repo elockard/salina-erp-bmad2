@@ -58,7 +58,9 @@ export function ContractStatusDropdown({
 }: ContractStatusDropdownProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [pendingStatus, setPendingStatus] = useState<ContractStatus | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<ContractStatus | null>(
+    null,
+  );
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleStatusSelect = (newStatus: ContractStatus) => {
@@ -74,7 +76,9 @@ export function ContractStatusDropdown({
       const result = await updateContractStatus(contractId, pendingStatus);
 
       if (result.success) {
-        toast.success(`Contract status changed to ${STATUS_LABELS[pendingStatus]}`);
+        toast.success(
+          `Contract status changed to ${STATUS_LABELS[pendingStatus]}`,
+        );
         router.refresh();
       } else {
         toast.error(result.error);
@@ -124,7 +128,10 @@ export function ContractStatusDropdown({
             <AlertDialogDescription>
               Are you sure you want to change the contract status from{" "}
               <strong>{STATUS_LABELS[currentStatus]}</strong> to{" "}
-              <strong>{pendingStatus ? STATUS_LABELS[pendingStatus] : ""}</strong>?
+              <strong>
+                {pendingStatus ? STATUS_LABELS[pendingStatus] : ""}
+              </strong>
+              ?
               <br />
               <br />
               {pendingStatus && STATUS_DESCRIPTIONS[pendingStatus]}

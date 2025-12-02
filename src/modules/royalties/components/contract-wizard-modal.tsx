@@ -17,10 +17,10 @@
  * 5. Review & Create - Summary and submission
  */
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, FileText, Loader2, X } from "lucide-react";
 import { useState, useTransition } from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -35,8 +35,8 @@ import { cn } from "@/lib/utils";
 import { createContract } from "../actions";
 import type { ContractFormat, TierInput } from "../types";
 import { ContractStepBasicInfo } from "./contract-step-basic-info";
-import { ContractTierBuilder } from "./contract-tier-builder";
 import { ContractStepReview } from "./contract-step-review";
+import { ContractTierBuilder } from "./contract-tier-builder";
 
 /**
  * Step definitions for the wizard
@@ -69,9 +69,21 @@ interface WizardFormData {
   status: "active" | "suspended" | "terminated";
   advance_amount: string;
   advance_paid: string;
-  physical_tiers: { min_quantity: number; max_quantity: number | null; rate: number }[];
-  ebook_tiers: { min_quantity: number; max_quantity: number | null; rate: number }[];
-  audiobook_tiers: { min_quantity: number; max_quantity: number | null; rate: number }[];
+  physical_tiers: {
+    min_quantity: number;
+    max_quantity: number | null;
+    rate: number;
+  }[];
+  ebook_tiers: {
+    min_quantity: number;
+    max_quantity: number | null;
+    rate: number;
+  }[];
+  audiobook_tiers: {
+    min_quantity: number;
+    max_quantity: number | null;
+    rate: number;
+  }[];
   physical_enabled: boolean;
   ebook_enabled: boolean;
   audiobook_enabled: boolean;
@@ -228,24 +240,30 @@ export function ContractWizardModal({
     const tiers: TierInput[] = [];
 
     if (data.physical_enabled && data.physical_tiers.length > 0) {
-      tiers.push(...data.physical_tiers.map((t) => ({
-        ...t,
-        format: "physical" as ContractFormat,
-      })));
+      tiers.push(
+        ...data.physical_tiers.map((t) => ({
+          ...t,
+          format: "physical" as ContractFormat,
+        })),
+      );
     }
 
     if (data.ebook_enabled && data.ebook_tiers.length > 0) {
-      tiers.push(...data.ebook_tiers.map((t) => ({
-        ...t,
-        format: "ebook" as ContractFormat,
-      })));
+      tiers.push(
+        ...data.ebook_tiers.map((t) => ({
+          ...t,
+          format: "ebook" as ContractFormat,
+        })),
+      );
     }
 
     if (data.audiobook_enabled && data.audiobook_tiers.length > 0) {
-      tiers.push(...data.audiobook_tiers.map((t) => ({
-        ...t,
-        format: "audiobook" as ContractFormat,
-      })));
+      tiers.push(
+        ...data.audiobook_tiers.map((t) => ({
+          ...t,
+          format: "audiobook" as ContractFormat,
+        })),
+      );
     }
 
     if (tiers.length === 0) {
@@ -265,7 +283,7 @@ export function ContractWizardModal({
 
       if (result.success) {
         toast.success(
-          `✓ Contract created for ${result.data.author_name} - ${result.data.title_name}`
+          `✓ Contract created for ${result.data.author_name} - ${result.data.title_name}`,
         );
         handleOpenChange(false);
         onSuccess?.(result.data.id);
@@ -340,8 +358,8 @@ export function ContractWizardModal({
                   currentStep > step.id
                     ? "bg-green-500 text-white"
                     : currentStep === step.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
                 )}
               >
                 {currentStep > step.id ? (
@@ -355,7 +373,7 @@ export function ContractWizardModal({
                   "ml-2 text-xs hidden sm:inline",
                   currentStep >= step.id
                     ? "text-foreground"
-                    : "text-muted-foreground"
+                    : "text-muted-foreground",
                 )}
               >
                 {step.shortName}
@@ -364,7 +382,7 @@ export function ContractWizardModal({
                 <div
                   className={cn(
                     "w-8 h-0.5 mx-2",
-                    currentStep > step.id ? "bg-green-500" : "bg-muted"
+                    currentStep > step.id ? "bg-green-500" : "bg-muted",
                   )}
                 />
               )}
@@ -374,10 +392,11 @@ export function ContractWizardModal({
 
         {/* Step Content */}
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
-            <div className="p-4">
-              {renderStepContent()}
-            </div>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex-1 overflow-y-auto"
+          >
+            <div className="p-4">{renderStepContent()}</div>
           </form>
         </FormProvider>
 

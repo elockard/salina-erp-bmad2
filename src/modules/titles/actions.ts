@@ -9,7 +9,7 @@ import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
 import { getTitleById, getTitles } from "./queries";
 import { createTitleSchema, updateTitleSchema } from "./schema";
-import type { PublicationStatus, Title, TitleWithAuthor } from "./types";
+import type { PublicationStatus, TitleWithAuthor } from "./types";
 
 /**
  * Server Action wrapper for getTitles query

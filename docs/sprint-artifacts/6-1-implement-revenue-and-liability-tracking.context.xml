@@ -1,0 +1,307 @@
+<story-context id="6-1-implement-revenue-and-liability-tracking" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>1</storyId>
+    <title>Implement Revenue and Liability Tracking</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-1-implement-revenue-and-liability-tracking.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance user</asA>
+    <iWant>to view total revenue and royalty liability metrics</iWant>
+    <soThat>I understand the company's financial position</soThat>
+    <tasks>
+      <task id="1" ac="2,3,4">Set up Recharts library and create reusable chart components
+        <subtasks>
+          <subtask>1.1 Install recharts package: npm install recharts</subtask>
+          <subtask>1.2 Create src/components/charts/bar-chart.tsx - Reusable bar chart wrapper</subtask>
+          <subtask>1.3 Create src/components/charts/pie-chart.tsx - Reusable pie chart wrapper</subtask>
+          <subtask>1.4 Create src/components/charts/line-chart.tsx - Reusable line chart wrapper</subtask>
+          <subtask>1.5 Create src/components/charts/area-chart.tsx - Reusable area chart wrapper</subtask>
+          <subtask>1.6 Create src/components/charts/index.ts - Export barrel file</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="1-6">Create reports module structure
+        <subtasks>
+          <subtask>2.1 Create src/modules/reports/ directory structure</subtask>
+          <subtask>2.2 Create src/modules/reports/types.ts - Define RevenueMetrics, LiabilityMetrics interfaces</subtask>
+          <subtask>2.3 Create src/modules/reports/schema.ts - Zod schemas for report filters</subtask>
+          <subtask>2.4 Create src/modules/reports/queries.ts - Revenue and liability query functions</subtask>
+          <subtask>2.5 Create src/modules/reports/actions.ts - Server actions for report export</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="1,2,3,4">Implement revenue tracking queries
+        <subtasks>
+          <subtask>3.1 Implement getRevenueMetrics(tenantId, period) - Returns total revenue and breakdowns</subtask>
+          <subtask>3.2 Implement period grouping with date-fns (day/week/month/quarter/year intervals)</subtask>
+          <subtask>3.3 Implement revenue by format aggregation (GROUP BY format)</subtask>
+          <subtask>3.4 Implement revenue by channel aggregation (GROUP BY channel)</subtask>
+          <subtask>3.5 Add tenant_id filtering to all queries (CRITICAL: tenant isolation)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="5,6">Implement liability tracking queries
+        <subtasks>
+          <subtask>4.1 Implement getLiabilityMetrics(tenantId) - Returns total liability and breakdowns</subtask>
+          <subtask>4.2 Calculate total liability from unpaid statements (status != 'paid')</subtask>
+          <subtask>4.3 Implement liability by author grouping (JOIN authors, GROUP BY author_id)</subtask>
+          <subtask>4.4 Calculate paid vs unpaid breakdown</subtask>
+          <subtask>4.5 Use Decimal.js for all financial aggregations</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="7,8">Enhance Finance dashboard with stats cards
+        <subtasks>
+          <subtask>5.1 Update src/app/(dashboard)/dashboard/components/finance-dashboard.tsx</subtask>
+          <subtask>5.2 Create revenue stats card with current month total</subtask>
+          <subtask>5.3 Create liability stats card with unpaid amount owed</subtask>
+          <subtask>5.4 Create upcoming deadline stats card (next statement date)</subtask>
+          <subtask>5.5 Add onClick handlers to navigate to detailed reports</subtask>
+          <subtask>5.6 Use shadcn/ui Card components with Editorial Navy accent per UX spec</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="2,3,4">Create revenue breakdown visualizations
+        <subtasks>
+          <subtask>6.1 Create src/modules/reports/components/revenue-period-chart.tsx - Line/area chart</subtask>
+          <subtask>6.2 Create src/modules/reports/components/format-breakdown.tsx - Pie chart</subtask>
+          <subtask>6.3 Create src/modules/reports/components/channel-breakdown.tsx - Pie chart</subtask>
+          <subtask>6.4 Add hover tooltips with exact amounts and percentages</subtask>
+          <subtask>6.5 Ensure percentages sum to 100%</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="6">Create liability by author view
+        <subtasks>
+          <subtask>7.1 Create src/modules/reports/components/liability-by-author.tsx - Table component</subtask>
+          <subtask>7.2 Use TanStack Table for sortable columns</subtask>
+          <subtask>7.3 Columns: Author Name, Titles Count, Unpaid Statements, Total Owed</subtask>
+          <subtask>7.4 Default sort by Total Owed DESC</subtask>
+          <subtask>7.5 Add pagination (20 per page)</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="1-6">Write unit tests for report queries
+        <subtasks>
+          <subtask>8.1 Create tests/unit/report-queries.test.ts</subtask>
+          <subtask>8.2 Test revenue aggregation by period</subtask>
+          <subtask>8.3 Test revenue aggregation by format</subtask>
+          <subtask>8.4 Test revenue aggregation by channel</subtask>
+          <subtask>8.5 Test liability calculation from unpaid statements</subtask>
+          <subtask>8.6 Test liability grouping by author</subtask>
+          <subtask>8.7 Mock database queries with test data</subtask>
+        </subtasks>
+      </task>
+      <task id="9" ac="7,8">Write integration tests for finance dashboard
+        <subtasks>
+          <subtask>9.1 Create tests/integration/finance-dashboard.test.tsx</subtask>
+          <subtask>9.2 Test stats cards render with data</subtask>
+          <subtask>9.3 Test stat card click navigation</subtask>
+          <subtask>9.4 Test permission enforcement (Finance/Admin/Owner only)</subtask>
+          <subtask>9.5 Seed test data for revenue and liability calculations</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Finance/Admin/Owner users can view total revenue from all sales (sum of sales.total_amount)</ac>
+    <ac id="2">Revenue can be filtered by period (daily/weekly/monthly/quarterly/annual)</ac>
+    <ac id="3">Revenue breakdown by format (physical/ebook/audiobook) is displayed with percentages</ac>
+    <ac id="4">Revenue breakdown by channel (retail/wholesale/direct/distributor) is displayed with percentages</ac>
+    <ac id="5">Total royalty liability (sum of net_payable from unpaid statements) is calculated and displayed</ac>
+    <ac id="6">Liability by author is available as a grouped view</ac>
+    <ac id="7">Finance dashboard displays stats cards: Total Revenue, Total Liability, Upcoming Statement Deadline</ac>
+    <ac id="8">Clicking a stat card opens the corresponding detailed report</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Tech Spec Epic 6 - Financial Reporting &amp; Analytics</title>
+        <section>Story 6.1 - Revenue and Liability Tracking</section>
+        <snippet>Defines RevenueMetrics and LiabilityMetrics interfaces, query signatures, and implementation approach for revenue/liability calculations using sales and statements tables.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Technology Stack, Module Patterns, Financial Calculations</section>
+        <snippet>Prescribes Decimal.js for financial math, multi-tenant isolation patterns with tenant_id filtering, and module structure conventions (queries.ts, types.ts, schema.ts, actions.ts).</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR67-FR69 Financial Reporting</section>
+        <snippet>FR67: Revenue tracking from sales. FR68: Liability tracking from unpaid statements. FR69: Role-based dashboard analytics for Finance users.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Dashboard Design, Editorial Navy Accent</section>
+        <snippet>Finance dashboard uses shadcn/ui Card components. Stats cards are clickable with Editorial Navy (#1e3a5f) accent color for emphasis.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/0-3-strengthen-portal-tests.md</path>
+        <title>Story 0.3 Learnings</title>
+        <section>Test Patterns</section>
+        <snippet>Use toBeTruthy() + textContent verification. Components render both mobile/desktop layouts in JSDOM. 982 unit tests pass as baseline.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/db/schema/sales.ts</path>
+        <kind>schema</kind>
+        <symbol>sales, Sale, salesFormatValues, salesChannelValues</symbol>
+        <lines>83-202</lines>
+        <reason>Revenue source table. sum(total_amount) for revenue calculations. Has format and channel columns for breakdowns. Indexes on tenant_id, sale_date, format, channel.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/schema/statements.ts</path>
+        <kind>schema</kind>
+        <symbol>statements, Statement, statementStatusValues</symbol>
+        <lines>71-187</lines>
+        <reason>Liability source table. sum(net_payable) where status != 'paid' for liability. Has author_id for grouping. Status column tracks paid/unpaid.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/sales/queries.ts</path>
+        <kind>queries</kind>
+        <symbol>getSalesStats, getSalesWithFilters</symbol>
+        <lines>292-361</lines>
+        <reason>Existing pattern for aggregating sales data with sum/count. Use as reference for revenue queries. Shows tenant_id filtering pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/statements/queries.ts</path>
+        <kind>queries</kind>
+        <symbol>getStatementStats, getStatements</symbol>
+        <lines>289-335</lines>
+        <reason>Existing pattern for liability calculation. sum(net_payable) for current quarter. Shows permission checking with requirePermission().</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(dashboard)/dashboard/components/finance-dashboard.tsx</path>
+        <kind>component</kind>
+        <symbol>FinanceDashboard</symbol>
+        <lines>1-159</lines>
+        <reason>FILE TO MODIFY. Add revenue/liability stats cards. Currently shows Pending Returns, Royalty Liability placeholder, Last Statement. Enhance with actual calculated metrics and clickable navigation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>library</kind>
+        <symbol>getCurrentTenantId, getDb, requirePermission</symbol>
+        <lines>12-137</lines>
+        <reason>Authentication and authorization helpers. Use requirePermission(['finance', 'admin', 'owner']) for access control. getDb() returns authenticated Drizzle client.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="recharts">NEW - Install for charts</package>
+        <package name="next" version="^16.0.6">Framework</package>
+        <package name="react" version="^19.2.0">UI library</package>
+        <package name="drizzle-orm" version="^0.44.7">Database ORM</package>
+        <package name="decimal.js" version="^10.6.0">Financial math (CRITICAL)</package>
+        <package name="date-fns" version="^4.1.0">Date calculations</package>
+        <package name="@date-fns/tz" version="1.4.1">Timezone handling</package>
+        <package name="@tanstack/react-table" version="8.21.3">Data tables</package>
+        <package name="zod" version="^4.1.13">Schema validation</package>
+        <package name="lucide-react" version="0.555.0">Icons</package>
+      </node>
+      <devDependencies>
+        <package name="vitest" version="4.0.14">Unit testing</package>
+        <package name="@testing-library/react" version="16.3.0">Component testing</package>
+        <package name="@playwright/test" version="^1.57.0">E2E testing</package>
+        <package name="@faker-js/faker" version="^10.1.0">Test data generation</package>
+      </devDependencies>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="multi-tenant">CRITICAL: Every query MUST include tenant_id filter as FIRST condition. Use getCurrentTenantId() from src/lib/auth.ts.</constraint>
+    <constraint type="financial">CRITICAL: Use Decimal.js for ALL financial math. Never use JavaScript arithmetic (+, -, *, /) on currency values.</constraint>
+    <constraint type="security">Permission check: requirePermission(['finance', 'admin', 'owner']) before any report query.</constraint>
+    <constraint type="currency-display">Use Intl.NumberFormat for currency display, or create formatCurrency() helper in src/lib/.</constraint>
+    <constraint type="caching">Dashboard metrics cached with 60-second revalidation using React Server Components.</constraint>
+    <constraint type="module-structure">Follow existing pattern: queries.ts (pure functions), actions.ts (server actions), types.ts (interfaces), schema.ts (Zod validation).</constraint>
+    <constraint type="test-pattern">Use toBeTruthy() + textContent verification (no @testing-library/jest-dom). Dashboard renders both mobile/desktop layouts in JSDOM.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>RevenueMetrics</name>
+      <kind>TypeScript interface</kind>
+      <signature><![CDATA[
+interface RevenueMetrics {
+  totalRevenue: number;
+  revenueByPeriod: { period: string; amount: number }[];
+  revenueByFormat: { format: string; amount: number; percentage: number }[];
+  revenueByChannel: { channel: string; amount: number; percentage: number }[];
+}
+      ]]></signature>
+      <path>src/modules/reports/types.ts (NEW)</path>
+    </interface>
+    <interface>
+      <name>LiabilityMetrics</name>
+      <kind>TypeScript interface</kind>
+      <signature><![CDATA[
+interface LiabilityMetrics {
+  totalLiability: number;
+  liabilityByAuthor: { authorId: string; authorName: string; amount: number }[];
+  paidAmount: number;
+  unpaidAmount: number;
+}
+      ]]></signature>
+      <path>src/modules/reports/types.ts (NEW)</path>
+    </interface>
+    <interface>
+      <name>getRevenueMetrics</name>
+      <kind>async function</kind>
+      <signature><![CDATA[
+async function getRevenueMetrics(
+  tenantId: string,
+  period: "day" | "week" | "month" | "quarter" | "year"
+): Promise<RevenueMetrics>
+      ]]></signature>
+      <path>src/modules/reports/queries.ts (NEW)</path>
+    </interface>
+    <interface>
+      <name>getLiabilityMetrics</name>
+      <kind>async function</kind>
+      <signature><![CDATA[
+async function getLiabilityMetrics(tenantId: string): Promise<LiabilityMetrics>
+      ]]></signature>
+      <path>src/modules/reports/queries.ts (NEW)</path>
+    </interface>
+    <interface>
+      <name>requirePermission</name>
+      <kind>async function</kind>
+      <signature><![CDATA[
+async function requirePermission(allowedRoles: UserRole[]): Promise<void>
+// Throws Error("UNAUTHORIZED") if denied
+      ]]></signature>
+      <path>src/lib/auth.ts (existing)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests use Vitest with JSDOM environment. Integration tests for database queries mock the Drizzle client. Component tests use @testing-library/react with render() and screen queries. Use toBeTruthy() + textContent verification pattern (project lacks @testing-library/jest-dom). Mock getCurrentTenantId() and getDb() for isolated unit tests.
+    </standards>
+    <locations>
+      <location>tests/unit/*.test.ts</location>
+      <location>tests/unit/*.test.tsx</location>
+      <location>tests/integration/*.test.ts</location>
+      <location>tests/integration/*.test.tsx</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Test getRevenueMetrics returns correct sum of sales.total_amount for tenant</idea>
+      <idea ac="2">Test period filtering with date-fns intervals (day/week/month/quarter/year)</idea>
+      <idea ac="3">Test revenueByFormat groups correctly and percentages sum to 100%</idea>
+      <idea ac="4">Test revenueByChannel groups correctly and percentages sum to 100%</idea>
+      <idea ac="5">Test getLiabilityMetrics sums net_payable from unpaid statements only</idea>
+      <idea ac="6">Test liabilityByAuthor groups by author_id with correct joins</idea>
+      <idea ac="7">Test finance dashboard renders all three stats cards with correct labels</idea>
+      <idea ac="8">Test stat card onClick handlers navigate to correct routes</idea>
+      <idea ac="security">Test unauthorized roles (editor, author) get UNAUTHORIZED error</idea>
+      <idea ac="tenant">Test queries filter by tenant_id, no cross-tenant data leakage</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -39,7 +39,7 @@ test.describe("Clerk Authentication UI", () => {
     page,
   }) => {
     // Attempt to access protected route without authentication
-    const response = await page.goto("/dashboard");
+    const _response = await page.goto("/dashboard");
 
     // Should either redirect to sign-in or show 404 (no dashboard page yet)
     // Middleware should intercept this request

@@ -30,7 +30,9 @@ test.describe("ISBN Import - Full Flow", () => {
     await expect(page.getByText("ISBN Import").first()).toBeVisible();
   });
 
-  test("AC1: Permission check enforces MANAGE_SETTINGS", async ({ page }) => {
+  test("AC1: Permission check enforces MANAGE_SETTINGS", async ({
+    page: _page,
+  }) => {
     // TODO: Login as non-admin user (editor/finance)
     // await loginAs(page, "editor@testorg.com");
     // await page.goto("/settings/isbn-import");

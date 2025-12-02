@@ -1,0 +1,303 @@
+<story-context id="5.6" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>6</storyId>
+    <title>Build Author Portal Statement Access</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-6-build-author-portal-statement-access.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>author</asA>
+    <iWant>to view my royalty statements in a dedicated portal</iWant>
+    <soThat>I can access my earnings information on-demand</soThat>
+    <tasks>
+      <task id="1">Create portal statement queries (AC: 2, 5)</task>
+      <task id="2">Create portal statement actions (AC: 4, 5)</task>
+      <task id="3">Update portal page with statement list (AC: 1, 2)</task>
+      <task id="4">Create portal statement list component (AC: 2)</task>
+      <task id="5">Create statement detail page (AC: 3, 4)</task>
+      <task id="6">Create portal statement detail component (AC: 3)</task>
+      <task id="7">Implement PDF download for portal (AC: 4)</task>
+      <task id="8">Apply mobile-responsive design (AC: 6)</task>
+      <task id="9">Update portal navigation (AC: 1)</task>
+      <task id="10">Update module exports (AC: 1-6)</task>
+      <task id="11">Write unit tests (AC: 2-4, 6)</task>
+      <task id="12">Write integration tests (AC: 4, 5, 6)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-5.6.1">Portal accessible at /portal with simplified nav (Logo, "My Statements", Logout)</criterion>
+    <criterion id="AC-5.6.2">Statement list shows only author's own statements with columns: Period, Date Generated, Status, Gross Royalties, Net Payable, Actions (View)</criterion>
+    <criterion id="AC-5.6.3">Statement detail view matches PDF content structure with summary, sales breakdown, returns section (if applicable), advance recoupment section (if applicable), and final payment calculation</criterion>
+    <criterion id="AC-5.6.4">Download PDF button generates presigned S3 URL (15-minute expiry)</criterion>
+    <criterion id="AC-5.6.5">RLS prevents access to other authors' data (enforced at database level via author_id isolation)</criterion>
+    <criterion id="AC-5.6.6">Mobile-responsive design with touch-optimized interface</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic 5 Technical Specification</title>
+        <section>Story 5.6 - Author Portal Statement Access</section>
+        <snippet>Implements FR61-66 author portal requirements. Portal pages in app/(portal)/. RLS enforces author_id isolation. Simplified navigation per UX spec.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Definitions</title>
+        <section>Story 5.6: Build Author Portal Statement Access</section>
+        <snippet>Author views statements in portal with simplified interface, RLS enforcement, PDF download via presigned URL, mobile-responsive design.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Multi-Tenant RLS Patterns, Project Structure</section>
+        <snippet>Layer 1-3 RLS enforcement. Portal routes under app/(portal)/. Authenticated connections via getDb() with JWT.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Journey 4: Author Views Statement (Author Portal)</section>
+        <snippet>Statement list with Period, Date Generated, Status, Gross Royalties, Net Payable. Detail page with summary card, sales breakdown, returns, advance recoupment, footer.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/5-5-build-statements-list-and-detail-view-for-finance.md</path>
+        <title>Story 5.5 - Statements List for Finance</title>
+        <section>Dev Agent Record, Completion Notes</section>
+        <snippet>Query functions, detail modal, status badge, TanStack Table patterns available for reuse. Test patterns in tests/unit/statements-list.test.tsx.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/app/(portal)/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>PortalLayout</symbol>
+        <lines>1-64</lines>
+        <reason>Existing portal layout with simplified header. Needs nav update to add "My Statements" link.</reason>
+      </file>
+      <file>
+        <path>src/app/(portal)/portal/page.tsx</path>
+        <kind>page</kind>
+        <symbol>PortalPage</symbol>
+        <lines>1-146</lines>
+        <reason>Current portal landing page with placeholder. Replace with statement list.</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/queries.ts</path>
+        <kind>query</kind>
+        <symbol>getStatements, getStatementById, getUniquePeriods, getStatementStats</symbol>
+        <lines>1-369</lines>
+        <reason>Finance-scoped queries. Add getMyStatements, getMyStatementById for author portal.</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/actions.ts</path>
+        <kind>action</kind>
+        <symbol>getStatementPDFUrl, generateStatementPDF</symbol>
+        <lines>147-207</lines>
+        <reason>Existing PDF URL action. Adapt for author-scoped validation in getMyStatementPDFUrl.</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/storage.ts</path>
+        <kind>utility</kind>
+        <symbol>getStatementDownloadUrl, uploadStatementPDF</symbol>
+        <lines>1-190</lines>
+        <reason>S3 presigned URL generation. Use getStatementDownloadUrl for portal PDF download.</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/types.ts</path>
+        <kind>types</kind>
+        <symbol>StatementWithRelations, StatementCalculations, StatementWithDetails</symbol>
+        <lines>1-287</lines>
+        <reason>Type definitions for statements. Reuse for portal components.</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/components/statement-detail-modal.tsx</path>
+        <kind>component</kind>
+        <symbol>StatementDetailModal, formatPeriod, formatCurrency</symbol>
+        <lines>1-324</lines>
+        <reason>Detail view pattern with calculation breakdown. Adapt for full-page portal view.</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/components/statement-status-badge.tsx</path>
+        <kind>component</kind>
+        <symbol>StatementStatusBadge</symbol>
+        <lines>all</lines>
+        <reason>Status badge component. Adapt colors for portal (Paid/Pending/New).</reason>
+      </file>
+      <file>
+        <path>src/modules/statements/components/statements-list.tsx</path>
+        <kind>component</kind>
+        <symbol>StatementsList</symbol>
+        <lines>all</lines>
+        <reason>TanStack Table implementation. Simplify for portal with fewer columns.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/statements.ts</path>
+        <kind>schema</kind>
+        <symbol>statements, Statement, InsertStatement</symbol>
+        <lines>1-200</lines>
+        <reason>Statement table schema with RLS policy comments. author_id for portal isolation.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/authors.ts</path>
+        <kind>schema</kind>
+        <symbol>authors</symbol>
+        <lines>all</lines>
+        <reason>Authors table with portal_user_id FK. Used to link portal user to author.</reason>
+      </file>
+      <file>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getCurrentUser, getDb, requirePermission, getCurrentTenantId</symbol>
+        <lines>1-100</lines>
+        <reason>Auth utilities for permission checking and authenticated DB access.</reason>
+      </file>
+      <file>
+        <path>tests/unit/statements-list.test.tsx</path>
+        <kind>test</kind>
+        <symbol>mockStatements, resetTestAuthContext, setTestUserRole</symbol>
+        <lines>1-80</lines>
+        <reason>Test patterns for statements. Use similar structure for portal tests.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>@tanstack/react-table</package>
+        <version>^8.21.3</version>
+        <usage>Data grid for statement list (optional for portal - can use simpler table)</usage>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>^4.1.0</version>
+        <usage>Date formatting for period display</usage>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>0.555.0</version>
+        <usage>Icons (FileText, Download, etc.)</usage>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>2.0.7</version>
+        <usage>Toast notifications for errors</usage>
+      </node>
+      <node>
+        <package>@aws-sdk/s3-request-presigner</package>
+        <version>^3.940.0</version>
+        <usage>Presigned URL generation for PDF download</usage>
+      </node>
+      <node>
+        <package>@radix-ui/react-progress</package>
+        <version>1.1.8</version>
+        <usage>Advance recoupment progress bar</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface>
+      <name>getMyStatements</name>
+      <kind>query function</kind>
+      <signature>async function getMyStatements(): Promise&lt;StatementWithRelations[]&gt;</signature>
+      <path>src/modules/statements/queries.ts</path>
+      <notes>New function. Query author's statements via portal_user_id link.</notes>
+    </interface>
+    <interface>
+      <name>getMyStatementById</name>
+      <kind>query function</kind>
+      <signature>async function getMyStatementById(statementId: string): Promise&lt;StatementWithDetails | null&gt;</signature>
+      <path>src/modules/statements/queries.ts</path>
+      <notes>New function. Get single statement with author ownership check.</notes>
+    </interface>
+    <interface>
+      <name>getMyStatementPDFUrl</name>
+      <kind>server action</kind>
+      <signature>async function getMyStatementPDFUrl(statementId: string): Promise&lt;ActionResult&lt;{ url: string }&gt;&gt;</signature>
+      <path>src/modules/statements/actions.ts</path>
+      <notes>New action. Validate author owns statement before generating presigned URL.</notes>
+    </interface>
+    <interface>
+      <name>getStatementDownloadUrl</name>
+      <kind>utility function</kind>
+      <signature>async function getStatementDownloadUrl(s3Key: string): Promise&lt;string&gt;</signature>
+      <path>src/modules/statements/storage.ts</path>
+      <notes>Existing. Generates presigned URL with 15-minute expiry.</notes>
+    </interface>
+    <interface>
+      <name>StatementWithRelations</name>
+      <kind>type</kind>
+      <signature>interface StatementWithRelations extends Statement { author: Author; contract: Contract; }</signature>
+      <path>src/modules/statements/types.ts</path>
+      <notes>Existing. Statement with author and contract relations.</notes>
+    </interface>
+    <interface>
+      <name>StatementCalculations</name>
+      <kind>type</kind>
+      <signature>interface StatementCalculations { period, formatBreakdowns, returnsDeduction, grossRoyalty, advanceRecoupment, netPayable }</signature>
+      <path>src/modules/statements/types.ts</path>
+      <notes>Existing. JSONB structure for calculation breakdown display.</notes>
+    </interface>
+    <interface>
+      <name>getCurrentUser</name>
+      <kind>utility function</kind>
+      <signature>async function getCurrentUser(): Promise&lt;User | null&gt;</signature>
+      <path>src/lib/auth.ts</path>
+      <notes>Existing. Gets authenticated user with role for permission checks.</notes>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint category="security">
+      RLS enforcement at database level. Author can only see statements where author_id matches their linked author via portal_user_id.
+    </constraint>
+    <constraint category="architecture">
+      Portal pages in app/(portal)/ directory. Simplified navigation for author users. No access to dashboard routes.
+    </constraint>
+    <constraint category="patterns">
+      Use existing formatCurrency, formatPeriod patterns from statement-detail-modal.tsx. Reuse StatementStatusBadge component with portal-specific colors.
+    </constraint>
+    <constraint category="authorization">
+      Only author role can access /portal routes. Non-author roles redirected to /dashboard. Middleware enforces role check.
+    </constraint>
+    <constraint category="styling">
+      Editorial Navy theme per UX specification. Mobile-responsive first for author portal. Touch targets minimum 44x44px.
+    </constraint>
+    <constraint category="api">
+      Server actions for mutations. Read queries can use direct DB access with getDb(). No client-side direct DB access.
+    </constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      Vitest for unit tests, Playwright for E2E. React Testing Library for component tests. Mock server actions and auth context. Use resetTestAuthContext() and setTestUserRole() from tests/setup.ts. Follow patterns from tests/unit/statements-list.test.tsx.
+    </standards>
+    <locations>
+      <location>tests/unit/portal-statement-list.test.tsx</location>
+      <location>tests/integration/portal-statement-access.test.tsx</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-5.6.1">Test portal page renders with simplified navigation (Logo, My Statements, Logout)</idea>
+      <idea ac="AC-5.6.2">Test statement list renders correct columns (Period, Date, Status, Gross, Net, Actions)</idea>
+      <idea ac="AC-5.6.2">Test period formatting displays "Q4 2025" format</idea>
+      <idea ac="AC-5.6.2">Test currency formatting for monetary amounts</idea>
+      <idea ac="AC-5.6.2">Test status badges (Paid=green, Pending=amber, New=blue)</idea>
+      <idea ac="AC-5.6.3">Test detail view renders summary card with net payable</idea>
+      <idea ac="AC-5.6.3">Test detail view renders sales breakdown table</idea>
+      <idea ac="AC-5.6.3">Test detail view renders returns section when applicable</idea>
+      <idea ac="AC-5.6.3">Test detail view renders advance recoupment with progress bar</idea>
+      <idea ac="AC-5.6.4">Test PDF download button calls getMyStatementPDFUrl action</idea>
+      <idea ac="AC-5.6.4">Test presigned URL opens in new tab</idea>
+      <idea ac="AC-5.6.5">Test author can only see own statements (mock RLS)</idea>
+      <idea ac="AC-5.6.5">Test accessing other author's statement returns 404</idea>
+      <idea ac="AC-5.6.5">Test non-author roles redirected from portal</idea>
+      <idea ac="AC-5.6.6">Test mobile viewport renders card layout instead of table</idea>
+      <idea ac="AC-5.6.6">Test touch targets are minimum 44x44px</idea>
+    </ideas>
+  </tests>
+</story-context>

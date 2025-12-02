@@ -461,7 +461,7 @@ describe("createReturnSchema (Story 3.5)", () => {
 
   describe("invalid inputs", () => {
     it("rejects missing title_id", () => {
-      const { title_id, ...noTitleId } = validReturn;
+      const { title_id: _title_id, ...noTitleId } = validReturn;
       const result = createReturnSchema.safeParse(noTitleId);
       expect(result.success).toBe(false);
     });
@@ -475,7 +475,7 @@ describe("createReturnSchema (Story 3.5)", () => {
     });
 
     it("rejects missing format", () => {
-      const { format, ...noFormat } = validReturn;
+      const { format: _format, ...noFormat } = validReturn;
       const result = createReturnSchema.safeParse(noFormat);
       expect(result.success).toBe(false);
     });
@@ -521,7 +521,7 @@ describe("createReturnSchema (Story 3.5)", () => {
     });
 
     it("rejects missing reason (AC 7)", () => {
-      const { reason, ...noReason } = validReturn;
+      const { reason: _reason, ...noReason } = validReturn;
       const result = createReturnSchema.safeParse(noReason);
       expect(result.success).toBe(false);
     });

@@ -25,7 +25,7 @@ const currencySchema = z
       const num = parseFloat(val);
       return !Number.isNaN(num) && num >= 0;
     },
-    { message: "Amount must be a non-negative number" }
+    { message: "Amount must be a non-negative number" },
   )
   .refine(
     (val) => {
@@ -33,7 +33,7 @@ const currencySchema = z
       const parts = val.split(".");
       return parts.length === 1 || (parts[1]?.length ?? 0) <= 2;
     },
-    { message: "Amount cannot have more than 2 decimal places" }
+    { message: "Amount cannot have more than 2 decimal places" },
   );
 
 const updateContractStatusSchema = z.object({
@@ -43,10 +43,9 @@ const updateContractStatusSchema = z.object({
 
 const updateAdvancePaidSchema = z.object({
   contractId: z.string().uuid(),
-  additionalPayment: currencySchema.refine(
-    (val) => parseFloat(val) > 0,
-    { message: "Payment amount must be greater than 0" }
-  ),
+  additionalPayment: currencySchema.refine((val) => parseFloat(val) > 0, {
+    message: "Payment amount must be greater than 0",
+  }),
 });
 
 describe("updateContractStatus validation (AC 6)", () => {
@@ -209,7 +208,7 @@ describe("Advance Payment Business Logic", () => {
    */
   function calculateNewAdvancePaid(
     currentPaid: string,
-    additionalPayment: string
+    additionalPayment: string,
   ): string {
     const paid = new Decimal(currentPaid || "0");
     const payment = new Decimal(additionalPayment);
@@ -222,7 +221,7 @@ describe("Advance Payment Business Logic", () => {
   function wouldExceedAdvanceAmount(
     advanceAmount: string,
     currentPaid: string,
-    additionalPayment: string
+    additionalPayment: string,
   ): boolean {
     const amount = new Decimal(advanceAmount || "0");
     const paid = new Decimal(currentPaid || "0");
@@ -236,7 +235,7 @@ describe("Advance Payment Business Logic", () => {
    */
   function getMaxAdditionalPayment(
     advanceAmount: string,
-    currentPaid: string
+    currentPaid: string,
   ): string {
     const amount = new Decimal(advanceAmount || "0");
     const paid = new Decimal(currentPaid || "0");
@@ -264,33 +263,31 @@ describe("Advance Payment Business Logic", () => {
 
   describe("wouldExceedAdvanceAmount", () => {
     it("returns false when payment is within limit", () => {
-      expect(
-        wouldExceedAdvanceAmount("10000.00", "5000.00", "4000.00")
-      ).toBe(false);
+      expect(wouldExceedAdvanceAmount("10000.00", "5000.00", "4000.00")).toBe(
+        false,
+      );
     });
 
     it("returns false when payment exactly reaches limit", () => {
-      expect(
-        wouldExceedAdvanceAmount("10000.00", "5000.00", "5000.00")
-      ).toBe(false);
+      expect(wouldExceedAdvanceAmount("10000.00", "5000.00", "5000.00")).toBe(
+        false,
+      );
     });
 
     it("returns true when payment exceeds limit", () => {
-      expect(
-        wouldExceedAdvanceAmount("10000.00", "5000.00", "6000.00")
-      ).toBe(true);
+      expect(wouldExceedAdvanceAmount("10000.00", "5000.00", "6000.00")).toBe(
+        true,
+      );
     });
 
     it("returns true for small overage", () => {
-      expect(
-        wouldExceedAdvanceAmount("10000.00", "9999.99", "0.02")
-      ).toBe(true);
+      expect(wouldExceedAdvanceAmount("10000.00", "9999.99", "0.02")).toBe(
+        true,
+      );
     });
 
     it("handles zero advance amount", () => {
-      expect(
-        wouldExceedAdvanceAmount("0", "0", "1.00")
-      ).toBe(true);
+      expect(wouldExceedAdvanceAmount("0", "0", "1.00")).toBe(true);
     });
   });
 
@@ -329,7 +326,7 @@ describe("Contract Update Schema", () => {
         min_quantity: z.number().int().min(0),
         max_quantity: z.number().int().min(1).nullable(),
         rate: z.number().min(0).max(1),
-      })
+      }),
     ),
   });
 
@@ -359,8 +356,18 @@ describe("Contract Update Schema", () => {
         advance_amount: "10000.00",
         advance_paid: "0",
         tiers: [
-          { format: "physical", min_quantity: 0, max_quantity: 5000, rate: 0.1 },
-          { format: "physical", min_quantity: 5001, max_quantity: null, rate: 0.12 },
+          {
+            format: "physical",
+            min_quantity: 0,
+            max_quantity: 5000,
+            rate: 0.1,
+          },
+          {
+            format: "physical",
+            min_quantity: 5001,
+            max_quantity: null,
+            rate: 0.12,
+          },
           { format: "ebook", min_quantity: 0, max_quantity: null, rate: 0.25 },
         ],
       });
@@ -374,7 +381,12 @@ describe("Contract Update Schema", () => {
         advance_amount: "0",
         advance_paid: "0",
         tiers: [
-          { format: "audiobook", min_quantity: 0, max_quantity: null, rate: 0.15 },
+          {
+            format: "audiobook",
+            min_quantity: 0,
+            max_quantity: null,
+            rate: 0.15,
+          },
         ],
       });
       expect(result.success).toBe(true);
@@ -402,7 +414,12 @@ describe("Contract Update Schema", () => {
         advance_amount: "0",
         advance_paid: "0",
         tiers: [
-          { format: "physical", min_quantity: -1, max_quantity: null, rate: 0.1 },
+          {
+            format: "physical",
+            min_quantity: -1,
+            max_quantity: null,
+            rate: 0.1,
+          },
         ],
       });
       expect(result.success).toBe(false);
@@ -415,7 +432,12 @@ describe("Contract Update Schema", () => {
         advance_amount: "0",
         advance_paid: "0",
         tiers: [
-          { format: "physical", min_quantity: 0, max_quantity: null, rate: 1.5 },
+          {
+            format: "physical",
+            min_quantity: 0,
+            max_quantity: null,
+            rate: 1.5,
+          },
         ],
       });
       expect(result.success).toBe(false);
@@ -428,7 +450,12 @@ describe("Contract Update Schema", () => {
         advance_amount: "0",
         advance_paid: "0",
         tiers: [
-          { format: "physical", min_quantity: 0, max_quantity: null, rate: -0.1 },
+          {
+            format: "physical",
+            min_quantity: 0,
+            max_quantity: null,
+            rate: -0.1,
+          },
         ],
       });
       expect(result.success).toBe(false);

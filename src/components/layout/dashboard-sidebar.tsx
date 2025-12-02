@@ -5,10 +5,12 @@ import {
   BarChart,
   BookOpen,
   DollarSign,
+  FileText,
   Hash,
   Home,
   Receipt,
   RotateCcw,
+  Server,
   Settings,
   Users,
 } from "lucide-react";
@@ -27,8 +29,10 @@ const iconMap: Record<IconName, LucideIcon> = {
   Receipt,
   RotateCcw,
   DollarSign,
+  FileText,
   BarChart,
   Settings,
+  Server,
 };
 
 interface DashboardSidebarProps {

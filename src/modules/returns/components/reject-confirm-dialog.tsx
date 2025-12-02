@@ -37,7 +37,7 @@ interface RejectConfirmDialogProps {
 export function RejectConfirmDialog({
   open,
   onOpenChange,
-  returnItem,
+  returnItem: _returnItem,
   onConfirm,
   loading,
 }: RejectConfirmDialogProps) {

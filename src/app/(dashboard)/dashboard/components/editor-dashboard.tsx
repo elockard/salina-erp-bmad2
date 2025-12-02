@@ -9,10 +9,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
+import { RefreshButton } from "@/components/dashboard/refresh-button";
 import type { User } from "@/db/schema";
 import type { DashboardStats } from "@/modules/dashboard/actions";
 import { ISBNPoolWidget } from "@/modules/isbn/components/isbn-pool-widget";
 import type { ISBNPoolStats } from "@/modules/isbn/types";
+import { EditorIsbnAssignments } from "./editor-isbn-assignments";
+import { EditorMyTitles } from "./editor-my-titles";
+import { EditorPendingTasks } from "./editor-pending-tasks";
+import { EditorRecentSales } from "./editor-recent-sales";
 
 interface EditorDashboardProps {
   stats: DashboardStats["stats"];
@@ -27,13 +33,16 @@ export function EditorDashboard({
 }: EditorDashboardProps) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {user.email.split("@")[0]} (Editor)
-        </h1>
-        <p className="text-muted-foreground">
-          Manage authors, titles, and ISBN assignments
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Welcome back, {user.email.split("@")[0]} (Editor)
+          </h1>
+          <p className="text-muted-foreground">
+            Manage authors, titles, and ISBN assignments
+          </p>
+        </div>
+        <RefreshButton />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -60,6 +69,25 @@ export function EditorDashboard({
         </Card>
 
         {isbnStats && <ISBNPoolWidget stats={isbnStats} />}
+      </div>
+
+      {/* Analytics Widgets - AC-3: My titles, Recent sales, ISBN assignments, Pending tasks */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <DashboardChartWrapper title="My Titles This Quarter" height={100}>
+          <EditorMyTitles userId={user.id} />
+        </DashboardChartWrapper>
+
+        <DashboardChartWrapper title="My ISBN Assignments" height={100}>
+          <EditorIsbnAssignments userId={user.id} />
+        </DashboardChartWrapper>
+
+        <DashboardChartWrapper title="Recent Sales" height={200}>
+          <EditorRecentSales userId={user.id} />
+        </DashboardChartWrapper>
+
+        <DashboardChartWrapper title="Pending Tasks" height={200}>
+          <EditorPendingTasks userId={user.id} />
+        </DashboardChartWrapper>
       </div>
 
       <Card>

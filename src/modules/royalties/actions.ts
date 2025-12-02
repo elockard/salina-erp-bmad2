@@ -12,6 +12,7 @@
  * Permission: MANAGE_CONTRACTS (owner, admin, editor)
  */
 
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { contracts, contractTiers } from "@/db/schema/contracts";
@@ -21,8 +22,10 @@ import {
   getDb,
   requirePermission,
 } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/audit";
 import { CALCULATE_ROYALTIES, MANAGE_CONTRACTS } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
+import { calculateRoyaltyForPeriod } from "./calculator";
 import {
   checkDuplicateContract,
   getAuthorForContract,
@@ -30,12 +33,10 @@ import {
   searchAuthorsForContract,
   searchTitlesForContract,
 } from "./queries";
-import { calculateRoyaltyForPeriod } from "./calculator";
 import {
-  createContractSchema,
   contractStatusSchema,
+  createContractSchema,
   currencySchema,
-  tierInputSchema,
 } from "./schema";
 import type {
   AuthorOption,
@@ -44,7 +45,6 @@ import type {
   RoyaltyCalculationResult,
   TitleOption,
 } from "./types";
-import { and, eq } from "drizzle-orm";
 
 /**
  * Search authors for contract dropdown
@@ -53,7 +53,7 @@ import { and, eq } from "drizzle-orm";
  * @returns Array of matching authors
  */
 export async function searchAuthorsAction(
-  searchTerm: string
+  searchTerm: string,
 ): Promise<ActionResult<AuthorOption[]>> {
   try {
     await requirePermission(MANAGE_CONTRACTS);
@@ -78,7 +78,7 @@ export async function searchAuthorsAction(
  * @returns Array of matching titles
  */
 export async function searchTitlesAction(
-  searchTerm: string
+  searchTerm: string,
 ): Promise<ActionResult<TitleOption[]>> {
   try {
     await requirePermission(MANAGE_CONTRACTS);
@@ -107,7 +107,7 @@ export async function searchTitlesAction(
  * @returns ActionResult with contract creation result
  */
 export async function createContract(
-  data: unknown
+  data: unknown,
 ): Promise<ActionResult<ContractCreationResult>> {
   try {
     // 1. Permission check (AC 9)
@@ -129,7 +129,7 @@ export async function createContract(
     // 5. Check for duplicate contract (AC 8)
     const isDuplicate = await checkDuplicateContract(
       validated.author_id,
-      validated.title_id
+      validated.title_id,
     );
     if (isDuplicate) {
       return {
@@ -181,12 +181,33 @@ export async function createContract(
       return contract;
     });
 
-    // 9. Revalidate paths
+    // 9. Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: user.id,
+      actionType: "CREATE",
+      resourceType: "contract",
+      resourceId: result.id,
+      changes: {
+        after: {
+          id: result.id,
+          author_id: validated.author_id,
+          author_name: author.name,
+          title_id: validated.title_id,
+          title_name: title.title,
+          status: validated.status,
+          advance_amount: validated.advance_amount,
+          tiers_count: validated.tiers.length,
+        },
+      },
+    });
+
+    // 10. Revalidate paths
     revalidatePath("/royalties");
     revalidatePath(`/authors/${validated.author_id}`);
     revalidatePath(`/titles/${validated.title_id}`);
 
-    // 10. Return success with contract details for toast
+    // 11. Return success with contract details for toast
     return {
       success: true,
       data: {
@@ -258,7 +279,7 @@ const updateContractStatusSchema = z.object({
  */
 export async function updateContractStatus(
   contractId: string,
-  status: string
+  status: string,
 ): Promise<ActionResult<Contract>> {
   try {
     // 1. Permission check
@@ -270,8 +291,19 @@ export async function updateContractStatus(
     // 3. Get tenant context
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
+    const user = await getCurrentUser();
 
-    // 4. Update contract
+    // 4. Get current contract for audit log
+    const current = await db.query.contracts.findFirst({
+      where: and(
+        eq(contracts.id, validated.contractId),
+        eq(contracts.tenant_id, tenantId),
+      ),
+    });
+
+    const oldStatus = current?.status;
+
+    // 5. Update contract
     const [updated] = await db
       .update(contracts)
       .set({
@@ -281,8 +313,8 @@ export async function updateContractStatus(
       .where(
         and(
           eq(contracts.id, validated.contractId),
-          eq(contracts.tenant_id, tenantId)
-        )
+          eq(contracts.tenant_id, tenantId),
+        ),
       )
       .returning();
 
@@ -290,7 +322,23 @@ export async function updateContractStatus(
       return { success: false, error: "Contract not found" };
     }
 
-    // 5. Revalidate paths
+    // 6. Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: user?.id ?? null,
+      actionType: "UPDATE",
+      resourceType: "contract",
+      resourceId: contractId,
+      changes: {
+        before: { status: oldStatus },
+        after: { status: validated.status },
+      },
+      metadata: {
+        operation: "status_change",
+      },
+    });
+
+    // 7. Revalidate paths
     revalidatePath(`/royalties/${contractId}`);
     revalidatePath("/royalties");
 
@@ -323,10 +371,9 @@ export async function updateContractStatus(
  */
 const updateAdvancePaidSchema = z.object({
   contractId: z.string().uuid(),
-  additionalPayment: currencySchema.refine(
-    (val) => parseFloat(val) > 0,
-    { message: "Payment amount must be greater than 0" }
-  ),
+  additionalPayment: currencySchema.refine((val) => parseFloat(val) > 0, {
+    message: "Payment amount must be greater than 0",
+  }),
 });
 
 /**
@@ -340,7 +387,7 @@ const updateAdvancePaidSchema = z.object({
  */
 export async function updateAdvancePaid(
   contractId: string,
-  additionalPayment: string
+  additionalPayment: string,
 ): Promise<ActionResult<Contract>> {
   try {
     // 1. Permission check
@@ -355,12 +402,13 @@ export async function updateAdvancePaid(
     // 3. Get tenant context
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
+    const user = await getCurrentUser();
 
     // 4. Get current contract
     const current = await db.query.contracts.findFirst({
       where: and(
         eq(contracts.id, validated.contractId),
-        eq(contracts.tenant_id, tenantId)
+        eq(contracts.tenant_id, tenantId),
       ),
     });
 
@@ -393,8 +441,8 @@ export async function updateAdvancePaid(
       .where(
         and(
           eq(contracts.id, validated.contractId),
-          eq(contracts.tenant_id, tenantId)
-        )
+          eq(contracts.tenant_id, tenantId),
+        ),
       )
       .returning();
 
@@ -402,7 +450,24 @@ export async function updateAdvancePaid(
       return { success: false, error: "Contract not found" };
     }
 
-    // 8. Revalidate paths
+    // 8. Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: user?.id ?? null,
+      actionType: "UPDATE",
+      resourceType: "contract",
+      resourceId: contractId,
+      changes: {
+        before: { advance_paid: currentPaid.toFixed(2) },
+        after: { advance_paid: newPaid.toFixed(2) },
+      },
+      metadata: {
+        operation: "advance_payment",
+        additional_payment: validated.additionalPayment,
+      },
+    });
+
+    // 9. Revalidate paths
     revalidatePath(`/royalties/${contractId}`);
     revalidatePath("/royalties");
 
@@ -444,7 +509,7 @@ const updateContractSchema = z.object({
       min_quantity: z.number().int().min(0),
       max_quantity: z.number().int().min(1).nullable(),
       rate: z.number().min(0).max(1),
-    })
+    }),
   ),
 });
 
@@ -459,7 +524,7 @@ const updateContractSchema = z.object({
  */
 export async function updateContract(
   contractId: string,
-  data: unknown
+  data: unknown,
 ): Promise<ActionResult<Contract>> {
   try {
     // 1. Permission check
@@ -474,8 +539,17 @@ export async function updateContract(
     // 3. Get tenant context
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
+    const user = await getCurrentUser();
 
-    // 4. Update contract and tiers atomically
+    // 4. Get current contract for audit log
+    const current = await db.query.contracts.findFirst({
+      where: and(
+        eq(contracts.id, validated.contractId),
+        eq(contracts.tenant_id, tenantId),
+      ),
+    });
+
+    // 5. Update contract and tiers atomically
     const result = await db.transaction(async (tx) => {
       // Update contract
       const [updated] = await tx
@@ -489,8 +563,8 @@ export async function updateContract(
         .where(
           and(
             eq(contracts.id, validated.contractId),
-            eq(contracts.tenant_id, tenantId)
-          )
+            eq(contracts.tenant_id, tenantId),
+          ),
         )
         .returning();
 
@@ -517,7 +591,32 @@ export async function updateContract(
       return updated;
     });
 
-    // 5. Revalidate paths
+    // 6. Log audit event (fire and forget - non-blocking)
+    logAuditEvent({
+      tenantId,
+      userId: user?.id ?? null,
+      actionType: "UPDATE",
+      resourceType: "contract",
+      resourceId: contractId,
+      changes: {
+        before: {
+          status: current?.status,
+          advance_amount: current?.advance_amount,
+          advance_paid: current?.advance_paid,
+        },
+        after: {
+          status: validated.status,
+          advance_amount: validated.advance_amount,
+          advance_paid: validated.advance_paid,
+          tiers_count: validated.tiers.length,
+        },
+      },
+      metadata: {
+        operation: "full_update",
+      },
+    });
+
+    // 7. Revalidate paths
     revalidatePath(`/royalties/${contractId}`);
     revalidatePath("/royalties");
 
@@ -585,7 +684,7 @@ const testCalculationSchema = z.object({
 export async function triggerTestCalculation(
   authorId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<RoyaltyCalculationResult> {
   try {
     // 1. Permission check (AC 1)
@@ -606,7 +705,7 @@ export async function triggerTestCalculation(
       validated.authorId,
       tenantId,
       validated.startDate,
-      validated.endDate
+      validated.endDate,
     );
 
     return result;

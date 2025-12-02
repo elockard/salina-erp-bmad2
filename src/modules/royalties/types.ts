@@ -8,13 +8,13 @@
  * Related FRs: FR38-FR40 (Royalty Contract Management)
  */
 
+import type { Author } from "@/db/schema/authors";
 import type {
   Contract,
   ContractFormat,
   ContractStatus,
   ContractTier,
 } from "@/db/schema/contracts";
-import type { Author } from "@/db/schema/authors";
 import type { Title } from "@/db/schema/titles";
 
 /**

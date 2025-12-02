@@ -17,14 +17,22 @@
  * For now, this component shows empty state since no statements exist.
  */
 
-import { BarChart3, FileText, TrendingUp, Package } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart3, FileText, Package, TrendingUp } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface ContractStatsSectionProps {
   contractId: string;
 }
 
-export function ContractStatsSection({ contractId }: ContractStatsSectionProps) {
+export function ContractStatsSection({
+  contractId: _contractId,
+}: ContractStatsSectionProps) {
   // TODO: Epic 5 will add the statements table and queries
   // For now, show empty state per AC 5
   const statementCount = 0;
@@ -72,7 +80,9 @@ export function ContractStatsSection({ contractId }: ContractStatsSectionProps) 
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">Total Lifetime Royalties</span>
               </div>
-              <span className="font-medium">{formatCurrency(lifetimeRoyalties)}</span>
+              <span className="font-medium">
+                {formatCurrency(lifetimeRoyalties)}
+              </span>
             </div>
 
             {/* Lifetime Sales */}
@@ -81,7 +91,9 @@ export function ContractStatsSection({ contractId }: ContractStatsSectionProps) 
                 <Package className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">Total Lifetime Sales</span>
               </div>
-              <span className="font-medium">{lifetimeSales.toLocaleString()} units</span>
+              <span className="font-medium">
+                {lifetimeSales.toLocaleString()} units
+              </span>
             </div>
 
             {/* Link to statements (placeholder for future) */}

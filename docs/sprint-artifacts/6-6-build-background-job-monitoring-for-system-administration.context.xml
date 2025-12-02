@@ -1,0 +1,353 @@
+<story-context id="6-6-build-background-job-monitoring-for-system-administration" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>6</storyId>
+    <title>Build Background Job Monitoring for System Administration</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-6-build-background-job-monitoring-for-system-administration.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>Admin/Owner user</asA>
+    <iWant>to monitor background job status and system health</iWant>
+    <soThat>I can ensure the platform is operating correctly and troubleshoot failures</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <title>Create admin module structure</title>
+        <subtasks>
+          <subtask>1.1 Create `src/modules/admin/` directory structure</subtask>
+          <subtask>1.2 Create `src/modules/admin/types.ts` with JobStatus, HealthCheckStatus interfaces</subtask>
+          <subtask>1.3 Create `src/modules/admin/components/index.ts` for component exports</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="7,8">
+        <title>Implement health check utilities</title>
+        <subtasks>
+          <subtask>2.1 Create `src/lib/health-checks.ts` with health check functions</subtask>
+          <subtask>2.2 Implement `checkDatabaseHealth()` - execute `SELECT 1` query</subtask>
+          <subtask>2.3 Implement `checkClerkHealth()` - verify API key with users.getCount()</subtask>
+          <subtask>2.4 Implement `checkS3Health()` - headBucket() operation on configured bucket</subtask>
+          <subtask>2.5 Implement `checkResendHealth()` - API key validation</subtask>
+          <subtask>2.6 Implement `checkInngestHealth()` - dashboard API ping</subtask>
+          <subtask>2.7 Create `runAllHealthChecks()` aggregating all checks with status/latency</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="2,3,4">
+        <title>Create system monitoring queries</title>
+        <subtasks>
+          <subtask>3.1 Create `src/modules/admin/queries.ts`</subtask>
+          <subtask>3.2 Implement `getJobSummary()` - counts for active, queued, completed, failed</subtask>
+          <subtask>3.3 Implement `getRecentJobs()` - paginated list with filters for status/type</subtask>
+          <subtask>3.4 Implement `getJobDetail()` - single job details including error info</subtask>
+          <subtask>3.5 Note: Job data sourced via Inngest SDK or API (not custom DB table)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="7,8">
+        <title>Build system health status component</title>
+        <subtasks>
+          <subtask>4.1 Create `src/modules/admin/components/health-status.tsx`</subtask>
+          <subtask>4.2 Display 5 service cards: Database, Clerk, S3, Resend, Inngest</subtask>
+          <subtask>4.3 Each card shows: Service name, Status indicator (green/red/yellow), Latency</subtask>
+          <subtask>4.4 Use green checkmark for healthy, red X for failure, yellow spinner for checking</subtask>
+          <subtask>4.5 Add refresh button to re-run health checks</subtask>
+          <subtask>4.6 Show last checked timestamp</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="2">
+        <title>Build job summary cards component</title>
+        <subtasks>
+          <subtask>5.1 Create `src/modules/admin/components/job-summary-cards.tsx`</subtask>
+          <subtask>5.2 Display 4 stat cards: Active Jobs, Queued Jobs, Recent Completions (24h), Recent Failures (24h)</subtask>
+          <subtask>5.3 Use appropriate icons and colors (blue for active, amber for queued, green for completed, red for failed)</subtask>
+          <subtask>5.4 Cards clickable to filter job list</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="3,4,5">
+        <title>Build job list table component</title>
+        <subtasks>
+          <subtask>6.1 Create `src/modules/admin/components/job-list.tsx`</subtask>
+          <subtask>6.2 Table columns: ID (truncated), Type, Status, Started, Duration, Actions</subtask>
+          <subtask>6.3 Status badge styling: running (blue pulse), completed (green), failed (red), queued (amber)</subtask>
+          <subtask>6.4 Duration calculated as completed_at - started_at (or ongoing for running)</subtask>
+          <subtask>6.5 Add filters: Job Type dropdown, Status dropdown</subtask>
+          <subtask>6.6 Implement pagination (20 per page default)</subtask>
+          <subtask>6.7 Add expandable row to show error message and retry count for failed jobs</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="6">
+        <title>Create Inngest dashboard link component</title>
+        <subtasks>
+          <subtask>7.1 Create `src/modules/admin/components/inngest-link.tsx`</subtask>
+          <subtask>7.2 External link button to Inngest dashboard URL</subtask>
+          <subtask>7.3 Include tooltip explaining "View detailed job logs in Inngest"</subtask>
+          <subtask>7.4 Open in new tab with proper rel attributes</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="1">
+        <title>Create system monitoring page</title>
+        <subtasks>
+          <subtask>8.1 Create `src/app/(dashboard)/admin/system/page.tsx`</subtask>
+          <subtask>8.2 Add permission check: Owner, Admin roles only</subtask>
+          <subtask>8.3 Use dynamic = "force-dynamic" (real-time data, no caching)</subtask>
+          <subtask>8.4 Add page title "System Monitoring" and description</subtask>
+        </subtasks>
+      </task>
+      <task id="9" ac="1-8">
+        <title>Assemble system monitoring page</title>
+        <subtasks>
+          <subtask>9.1 Compose health status, job summary, job list components</subtask>
+          <subtask>9.2 Layout: Health status at top, Job summary cards row, Job list table below</subtask>
+          <subtask>9.3 Add Inngest dashboard link in header area</subtask>
+          <subtask>9.4 Add loading states for each section using Suspense boundaries</subtask>
+          <subtask>9.5 Add refresh button to reload all data</subtask>
+        </subtasks>
+      </task>
+      <task id="10" ac="1">
+        <title>Add navigation link</title>
+        <subtasks>
+          <subtask>10.1 Add "System" link to admin section of dashboard sidebar (Owner/Admin only)</subtask>
+          <subtask>10.2 Use Server icon from lucide-react</subtask>
+          <subtask>10.3 Verify navigation works correctly</subtask>
+        </subtasks>
+      </task>
+      <task id="11" ac="7,8">
+        <title>Write unit tests for health checks</title>
+        <subtasks>
+          <subtask>11.1 Create `tests/unit/health-checks.test.ts`</subtask>
+          <subtask>11.2 Test each health check function with mock services</subtask>
+          <subtask>11.3 Test runAllHealthChecks() aggregation</subtask>
+          <subtask>11.4 Test timeout handling for slow services</subtask>
+          <subtask>11.5 Test error handling for failed services</subtask>
+        </subtasks>
+      </task>
+      <task id="12" ac="1-8">
+        <title>Write integration tests for system page</title>
+        <subtasks>
+          <subtask>12.1 Create `tests/integration/system-monitoring.test.tsx`</subtask>
+          <subtask>12.2 Test health status component renders all 5 services</subtask>
+          <subtask>12.3 Test job summary cards display counts</subtask>
+          <subtask>12.4 Test job list renders with mock data</subtask>
+          <subtask>12.5 Test filter interactions</subtask>
+          <subtask>12.6 Test error states display correctly</subtask>
+          <subtask>12.7 Test permission enforcement</subtask>
+        </subtasks>
+      </task>
+      <task id="13" ac="1,2,6,7">
+        <title>Write E2E tests for system monitoring</title>
+        <subtasks>
+          <subtask>13.1 Create `tests/e2e/system-monitoring.spec.ts`</subtask>
+          <subtask>13.2 Test page navigation to /admin/system</subtask>
+          <subtask>13.3 Test health status section displays</subtask>
+          <subtask>13.4 Test job summary cards display</subtask>
+          <subtask>13.5 Test Inngest dashboard link opens external page</subtask>
+          <subtask>13.6 Test permission enforcement (Admin/Owner access; others blocked)</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="6.6.1">Admin/Owner users can access /admin/system page</criterion>
+    <criterion id="6.6.2">Dashboard shows: Active Jobs, Queued Jobs, Recent Completions, Recent Failures</criterion>
+    <criterion id="6.6.3">Job types displayed: PDF generation, Batch statement generation</criterion>
+    <criterion id="6.6.4">Job detail view shows: ID, Type, Status, Started/Completed times, Duration</criterion>
+    <criterion id="6.6.5">Failed jobs show error message and retry count</criterion>
+    <criterion id="6.6.6">Link to Inngest dashboard provided for detailed monitoring</criterion>
+    <criterion id="6.6.7">System health section shows status of: Database, Clerk, S3, Resend, Inngest</criterion>
+    <criterion id="6.6.8">Health check failures display warning indicators</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Story 6.6: Background Job Monitoring</section>
+        <snippet>Defines admin/system page structure, health check methods for all 5 services, job monitoring queries using Inngest SDK or API, and permission matrix (Owner/Admin only).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Background Processing, Security Architecture</section>
+        <snippet>Inngest for serverless background jobs with visual debugging. Roles include Owner/Admin with full system access. Authorization enforced in Server Actions.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/inngest/client.ts</path>
+        <kind>module</kind>
+        <symbol>inngest, InngestEvents</symbol>
+        <lines>1-49</lines>
+        <reason>Inngest client configuration and event type definitions. Job monitoring should query this client for job status.</reason>
+      </artifact>
+      <artifact>
+        <path>src/inngest/functions.ts</path>
+        <kind>registry</kind>
+        <symbol>functions</symbol>
+        <lines>1-19</lines>
+        <reason>Registry of all Inngest functions (generateStatementPdf, generateStatementsBatch). These are the job types to monitor.</reason>
+      </artifact>
+      <artifact>
+        <path>src/inngest/generate-statement-pdf.ts</path>
+        <kind>function</kind>
+        <symbol>generateStatementPdf</symbol>
+        <reason>One of the job types displayed in monitoring: statements/pdf.generate</reason>
+      </artifact>
+      <artifact>
+        <path>src/inngest/generate-statements-batch.ts</path>
+        <kind>function</kind>
+        <symbol>generateStatementsBatch</symbol>
+        <reason>One of the job types displayed in monitoring: statements/generate.batch</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>hasPermission, getCurrentUser, requirePermission</symbol>
+        <lines>1-137</lines>
+        <reason>Permission checking patterns. Use hasPermission(["owner", "admin"]) for page access control per AC-6.6.1.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/dashboard-nav.ts</path>
+        <kind>config</kind>
+        <symbol>NAV_ITEMS, NavItem, IconName</symbol>
+        <lines>1-101</lines>
+        <reason>Navigation configuration. Need to add "System" nav item with Server icon for Owner/Admin roles per Task 10.</reason>
+      </artifact>
+      <artifact>
+        <path>src/db/index.ts</path>
+        <kind>utility</kind>
+        <symbol>db, adminDb, getAuthenticatedDb</symbol>
+        <lines>1-47</lines>
+        <reason>Database connection pattern. Health check should use adminDb for SELECT 1 query.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(dashboard)/reports/audit-logs/page.tsx</path>
+        <kind>page</kind>
+        <symbol>AuditLogsPage</symbol>
+        <lines>1-44</lines>
+        <reason>Reference pattern for permission-gated admin page. Use same hasPermission pattern with redirect to /dashboard.</reason>
+      </artifact>
+      <artifact>
+        <path>src/modules/reports/components/audit-logs-client.tsx</path>
+        <kind>component</kind>
+        <symbol>AuditLogsClient</symbol>
+        <lines>1-501</lines>
+        <reason>Reference pattern for client-side filtering, pagination, and table rendering with expandable rows (for error details in failed jobs).</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="inngest" version="^3.46.0">Background job client - query job status</package>
+        <package name="@clerk/nextjs" version="^6.35.5">Clerk SDK for health check</package>
+        <package name="@aws-sdk/client-s3" version="^3.940.0">S3 client for headBucket health check</package>
+        <package name="resend" version="^6.5.2">Resend client for API validation</package>
+        <package name="@neondatabase/serverless" version="^1.0.2">Neon DB for health check</package>
+        <package name="drizzle-orm" version="^0.44.7">Database queries</package>
+        <package name="lucide-react" version="0.555.0">Icons including Server for nav</package>
+        <package name="@tanstack/react-table" version="8.21.3">Table component for job list</package>
+        <package name="date-fns" version="^4.1.0">Date formatting for timestamps</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="dev-notes">Permission: Owner, Admin roles only - NOT Finance, Editor, Author</constraint>
+    <constraint source="dev-notes">Health checks operate at system level (no tenant scoping)</constraint>
+    <constraint source="dev-notes">Job monitoring queries Inngest API - NOT a custom database table</constraint>
+    <constraint source="architecture">Use force-dynamic for real-time data, no caching</constraint>
+    <constraint source="dev-notes">Follow module pattern: src/modules/admin/ with types.ts, queries.ts, components/</constraint>
+    <constraint source="dev-notes">Use Suspense boundaries for independent component loading</constraint>
+    <constraint source="dev-notes">Pre-existing test failures in permissions.test.ts, tenant-settings.test.ts, users-actions.test.ts - do not fix</constraint>
+    <constraint source="dev-notes">Test baseline: ~1215+ unit/integration tests pass - maintain this</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="HealthCheckResult" kind="type" path="src/modules/admin/types.ts">
+      <signature>{
+  service: string;
+  status: "healthy" | "degraded" | "unhealthy" | "checking";
+  latencyMs: number;
+  message?: string;
+  checkedAt: Date;
+}</signature>
+    </interface>
+    <interface name="JobStatus" kind="type" path="src/modules/admin/types.ts">
+      <signature>type JobStatus = "queued" | "running" | "completed" | "failed" | "cancelled";</signature>
+    </interface>
+    <interface name="JobType" kind="type" path="src/modules/admin/types.ts">
+      <signature>type JobType = "pdf-generation" | "batch-statements";</signature>
+    </interface>
+    <interface name="JobSummary" kind="type" path="src/modules/admin/types.ts">
+      <signature>{
+  active: number;
+  queued: number;
+  completedLast24h: number;
+  failedLast24h: number;
+}</signature>
+    </interface>
+    <interface name="JobEntry" kind="type" path="src/modules/admin/types.ts">
+      <signature>{
+  id: string;
+  type: JobType;
+  status: JobStatus;
+  functionName: string;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  durationMs: number | null;
+  error?: string;
+  retryCount?: number;
+  input?: Record&lt;string, unknown&gt;;
+}</signature>
+    </interface>
+    <interface name="checkDatabaseHealth" kind="function" path="src/lib/health-checks.ts">
+      <signature>async function checkDatabaseHealth(): Promise&lt;HealthCheckResult&gt;</signature>
+    </interface>
+    <interface name="checkClerkHealth" kind="function" path="src/lib/health-checks.ts">
+      <signature>async function checkClerkHealth(): Promise&lt;HealthCheckResult&gt;</signature>
+    </interface>
+    <interface name="checkS3Health" kind="function" path="src/lib/health-checks.ts">
+      <signature>async function checkS3Health(): Promise&lt;HealthCheckResult&gt;</signature>
+    </interface>
+    <interface name="checkResendHealth" kind="function" path="src/lib/health-checks.ts">
+      <signature>async function checkResendHealth(): Promise&lt;HealthCheckResult&gt;</signature>
+    </interface>
+    <interface name="checkInngestHealth" kind="function" path="src/lib/health-checks.ts">
+      <signature>async function checkInngestHealth(): Promise&lt;HealthCheckResult&gt;</signature>
+    </interface>
+    <interface name="runAllHealthChecks" kind="function" path="src/lib/health-checks.ts">
+      <signature>async function runAllHealthChecks(): Promise&lt;HealthCheckResult[]&gt;</signature>
+    </interface>
+    <interface name="getJobSummary" kind="function" path="src/modules/admin/queries.ts">
+      <signature>async function getJobSummary(): Promise&lt;JobSummary&gt;</signature>
+    </interface>
+    <interface name="getRecentJobs" kind="function" path="src/modules/admin/queries.ts">
+      <signature>async function getRecentJobs(filters: JobFilters, page: number, pageSize: number): Promise&lt;{ jobs: JobEntry[]; total: number }&gt;</signature>
+    </interface>
+    <interface name="getJobDetail" kind="function" path="src/modules/admin/queries.ts">
+      <signature>async function getJobDetail(jobId: string): Promise&lt;JobEntry | null&gt;</signature>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>All tests use Vitest for unit/integration and Playwright for E2E. Follow existing patterns from Story 6.5 audit logs tests. Mock external services (Inngest, Clerk, S3, Resend) in unit tests. Use getAllByTestId for elements that may appear multiple times. Add data-testid attributes to key elements for test stability.</standards>
+    <locations>
+      <location>tests/unit/health-checks.test.ts</location>
+      <location>tests/integration/system-monitoring.test.tsx</location>
+      <location>tests/e2e/system-monitoring.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="6.6.1">Test page renders for owner role, renders for admin role, redirects for finance/editor/author roles</idea>
+      <idea ac="6.6.2">Test JobSummaryCards displays all 4 stat cards with correct counts from mock data</idea>
+      <idea ac="6.6.3">Test job list shows correct job types matching Inngest function names</idea>
+      <idea ac="6.6.4">Test job detail expandable row shows all required fields</idea>
+      <idea ac="6.6.5">Test failed job row displays error message and retry count</idea>
+      <idea ac="6.6.6">Test Inngest link opens correct URL in new tab with proper rel attributes</idea>
+      <idea ac="6.6.7">Test HealthStatus component renders all 5 service cards</idea>
+      <idea ac="6.6.8">Test unhealthy service displays red indicator, healthy displays green</idea>
+      <idea>Test health check timeout handling - slow service returns degraded status</idea>
+      <idea>Test refresh button triggers new data fetch for all components</idea>
+    </ideas>
+  </tests>
+</story-context>

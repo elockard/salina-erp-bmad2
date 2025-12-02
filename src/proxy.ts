@@ -14,6 +14,10 @@ const isProtectedRoute = createRouteMatcher([
   "/titles(.*)",
   "/isbn-pool(.*)",
   "/returns(.*)", // Story 3.5-3.7: Returns module routes
+  "/royalties(.*)", // Story 4.x: Royalty contracts and calculations
+  "/statements(.*)", // Story 5.x: Statement generation
+  "/reports(.*)", // Story 6.x: Reports module
+  "/admin(.*)", // Story 6.6: System administration
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -52,24 +56,40 @@ export default clerkMiddleware(async (auth, req) => {
         const user = await adminDb.query.users.findFirst({
           where: eq(users.clerk_user_id, userId),
         });
-        console.log("[Proxy] Fallback: DB user lookup result =", user ? { id: user.id, tenant_id: user.tenant_id, clerk_user_id: user.clerk_user_id } : null);
+        console.log(
+          "[Proxy] Fallback: DB user lookup result =",
+          user
+            ? {
+                id: user.id,
+                tenant_id: user.tenant_id,
+                clerk_user_id: user.clerk_user_id,
+              }
+            : null,
+        );
 
         if (user?.tenant_id) {
           // Look up tenant subdomain
           const tenant = await adminDb.query.tenants.findFirst({
             where: eq(tenants.id, user.tenant_id),
           });
-          console.log("[Proxy] Fallback: Tenant lookup result =", tenant ? { id: tenant.id, subdomain: tenant.subdomain } : null);
+          console.log(
+            "[Proxy] Fallback: Tenant lookup result =",
+            tenant ? { id: tenant.id, subdomain: tenant.subdomain } : null,
+          );
 
           if (tenant) {
             subdomain = tenant.subdomain;
             console.log("[Proxy] Fallback: Set subdomain to", subdomain);
           }
         } else {
-          console.log("[Proxy] Fallback: User not found in DB or has no tenant_id");
+          console.log(
+            "[Proxy] Fallback: User not found in DB or has no tenant_id",
+          );
         }
       } else {
-        console.log("[Proxy] Fallback: No Clerk userId (user not authenticated)");
+        console.log(
+          "[Proxy] Fallback: No Clerk userId (user not authenticated)",
+        );
       }
     } catch (error) {
       console.error("[Proxy] Fallback error:", error);
@@ -90,7 +110,10 @@ export default clerkMiddleware(async (auth, req) => {
       // Get Clerk JWT token using the neon-authorize template
       const { getToken } = await auth();
       const token = await getToken({ template: "neon-authorize" });
-      console.log("[Proxy] JWT from Clerk neon-authorize template:", token ? `present (${token.length} chars)` : "NULL");
+      console.log(
+        "[Proxy] JWT from Clerk neon-authorize template:",
+        token ? `present (${token.length} chars)` : "NULL",
+      );
 
       // Clone request headers and add tenant/JWT headers
       // Next.js 15+: Use request.headers option to pass headers to Server Components

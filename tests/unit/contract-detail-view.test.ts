@@ -19,7 +19,7 @@ describe("Advance Tracking Calculations (AC 3)", () => {
    */
   function calculateRemainingBalance(
     advanceAmount: string,
-    advanceRecouped: string
+    advanceRecouped: string,
   ): Decimal {
     const amount = new Decimal(advanceAmount || "0");
     const recouped = new Decimal(advanceRecouped || "0");
@@ -31,7 +31,7 @@ describe("Advance Tracking Calculations (AC 3)", () => {
    */
   function calculateProgressPercentage(
     advanceAmount: string,
-    advanceRecouped: string
+    advanceRecouped: string,
   ): number {
     const amount = new Decimal(advanceAmount || "0");
     const recouped = new Decimal(advanceRecouped || "0");
@@ -119,9 +119,12 @@ describe("Advance Tracking Calculations (AC 3)", () => {
   describe("fully recouped detection", () => {
     function isFullyRecouped(
       advanceAmount: string,
-      advanceRecouped: string
+      advanceRecouped: string,
     ): boolean {
-      const remaining = calculateRemainingBalance(advanceAmount, advanceRecouped);
+      const remaining = calculateRemainingBalance(
+        advanceAmount,
+        advanceRecouped,
+      );
       return remaining.lessThanOrEqualTo(0);
     }
 
@@ -156,7 +159,10 @@ describe("Tier Display Functions (AC 4)", () => {
   /**
    * Format quantity range for display
    */
-  function formatRange(minQuantity: number, maxQuantity: number | null): string {
+  function formatRange(
+    minQuantity: number,
+    maxQuantity: number | null,
+  ): string {
     if (maxQuantity === null) {
       return `${minQuantity.toLocaleString()}+ units`;
     }
@@ -182,7 +188,7 @@ describe("Tier Display Functions (AC 4)", () => {
         acc[tier.format].push(tier);
         return acc;
       },
-      {} as Record<string, Tier[]>
+      {} as Record<string, Tier[]>,
     );
   }
 
@@ -231,9 +237,24 @@ describe("Tier Display Functions (AC 4)", () => {
   describe("groupTiersByFormat", () => {
     it("groups tiers by format correctly", () => {
       const tiers: Tier[] = [
-        { format: "physical", min_quantity: 0, max_quantity: 5000, rate: "0.1000" },
-        { format: "physical", min_quantity: 5001, max_quantity: null, rate: "0.1200" },
-        { format: "ebook", min_quantity: 0, max_quantity: null, rate: "0.2500" },
+        {
+          format: "physical",
+          min_quantity: 0,
+          max_quantity: 5000,
+          rate: "0.1000",
+        },
+        {
+          format: "physical",
+          min_quantity: 5001,
+          max_quantity: null,
+          rate: "0.1200",
+        },
+        {
+          format: "ebook",
+          min_quantity: 0,
+          max_quantity: null,
+          rate: "0.2500",
+        },
       ];
 
       const grouped = groupTiersByFormat(tiers);
@@ -250,7 +271,12 @@ describe("Tier Display Functions (AC 4)", () => {
 
     it("handles single format", () => {
       const tiers: Tier[] = [
-        { format: "audiobook", min_quantity: 0, max_quantity: null, rate: "0.1500" },
+        {
+          format: "audiobook",
+          min_quantity: 0,
+          max_quantity: null,
+          rate: "0.1500",
+        },
       ];
 
       const grouped = groupTiersByFormat(tiers);
@@ -261,9 +287,24 @@ describe("Tier Display Functions (AC 4)", () => {
 
     it("handles all three formats", () => {
       const tiers: Tier[] = [
-        { format: "physical", min_quantity: 0, max_quantity: null, rate: "0.1000" },
-        { format: "ebook", min_quantity: 0, max_quantity: null, rate: "0.2500" },
-        { format: "audiobook", min_quantity: 0, max_quantity: null, rate: "0.1500" },
+        {
+          format: "physical",
+          min_quantity: 0,
+          max_quantity: null,
+          rate: "0.1000",
+        },
+        {
+          format: "ebook",
+          min_quantity: 0,
+          max_quantity: null,
+          rate: "0.2500",
+        },
+        {
+          format: "audiobook",
+          min_quantity: 0,
+          max_quantity: null,
+          rate: "0.1500",
+        },
       ];
 
       const grouped = groupTiersByFormat(tiers);
@@ -335,7 +376,11 @@ describe("Status Badge Mapping", () => {
   });
 
   it("has all status values", () => {
-    expect(Object.keys(STATUS_BADGES)).toEqual(["active", "suspended", "terminated"]);
+    expect(Object.keys(STATUS_BADGES)).toEqual([
+      "active",
+      "suspended",
+      "terminated",
+    ]);
   });
 });
 

@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  type Contract,
+  type ContractFormat,
+  type ContractStatus,
+  type ContractTier,
+  contractFormatValues,
+  contractStatusValues,
   contracts,
   contractTiers,
-  contractStatusValues,
-  contractFormatValues,
-  type Contract,
   type InsertContract,
-  type ContractTier,
   type InsertContractTier,
-  type ContractStatus,
-  type ContractFormat,
 } from "@/db/schema/contracts";
 
 /**

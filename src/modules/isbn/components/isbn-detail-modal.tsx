@@ -35,12 +35,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
 import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -125,7 +119,7 @@ export function ISBNDetailModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
 
   // Title selection state
   const [titles, setTitles] = useState<TitleWithAuthor[]>([]);

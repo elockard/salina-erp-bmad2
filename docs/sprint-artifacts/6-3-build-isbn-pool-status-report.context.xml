@@ -1,0 +1,230 @@
+<story-context id="6-3-build-isbn-pool-status-report" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>3</storyId>
+    <title>Build ISBN Pool Status Report</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-3-build-isbn-pool-status-report.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to view ISBN pool status report</iWant>
+    <soThat>I know when to order more ISBNs</soThat>
+    <tasks>
+      <task id="1" ac="1">Create ISBN pool report page and route structure
+        <subtask id="1.1">Create src/app/(dashboard)/reports/isbn-pool/page.tsx - ISBN pool report page</subtask>
+        <subtask id="1.2">Add permission check: all staff roles can access (Author role blocked)</subtask>
+        <subtask id="1.3">Add ISBN Pool Report link to /reports index page (update available: true)</subtask>
+      </task>
+      <task id="2" ac="2,3,7,8">Implement ISBN pool metrics query function
+        <subtask id="2.1">Add getISBNPoolMetrics(tenantId) to src/modules/reports/queries.ts</subtask>
+        <subtask id="2.2">Query ISBN counts by type (physical, ebook) and status (available, assigned)</subtask>
+        <subtask id="2.3">Calculate utilization percentage: (assigned / total) * 100</subtask>
+        <subtask id="2.4">Calculate burn rate: ISBNs assigned per month (last 6 months average)</subtask>
+        <subtask id="2.5">Calculate estimated runout date: available / burnRate months from now</subtask>
+        <subtask id="2.6">Add tenant_id filter FIRST (CRITICAL: tenant isolation)</subtask>
+      </task>
+      <task id="3" ac="5,7">Implement ISBN assignment history query
+        <subtask id="3.1">Add getISBNAssignmentHistory(tenantId, months) to src/modules/reports/queries.ts</subtask>
+        <subtask id="3.2">Group ISBN assignments by month using date-fns</subtask>
+        <subtask id="3.3">Return array of { month: string, assigned: number } for timeline chart</subtask>
+      </task>
+      <task id="4" ac="2,3">Build ISBN pool stats cards component
+        <subtask id="4.1">Create src/modules/reports/components/isbn-pool-stats.tsx</subtask>
+        <subtask id="4.2">Display Physical ISBNs card: Available / Assigned / Total</subtask>
+        <subtask id="4.3">Display Ebook ISBNs card: Available / Assigned / Total</subtask>
+        <subtask id="4.4">Display Utilization card: percentage with progress bar</subtask>
+        <subtask id="4.5">Add loading skeleton state</subtask>
+      </task>
+      <task id="5" ac="4,5">Build ISBN pool charts component
+        <subtask id="5.1">Create src/modules/reports/components/isbn-pool-charts.tsx</subtask>
+        <subtask id="5.2">Implement Pie chart using Recharts PieChart (Available vs Assigned)</subtask>
+        <subtask id="5.3">Implement Timeline chart using Recharts LineChart (assignments per month)</subtask>
+        <subtask id="5.4">Use Editorial Navy color scheme (#1e3a5f)</subtask>
+        <subtask id="5.5">Add hover tooltips with exact counts</subtask>
+        <subtask id="5.6">Handle empty data state</subtask>
+      </task>
+      <task id="6" ac="6">Build ISBN pool warning alert component
+        <subtask id="6.1">Create src/modules/reports/components/isbn-pool-alert.tsx</subtask>
+        <subtask id="6.2">Show warning when physical available less than 10</subtask>
+        <subtask id="6.3">Show warning when ebook available less than 10</subtask>
+        <subtask id="6.4">Use shadcn/ui Alert component with warning variant</subtask>
+        <subtask id="6.5">Include count in message: "Only X Physical ISBNs remaining"</subtask>
+      </task>
+      <task id="7" ac="7,8,9">Build ISBN pool insights component
+        <subtask id="7.1">Create src/modules/reports/components/isbn-pool-insights.tsx</subtask>
+        <subtask id="7.2">Display burn rate: "ISBNs assigned per month: X"</subtask>
+        <subtask id="7.3">Display runout estimate in months</subtask>
+        <subtask id="7.4">Display runout date or "N/A" if burn rate is 0</subtask>
+        <subtask id="7.5">Add "Import ISBN Block" button linking to /titles</subtask>
+      </task>
+      <task id="8" ac="1-9">Assemble ISBN pool report page
+        <subtask id="8.1">Compose stats cards, alerts, charts, and insights</subtask>
+        <subtask id="8.2">Add responsive layout</subtask>
+        <subtask id="8.3">Add Suspense boundaries</subtask>
+        <subtask id="8.4">Export types from modules/reports</subtask>
+      </task>
+      <task id="9" ac="2,3,7,8">Write unit tests for ISBN pool queries
+        <subtask id="9.1">Create tests/unit/isbn-pool-report.test.ts</subtask>
+        <subtask id="9.2">Test ISBN counts by type and status</subtask>
+        <subtask id="9.3">Test utilization percentage calculation</subtask>
+        <subtask id="9.4">Test burn rate calculation</subtask>
+        <subtask id="9.5">Test runout date calculation</subtask>
+        <subtask id="9.6">Test assignment history grouping by month</subtask>
+        <subtask id="9.7">Test empty ISBN pool handling</subtask>
+        <subtask id="9.8">Test tenant isolation</subtask>
+      </task>
+      <task id="10" ac="1,6">Write integration tests
+        <subtask id="10.1">Create tests/integration/isbn-pool-report.test.tsx</subtask>
+        <subtask id="10.2">Test page renders for Finance user</subtask>
+        <subtask id="10.3">Test page renders for Admin user</subtask>
+        <subtask id="10.4">Test page renders for Editor user</subtask>
+        <subtask id="10.5">Test warning alert appears when available less than 10</subtask>
+        <subtask id="10.6">Test stats cards display correct data</subtask>
+      </task>
+      <task id="11" ac="4,5,9">Write E2E tests
+        <subtask id="11.1">Create tests/e2e/isbn-pool-report.spec.ts</subtask>
+        <subtask id="11.2">Test page navigation from reports index</subtask>
+        <subtask id="11.3">Test charts render with data</subtask>
+        <subtask id="11.4">Test Import ISBN Block button navigates correctly</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Users can access /reports/isbn-pool page</ac>
+    <ac id="2">Stats cards show: Physical ISBNs (Available/Assigned/Total), Ebook ISBNs (Available/Assigned/Total)</ac>
+    <ac id="3">Utilization percentage is calculated and displayed</ac>
+    <ac id="4">Pie chart shows Available vs Assigned breakdown by type</ac>
+    <ac id="5">Timeline chart shows ISBN assignments over time</ac>
+    <ac id="6">Warning alert displayed when available ISBNs less than 10 (physical or ebook)</ac>
+    <ac id="7">Burn rate calculation shows ISBNs assigned per month</ac>
+    <ac id="8">Estimated runout date displayed based on burn rate</ac>
+    <ac id="9">"Import ISBN Block" quick action button links to ISBN import page</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-6.md" title="Epic 6 Tech Spec" section="Story 6.3: ISBN Pool Status Report">
+        Defines ISBNPoolMetrics interface, query signatures getISBNPoolMetrics() and getISBNAssignmentHistory(), route structure at /reports/isbn-pool, and acceptance criteria 6.3.1-6.3.9.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture" section="Technology Stack Details">
+        Specifies Recharts for charts, date-fns for date manipulation, Drizzle ORM for database access, and modular monolith structure with feature-based modules.
+      </doc>
+      <doc path="docs/epics.md" title="Epics" section="Story 6.3: Build ISBN Pool Status Report">
+        User story with acceptance criteria including stats cards, charts (pie, timeline), warning alerts (threshold less than 10), burn rate, runout estimation, and quick action button.
+      </doc>
+      <doc path="docs/sprint-artifacts/6-2-build-sales-reports-with-multi-dimensional-filtering.md" title="Story 6.2 (Previous)" section="Completion Notes">
+        Previous story learnings: Recharts 2.15.3 installed, reports module exists at src/modules/reports/, reusable chart components at src/components/charts/ with Editorial Navy color scheme (#1e3a5f).
+      </doc>
+    </docs>
+
+    <code>
+      <file path="src/db/schema/isbns.ts" kind="schema" symbol="isbns" reason="ISBN table schema - source of all ISBN data. Fields: id, tenant_id, isbn_13, type (physical/ebook), status (available/assigned/registered/retired), assigned_at, assigned_to_title_id, created_at, updated_at" />
+      <file path="src/modules/reports/types.ts" kind="types" symbol="RevenueMetrics, SalesReportFilters, SalesReportRow" reason="Existing report types - EXTEND with ISBNPoolMetrics interface per tech-spec" />
+      <file path="src/modules/reports/queries.ts" kind="queries" symbol="getRevenueMetrics, getLiabilityMetrics, getSalesReport" reason="Existing report queries - EXTEND with getISBNPoolMetrics() and getISBNAssignmentHistory(). Follow same tenant isolation pattern (tenant_id FIRST)" />
+      <file path="src/modules/isbn/queries.ts" kind="queries" symbol="getISBNPoolStats" lines="50-105" reason="EXISTING ISBN stats query - returns counts by type/status. May reuse this logic or reference it for consistent aggregation patterns" />
+      <file path="src/components/charts/pie-chart.tsx" kind="component" symbol="PieChart" reason="REUSE - Existing pie chart component with Editorial Navy palette. Accepts data array with name/value/percentage" />
+      <file path="src/components/charts/line-chart.tsx" kind="component" symbol="LineChart" reason="REUSE - Existing line chart for timeline visualization. Accepts data array with name/value" />
+      <file path="src/app/(dashboard)/reports/page.tsx" kind="page" symbol="ReportsPage" lines="34-67" reason="MODIFY - Reports index page. Update ISBN Pool Status card to available: true and update icon color" />
+      <file path="src/app/(dashboard)/reports/sales/page.tsx" kind="page" symbol="SalesReportPage" reason="REFERENCE - Pattern for report page structure with permission check and data fetching" />
+      <file path="src/modules/reports/components/index.ts" kind="exports" reason="MODIFY - Add exports for new ISBN pool components" />
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="recharts" version="3.5.1">Charts library - PieChart, LineChart components</package>
+        <package name="date-fns" version="^4.1.0">Date manipulation - subMonths, format, startOfMonth for burn rate calculation</package>
+        <package name="drizzle-orm" version="^0.44.7">Database ORM - eq, and, count, sql for aggregation queries</package>
+        <package name="decimal.js" version="^10.6.0">Precise calculations for percentages</package>
+        <package name="lucide-react" version="0.555.0">Icons - Hash for ISBN icon</package>
+        <package name="vitest" version="4.0.14">Unit/integration testing</package>
+        <package name="@playwright/test" version="^1.57.0">E2E testing</package>
+        <package name="@testing-library/react" version="16.3.0">Component testing</package>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface name="ISBNPoolMetrics" kind="TypeScript interface" path="src/modules/reports/types.ts">
+      interface ISBNPoolMetrics {
+        physical: { available: number; assigned: number; total: number };
+        ebook: { available: number; assigned: number; total: number };
+        utilizationPercent: number;
+        burnRate: number; // ISBNs assigned per month
+        estimatedRunout: Date | null; // When pool will be exhausted
+      }
+    </interface>
+    <interface name="getISBNPoolMetrics" kind="async function" path="src/modules/reports/queries.ts">
+      export async function getISBNPoolMetrics(tenantId: string): Promise&lt;ISBNPoolMetrics&gt;;
+      // Returns ISBN pool statistics with utilization and burn rate calculations
+    </interface>
+    <interface name="getISBNAssignmentHistory" kind="async function" path="src/modules/reports/queries.ts">
+      export async function getISBNAssignmentHistory(
+        tenantId: string,
+        months: number
+      ): Promise&lt;{ month: string; assigned: number }[]&gt;;
+      // Returns monthly assignment counts for timeline chart
+    </interface>
+    <interface name="PieChart" kind="React component" path="src/components/charts/pie-chart.tsx">
+      &lt;PieChart
+        data={[{ name: string, value: number, percentage?: number }]}
+        height={number}
+        colors={string[]}
+        showLegend={boolean}
+        tooltipFormatter={(value, name, percentage) =&gt; string}
+      /&gt;
+    </interface>
+    <interface name="LineChart" kind="React component" path="src/components/charts/line-chart.tsx">
+      &lt;LineChart
+        data={[{ name: string, value: number }]}
+        height={number}
+        strokeColor={string}
+        yAxisFormatter={(value) =&gt; string}
+        tooltipFormatter={(value) =&gt; string}
+      /&gt;
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint source="architecture.md">CRITICAL: Every database query MUST include tenant_id filter as the FIRST condition for multi-tenant isolation</constraint>
+    <constraint source="architecture.md">Use Decimal.js for all financial calculations to avoid floating-point errors</constraint>
+    <constraint source="tech-spec-epic-6.md">Reports use dynamic = "force-dynamic" (no caching for real-time data)</constraint>
+    <constraint source="tech-spec-epic-6.md">Report generation must complete in less than 3 seconds</constraint>
+    <constraint source="tech-spec-epic-6.md">Permission Matrix: Owner, Admin, Finance, Editor can access; Author role blocked</constraint>
+    <constraint source="story-6.2">Use Editorial Navy color scheme (#1e3a5f) for all charts</constraint>
+    <constraint source="story-6.2">Follow existing reports module structure at src/modules/reports/</constraint>
+    <constraint source="story-6.2">REUSE existing chart components from src/components/charts/ - do not recreate</constraint>
+    <constraint source="story-6.2">Test baseline: ~1215+ unit/integration tests pass - maintain this baseline</constraint>
+    <constraint source="story-6.2">Pre-existing test failures in permissions.test.ts, tenant-settings.test.ts, users-actions.test.ts - do not attempt to fix</constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      Tests use Vitest for unit/integration and Playwright for E2E. Unit tests mock database calls. Integration tests render components with mocked data. E2E tests navigate actual UI. Follow existing patterns in tests/unit/sales-report-queries.test.ts and tests/integration/sales-report.test.tsx. Use getAllByTestId for elements that appear in multiple locations (mobile/desktop layouts).
+    </standards>
+    <locations>
+      <location>tests/unit/isbn-pool-report.test.ts</location>
+      <location>tests/integration/isbn-pool-report.test.tsx</location>
+      <location>tests/e2e/isbn-pool-report.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="2">Unit test: getISBNPoolMetrics returns correct counts for physical and ebook by status</idea>
+      <idea ac="3">Unit test: Utilization percentage calculation is correct: (assigned / total) * 100</idea>
+      <idea ac="7">Unit test: Burn rate calculation averages assignments over last 6 months</idea>
+      <idea ac="8">Unit test: Estimated runout date is available / burnRate months in future</idea>
+      <idea ac="8">Unit test: Estimated runout is null when burn rate is 0</idea>
+      <idea ac="5">Unit test: getISBNAssignmentHistory groups by month correctly using date-fns</idea>
+      <idea ac="2,3">Integration test: Stats cards render with correct ISBN metrics</idea>
+      <idea ac="6">Integration test: Warning alert appears when physical available less than 10</idea>
+      <idea ac="6">Integration test: Warning alert appears when ebook available less than 10</idea>
+      <idea ac="1">Integration test: Page renders for Finance, Admin, Editor users</idea>
+      <idea ac="4">E2E test: Pie chart renders Available vs Assigned breakdown</idea>
+      <idea ac="5">E2E test: Timeline chart renders assignment history</idea>
+      <idea ac="9">E2E test: Import ISBN Block button navigates to /titles</idea>
+    </ideas>
+  </tests>
+</story-context>

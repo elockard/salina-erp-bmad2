@@ -9,8 +9,10 @@ export type IconName =
   | "Receipt"
   | "RotateCcw"
   | "DollarSign"
+  | "FileText"
   | "BarChart"
-  | "Settings";
+  | "Settings"
+  | "Server";
 
 export interface NavItem {
   label: string;
@@ -39,13 +41,13 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: "Authors",
-    href: "/dashboard/authors",
+    href: "/authors",
     icon: "Users",
     allowedRoles: ["owner", "admin", "editor"],
   },
   {
     label: "Titles",
-    href: "/dashboard/titles",
+    href: "/titles",
     icon: "BookOpen",
     allowedRoles: ["owner", "admin", "editor"],
   },
@@ -75,11 +77,22 @@ export const NAV_ITEMS: NavItem[] = [
     allowedRoles: ["owner", "admin", "editor"],
   },
   {
+    label: "Statements",
+    href: "/statements",
+    icon: "FileText",
+    allowedRoles: ["owner", "admin", "finance"],
+  },
+  {
     label: "Reports",
-    href: "/dashboard/reports",
+    href: "/reports",
     icon: "BarChart",
     allowedRoles: ["owner", "admin", "editor", "finance"],
-    comingSoon: true,
+  },
+  {
+    label: "System",
+    href: "/admin/system",
+    icon: "Server",
+    allowedRoles: ["owner", "admin"],
   },
   {
     label: "Settings",

@@ -1,11 +1,10 @@
 "use client";
 
-import { BookOpen, Calendar, DollarSign, FileText, Hash, Pencil, User } from "lucide-react";
+import { BookOpen, DollarSign, FileText, Pencil, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +25,7 @@ import {
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
 import { CREATE_AUTHORS_TITLES, MANAGE_CONTRACTS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
 import { updateTitle } from "../actions";
 import type { PublicationStatus, TitleWithAuthor } from "../types";
 import { ISBNAssignmentModal } from "./isbn-assignment-modal";

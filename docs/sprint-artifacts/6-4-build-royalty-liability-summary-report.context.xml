@@ -1,0 +1,337 @@
+<story-context id="6-4-build-royalty-liability-summary-report" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>4</storyId>
+    <title>Build Royalty Liability Summary Report</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-4-build-royalty-liability-summary-report.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance user</asA>
+    <iWant>to view royalty liability summary across all authors</iWant>
+    <soThat>I can plan cash flow and payments</soThat>
+    <tasks>
+      <task id="1">Create royalty liability report page and route structure (AC: 1)</task>
+      <task id="2">Implement royalty liability summary query function (AC: 2, 3)</task>
+      <task id="3">Implement liability by author query (AC: 4, 5)</task>
+      <task id="4">Implement advance balance tracking query (AC: 6)</task>
+      <task id="5">Build royalty liability summary stats component (AC: 2, 3)</task>
+      <task id="6">Build liability by author table component (AC: 4, 5)</task>
+      <task id="7">Build advance tracking section component (AC: 6)</task>
+      <task id="8">Implement CSV export server action (AC: 7)</task>
+      <task id="9">Build export button component</task>
+      <task id="10">Assemble royalty liability report page (AC: 1-7)</task>
+      <task id="11">Write unit tests for liability queries (AC: 2, 3, 4, 6)</task>
+      <task id="12">Write integration tests for liability report page (AC: 1, 5)</task>
+      <task id="13">Write E2E tests for royalty liability report (AC: 7)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Finance/Admin/Owner users can access /reports/royalty-liability</criterion>
+    <criterion id="2">Summary stats show: Total Unpaid Liability, Authors with Pending Payments, Oldest Unpaid Statement</criterion>
+    <criterion id="3">Average payment per author is calculated</criterion>
+    <criterion id="4">Liability by author table shows: Author, Titles, Unpaid Statements, Total Owed, Oldest Statement</criterion>
+    <criterion id="5">Table is sortable by amount owed (default: highest first)</criterion>
+    <criterion id="6">Advance tracking section shows authors with active advances and remaining balances</criterion>
+    <criterion id="7">CSV export available for accounting system import</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Story 6.4: Royalty Liability Summary Report</section>
+        <snippet>Defines RoyaltyLiabilitySummary, AuthorLiabilityRow, and AdvanceBalanceRow interfaces. Query function signatures: getRoyaltyLiabilitySummary(tenantId), exportLiabilityReportCSV().</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Data Access Patterns, Multi-Tenant Isolation</section>
+        <snippet>All queries must include tenant_id as FIRST condition. Use Decimal.js for financial calculations. Reports use dynamic = "force-dynamic" for real-time data.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR74</section>
+        <snippet>FR74: Finance users can view royalty liability summary across all authors. Maps to Story 6.4.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/6-3-build-isbn-pool-status-report.md</path>
+        <title>Previous Story Learnings</title>
+        <section>Completion Notes</section>
+        <snippet>Reports module pattern established. Use hasPermission() for Finance/Admin/Owner. Pre-existing test failures documented (18 tests). ~1215+ tests pass baseline.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/modules/reports/types.ts</path>
+        <kind>types</kind>
+        <symbol>LiabilityMetrics, LiabilityAuthorBreakdown</symbol>
+        <lines>66-96</lines>
+        <reason>Existing liability types - extend with RoyaltyLiabilitySummary, AuthorLiabilityRow, AdvanceBalanceRow interfaces</reason>
+      </file>
+      <file>
+        <path>src/modules/reports/queries.ts</path>
+        <kind>queries</kind>
+        <symbol>getLiabilityMetrics, getISBNPoolMetrics</symbol>
+        <lines>283-346, 689-779</lines>
+        <reason>Existing liability query pattern to extend. Add getRoyaltyLiabilitySummary() following same structure with tenant_id FIRST.</reason>
+      </file>
+      <file>
+        <path>src/modules/reports/actions.ts</path>
+        <kind>actions</kind>
+        <symbol>fetchLiabilityMetrics, exportSalesReportCSV</symbol>
+        <lines>80-99, 191-243</lines>
+        <reason>Existing action patterns. Add exportLiabilityReportCSV() following same CSV generation pattern.</reason>
+      </file>
+      <file>
+        <path>src/modules/reports/components/liability-by-author.tsx</path>
+        <kind>component</kind>
+        <symbol>LiabilityByAuthor</symbol>
+        <lines>1-246</lines>
+        <reason>Existing TanStack Table pattern for liability display. Reuse/extend for detailed liability-by-author-table.tsx with additional columns.</reason>
+      </file>
+      <file>
+        <path>src/modules/reports/components/export-button.tsx</path>
+        <kind>component</kind>
+        <symbol>ExportButton</symbol>
+        <lines>1-84</lines>
+        <reason>Reusable export pattern - create similar for liability CSV export or parameterize existing.</reason>
+      </file>
+      <file>
+        <path>src/modules/reports/components/isbn-pool-stats.tsx</path>
+        <kind>component</kind>
+        <symbol>ISBNPoolStats</symbol>
+        <reason>Stats card layout pattern to follow for liability-summary-stats.tsx.</reason>
+      </file>
+      <file>
+        <path>src/modules/reports/components/index.ts</path>
+        <kind>barrel</kind>
+        <symbol>exports</symbol>
+        <lines>1-26</lines>
+        <reason>Add exports for new components: LiabilitySummaryStats, LiabilityByAuthorTable, AdvanceTrackingSection.</reason>
+      </file>
+      <file>
+        <path>src/app/(dashboard)/reports/page.tsx</path>
+        <kind>page</kind>
+        <symbol>reportCards</symbol>
+        <lines>34-67</lines>
+        <reason>Update Royalty Liability card: set available: true, update icon color to #1e3a5f.</reason>
+      </file>
+      <file>
+        <path>src/app/(dashboard)/reports/isbn-pool/page.tsx</path>
+        <kind>page</kind>
+        <reason>Reference page structure for royalty-liability/page.tsx - permission check, Suspense boundaries, layout.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/statements.ts</path>
+        <kind>schema</kind>
+        <symbol>statements, StatementStatus</symbol>
+        <lines>71-187</lines>
+        <reason>Source table for unpaid liability. Fields: tenant_id, author_id, contract_id, net_payable, period_end, status (draft/sent/failed).</reason>
+      </file>
+      <file>
+        <path>src/db/schema/contracts.ts</path>
+        <kind>schema</kind>
+        <symbol>contracts, contractTiers</symbol>
+        <lines>94-215</lines>
+        <reason>Source table for advance tracking. Fields: tenant_id, author_id, title_id, advance_amount, advance_paid, advance_recouped, status.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/authors.ts</path>
+        <kind>schema</kind>
+        <reason>Join for author names and payment method in liability queries.</reason>
+      </file>
+      <file>
+        <path>src/db/schema/titles.ts</path>
+        <kind>schema</kind>
+        <reason>Join for title names in advance tracking section.</reason>
+      </file>
+      <file>
+        <path>src/lib/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>hasPermission, requirePermission, getCurrentTenantId, getDb</symbol>
+        <reason>Permission checking and tenant context. Use requirePermission(["finance", "admin", "owner"]) for queries.</reason>
+      </file>
+      <file>
+        <path>tests/unit/isbn-pool-report.test.ts</path>
+        <kind>test</kind>
+        <lines>1-100</lines>
+        <reason>Test pattern for report queries. Follow same structure for royalty-liability-report.test.ts.</reason>
+      </file>
+      <file>
+        <path>tests/integration/isbn-pool-report.test.tsx</path>
+        <kind>test</kind>
+        <lines>1-100</lines>
+        <reason>Integration test pattern. Follow for royalty-liability-report.test.tsx with role-based permission testing.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>@tanstack/react-table</package>
+        <version>8.21.3</version>
+        <usage>Sortable tables for liability-by-author and advance tracking</usage>
+      </node>
+      <node>
+        <package>decimal.js</package>
+        <version>^10.6.0</version>
+        <usage>Financial calculations with precision</usage>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>^4.1.0</version>
+        <usage>Date formatting for oldest statement, period display</usage>
+      </node>
+      <node>
+        <package>drizzle-orm</package>
+        <version>^0.44.7</version>
+        <usage>Database queries with tenant isolation</usage>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>0.555.0</version>
+        <usage>Icons for stats cards and export button</usage>
+      </node>
+      <node>
+        <package>vitest</package>
+        <version>4.0.14</version>
+        <usage>Unit and integration testing</usage>
+      </node>
+      <node>
+        <package>@testing-library/react</package>
+        <version>16.3.0</version>
+        <usage>Component integration testing</usage>
+      </node>
+      <node>
+        <package>@playwright/test</package>
+        <version>^1.57.0</version>
+        <usage>E2E testing</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="tenant-isolation" priority="critical">
+      Every database query MUST include tenant_id as the FIRST condition in WHERE clause. Use pattern: eq(table.tenant_id, tenantId) as first argument to and().
+    </constraint>
+    <constraint type="permission" priority="critical">
+      Royalty liability report accessible only to Finance, Admin, Owner roles. Editor and Author roles must be blocked. Use requirePermission(["finance", "admin", "owner"]).
+    </constraint>
+    <constraint type="financial-precision" priority="high">
+      Use Decimal.js for all financial aggregations (totalLiability, averagePayment, advanceRemaining). Convert to number only for final display.
+    </constraint>
+    <constraint type="module-structure" priority="high">
+      Follow existing reports module structure: types.ts for interfaces, queries.ts for data access, actions.ts for server actions, components/ for UI.
+    </constraint>
+    <constraint type="page-caching" priority="medium">
+      Use dynamic = "force-dynamic" for real-time report data. No caching for liability/financial reports.
+    </constraint>
+    <constraint type="color-scheme" priority="medium">
+      Use Editorial Navy (#1e3a5f) for primary visual elements, charts, and currency values.
+    </constraint>
+    <constraint type="test-baseline" priority="medium">
+      ~1215+ unit/integration tests pass. Do not regress. 18 pre-existing failures in permissions.test.ts, tenant-settings.test.ts, users-actions.test.ts are documented.
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>RoyaltyLiabilitySummary</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface RoyaltyLiabilitySummary {
+  totalUnpaidLiability: number;
+  authorsWithPendingPayments: number;
+  oldestUnpaidStatement: Date | null;
+  averagePaymentPerAuthor: number;
+  liabilityByAuthor: AuthorLiabilityRow[];
+  advanceBalances: AdvanceBalanceRow[];
+}
+      </signature>
+      <path>src/modules/reports/types.ts</path>
+    </interface>
+    <interface>
+      <name>AuthorLiabilityRow</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface AuthorLiabilityRow {
+  authorId: string;
+  authorName: string;
+  titleCount: number;
+  unpaidStatements: number;
+  totalOwed: number;
+  oldestStatement: Date;
+  paymentMethod: string | null;
+}
+      </signature>
+      <path>src/modules/reports/types.ts</path>
+    </interface>
+    <interface>
+      <name>AdvanceBalanceRow</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface AdvanceBalanceRow {
+  authorId: string;
+  authorName: string;
+  contractId: string;
+  titleName: string;
+  advanceAmount: number;
+  advanceRecouped: number;
+  advanceRemaining: number;
+}
+      </signature>
+      <path>src/modules/reports/types.ts</path>
+    </interface>
+    <interface>
+      <name>getRoyaltyLiabilitySummary</name>
+      <kind>async function</kind>
+      <signature>async function getRoyaltyLiabilitySummary(tenantId: string): Promise&lt;RoyaltyLiabilitySummary&gt;</signature>
+      <path>src/modules/reports/queries.ts</path>
+    </interface>
+    <interface>
+      <name>exportLiabilityReportCSV</name>
+      <kind>server action</kind>
+      <signature>async function exportLiabilityReportCSV(): Promise&lt;ActionResult&lt;string&gt;&gt;</signature>
+      <path>src/modules/reports/actions.ts</path>
+    </interface>
+    <interface>
+      <name>hasPermission</name>
+      <kind>async function</kind>
+      <signature>async function hasPermission(roles: string[]): Promise&lt;boolean&gt;</signature>
+      <path>src/lib/auth.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      All tests use Vitest for unit and integration tests, Playwright for E2E. Follow existing patterns in tests/unit/isbn-pool-report.test.ts and tests/integration/isbn-pool-report.test.tsx. Mock next/navigation, lucide-react icons, and recharts for component tests. Use @testing-library/react for component rendering and assertions.
+    </standards>
+    <locations>
+      <location>tests/unit/royalty-liability-report.test.ts</location>
+      <location>tests/integration/royalty-liability-report.test.tsx</location>
+      <location>tests/e2e/royalty-liability-report.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea acId="2">Test totalUnpaidLiability calculation sums net_payable from unpaid statements</idea>
+      <idea acId="2">Test authorsWithPendingPayments counts distinct authors</idea>
+      <idea acId="2">Test oldestUnpaidStatement finds MIN period_end</idea>
+      <idea acId="3">Test averagePaymentPerAuthor = totalLiability / authorsCount</idea>
+      <idea acId="4">Test liabilityByAuthor groups by author with correct aggregations</idea>
+      <idea acId="5">Test default sort order is totalOwed DESC</idea>
+      <idea acId="6">Test advanceBalances calculates remaining = amount - recouped</idea>
+      <idea acId="6">Test only contracts with active advances (amount > recouped) included</idea>
+      <idea acId="7">Test CSV export generates correct headers and rows</idea>
+      <idea acId="1">Test page renders for Finance, Admin, Owner roles</idea>
+      <idea acId="1">Test page blocks Editor and Author roles (redirect)</idea>
+      <idea tenantIsolation="true">Test queries include tenant_id filter and return only tenant data</idea>
+      <idea emptyState="true">Test empty state handling when no statements exist</idea>
+    </ideas>
+  </tests>
+</story-context>

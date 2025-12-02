@@ -1,3 +1,4 @@
+import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { config } from "dotenv";
 import { afterEach, beforeEach, vi } from "vitest";
@@ -47,7 +48,7 @@ export const testAuthContext: {
  * @param role - The role to set for the test user
  */
 export function setTestUserRole(
-  role: "owner" | "admin" | "editor" | "finance" | "author"
+  role: "owner" | "admin" | "editor" | "finance" | "author",
 ): void {
   testAuthContext.user.role = role;
 }
@@ -65,9 +66,7 @@ export function setTestTenantId(tenantId: string): void {
  * Helper to set custom test user
  * @param user - Partial user object to merge with defaults
  */
-export function setTestUser(
-  user: Partial<typeof testAuthContext.user>
-): void {
+export function setTestUser(user: Partial<typeof testAuthContext.user>): void {
   Object.assign(testAuthContext.user, user);
 }
 
@@ -141,7 +140,7 @@ vi.mock("@clerk/nextjs/server", () => ({
     Promise.resolve({
       id: testAuthContext.user.clerk_user_id,
       emailAddresses: [{ emailAddress: testAuthContext.user.email }],
-    })
+    }),
   ),
   auth: vi.fn(() => ({
     userId: testAuthContext.user.clerk_user_id,
@@ -171,7 +170,7 @@ vi.mock("@/lib/auth", () => ({
    * Checks if user has one of the allowed roles
    */
   checkPermission: vi.fn((allowedRoles: string[]) =>
-    Promise.resolve(allowedRoles.includes(testAuthContext.user.role))
+    Promise.resolve(allowedRoles.includes(testAuthContext.user.role)),
   ),
 
   /**
@@ -180,8 +179,8 @@ vi.mock("@/lib/auth", () => ({
   hasPermission: vi.fn((allowedRoles: string[]) =>
     Promise.resolve(
       testAuthContext.user.is_active &&
-        allowedRoles.includes(testAuthContext.user.role)
-    )
+        allowedRoles.includes(testAuthContext.user.role),
+    ),
   ),
 
   /**
@@ -221,6 +220,6 @@ vi.mock("@/lib/auth", () => ({
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
-    })
+    }),
   ),
 }));
