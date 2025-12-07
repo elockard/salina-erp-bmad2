@@ -98,6 +98,16 @@ export default defineConfig({
       testMatch: /.*\.setup\.ts$/,
     },
 
+    // Public tests - no authentication required (landing page, contact/legal pages, sign-in/sign-up)
+    {
+      name: "public",
+      testMatch: /(landing-page|contact-legal-pages)\.spec\.ts$/,
+      use: {
+        ...devices["Desktop Chrome"],
+      },
+      // No dependencies - runs without auth setup
+    },
+
     // Main test projects - depend on setup for authenticated session
     {
       name: "chromium",
@@ -106,6 +116,7 @@ export default defineConfig({
         storageState: authFile,
       },
       dependencies: ["setup"],
+      testIgnore: /landing-page\.spec\.ts$/,
     },
     {
       name: "firefox",

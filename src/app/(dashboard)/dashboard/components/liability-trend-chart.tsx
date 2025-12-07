@@ -1,6 +1,6 @@
-import { getFinanceDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AreaChart } from "@/components/charts/area-chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getFinanceDashboardData } from "@/modules/reports/queries";
 
 /**
  * Liability Trend Chart Widget
@@ -24,7 +24,9 @@ export async function LiabilityTrendChart() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Liability Trend (12 Months)</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Liability Trend (12 Months)
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <AreaChart

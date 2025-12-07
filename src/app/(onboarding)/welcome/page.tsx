@@ -63,7 +63,7 @@ export default async function WelcomePage() {
                 <span>
                   Your workspace is available at{" "}
                   <span className="font-mono text-xs">
-                    {tenant?.subdomain}.salina-erp.com
+                    {tenant?.subdomain}.salina.media
                   </span>
                 </span>
               </li>

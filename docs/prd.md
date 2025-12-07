@@ -136,11 +136,51 @@ Based on comprehensive domain research conducted 2025-11-21, the following archi
 - Track royalty expenses (amounts owed to authors)
 - Basic reporting: Sales by format, sales by title, royalty liability
 
-### Growth Features (Post-MVP)
+### Growth Features - Phase 1 (Epics 7-9)
 
-**Enhanced ISBN Management:**
+*Identified during Story 0.4 Retrospective (2025-12-05) - Prioritized for immediate implementation*
+
+**Unified Contact Database (Epic 7):**
+- Refactor Authors entity to unified Contacts table with multi-role support
+- Contact can have multiple roles: Author, Customer, Vendor, Distributor
+- Migration strategy for existing author data to contacts
+- Contact profile management with role-specific fields
+- Role-based access: Authors see author portal, Customers see invoices, etc.
+
+**Enhanced ISBN Management (Epic 7):**
+- Publisher prefix system: Enter prefix → auto-generate full ISBN range
+- Support multiple block sizes: 10, 100, 1,000, 10,000, 100,000, 1,000,000
+- ISBN pool visualization by prefix and block
+- Prefix validation against ISBN agency standards
+
+**Royalty Period Configuration (Epic 7):**
+- Customizable royalty calculation period independent of fiscal year
+- Tenant setting for annual royalty period start/end dates
+- Support for calendar year, fiscal year, or custom period
+- Period selection in royalty calculation workflow
+
+**Invoicing & Accounts Receivable (Epic 8):**
+- Full invoice creation: bill to, ship to, terms, P.O. number, due date
+- Line item entry: quantity, item code, description, price, tax
+- Invoice templates and customization
+- Customer management (linked to Contacts with Customer role)
+- Accounts Receivable tracking: outstanding invoices, payments received
+- Payment recording and application to invoices
+- Aging reports: 30/60/90 day buckets
+- Invoice PDF generation and email delivery
+
+**Public Landing Page (Epic 9):**
+- Marketing homepage for Salina ERP
+- Feature highlights and benefits
+- Pricing information (tiers if applicable)
+- Call-to-action for tenant registration
+- Professional design consistent with app branding
+
+### Growth Features - Phase 2 (Future)
+
+**Advanced ISBN Management:**
 - ISBN registration tracking with national ISBN agencies
-- Bulk ISBN operations (bulk assignment, bulk import from multiple blocks)
+- Bulk ISBN operations across multiple prefixes
 - ISBN status reporting (available, assigned, registered, retired)
 
 **Advanced Royalty Features:**
@@ -440,10 +480,10 @@ Salina ERP is a professional tool for publishing operations. The UI should feel 
 **FR17**: System tracks ISBN pool status (available, assigned, registered, retired)
 **FR18**: Editors can assign available ISBNs to titles from the pool
 **FR19**: System prevents duplicate ISBN assignment across all titles
-**FR20**: Editors can assign separate ISBNs for physical books and ebooks (eISBN)
+**FR20**: Editors can assign ISBNs to titles for each format requiring an ISBN
 **FR21**: System validates ISBN-13 format before accepting
 **FR22**: Editors can update title metadata and publication status
-**FR23**: System displays ISBN pool availability count by type (physical/ebook)
+**FR23**: System displays ISBN pool availability count
 
 ### Sales Transaction Management
 
@@ -529,6 +569,50 @@ Salina ERP is a professional tool for publishing operations. The UI should feel 
 **FR79**: System logs all data modifications for audit trail
 **FR80**: System provides tenant-level configuration management
 **FR81**: System handles background jobs (PDF generation, email delivery) asynchronously
+
+### Contact Management (Growth - Epic 7)
+
+**FR82**: System maintains unified contact database with multi-role support (Author, Customer, Vendor, Distributor)
+**FR83**: Users can assign multiple roles to a single contact
+**FR84**: System migrates existing author data to contact records preserving all relationships
+**FR85**: Contact profiles display role-specific information based on assigned roles
+**FR86**: Author portal access is granted to contacts with Author role
+**FR87**: Customer invoicing is available for contacts with Customer role
+
+### Enhanced ISBN Management (Growth - Epic 7)
+
+**FR88**: Administrators can register publisher ISBN prefixes (e.g., 978-1-234567)
+**FR89**: System auto-generates full ISBN range from registered prefix based on block size (10, 100, 1K, 10K, 100K, 1M)
+**FR90**: System organizes ISBN pool by publisher prefix for easy management
+**FR91**: Users can view ISBN pool organized by prefix and block
+**FR92**: System validates ISBN prefixes against standard ISBN-13 format rules
+
+### Royalty Period Configuration (Growth - Epic 7)
+
+**FR93**: Tenant owners can configure royalty calculation period independent of fiscal year
+**FR94**: System supports calendar year, fiscal year, or custom date range for royalty periods
+**FR95**: Royalty calculation workflow uses configured royalty period for date filtering
+
+### Invoicing & Accounts Receivable (Growth - Epic 8)
+
+**FR96**: Users can create invoices with bill-to and ship-to addresses
+**FR97**: Users can add line items to invoices with quantity, item code, description, unit price, and tax
+**FR98**: System calculates invoice totals including subtotal, tax, and grand total
+**FR99**: Users can specify payment terms (Net 30, Net 60, Due on Receipt, custom)
+**FR100**: Users can record P.O. numbers and shipping methods on invoices
+**FR101**: System links invoices to contacts with Customer role
+**FR102**: System tracks accounts receivable balance per customer
+**FR103**: Users can record payments received against outstanding invoices
+**FR104**: System generates aging reports (current, 30, 60, 90+ days)
+**FR105**: System generates invoice PDFs for delivery to customers
+**FR106**: Users can email invoices directly from the system
+
+### Public Landing Page (Growth - Epic 9)
+
+**FR107**: System provides public landing page accessible without authentication
+**FR108**: Landing page displays product features and benefits
+**FR109**: Landing page includes call-to-action for tenant registration
+**FR110**: Landing page design is consistent with application branding
 
 ---
 
@@ -664,16 +748,21 @@ _Created through collaborative discovery between BMad and AI facilitator, inform
 
 ## PRD Summary
 
-**Document Status:** Complete
-**Total Functional Requirements:** 81 FRs across 12 capability areas
+**Document Status:** Complete (Updated 2025-12-05 with Growth Phase 1)
+**Total Functional Requirements:** 110 FRs across 17 capability areas
+- MVP (FR1-FR81): 81 FRs across 12 capability areas - **COMPLETE**
+- Growth Phase 1 (FR82-FR110): 29 FRs across 5 capability areas - **Epics 7-9**
+
 **Non-Functional Requirements:** Performance, Security, Scalability, Accessibility, Integration, Reliability
 
 **Key Differentiators:**
 1. Tiered royalty calculation engine with advance recoupment
-2. ISBN pool management (100-block imports)
+2. ISBN pool management with publisher prefix auto-generation
 3. Returns approval workflow (only approved returns affect royalties)
 4. Multi-format support with format-specific royalty rates
 5. Author portal for self-service statement access
+6. Unified contact database with multi-role support (Author, Customer, Vendor)
+7. Full invoicing and accounts receivable module
 
 **Technology Foundation:**
 - Next.js 16 (App Router, Server Components, Server Actions)

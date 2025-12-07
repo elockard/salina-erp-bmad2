@@ -1,6 +1,11 @@
 "use client";
 
-import { BookOpen, Hash, Smartphone } from "lucide-react";
+/**
+ * ISBN Pool Stats Component
+ * Story 7.6: Simplified to single card - removed type distinction
+ */
+
+import { Hash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -79,184 +84,43 @@ interface ISBNPoolStatsProps {
 /**
  * ISBN Pool stats cards component
  *
- * Story 2.8 - AC 3: Full /isbn-pool page displays stats cards
- * - Physical ISBNs card: Available / Assigned / Registered / Retired counts
- * - Ebook ISBNs card: Available / Assigned / Registered / Retired counts
- * - Total ISBNs card: Combined counts across both types
+ * Story 7.6: Simplified to single unified card - removed Physical/Ebook type distinction
+ * - Total ISBNs card: Available / Assigned / Registered / Retired counts
  * - Visual progress bar showing pool utilization
  * - Warning badge when available < 10
  */
 export function ISBNPoolStats({ stats }: ISBNPoolStatsProps) {
-  const physicalAvailable = stats.availableByType.physical;
-  const physicalTotal = stats.byType.physical;
-  const ebookAvailable = stats.availableByType.ebook;
-  const ebookTotal = stats.byType.ebook;
-
-  // Calculate used counts (non-available)
-  const physicalUsed = physicalTotal - physicalAvailable;
-  const ebookUsed = ebookTotal - ebookAvailable;
   const totalUsed = stats.total - stats.available;
-
-  // Low inventory warnings
-  const physicalLow = physicalAvailable < 10 && physicalTotal > 0;
-  const ebookLow = ebookAvailable < 10 && ebookTotal > 0;
+  const isLow = stats.available < 10 && stats.total > 0;
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {/* Physical ISBNs Card */}
-      <Card>
+      {/* Total ISBNs Card - Story 7.6: Single unified card */}
+      <Card className="lg:col-span-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Physical ISBNs</CardTitle>
+          <CardTitle className="text-sm font-medium">ISBN Pool</CardTitle>
           <div className="flex items-center gap-2">
-            {physicalLow && (
+            {isLow && (
               <Badge
                 variant="outline"
                 className="border-amber-500 bg-amber-50 text-amber-700"
               >
-                Low
+                Low Inventory
               </Badge>
             )}
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <Hash className="h-4 w-4 text-muted-foreground" />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-2xl font-bold">
-            {physicalAvailable}{" "}
-            <span className="text-lg font-normal text-muted-foreground">
-              / {physicalTotal}
-            </span>
-          </div>
-          <CardDescription>Available physical ISBNs</CardDescription>
-
-          <UtilizationBar
-            used={physicalUsed}
-            total={physicalTotal}
-            showWarning={physicalLow}
-          />
-
-          <div className="space-y-1 border-t pt-4">
-            <StatRow
-              label="Available"
-              value={physicalAvailable}
-              variant="outline"
-              className="border-green-500 bg-green-50 text-green-700"
-            />
-            <StatRow
-              label="Assigned"
-              value={
-                stats.byType.physical > 0
-                  ? Math.round((stats.assigned / stats.total) * physicalTotal)
-                  : 0
-              }
-              variant="secondary"
-            />
-            <StatRow
-              label="Registered"
-              value={
-                stats.byType.physical > 0
-                  ? Math.round((stats.registered / stats.total) * physicalTotal)
-                  : 0
-              }
-              variant="secondary"
-            />
-            <StatRow
-              label="Retired"
-              value={
-                stats.byType.physical > 0
-                  ? Math.round((stats.retired / stats.total) * physicalTotal)
-                  : 0
-              }
-              variant="destructive"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Ebook ISBNs Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Ebook ISBNs</CardTitle>
-          <div className="flex items-center gap-2">
-            {ebookLow && (
-              <Badge
-                variant="outline"
-                className="border-amber-500 bg-amber-50 text-amber-700"
-              >
-                Low
-              </Badge>
-            )}
-            <Smartphone className="h-4 w-4 text-muted-foreground" />
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-2xl font-bold">
-            {ebookAvailable}{" "}
-            <span className="text-lg font-normal text-muted-foreground">
-              / {ebookTotal}
-            </span>
-          </div>
-          <CardDescription>Available ebook ISBNs</CardDescription>
-
-          <UtilizationBar
-            used={ebookUsed}
-            total={ebookTotal}
-            showWarning={ebookLow}
-          />
-
-          <div className="space-y-1 border-t pt-4">
-            <StatRow
-              label="Available"
-              value={ebookAvailable}
-              variant="outline"
-              className="border-green-500 bg-green-50 text-green-700"
-            />
-            <StatRow
-              label="Assigned"
-              value={
-                stats.byType.ebook > 0
-                  ? Math.round((stats.assigned / stats.total) * ebookTotal)
-                  : 0
-              }
-              variant="secondary"
-            />
-            <StatRow
-              label="Registered"
-              value={
-                stats.byType.ebook > 0
-                  ? Math.round((stats.registered / stats.total) * ebookTotal)
-                  : 0
-              }
-              variant="secondary"
-            />
-            <StatRow
-              label="Retired"
-              value={
-                stats.byType.ebook > 0
-                  ? Math.round((stats.retired / stats.total) * ebookTotal)
-                  : 0
-              }
-              variant="destructive"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Total ISBNs Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total ISBNs</CardTitle>
-          <Hash className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-2xl font-bold">
             {stats.available}{" "}
             <span className="text-lg font-normal text-muted-foreground">
-              / {stats.total}
+              / {stats.total} available
             </span>
           </div>
-          <CardDescription>Total available across all types</CardDescription>
+          <CardDescription>Total available ISBNs in your pool</CardDescription>
 
-          <UtilizationBar used={totalUsed} total={stats.total} />
+          <UtilizationBar used={totalUsed} total={stats.total} showWarning={isLow} />
 
           <div className="space-y-1 border-t pt-4">
             <StatRow
@@ -281,6 +145,18 @@ export function ISBNPoolStats({ stats }: ISBNPoolStatsProps) {
               variant="destructive"
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Placeholder for future stats card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CardDescription className="text-center py-4">
+            Use the filters below to manage your ISBN pool
+          </CardDescription>
         </CardContent>
       </Card>
     </div>

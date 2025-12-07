@@ -1,5 +1,5 @@
-import { getEditorDashboardData } from "@/modules/reports/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getEditorDashboardData } from "@/modules/reports/queries";
 
 /**
  * Editor Recent Sales Widget
@@ -21,7 +21,9 @@ export async function EditorRecentSales({ userId }: EditorRecentSalesProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Recent Sales (30 Days)</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Recent Sales (30 Days)
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         {data.recentSales.length === 0 ? (

@@ -71,7 +71,9 @@ export function BarChart({
   legendLabel,
 }: BarChartProps) {
   // Function props take precedence over formatterType
-  const builtinFormatter = formatterType ? formatters[formatterType] : undefined;
+  const builtinFormatter = formatterType
+    ? formatters[formatterType]
+    : undefined;
   const yFormatter = yAxisFormatter || builtinFormatter;
   const tipFormatter = tooltipFormatter || builtinFormatter;
 

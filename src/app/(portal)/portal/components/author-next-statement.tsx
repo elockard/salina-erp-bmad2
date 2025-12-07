@@ -1,6 +1,6 @@
-import { getAuthorPortalDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAuthorPortalDashboardData } from "@/modules/reports/queries";
 
 /**
  * Author Next Statement Widget
@@ -31,7 +31,9 @@ function formatDate(date: Date): string {
   });
 }
 
-export async function AuthorNextStatement({ authorId }: AuthorNextStatementProps) {
+export async function AuthorNextStatement({
+  authorId,
+}: AuthorNextStatementProps) {
   const data = await getAuthorPortalDashboardData(authorId);
   const { nextStatementDate } = data;
 

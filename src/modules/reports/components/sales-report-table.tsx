@@ -38,7 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { SalesReportRow, SalesReportResult } from "../types";
+import type { SalesReportResult, SalesReportRow } from "../types";
 
 interface SalesReportTableProps {
   /** Report data with rows and totals */

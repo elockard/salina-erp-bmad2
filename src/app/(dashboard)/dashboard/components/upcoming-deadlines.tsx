@@ -1,6 +1,6 @@
-import { getFinanceDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getFinanceDashboardData } from "@/modules/reports/queries";
 
 /**
  * Upcoming Deadlines Widget
@@ -32,7 +32,9 @@ export async function UpcomingDeadlines() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Upcoming Deadlines</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Upcoming Deadlines
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">

@@ -33,9 +33,13 @@ vi.mock("lucide-react", () => ({
   Check: () => <span data-testid="icon-check">Check</span>,
   ChevronDown: () => <span data-testid="icon-chevron-down">ChevronDown</span>,
   ChevronLeft: () => <span data-testid="icon-chevron-left">ChevronLeft</span>,
-  ChevronRight: () => <span data-testid="icon-chevron-right">ChevronRight</span>,
+  ChevronRight: () => (
+    <span data-testid="icon-chevron-right">ChevronRight</span>
+  ),
   ChevronUp: () => <span data-testid="icon-chevron-up">ChevronUp</span>,
-  ChevronsUpDown: () => <span data-testid="icon-chevrons-up-down">ChevronsUpDown</span>,
+  ChevronsUpDown: () => (
+    <span data-testid="icon-chevrons-up-down">ChevronsUpDown</span>
+  ),
   Download: () => <span data-testid="icon-download">Download</span>,
   Loader2: () => <span data-testid="icon-loader">Loader</span>,
   X: () => <span data-testid="icon-x">X</span>,
@@ -58,11 +62,11 @@ vi.mock("recharts", () => ({
   YAxis: () => null,
 }));
 
+import { ExportButton } from "@/modules/reports/components/export-button";
+import { SalesReportCharts } from "@/modules/reports/components/sales-report-charts";
 // Import components after mocks
 import { SalesReportFilters } from "@/modules/reports/components/sales-report-filters";
 import { SalesReportTable } from "@/modules/reports/components/sales-report-table";
-import { SalesReportCharts } from "@/modules/reports/components/sales-report-charts";
-import { ExportButton } from "@/modules/reports/components/export-button";
 import type { SalesReportResult } from "@/modules/reports/types";
 
 // Test fixtures
@@ -359,9 +363,7 @@ describe("SalesReportTable Component", () => {
         },
       };
 
-      render(
-        <SalesReportTable data={dataWithManyRows} isLoading={false} />,
-      );
+      render(<SalesReportTable data={dataWithManyRows} isLoading={false} />);
 
       // Pagination should be present
       expect(screen.getByText(/Page 1 of/)).toBeTruthy();

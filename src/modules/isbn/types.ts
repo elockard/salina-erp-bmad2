@@ -3,6 +3,7 @@ import type { ISBN, ISBNStatus, ISBNType } from "@/db/schema/isbns";
 
 /**
  * Re-export types from schema for convenience
+ * Story 7.6: ISBNType is deprecated - ISBNs are unified without type distinction
  */
 export type { ISBN, ISBNStatus, ISBNType };
 
@@ -17,7 +18,7 @@ export interface ISBNWithRelations extends ISBN {
 
 /**
  * ISBN pool statistics for dashboard display
- * Aggregates ISBN counts by status and type
+ * Story 7.6: Removed byType and availableByType - ISBNs are unified without type distinction
  */
 export interface ISBNPoolStats {
   /** Total ISBNs in pool */
@@ -30,16 +31,6 @@ export interface ISBNPoolStats {
   registered: number;
   /** Count of retired ISBNs */
   retired: number;
-  /** Breakdown by type */
-  byType: {
-    physical: number;
-    ebook: number;
-  };
-  /** Breakdown of available by type */
-  availableByType: {
-    physical: number;
-    ebook: number;
-  };
 }
 
 /**
@@ -71,28 +62,29 @@ export interface ISBNImportResult {
 
 /**
  * ISBN list item for display
- * Lightweight type for list views
+ * Story 7.6: Removed type field - ISBNs are unified without type distinction
  */
 export interface ISBNListItem {
   id: string;
   isbn_13: string;
-  type: ISBNType;
   status: ISBNStatus;
   assignedTitleName: string | null;
   assignedAt: Date | null;
+  /** Prefix ID if ISBN was generated from a prefix (null for legacy imports) */
+  prefixId: string | null;
+  /** Formatted prefix for display (e.g., "978-1-234567") */
+  prefixName: string | null;
 }
 
 /**
  * Result of ISBN assignment to a title
- * Story 2.9 - Smart ISBN Assignment with Row Locking
+ * Story 7.6: Removed type field - ISBNs are unified without type distinction
  */
 export interface AssignedISBN {
   /** ISBN record ID */
   id: string;
   /** ISBN-13 value that was assigned */
   isbn_13: string;
-  /** Type of ISBN (physical or ebook) */
-  type: ISBNType;
   /** Title ID the ISBN was assigned to */
   titleId: string;
   /** Title name for display */

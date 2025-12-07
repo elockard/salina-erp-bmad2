@@ -215,6 +215,7 @@ describe("Statement type (AC-5.1.1)", () => {
       id: "550e8400-e29b-41d4-a716-446655440000",
       tenant_id: "550e8400-e29b-41d4-a716-446655440001",
       author_id: "550e8400-e29b-41d4-a716-446655440002",
+      contact_id: null, // Added for Story 7.3 migration compatibility
       contract_id: "550e8400-e29b-41d4-a716-446655440003",
       period_start: new Date("2024-01-01"),
       period_end: new Date("2024-03-31"),
@@ -245,6 +246,7 @@ describe("Statement type (AC-5.1.1)", () => {
       id: "550e8400-e29b-41d4-a716-446655440000",
       tenant_id: "550e8400-e29b-41d4-a716-446655440001",
       author_id: "550e8400-e29b-41d4-a716-446655440002",
+      contact_id: null, // Added for Story 7.3 migration compatibility
       contract_id: "550e8400-e29b-41d4-a716-446655440003",
       period_start: new Date("2024-01-01"),
       period_end: new Date("2024-03-31"),
@@ -283,6 +285,7 @@ describe("Statement type (AC-5.1.1)", () => {
       id: "550e8400-e29b-41d4-a716-446655440000",
       tenant_id: "550e8400-e29b-41d4-a716-446655440001",
       author_id: "550e8400-e29b-41d4-a716-446655440002",
+      contact_id: null, // Added for Story 7.3 migration compatibility
       contract_id: "550e8400-e29b-41d4-a716-446655440003",
       period_start: new Date("2024-01-01"),
       period_end: new Date("2024-03-31"),

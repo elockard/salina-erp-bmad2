@@ -26,13 +26,7 @@ interface ISBNPoolTableProps {
   totalPages: number;
 }
 
-/**
- * Get badge variant for ISBN type
- * Physical: secondary (gray), Ebook: outline (bordered)
- */
-function getTypeBadgeVariant(type: string): "secondary" | "outline" {
-  return type === "physical" ? "secondary" : "outline";
-}
+// Story 7.6: Removed getTypeBadgeVariant - ISBNs are unified without type distinction
 
 /**
  * Get badge variant and class for ISBN status
@@ -69,6 +63,9 @@ function getStatusBadgeProps(status: string): {
  * - Assigned To (title link if assigned, empty if available)
  * - Assigned Date (formatted date, empty if available)
  * - Actions column (View Details button)
+ *
+ * Story 7.4 - AC 7.4.7: Show "Legacy" badge for ISBNs without prefix_id
+ * - Prefix column shows formatted prefix or "Legacy" badge
  *
  * AC 6: Table pagination (20 items per page)
  * - Display total count of matching ISBNs
@@ -110,11 +107,12 @@ export function ISBNPoolTable({
       {/* Table */}
       <div className="rounded-md border">
         <Table>
+          {/* Story 7.6: Removed Type column - ISBNs are unified */}
           <TableHeader>
             <TableRow>
               <TableHead className="w-[180px]">ISBN-13</TableHead>
-              <TableHead className="w-[100px]">Type</TableHead>
               <TableHead className="w-[120px]">Status</TableHead>
+              <TableHead className="w-[140px]">Prefix</TableHead>
               <TableHead>Assigned To</TableHead>
               <TableHead className="w-[140px]">Assigned Date</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
@@ -123,6 +121,7 @@ export function ISBNPoolTable({
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
+                {/* Story 7.6: Updated colSpan from 7 to 6 after removing Type column */}
                 <TableCell colSpan={6} className="h-24 text-center">
                   No ISBNs found.
                 </TableCell>
@@ -133,16 +132,27 @@ export function ISBNPoolTable({
                   <TableCell className="font-mono text-sm">
                     {isbn.isbn_13}
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={getTypeBadgeVariant(isbn.type)}>
-                      {isbn.type === "physical" ? "Physical" : "Ebook"}
-                    </Badge>
-                  </TableCell>
+                  {/* Story 7.6: Removed Type badge cell - ISBNs are unified */}
                   <TableCell>
                     <Badge {...getStatusBadgeProps(isbn.status)}>
                       {isbn.status.charAt(0).toUpperCase() +
                         isbn.status.slice(1)}
                     </Badge>
+                  </TableCell>
+                  {/* Prefix column - Story 7.4 AC-7.4.7 */}
+                  <TableCell>
+                    {isbn.prefixId ? (
+                      <span className="font-mono text-sm">
+                        {isbn.prefixName}
+                      </span>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="border-amber-500 bg-amber-50 text-amber-700"
+                      >
+                        Legacy
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     {isbn.assignedTitleName ? (

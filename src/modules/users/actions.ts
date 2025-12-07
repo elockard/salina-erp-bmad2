@@ -4,13 +4,13 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { and, count, desc, eq, ilike } from "drizzle-orm";
 import { tenants } from "@/db/schema/tenants";
 import { users } from "@/db/schema/users";
+import { logAuditEvent } from "@/lib/audit";
 import {
-  getDb,
   getCurrentTenantId,
   getCurrentUser,
+  getDb,
   requirePermission,
 } from "@/lib/auth";
-import { logAuditEvent } from "@/lib/audit";
 import { MANAGE_USERS } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
 import { inviteUserSchema } from "./schema";
@@ -141,7 +141,7 @@ export async function inviteUser(data: unknown): Promise<ActionResult<User>> {
 
     // Build redirect URL with tenant subdomain
     // For localhost: http://localhost:3000/dashboard
-    // For production: https://tenant.salina-erp.com/dashboard
+    // For production: https://tenant.salina.media/dashboard
     const redirectUrl = baseUrl.includes("localhost")
       ? `${baseUrl}/dashboard`
       : `${baseUrl

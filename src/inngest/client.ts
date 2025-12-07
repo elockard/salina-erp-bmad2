@@ -46,4 +46,17 @@ export interface InngestEvents {
       userId: string;
     };
   };
+  /**
+   * ISBN prefix generation event
+   * Story 7.4 AC-7.4.6: Async generation for large ISBN blocks (>1000)
+   * Story 7.6: Removed type field - ISBNs are unified without type distinction
+   */
+  "isbn-prefix/generate": {
+    data: {
+      prefixId: string;
+      tenantId: string;
+      prefix: string;
+      blockSize: number;
+    };
+  };
 }

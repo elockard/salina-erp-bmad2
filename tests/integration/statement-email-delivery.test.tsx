@@ -52,7 +52,7 @@ vi.mock("@aws-sdk/s3-request-presigner", () => ({
 // Mock Resend email client
 vi.mock("@/lib/email", () => ({
   sendEmail: mockSendEmail,
-  getDefaultFromEmail: vi.fn(() => "statements@test.salina-erp.com"),
+  getDefaultFromEmail: vi.fn(() => "statements@test.salina.media"),
 }));
 
 // Mock database
@@ -232,7 +232,7 @@ describe("Statement Email Delivery Integration", () => {
       // Verify sendEmail was called with correct structure
       expect(mockSendEmail).toHaveBeenCalledTimes(1);
       const callArgs = mockSendEmail.mock.calls[0][0];
-      expect(callArgs.from).toBe("statements@test.salina-erp.com");
+      expect(callArgs.from).toBe("statements@test.salina.media");
       expect(callArgs.to).toBe("jane@author.com");
       // Period label may vary based on timezone - just check it includes year and publisher
       expect(callArgs.subject).toContain("2024");

@@ -23,12 +23,14 @@ test.describe("System Monitoring Page - Access and Layout", () => {
   test("AC-6.6.1: Page renders with correct header", async ({ page }) => {
     // Page header
     await expect(
-      page.getByRole("heading", { name: "System Monitoring" })
+      page.getByRole("heading", { name: "System Monitoring" }),
     ).toBeVisible();
 
     // Subtitle
     await expect(
-      page.getByText("Monitor system health, background jobs, and service status")
+      page.getByText(
+        "Monitor system health, background jobs, and service status",
+      ),
     ).toBeVisible();
   });
 
@@ -90,7 +92,10 @@ test.describe("System Monitoring Page - Health Status Section (AC-6.6.7)", () =>
 
     // Look for latency indicators (e.g., "15ms latency")
     const latencyText = page.getByText(/\d+ms latency/);
-    const hasLatency = await latencyText.first().isVisible().catch(() => false);
+    const hasLatency = await latencyText
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // At least some cards should show latency
     expect(hasLatency).toBe(true);
@@ -127,9 +132,18 @@ test.describe("System Monitoring Page - Health Status Section (AC-6.6.7)", () =>
     const degradedIndicator = page.getByTestId("status-degraded");
 
     // At least one status indicator should be visible
-    const hasHealthy = await healthyIndicator.first().isVisible().catch(() => false);
-    const hasUnhealthy = await unhealthyIndicator.first().isVisible().catch(() => false);
-    const hasDegraded = await degradedIndicator.first().isVisible().catch(() => false);
+    const hasHealthy = await healthyIndicator
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasUnhealthy = await unhealthyIndicator
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasDegraded = await degradedIndicator
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     expect(hasHealthy || hasUnhealthy || hasDegraded).toBe(true);
   });
@@ -193,8 +207,12 @@ test.describe("System Monitoring Page - Job List Section", () => {
     await typeFilter.click();
 
     await expect(page.getByRole("option", { name: "All Types" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "PDF Generation" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Batch Statements" })).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: "PDF Generation" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: "Batch Statements" }),
+    ).toBeVisible();
 
     await page.keyboard.press("Escape");
   });
@@ -203,7 +221,9 @@ test.describe("System Monitoring Page - Job List Section", () => {
     const statusFilter = page.getByTestId("filter-status");
     await statusFilter.click();
 
-    await expect(page.getByRole("option", { name: "All Statuses" })).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: "All Statuses" }),
+    ).toBeVisible();
     await expect(page.getByRole("option", { name: "Queued" })).toBeVisible();
     await expect(page.getByRole("option", { name: "Running" })).toBeVisible();
     await expect(page.getByRole("option", { name: "Completed" })).toBeVisible();
@@ -218,10 +238,18 @@ test.describe("System Monitoring Page - Job List Section", () => {
     await expect(table).toBeVisible();
 
     await expect(table.getByRole("columnheader", { name: "ID" })).toBeVisible();
-    await expect(table.getByRole("columnheader", { name: "Type" })).toBeVisible();
-    await expect(table.getByRole("columnheader", { name: "Status" })).toBeVisible();
-    await expect(table.getByRole("columnheader", { name: "Started" })).toBeVisible();
-    await expect(table.getByRole("columnheader", { name: "Duration" })).toBeVisible();
+    await expect(
+      table.getByRole("columnheader", { name: "Type" }),
+    ).toBeVisible();
+    await expect(
+      table.getByRole("columnheader", { name: "Status" }),
+    ).toBeVisible();
+    await expect(
+      table.getByRole("columnheader", { name: "Started" }),
+    ).toBeVisible();
+    await expect(
+      table.getByRole("columnheader", { name: "Duration" }),
+    ).toBeVisible();
   });
 
   test("Shows empty state message when no jobs", async ({ page }) => {
@@ -279,25 +307,29 @@ test.describe("System Monitoring Page - Inngest Dashboard Link (AC-6.6.6)", () =
 });
 
 test.describe("System Monitoring Page - Permission Enforcement (AC-6.6.1)", () => {
-  test("AC-6.6.1: Admin user can access system monitoring page", async ({ page }) => {
+  test("AC-6.6.1: Admin user can access system monitoring page", async ({
+    page,
+  }) => {
     // TODO: Login as admin user
     // await loginAs(page, "admin@testorg.com");
 
     await page.goto("/admin/system");
 
     await expect(
-      page.getByRole("heading", { name: "System Monitoring" })
+      page.getByRole("heading", { name: "System Monitoring" }),
     ).toBeVisible();
   });
 
-  test("AC-6.6.1: Owner user can access system monitoring page", async ({ page }) => {
+  test("AC-6.6.1: Owner user can access system monitoring page", async ({
+    page,
+  }) => {
     // TODO: Login as owner
     // await loginAs(page, "owner@testorg.com");
 
     await page.goto("/admin/system");
 
     await expect(
-      page.getByRole("heading", { name: "System Monitoring" })
+      page.getByRole("heading", { name: "System Monitoring" }),
     ).toBeVisible();
   });
 
@@ -348,7 +380,9 @@ test.describe("System Monitoring Page - Navigation", () => {
     }
   });
 
-  test("Clicking System nav link navigates to /admin/system", async ({ page }) => {
+  test("Clicking System nav link navigates to /admin/system", async ({
+    page,
+  }) => {
     // TODO: Login as admin
     // await loginAs(page, "admin@testorg.com");
 
@@ -384,7 +418,9 @@ test.describe("System Monitoring Page - Responsive Design", () => {
     await expect(page.getByTestId("job-summary-section")).toBeVisible();
   });
 
-  test("Desktop layout - full width with multiple columns", async ({ page }) => {
+  test("Desktop layout - full width with multiple columns", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/admin/system");
 
@@ -415,13 +451,17 @@ test.describe("System Monitoring Page - Refresh Functionality", () => {
     await expect(refreshButton).toBeEnabled();
   });
 
-  test("Health refresh button only refreshes health checks", async ({ page }) => {
+  test("Health refresh button only refreshes health checks", async ({
+    page,
+  }) => {
     await page.goto("/admin/system");
     await page.waitForTimeout(1000);
 
     const healthRefreshButton = page.getByTestId("refresh-health-button");
 
-    const hasHealthRefresh = await healthRefreshButton.isVisible().catch(() => false);
+    const hasHealthRefresh = await healthRefreshButton
+      .isVisible()
+      .catch(() => false);
 
     if (hasHealthRefresh) {
       await healthRefreshButton.click();
@@ -445,7 +485,9 @@ test.describe("System Monitoring Page - Error Handling", () => {
     // Error state depends on environment - either is valid
   });
 
-  test("Page continues to function when one service is unhealthy", async ({ page }) => {
+  test("Page continues to function when one service is unhealthy", async ({
+    page,
+  }) => {
     await page.goto("/admin/system");
     await page.waitForTimeout(2000);
 

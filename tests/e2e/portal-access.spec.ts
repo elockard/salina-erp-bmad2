@@ -3,18 +3,20 @@ import { expect, test } from "@playwright/test";
 /**
  * E2E Tests for Author Portal Access Provisioning
  * Story 2.3 - Author Portal Access Provisioning
+ * Story 0.5: Consolidated to use /contacts?role=author
  *
  * Note: These tests require:
  * - Test database seeded with test tenant and users
  * - Authentication helpers to login as different roles
- * - Test authors to be created/cleaned up
+ * - Test contacts with author role to be created/cleaned up
  */
 
 test.describe("Portal Access - Grant Portal Access (AC: 35)", () => {
   test.beforeEach(async ({ page }) => {
     // TODO: Login as owner user with MANAGE_USERS permission
     // await loginAs(page, "owner@testorg.com");
-    await page.goto("/dashboard/authors");
+    // Story 0.5: Authors are now contacts with author role
+    await page.goto("/contacts?role=author");
   });
 
   test("AC1: Grant Portal Access button visible in Author Detail panel", async ({
@@ -138,7 +140,8 @@ test.describe("Portal Access - Revoke Portal Access (AC: 35)", () => {
   test.beforeEach(async ({ page }) => {
     // TODO: Login as owner user
     // await loginAs(page, "owner@testorg.com");
-    await page.goto("/dashboard/authors");
+    // Story 0.5: Authors are now contacts with author role
+    await page.goto("/contacts?role=author");
   });
 
   test("AC15: Revoke Portal Access button visible when author has access", async ({
@@ -264,7 +267,8 @@ test.describe("Portal Access - Permission Checks", () => {
   }) => {
     // TODO: Login as editor (has CREATE_AUTHORS_TITLES but not MANAGE_USERS)
     // await loginAs(page, "editor@testorg.com");
-    await page.goto("/dashboard/authors");
+    // Story 0.5: Authors are now contacts with author role
+    await page.goto("/contacts?role=author");
 
     // Select an author
     const authorItem = page.locator('[role="option"]').first();
@@ -280,7 +284,8 @@ test.describe("Portal Access - Permission Checks", () => {
   test("Finance role cannot grant portal access", async ({ page }) => {
     // TODO: Login as finance (not in MANAGE_USERS)
     // await loginAs(page, "finance@testorg.com");
-    await page.goto("/dashboard/authors");
+    // Story 0.5: Authors are now contacts with author role
+    await page.goto("/contacts?role=author");
 
     // Select an author
     const authorItem = page.locator('[role="option"]').first();

@@ -59,6 +59,7 @@ export async function createTitle(
     const db = await getDb();
 
     // Prepare insert values
+    // Story 7.6: Removed eisbn - ISBNs are unified without type distinction
     const insertValues: Record<string, unknown> = {
       tenant_id: tenantId,
       title: validated.title,
@@ -68,7 +69,6 @@ export async function createTitle(
       word_count: validated.word_count || null,
       publication_status: validated.publication_status || "draft",
       isbn: validated.isbn || null,
-      eisbn: validated.eisbn || null,
       publication_date: validated.publication_date || null,
     };
 
@@ -171,9 +171,7 @@ export async function updateTitle(
     if (validated.isbn !== undefined) {
       updateValues.isbn = validated.isbn || null;
     }
-    if (validated.eisbn !== undefined) {
-      updateValues.eisbn = validated.eisbn || null;
-    }
+    // Story 7.6: Removed eisbn - ISBNs are unified without type distinction
     if (validated.publication_date !== undefined) {
       updateValues.publication_date = validated.publication_date || null;
     }

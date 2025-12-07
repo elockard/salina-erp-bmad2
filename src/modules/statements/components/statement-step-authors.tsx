@@ -6,11 +6,14 @@
  * Story 5.3: Build Statement Generation Wizard for Finance
  * AC-5.3.3: Author selection allows "Select All" or individual checkboxes with search/filter
  *
+ * Story 0.5: Consolidate Authors into Contacts
+ * AC-0.5.4: Updated UI text to reference contacts with author role
+ *
  * Features:
- * - "Select All Authors" checkbox at top
- * - Scrollable author list with individual checkboxes
+ * - "Select All" checkbox at top
+ * - Scrollable list of contacts with author role with individual checkboxes
  * - Search/filter input to filter by name
- * - Author name and pending royalties estimate display
+ * - Contact name and pending royalties estimate display
  * - Selection summary: "N authors selected - Total pending royalties: $X"
  */
 
@@ -138,7 +141,7 @@ export function StatementStepAuthors({
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-muted-foreground">Loading authors...</p>
+        <p className="text-muted-foreground">Loading contacts...</p>
       </div>
     );
   }
@@ -156,7 +159,7 @@ export function StatementStepAuthors({
       <div>
         <h3 className="text-lg font-medium">Select Authors</h3>
         <p className="text-sm text-muted-foreground">
-          Choose which authors to include in statement generation
+          Choose which contacts with author role to include in statement generation
         </p>
       </div>
 
@@ -169,7 +172,7 @@ export function StatementStepAuthors({
             onCheckedChange={handleSelectAllChange}
           />
           <Label htmlFor="select-all" className="cursor-pointer font-medium">
-            Select All Authors ({authors.length})
+            Select All ({authors.length})
           </Label>
         </div>
       </div>
@@ -178,7 +181,7 @@ export function StatementStepAuthors({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search authors by name..."
+          placeholder="Search by name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
@@ -190,8 +193,8 @@ export function StatementStepAuthors({
         {filteredAuthors.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             {searchQuery
-              ? "No authors match your search"
-              : "No authors available"}
+              ? "No contacts match your search"
+              : "No contacts with author role available"}
           </div>
         ) : (
           <div className="divide-y">

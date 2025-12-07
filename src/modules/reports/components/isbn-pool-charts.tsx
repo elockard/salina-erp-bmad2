@@ -7,7 +7,8 @@
  * timeline chart for assignment history.
  *
  * Story: 6.3 - Build ISBN Pool Status Report
- * AC: 4 (Pie chart shows Available vs Assigned breakdown by type)
+ * Story: 7.6 - Remove ISBN Type Distinction (unified charts, no physical/ebook breakdown)
+ * AC: 4 (Pie chart shows Available vs Assigned breakdown)
  * AC: 5 (Timeline chart shows ISBN assignments over time)
  */
 
@@ -28,41 +29,19 @@ interface ISBNPoolChartsProps {
 }
 
 export function ISBNPoolCharts({ metrics, history }: ISBNPoolChartsProps) {
-  const { physical, ebook } = metrics;
+  const { available, assigned, total } = metrics;
 
-  // Prepare pie chart data - Available vs Assigned breakdown
+  // Story 7.6: Unified pie chart - Available vs Assigned
   const pieData = [
     {
-      name: "Physical Available",
-      value: physical.available,
-      percentage:
-        physical.total > 0
-          ? (physical.available / (physical.total + ebook.total)) * 100
-          : 0,
+      name: "Available",
+      value: available,
+      percentage: total > 0 ? (available / total) * 100 : 0,
     },
     {
-      name: "Physical Assigned",
-      value: physical.assigned,
-      percentage:
-        physical.total > 0
-          ? (physical.assigned / (physical.total + ebook.total)) * 100
-          : 0,
-    },
-    {
-      name: "Ebook Available",
-      value: ebook.available,
-      percentage:
-        ebook.total > 0
-          ? (ebook.available / (physical.total + ebook.total)) * 100
-          : 0,
-    },
-    {
-      name: "Ebook Assigned",
-      value: ebook.assigned,
-      percentage:
-        ebook.total > 0
-          ? (ebook.assigned / (physical.total + ebook.total)) * 100
-          : 0,
+      name: "Assigned",
+      value: assigned,
+      percentage: total > 0 ? (assigned / total) * 100 : 0,
     },
   ].filter((d) => d.value > 0);
 
@@ -72,15 +51,13 @@ export function ISBNPoolCharts({ metrics, history }: ISBNPoolChartsProps) {
     value: item.assigned,
   }));
 
-  const hasPoolData = physical.total > 0 || ebook.total > 0;
+  const hasPoolData = total > 0;
   const hasHistoryData = history.some((h) => h.assigned > 0);
 
-  // Custom pie chart colors: greens for available, blues for assigned
+  // Simple two-color scheme: green for available, navy for assigned
   const pieColors = [
-    "#22c55e", // green-500 for Physical Available
-    "#1e3a5f", // Editorial Navy for Physical Assigned
-    "#86efac", // green-300 for Ebook Available
-    "#4a7ab0", // Lighter navy for Ebook Assigned
+    "#22c55e", // green-500 for Available
+    "#1e3a5f", // Editorial Navy for Assigned
   ];
 
   return (
@@ -89,7 +66,7 @@ export function ISBNPoolCharts({ metrics, history }: ISBNPoolChartsProps) {
       <Card data-testid="isbn-distribution-chart">
         <CardHeader>
           <CardTitle className="text-base">ISBN Distribution</CardTitle>
-          <CardDescription>Available vs Assigned by type</CardDescription>
+          <CardDescription>Available vs Assigned</CardDescription>
         </CardHeader>
         <CardContent>
           {hasPoolData ? (
@@ -130,7 +107,9 @@ export function ISBNPoolCharts({ metrics, history }: ISBNPoolChartsProps) {
               height={280}
               strokeColor="#1e3a5f"
               legendLabel="ISBNs Assigned"
-              tooltipFormatter={(value) => `${value} ISBN${value !== 1 ? "s" : ""}`}
+              tooltipFormatter={(value) =>
+                `${value} ISBN${value !== 1 ? "s" : ""}`
+              }
               yAxisFormatter={(value) => String(Math.round(value))}
             />
           ) : (

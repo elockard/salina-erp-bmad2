@@ -365,27 +365,21 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
         </Card>
       </div>
 
-      {/* Formats Section */}
+      {/* ISBN Section - Story 7.6: Unified single ISBN field */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
-            Formats
+            ISBN
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Physical Format */}
+        <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Physical</p>
               {title.isbn ? (
-                <p className="text-sm text-muted-foreground font-mono">
-                  {formatIsbn(title.isbn)}
-                </p>
+                <p className="text-lg font-mono">{formatIsbn(title.isbn)}</p>
               ) : (
-                <Badge variant="secondary" className="text-xs">
-                  Not assigned
-                </Badge>
+                <Badge variant="secondary">Not assigned</Badge>
               )}
             </div>
             {!title.isbn &&
@@ -414,64 +408,14 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
                 </TooltipProvider>
               ))}
           </div>
-
-          {/* Ebook Format */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Ebook</p>
-              {title.eisbn ? (
-                <p className="text-sm text-muted-foreground font-mono">
-                  {formatIsbn(title.eisbn)}
-                </p>
-              ) : (
-                <Badge variant="secondary" className="text-xs">
-                  Not assigned
-                </Badge>
-              )}
-            </div>
-            {!title.eisbn &&
-              (canEdit ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsbnModalOpen(true)}
-                >
-                  Assign eISBN
-                </Button>
-              ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <Button variant="outline" size="sm" disabled>
-                          Assign eISBN
-                        </Button>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>You don't have permission to assign ISBNs</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
-          </div>
-
-          {/* Audiobook Format */}
-          <div className="flex items-center justify-between opacity-50">
-            <div>
-              <p className="font-medium">Audiobook</p>
-              <span className="text-sm text-muted-foreground">Coming soon</span>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
-      {/* ISBN Assignment Modal */}
+      {/* ISBN Assignment Modal - Story 7.6: Simplified without type selection */}
       <ISBNAssignmentModal
         titleId={title.id}
         titleName={title.title}
         currentISBN={title.isbn}
-        currentEISBN={title.eisbn}
         open={isbnModalOpen}
         onOpenChange={setIsbnModalOpen}
         onSuccess={() => {

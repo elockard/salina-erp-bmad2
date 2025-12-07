@@ -4,16 +4,19 @@
  * Statement Wizard Step 1: Period Selection
  *
  * Story 5.3: Build Statement Generation Wizard for Finance
- * AC-5.3.2: Period selection supports Quarterly, Annual, Custom date range options
+ * Story 7.5: Add Royalty Period option (AC-5)
+ * AC-5.3.2: Period selection supports Quarterly, Annual, Custom, Royalty Period options
  *
  * Features:
  * - Radio buttons for period type selection
  * - Conditional inputs based on type (quarter/year, year only, or date pickers)
+ * - Royalty Period option respects tenant's royalty period setting (Story 7.5 AC-5)
  * - Resolved date range display
  */
 
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,7 +34,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getCurrentRoyaltyPeriod } from "@/lib/royalty-period";
 import { cn } from "@/lib/utils";
+import { getTenantSettings } from "@/modules/tenant/actions";
+import type { TenantSettings } from "@/modules/tenant/types";
 import type {
   PeriodType,
   Quarter,
@@ -77,10 +83,50 @@ export function StatementStepPeriod() {
 
   const yearOptions = getYearOptions();
 
+  // Tenant settings for royalty period (Story 7.5 AC-5)
+  const [tenantSettings, setTenantSettings] = useState<TenantSettings | null>(
+    null
+  );
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [royaltyPeriodDates, setRoyaltyPeriodDates] = useState<{
+    start: Date;
+    end: Date;
+  } | null>(null);
+
+  // Load tenant settings when royalty_period is selected
+  useEffect(() => {
+    async function loadTenantSettings() {
+      if (periodType === "royalty_period" && !tenantSettings) {
+        setLoadingSettings(true);
+        const result = await getTenantSettings();
+        if (result.success) {
+          setTenantSettings(result.data);
+          // Calculate current royalty period dates
+          const period = getCurrentRoyaltyPeriod(result.data);
+          setRoyaltyPeriodDates(period);
+          // Update form values with calculated dates
+          setValue("periodStart", period.start);
+          setValue("periodEnd", period.end);
+        }
+        setLoadingSettings(false);
+      }
+    }
+    loadTenantSettings();
+  }, [periodType, tenantSettings, setValue]);
+
   /**
    * Get resolved period description for display
    */
   const getResolvedPeriod = (): string => {
+    if (periodType === "royalty_period") {
+      if (loadingSettings) {
+        return "Loading...";
+      }
+      if (royaltyPeriodDates) {
+        return `${format(royaltyPeriodDates.start, "MMMM d, yyyy")} - ${format(royaltyPeriodDates.end, "MMMM d, yyyy")}`;
+      }
+      return "Calculating royalty period...";
+    }
     if (periodType === "quarterly" && quarter && year) {
       return getQuarterDateRange(quarter as Quarter, year);
     }
@@ -102,14 +148,21 @@ export function StatementStepPeriod() {
         </p>
       </div>
 
-      {/* Period Type Selection (AC-5.3.2) */}
+      {/* Period Type Selection (AC-5.3.2, Story 7.5 AC-5) */}
       <div className="space-y-4">
         <Label>Period Type</Label>
         <RadioGroup
           value={periodType}
           onValueChange={(value) => setValue("periodType", value as PeriodType)}
-          className="flex gap-4"
+          className="flex flex-wrap gap-4"
         >
+          {/* Royalty Period - first option as per Story 7.5 AC-5 */}
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="royalty_period" id="royalty_period" />
+            <Label htmlFor="royalty_period" className="cursor-pointer">
+              Royalty Period
+            </Label>
+          </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="quarterly" id="quarterly" />
             <Label htmlFor="quarterly" className="cursor-pointer">
@@ -130,6 +183,30 @@ export function StatementStepPeriod() {
           </div>
         </RadioGroup>
       </div>
+
+      {/* Royalty Period display (Story 7.5 AC-5) */}
+      {periodType === "royalty_period" && (
+        <div className="space-y-2">
+          {loadingSettings ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading tenant royalty period settings...</span>
+            </div>
+          ) : tenantSettings ? (
+            <div className="text-sm text-muted-foreground">
+              Using tenant's configured{" "}
+              <span className="font-medium">
+                {tenantSettings.royalty_period_type === "calendar_year"
+                  ? "Calendar Year"
+                  : tenantSettings.royalty_period_type === "fiscal_year"
+                    ? "Fiscal Year"
+                    : "Custom"}
+              </span>{" "}
+              royalty period
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* Quarterly Selection (AC-5.3.2) */}
       {periodType === "quarterly" && (

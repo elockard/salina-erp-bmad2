@@ -87,9 +87,24 @@ describe("Total Unpaid Liability Calculation (AC-2.3)", () => {
 
   it("calculates total liability from multiple statements", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 100.5, periodEnd: new Date(), tenantId: "t1" },
-      { authorId: "a1", netPayable: 200.25, periodEnd: new Date(), tenantId: "t1" },
-      { authorId: "a2", netPayable: 350.0, periodEnd: new Date(), tenantId: "t1" },
+      {
+        authorId: "a1",
+        netPayable: 100.5,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a1",
+        netPayable: 200.25,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a2",
+        netPayable: 350.0,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
     ];
 
     const total = calculateTotalLiability(statements);
@@ -105,8 +120,18 @@ describe("Total Unpaid Liability Calculation (AC-2.3)", () => {
 
   it("handles decimal precision correctly", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 0.1, periodEnd: new Date(), tenantId: "t1" },
-      { authorId: "a1", netPayable: 0.2, periodEnd: new Date(), tenantId: "t1" },
+      {
+        authorId: "a1",
+        netPayable: 0.1,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a1",
+        netPayable: 0.2,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
     ];
 
     const total = calculateTotalLiability(statements);
@@ -117,8 +142,18 @@ describe("Total Unpaid Liability Calculation (AC-2.3)", () => {
 
   it("handles large amounts", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 999999.99, periodEnd: new Date(), tenantId: "t1" },
-      { authorId: "a1", netPayable: 0.01, periodEnd: new Date(), tenantId: "t1" },
+      {
+        authorId: "a1",
+        netPayable: 999999.99,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a1",
+        netPayable: 0.01,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
     ];
 
     const total = calculateTotalLiability(statements);
@@ -140,10 +175,30 @@ describe("Authors with Pending Payments Count (AC-2.4)", () => {
 
   it("counts distinct authors correctly", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 100, periodEnd: new Date(), tenantId: "t1" },
-      { authorId: "a1", netPayable: 200, periodEnd: new Date(), tenantId: "t1" },
-      { authorId: "a2", netPayable: 300, periodEnd: new Date(), tenantId: "t1" },
-      { authorId: "a3", netPayable: 400, periodEnd: new Date(), tenantId: "t1" },
+      {
+        authorId: "a1",
+        netPayable: 100,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a1",
+        netPayable: 200,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a2",
+        netPayable: 300,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a3",
+        netPayable: 400,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
     ];
 
     const count = countAuthorsWithPendingPayments(statements);
@@ -159,9 +214,24 @@ describe("Authors with Pending Payments Count (AC-2.4)", () => {
 
   it("handles single author with multiple statements", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 100, periodEnd: new Date(), tenantId: "t1" },
-      { authorId: "a1", netPayable: 200, periodEnd: new Date(), tenantId: "t1" },
-      { authorId: "a1", netPayable: 300, periodEnd: new Date(), tenantId: "t1" },
+      {
+        authorId: "a1",
+        netPayable: 100,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a1",
+        netPayable: 200,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a1",
+        netPayable: 300,
+        periodEnd: new Date(),
+        tenantId: "t1",
+      },
     ];
 
     const count = countAuthorsWithPendingPayments(statements);
@@ -185,9 +255,24 @@ describe("Oldest Unpaid Statement Detection (AC-2.5)", () => {
 
   it("finds the oldest statement", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 100, periodEnd: new Date("2024-06-30"), tenantId: "t1" },
-      { authorId: "a1", netPayable: 200, periodEnd: new Date("2024-03-31"), tenantId: "t1" },
-      { authorId: "a2", netPayable: 300, periodEnd: new Date("2024-09-30"), tenantId: "t1" },
+      {
+        authorId: "a1",
+        netPayable: 100,
+        periodEnd: new Date("2024-06-30"),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a1",
+        netPayable: 200,
+        periodEnd: new Date("2024-03-31"),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a2",
+        netPayable: 300,
+        periodEnd: new Date("2024-09-30"),
+        tenantId: "t1",
+      },
     ];
 
     const oldest = findOldestStatement(statements);
@@ -203,7 +288,12 @@ describe("Oldest Unpaid Statement Detection (AC-2.5)", () => {
 
   it("handles single statement", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 100, periodEnd: new Date("2024-12-31"), tenantId: "t1" },
+      {
+        authorId: "a1",
+        netPayable: 100,
+        periodEnd: new Date("2024-12-31"),
+        tenantId: "t1",
+      },
     ];
 
     const oldest = findOldestStatement(statements);
@@ -259,11 +349,14 @@ describe("Liability By Author Grouping (AC-4)", () => {
     titleCounts: Map<string, number>,
   ): AuthorLiabilityRow[] => {
     const authorMap = new Map(authors.map((a) => [a.authorId, a]));
-    const grouped = new Map<string, {
-      totalOwed: number;
-      unpaidStatements: number;
-      oldestStatement: Date;
-    }>();
+    const grouped = new Map<
+      string,
+      {
+        totalOwed: number;
+        unpaidStatements: number;
+        oldestStatement: Date;
+      }
+    >();
 
     for (const statement of statements) {
       const existing = grouped.get(statement.authorId);
@@ -300,14 +393,33 @@ describe("Liability By Author Grouping (AC-4)", () => {
 
   it("groups statements by author correctly", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 100, periodEnd: new Date("2024-06-30"), tenantId: "t1" },
-      { authorId: "a1", netPayable: 200, periodEnd: new Date("2024-03-31"), tenantId: "t1" },
-      { authorId: "a2", netPayable: 500, periodEnd: new Date("2024-09-30"), tenantId: "t1" },
+      {
+        authorId: "a1",
+        netPayable: 100,
+        periodEnd: new Date("2024-06-30"),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a1",
+        netPayable: 200,
+        periodEnd: new Date("2024-03-31"),
+        tenantId: "t1",
+      },
+      {
+        authorId: "a2",
+        netPayable: 500,
+        periodEnd: new Date("2024-09-30"),
+        tenantId: "t1",
+      },
     ];
 
     const authors: AuthorRecord[] = [
       { authorId: "a1", authorName: "Author One", paymentMethod: "check" },
-      { authorId: "a2", authorName: "Author Two", paymentMethod: "direct_deposit" },
+      {
+        authorId: "a2",
+        authorName: "Author Two",
+        paymentMethod: "direct_deposit",
+      },
     ];
 
     const titleCounts = new Map([
@@ -321,7 +433,9 @@ describe("Liability By Author Grouping (AC-4)", () => {
     expect(author1?.totalOwed).toBe(300);
     expect(author1?.unpaidStatements).toBe(2);
     expect(author1?.titleCount).toBe(2);
-    expect(author1?.oldestStatement.toISOString().split("T")[0]).toBe("2024-03-31");
+    expect(author1?.oldestStatement.toISOString().split("T")[0]).toBe(
+      "2024-03-31",
+    );
 
     const author2 = result.find((r) => r.authorId === "a2");
     expect(author2?.totalOwed).toBe(500);
@@ -348,9 +462,33 @@ describe("Liability By Author Sorting (AC-5)", () => {
 
   it("sorts by total owed descending", () => {
     const rows: AuthorLiabilityRow[] = [
-      { authorId: "a1", authorName: "A", titleCount: 1, unpaidStatements: 1, totalOwed: 100, oldestStatement: new Date(), paymentMethod: null },
-      { authorId: "a2", authorName: "B", titleCount: 1, unpaidStatements: 1, totalOwed: 500, oldestStatement: new Date(), paymentMethod: null },
-      { authorId: "a3", authorName: "C", titleCount: 1, unpaidStatements: 1, totalOwed: 250, oldestStatement: new Date(), paymentMethod: null },
+      {
+        authorId: "a1",
+        authorName: "A",
+        titleCount: 1,
+        unpaidStatements: 1,
+        totalOwed: 100,
+        oldestStatement: new Date(),
+        paymentMethod: null,
+      },
+      {
+        authorId: "a2",
+        authorName: "B",
+        titleCount: 1,
+        unpaidStatements: 1,
+        totalOwed: 500,
+        oldestStatement: new Date(),
+        paymentMethod: null,
+      },
+      {
+        authorId: "a3",
+        authorName: "C",
+        titleCount: 1,
+        unpaidStatements: 1,
+        totalOwed: 250,
+        oldestStatement: new Date(),
+        paymentMethod: null,
+      },
     ];
 
     const sorted = sortByTotalOwedDesc(rows);
@@ -362,8 +500,24 @@ describe("Liability By Author Sorting (AC-5)", () => {
 
   it("handles equal amounts", () => {
     const rows: AuthorLiabilityRow[] = [
-      { authorId: "a1", authorName: "A", titleCount: 1, unpaidStatements: 1, totalOwed: 100, oldestStatement: new Date(), paymentMethod: null },
-      { authorId: "a2", authorName: "B", titleCount: 1, unpaidStatements: 1, totalOwed: 100, oldestStatement: new Date(), paymentMethod: null },
+      {
+        authorId: "a1",
+        authorName: "A",
+        titleCount: 1,
+        unpaidStatements: 1,
+        totalOwed: 100,
+        oldestStatement: new Date(),
+        paymentMethod: null,
+      },
+      {
+        authorId: "a2",
+        authorName: "B",
+        titleCount: 1,
+        unpaidStatements: 1,
+        totalOwed: 100,
+        oldestStatement: new Date(),
+        paymentMethod: null,
+      },
     ];
 
     const sorted = sortByTotalOwedDesc(rows);
@@ -405,7 +559,15 @@ describe("Advance Balance Calculation (AC-6)", () => {
 
   it("calculates remaining balance correctly", () => {
     const contracts: ContractRecord[] = [
-      { contractId: "c1", authorId: "a1", titleId: "t1", titleName: "Book One", advanceAmount: 5000, advanceRecouped: 2000, tenantId: "t1" },
+      {
+        contractId: "c1",
+        authorId: "a1",
+        titleId: "t1",
+        titleName: "Book One",
+        advanceAmount: 5000,
+        advanceRecouped: 2000,
+        tenantId: "t1",
+      },
     ];
 
     const authors: AuthorRecord[] = [
@@ -420,9 +582,33 @@ describe("Advance Balance Calculation (AC-6)", () => {
 
   it("only includes contracts with active advances", () => {
     const contracts: ContractRecord[] = [
-      { contractId: "c1", authorId: "a1", titleId: "t1", titleName: "Book One", advanceAmount: 5000, advanceRecouped: 2000, tenantId: "t1" },
-      { contractId: "c2", authorId: "a1", titleId: "t2", titleName: "Book Two", advanceAmount: 1000, advanceRecouped: 1000, tenantId: "t1" }, // Fully recouped
-      { contractId: "c3", authorId: "a2", titleId: "t3", titleName: "Book Three", advanceAmount: 0, advanceRecouped: 0, tenantId: "t1" }, // No advance
+      {
+        contractId: "c1",
+        authorId: "a1",
+        titleId: "t1",
+        titleName: "Book One",
+        advanceAmount: 5000,
+        advanceRecouped: 2000,
+        tenantId: "t1",
+      },
+      {
+        contractId: "c2",
+        authorId: "a1",
+        titleId: "t2",
+        titleName: "Book Two",
+        advanceAmount: 1000,
+        advanceRecouped: 1000,
+        tenantId: "t1",
+      }, // Fully recouped
+      {
+        contractId: "c3",
+        authorId: "a2",
+        titleId: "t3",
+        titleName: "Book Three",
+        advanceAmount: 0,
+        advanceRecouped: 0,
+        tenantId: "t1",
+      }, // No advance
     ];
 
     const authors: AuthorRecord[] = [
@@ -438,7 +624,15 @@ describe("Advance Balance Calculation (AC-6)", () => {
 
   it("handles zero advances", () => {
     const contracts: ContractRecord[] = [
-      { contractId: "c1", authorId: "a1", titleId: "t1", titleName: "Book", advanceAmount: 0, advanceRecouped: 0, tenantId: "t1" },
+      {
+        contractId: "c1",
+        authorId: "a1",
+        titleId: "t1",
+        titleName: "Book",
+        advanceAmount: 0,
+        advanceRecouped: 0,
+        tenantId: "t1",
+      },
     ];
 
     const result = calculateAdvanceBalances(contracts, []);
@@ -448,7 +642,15 @@ describe("Advance Balance Calculation (AC-6)", () => {
 
   it("handles partial recoupment correctly", () => {
     const contracts: ContractRecord[] = [
-      { contractId: "c1", authorId: "a1", titleId: "t1", titleName: "Book", advanceAmount: 10000.5, advanceRecouped: 3500.25, tenantId: "t1" },
+      {
+        contractId: "c1",
+        authorId: "a1",
+        titleId: "t1",
+        titleName: "Book",
+        advanceAmount: 10000.5,
+        advanceRecouped: 3500.25,
+        tenantId: "t1",
+      },
     ];
 
     const authors: AuthorRecord[] = [
@@ -471,9 +673,24 @@ describe("Tenant Isolation Validation", () => {
 
   it("filters statements by tenant ID", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 100, periodEnd: new Date(), tenantId: "tenant-a" },
-      { authorId: "a1", netPayable: 200, periodEnd: new Date(), tenantId: "tenant-b" },
-      { authorId: "a2", netPayable: 300, periodEnd: new Date(), tenantId: "tenant-a" },
+      {
+        authorId: "a1",
+        netPayable: 100,
+        periodEnd: new Date(),
+        tenantId: "tenant-a",
+      },
+      {
+        authorId: "a1",
+        netPayable: 200,
+        periodEnd: new Date(),
+        tenantId: "tenant-b",
+      },
+      {
+        authorId: "a2",
+        netPayable: 300,
+        periodEnd: new Date(),
+        tenantId: "tenant-a",
+      },
     ];
 
     const tenantAStatements = filterByTenant(statements, "tenant-a");
@@ -485,8 +702,24 @@ describe("Tenant Isolation Validation", () => {
 
   it("filters contracts by tenant ID", () => {
     const contracts: ContractRecord[] = [
-      { contractId: "c1", authorId: "a1", titleId: "t1", titleName: "Book", advanceAmount: 5000, advanceRecouped: 0, tenantId: "tenant-a" },
-      { contractId: "c2", authorId: "a1", titleId: "t2", titleName: "Book 2", advanceAmount: 3000, advanceRecouped: 0, tenantId: "tenant-b" },
+      {
+        contractId: "c1",
+        authorId: "a1",
+        titleId: "t1",
+        titleName: "Book",
+        advanceAmount: 5000,
+        advanceRecouped: 0,
+        tenantId: "tenant-a",
+      },
+      {
+        contractId: "c2",
+        authorId: "a1",
+        titleId: "t2",
+        titleName: "Book 2",
+        advanceAmount: 3000,
+        advanceRecouped: 0,
+        tenantId: "tenant-b",
+      },
     ];
 
     const tenantAContracts = filterByTenant(contracts, "tenant-a");
@@ -497,7 +730,12 @@ describe("Tenant Isolation Validation", () => {
 
   it("returns empty for non-existent tenant", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 100, periodEnd: new Date(), tenantId: "tenant-a" },
+      {
+        authorId: "a1",
+        netPayable: 100,
+        periodEnd: new Date(),
+        tenantId: "tenant-a",
+      },
     ];
 
     const result = filterByTenant(statements, "tenant-c");
@@ -531,20 +769,30 @@ describe("Empty Data Handling", () => {
 
     const averagePaymentPerAuthor =
       authorsWithPendingPayments > 0
-        ? new Decimal(totalUnpaidLiability).div(authorsWithPendingPayments).toNumber()
+        ? new Decimal(totalUnpaidLiability)
+            .div(authorsWithPendingPayments)
+            .toNumber()
         : 0;
 
     // Simplified grouping
     const authorMap = new Map(authors.map((a) => [a.authorId, a]));
-    const groupedMap = new Map<string, { totalOwed: number; unpaidStatements: number; oldestStatement: Date }>();
+    const groupedMap = new Map<
+      string,
+      { totalOwed: number; unpaidStatements: number; oldestStatement: Date }
+    >();
     for (const s of statements) {
       const existing = groupedMap.get(s.authorId);
       if (existing) {
         existing.totalOwed += s.netPayable;
         existing.unpaidStatements++;
-        if (s.periodEnd < existing.oldestStatement) existing.oldestStatement = s.periodEnd;
+        if (s.periodEnd < existing.oldestStatement)
+          existing.oldestStatement = s.periodEnd;
       } else {
-        groupedMap.set(s.authorId, { totalOwed: s.netPayable, unpaidStatements: 1, oldestStatement: s.periodEnd });
+        groupedMap.set(s.authorId, {
+          totalOwed: s.netPayable,
+          unpaidStatements: 1,
+          oldestStatement: s.periodEnd,
+        });
       }
     }
 
@@ -594,14 +842,24 @@ describe("Empty Data Handling", () => {
 
   it("handles statements but no advances", () => {
     const statements: StatementRecord[] = [
-      { authorId: "a1", netPayable: 100, periodEnd: new Date("2024-06-30"), tenantId: "t1" },
+      {
+        authorId: "a1",
+        netPayable: 100,
+        periodEnd: new Date("2024-06-30"),
+        tenantId: "t1",
+      },
     ];
 
     const authors: AuthorRecord[] = [
       { authorId: "a1", authorName: "Author", paymentMethod: null },
     ];
 
-    const result = calculateSummary(statements, [], authors, new Map([["a1", 1]]));
+    const result = calculateSummary(
+      statements,
+      [],
+      authors,
+      new Map([["a1", 1]]),
+    );
 
     expect(result.totalUnpaidLiability).toBe(100);
     expect(result.authorsWithPendingPayments).toBe(1);
@@ -611,7 +869,15 @@ describe("Empty Data Handling", () => {
 
   it("handles advances but no statements", () => {
     const contracts: ContractRecord[] = [
-      { contractId: "c1", authorId: "a1", titleId: "t1", titleName: "Book", advanceAmount: 5000, advanceRecouped: 1000, tenantId: "t1" },
+      {
+        contractId: "c1",
+        authorId: "a1",
+        titleId: "t1",
+        titleName: "Book",
+        advanceAmount: 5000,
+        advanceRecouped: 1000,
+        tenantId: "t1",
+      },
     ];
 
     const authors: AuthorRecord[] = [

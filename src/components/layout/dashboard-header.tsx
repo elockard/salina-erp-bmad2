@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart,
   BookOpen,
+  ClipboardList,
   DollarSign,
   FileText,
   Hash,
@@ -50,6 +51,7 @@ const iconMap: Record<IconName, LucideIcon> = {
   RotateCcw,
   DollarSign,
   FileText,
+  ClipboardList,
   BarChart,
   Settings,
   Server,

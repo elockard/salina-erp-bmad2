@@ -1,4 +1,6 @@
 import { Activity, BookOpen, Users as UsersIcon } from "lucide-react";
+import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
+import { RefreshButton } from "@/components/dashboard/refresh-button";
 import {
   Card,
   CardContent,
@@ -6,8 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
-import { RefreshButton } from "@/components/dashboard/refresh-button";
 import type { User } from "@/db/schema";
 import type { DashboardStats } from "@/modules/dashboard/actions";
 import { ISBNPoolWidget } from "@/modules/isbn/components/isbn-pool-widget";

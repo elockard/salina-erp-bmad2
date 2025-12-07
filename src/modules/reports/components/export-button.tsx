@@ -40,7 +40,9 @@ export function ExportButton({ filters, disabled = false }: ExportButtonProps) {
 
       if (result.success) {
         // Create and trigger download (subtask 6.4, 6.5)
-        const blob = new Blob([result.data], { type: "text/csv;charset=utf-8;" });
+        const blob = new Blob([result.data], {
+          type: "text/csv;charset=utf-8;",
+        });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;

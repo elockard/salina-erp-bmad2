@@ -218,13 +218,14 @@ test.describe("Title Management - Detail View", () => {
     await expect(page.getByText("Publication Date")).toBeVisible();
   });
 
-  test("AC3: Author name links to author detail", async ({ page }) => {
+  test("AC3: Author name links to contact detail", async ({ page }) => {
     const titleItem = page.locator('[role="option"]').first();
     await titleItem.click();
 
-    // Author link should be present
-    const authorLink = page.locator('a[href*="/dashboard/authors"]');
-    await expect(authorLink).toBeVisible();
+    // Author link should be present (Story 0.5: Authors consolidated into Contacts)
+    // Link may point to /contacts or /authors (which redirects)
+    const authorLink = page.locator('a[href*="/contacts"], a[href*="/authors"]');
+    await expect(authorLink.first()).toBeVisible();
   });
 
   test("AC4: Formats section shows ISBN status", async ({ page }) => {

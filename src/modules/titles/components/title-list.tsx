@@ -52,37 +52,20 @@ function getStatusBadge(status: PublicationStatus) {
 }
 
 /**
- * Format icons for physical/ebook
- * AC 2: Format icons (P/E for Physical/Ebook)
+ * ISBN indicator badge
+ * Story 7.6: Simplified - removed Physical/Ebook distinction
+ * Shows whether the title has an ISBN assigned
  */
-function FormatIcons({
-  isbn,
-  eisbn,
-}: {
-  isbn: string | null;
-  eisbn: string | null;
-}) {
+function ISBNIndicator({ isbn }: { isbn: string | null }) {
+  if (!isbn) return null;
+
   return (
-    <div className="flex gap-1">
-      <span
-        className={cn(
-          "text-[10px] font-medium px-1 rounded",
-          isbn ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400",
-        )}
-        title={isbn ? `ISBN: ${isbn}` : "No physical ISBN"}
-      >
-        P
-      </span>
-      <span
-        className={cn(
-          "text-[10px] font-medium px-1 rounded",
-          eisbn ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-400",
-        )}
-        title={eisbn ? `eISBN: ${eisbn}` : "No ebook ISBN"}
-      >
-        E
-      </span>
-    </div>
+    <span
+      className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-100 text-blue-700"
+      title={`ISBN: ${isbn}`}
+    >
+      ISBN
+    </span>
   );
 }
 
@@ -218,7 +201,7 @@ export function TitleList({
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       {getStatusBadge(title.publication_status)}
-                      <FormatIcons isbn={title.isbn} eisbn={title.eisbn} />
+                      <ISBNIndicator isbn={title.isbn} />
                     </div>
                   </div>
                 </button>

@@ -14,9 +14,15 @@
  * - PieChart with Editorial Navy palette
  */
 
+import {
+  BarChart,
+  type BarChartDataPoint,
+} from "@/components/charts/bar-chart";
+import {
+  PieChart,
+  type PieChartDataPoint,
+} from "@/components/charts/pie-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, type BarChartDataPoint } from "@/components/charts/bar-chart";
-import { PieChart, type PieChartDataPoint } from "@/components/charts/pie-chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SalesReportResult } from "../types";
 
@@ -114,9 +120,10 @@ export function SalesReportCharts({
   const barChartData: BarChartDataPoint[] = data.rows
     .slice(0, 10) // Already sorted by revenue DESC from query
     .map((row) => ({
-      name: row.groupLabel.length > 20
-        ? `${row.groupLabel.substring(0, 20)}...`
-        : row.groupLabel,
+      name:
+        row.groupLabel.length > 20
+          ? `${row.groupLabel.substring(0, 20)}...`
+          : row.groupLabel,
       value: row.totalRevenue,
     }));
 
@@ -130,19 +137,24 @@ export function SalesReportCharts({
     pieChartData = data.rows.map((row) => ({
       name: row.groupLabel,
       value: row.totalRevenue,
-      percentage: totalRevenue > 0 ? (row.totalRevenue / totalRevenue) * 100 : 0,
+      percentage:
+        totalRevenue > 0 ? (row.totalRevenue / totalRevenue) * 100 : 0,
     }));
   } else {
     // Show top 5 and aggregate rest
     const top5 = data.rows.slice(0, 5);
     const otherRows = data.rows.slice(5);
-    const otherRevenue = otherRows.reduce((sum, row) => sum + row.totalRevenue, 0);
+    const otherRevenue = otherRows.reduce(
+      (sum, row) => sum + row.totalRevenue,
+      0,
+    );
 
     pieChartData = [
       ...top5.map((row) => ({
         name: row.groupLabel,
         value: row.totalRevenue,
-        percentage: totalRevenue > 0 ? (row.totalRevenue / totalRevenue) * 100 : 0,
+        percentage:
+          totalRevenue > 0 ? (row.totalRevenue / totalRevenue) * 100 : 0,
       })),
       {
         name: `Other (${otherRows.length})`,

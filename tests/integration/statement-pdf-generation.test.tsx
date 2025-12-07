@@ -110,6 +110,7 @@ function createMockStatementWithDetails(): StatementWithDetails {
     id: "statement-uuid-123",
     tenant_id: "tenant-uuid-456",
     author_id: "author-uuid-789",
+    contact_id: null, // Added for Story 7.3 migration compatibility
     contract_id: "contract-uuid-012",
     period_start: new Date("2024-10-01"),
     period_end: new Date("2024-12-31"),

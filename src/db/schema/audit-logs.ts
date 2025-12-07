@@ -66,6 +66,10 @@ export const auditResourceTypeValues = [
   "statement",
   "contract",
   "user",
+  "contact",
+  "isbn_prefix",
+  "invoice",
+  "payment",
 ] as const;
 
 export type AuditResourceType = (typeof auditResourceTypeValues)[number];

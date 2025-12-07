@@ -42,6 +42,8 @@ const mockAuthor = {
   email: "jane@example.com",
   portal_user_id: "user-1",
   is_active: true,
+  // For contacts query compatibility (Story 7.3 migration)
+  roles: [{ role: "author" }],
 };
 
 const _mockOtherAuthor = {
@@ -106,6 +108,9 @@ describe("Portal Statement Access", () => {
         authors: {
           findFirst: vi.fn().mockResolvedValue(mockAuthor),
         },
+        contacts: {
+          findFirst: vi.fn().mockResolvedValue(mockAuthor),
+        },
         statements: {
           findMany: vi.fn().mockResolvedValue([mockStatement]),
         },
@@ -119,8 +124,8 @@ describe("Portal Statement Access", () => {
       const { getMyStatements } = await import("@/modules/statements/queries");
       const result = await getMyStatements();
 
-      // Verify author lookup used portal_user_id
-      expect(mockDbQuery.authors.findFirst).toHaveBeenCalled();
+      // Verify contact lookup used portal_user_id (Story 7.3 migration)
+      expect(mockDbQuery.contacts.findFirst).toHaveBeenCalled();
 
       // Verify only author's statements returned
       expect(result).toHaveLength(1);
@@ -135,6 +140,9 @@ describe("Portal Statement Access", () => {
       const mockDbQuery = {
         authors: {
           findFirst: vi.fn().mockResolvedValue(null), // No author linked
+        },
+        contacts: {
+          findFirst: vi.fn().mockResolvedValue(null), // No contact linked
         },
         statements: {
           findMany: vi.fn(),
@@ -172,6 +180,9 @@ describe("Portal Statement Access", () => {
         authors: {
           findFirst: vi.fn().mockResolvedValue(mockAuthor),
         },
+        contacts: {
+          findFirst: vi.fn().mockResolvedValue(mockAuthor),
+        },
         statements: {
           findFirst: vi.fn().mockResolvedValue({
             ...mockStatement,
@@ -207,6 +218,9 @@ describe("Portal Statement Access", () => {
         authors: {
           findFirst: vi.fn().mockResolvedValue(mockAuthor),
         },
+        contacts: {
+          findFirst: vi.fn().mockResolvedValue(mockAuthor),
+        },
         statements: {
           findFirst: vi.fn().mockResolvedValue(null), // No match (ownership check)
         },
@@ -233,6 +247,9 @@ describe("Portal Statement Access", () => {
 
       const mockDbQuery = {
         authors: {
+          findFirst: vi.fn().mockResolvedValue(mockAuthor),
+        },
+        contacts: {
           findFirst: vi.fn().mockResolvedValue(mockAuthor),
         },
         statements: {
@@ -265,6 +282,9 @@ describe("Portal Statement Access", () => {
         authors: {
           findFirst: vi.fn().mockResolvedValue(mockAuthor),
         },
+        contacts: {
+          findFirst: vi.fn().mockResolvedValue(mockAuthor),
+        },
         statements: {
           findFirst: vi.fn().mockResolvedValue(null), // Not found (ownership check)
         },
@@ -292,6 +312,9 @@ describe("Portal Statement Access", () => {
 
       const mockDbQuery = {
         authors: {
+          findFirst: vi.fn().mockResolvedValue(mockAuthor),
+        },
+        contacts: {
           findFirst: vi.fn().mockResolvedValue(mockAuthor),
         },
         statements: {
@@ -340,6 +363,9 @@ describe("Portal Statement Access", () => {
         authors: {
           findFirst: vi.fn().mockResolvedValue(null), // No author linked
         },
+        contacts: {
+          findFirst: vi.fn().mockResolvedValue(null), // No contact linked
+        },
         statements: {
           findFirst: vi.fn(),
         },
@@ -371,6 +397,9 @@ describe("Portal Statement Access", () => {
 
       const mockDbQuery = {
         authors: {
+          findFirst: vi.fn().mockResolvedValue(mockAuthor),
+        },
+        contacts: {
           findFirst: vi.fn().mockResolvedValue(mockAuthor),
         },
         statements: {

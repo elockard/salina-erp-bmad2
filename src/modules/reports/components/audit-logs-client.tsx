@@ -298,7 +298,10 @@ export function AuditLogsClient({ users }: AuditLogsClientProps) {
 
             {/* Start Date */}
             <div>
-              <label htmlFor="audit-start-date" className="text-sm font-medium mb-1.5 block">
+              <label
+                htmlFor="audit-start-date"
+                className="text-sm font-medium mb-1.5 block"
+              >
                 Start Date
               </label>
               <Input
@@ -314,7 +317,10 @@ export function AuditLogsClient({ users }: AuditLogsClientProps) {
 
             {/* End Date */}
             <div>
-              <label htmlFor="audit-end-date" className="text-sm font-medium mb-1.5 block">
+              <label
+                htmlFor="audit-end-date"
+                className="text-sm font-medium mb-1.5 block"
+              >
                 End Date
               </label>
               <Input

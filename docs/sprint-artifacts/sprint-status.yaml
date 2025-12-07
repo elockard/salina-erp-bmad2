@@ -1,4 +1,4 @@
-# generated: 2025-11-21
+# generated: 2025-12-07
 # project: Salina ERP
 # project_key: salina-erp
 # tracking_system: file-system
@@ -9,6 +9,7 @@
 # Epic Status:
 #   - backlog: Epic exists in epic file but not contexted
 #   - contexted: Next epic tech context created by *epic-tech-context (required)
+#   - done: All stories in epic completed
 #
 # Story Status:
 #   - backlog: Story only exists in epic file
@@ -28,14 +29,17 @@
 # - SM typically drafts next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', dev reviews, then Dev moves to 'done'
 
-generated: 2025-11-21
+generated: 2025-12-07
 project: Salina ERP
 project_key: salina-erp
 tracking_system: file-system
 story_location: /Users/elockard/office/salina-erp-bmad2/docs/sprint-artifacts
 
 development_status:
-  epic-1: contexted
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 1: Foundation & Multi-Tenant Infrastructure (COMPLETE)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-1: done
   1-1-initialize-nextjs-project-with-tech-stack: done
   1-2-set-up-database-schema-and-multi-tenant-infrastructure: done
   1-3-implement-clerk-authentication-with-multi-tenant-middleware: done
@@ -44,9 +48,12 @@ development_status:
   1-6-build-user-invitation-and-management-system: done
   1-7-create-tenant-settings-configuration-page: done
   1-8-build-role-based-dashboard-landing-page: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: completed
 
-  epic-2: contexted
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 2: Author & Title Catalog Management (COMPLETE)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-2: done
   2-1-create-author-database-schema-and-data-model: done
   2-2-build-author-management-split-view-interface: done
   2-3-implement-author-portal-access-provisioning: done
@@ -58,7 +65,10 @@ development_status:
   2-9-implement-smart-isbn-assignment-with-row-locking: done
   epic-2-retrospective: completed
 
-  epic-3: contexted
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 3: Sales & Returns Processing (COMPLETE)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-3: done
   3-1-create-sales-transaction-database-schema: done
   3-2-build-sales-transaction-entry-form: done
   3-3-build-sales-transaction-history-view: done
@@ -68,34 +78,47 @@ development_status:
   3-7-build-returns-history-view-with-status-filtering: done
   epic-3-retrospective: completed
 
-  # INFRASTRUCTURE SPRINT - Blocking Epic 4
+  # ═══════════════════════════════════════════════════════════════════════════
+  # INFRASTRUCTURE SPRINT 1 - Blocking Epic 4
   # Decision: BMad (2025-11-26) - Epic 4 blocked until auth testing fixed
-  epic-0-infrastructure: contexted
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-0-infrastructure: done
   0-1-fix-auth-testing-infrastructure: done
 
-  epic-4: blocked  # Blocked pending Story 0.1 completion
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 4: Royalty Contracts & Calculation Engine (COMPLETE)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-4: done
   4-1-create-royalty-contract-database-schema-with-tiered-rates: done
   4-2-build-contract-creation-form-with-tiered-royalty-configuration: done
   4-3-build-contract-detail-view-and-management: done
   4-4-implement-tiered-royalty-calculation-engine: done
   4-5-build-manual-royalty-calculation-trigger-testing: done
-  epic-4-retrospective: done
+  epic-4-retrospective: completed
 
-  epic-5: contexted
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 5: Royalty Statements & Author Portal (COMPLETE)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-5: done
   5-1-create-statements-database-schema-and-pdf-storage: done
   5-2-implement-pdf-statement-generation-with-react-email: done
   5-3-build-statement-generation-wizard-for-finance: done
   5-4-implement-statement-email-delivery-with-resend: done
   5-5-build-statements-list-and-detail-view-for-finance: done
   5-6-build-author-portal-statement-access: done
-  epic-5-retrospective: done
+  epic-5-retrospective: completed
 
+  # ═══════════════════════════════════════════════════════════════════════════
   # INFRASTRUCTURE SPRINT 2 - Before Epic 6
   # Decision: BMad (2025-11-30) - Technical debt cleanup before Epic 6
+  # ═══════════════════════════════════════════════════════════════════════════
   0-2-fix-typescript-and-lint-issues: done
   0-3-strengthen-portal-tests: done
 
-  epic-6: contexted
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 6: Financial Reporting & Analytics (COMPLETE)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-6: done
   6-1-implement-revenue-and-liability-tracking: done
   6-2-build-sales-reports-with-multi-dimensional-filtering: done
   6-3-build-isbn-pool-status-report: done
@@ -103,4 +126,89 @@ development_status:
   6-5-implement-audit-logging-for-compliance: done
   6-6-build-background-job-monitoring-for-system-administration: done
   6-7-enhance-all-dashboards-with-role-specific-analytics: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: completed
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # INFRASTRUCTURE SPRINT 3 - Before Epic 7
+  # Decision: BMad (2025-12-05) - Fix pre-existing test failures and TypeScript errors
+  # ═══════════════════════════════════════════════════════════════════════════
+  0-4-fix-test-failures-and-typescript-errors: done
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # INFRASTRUCTURE SPRINT 4 - Epic 7 Retrospective Cleanup
+  # Decision: BMad (2025-12-06) - Consolidate Authors into Contacts (UX contradiction)
+  # ═══════════════════════════════════════════════════════════════════════════
+  0-5-consolidate-authors-into-contacts: done
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 7: Contact & ISBN Foundation (COMPLETE)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-7: done
+  7-1-create-unified-contact-database-schema: done
+  7-2-build-contact-management-interface: done
+  7-3-migrate-authors-to-contacts: done
+  7-4-implement-publisher-isbn-prefix-system: done
+  7-5-add-customizable-royalty-period-setting: done
+  7-6-remove-isbn-type-distinction: done
+  epic-7-retrospective: completed
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 8: Invoicing & Accounts Receivable (COMPLETE)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-8: done
+  8-1-create-invoice-database-schema: done
+  8-2-build-invoice-creation-form: done
+  8-3-build-invoice-list-and-detail-views: done
+  8-4-implement-payment-recording: done
+  8-5-build-accounts-receivable-dashboard: done
+  8-6-implement-invoice-pdf-generation-and-email: done
+  epic-8-retrospective: completed
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 9: Public Presence (COMPLETE)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-9: done
+  9-1-build-marketing-landing-page: done
+  9-2-add-contact-and-legal-pages: done
+  epic-9-retrospective: completed
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PHASE 2: GROWTH FEATURES
+  # Added: 2025-12-07 - Advanced royalty features, tax compliance, platform admin
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 10: Advanced Royalty Features
+  # Goal: Split royalties for co-authors, lifetime escalating rates
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-10: backlog
+  10-1-add-multiple-authors-per-title-with-ownership-percentages: backlog
+  10-2-implement-split-royalty-calculation-engine: backlog
+  10-3-generate-split-royalty-statements-for-co-authors: backlog
+  10-4-implement-escalating-lifetime-royalty-rates: backlog
+  epic-10-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 11: Tax & Compliance
+  # Goal: 1099-MISC generation for IRS compliance
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-11: backlog
+  11-1-collect-and-validate-tax-identification-information: backlog
+  11-2-track-annual-earnings-for-1099-threshold: backlog
+  11-3-generate-1099-misc-forms: backlog
+  epic-11-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 13: Platform Administration
+  # Goal: SaaS operator tools for tenant management and monitoring
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-13: backlog
+  13-1-implement-platform-administrator-authentication: backlog
+  13-2-build-tenant-list-and-search-interface: backlog
+  13-3-build-tenant-detail-view: backlog
+  13-4-implement-tenant-suspension-and-reactivation: backlog
+  13-5-build-platform-analytics-dashboard: backlog
+  13-6-implement-tenant-impersonation-for-support: backlog
+  13-7-build-system-health-and-job-monitoring: backlog
+  13-8-implement-platform-wide-announcements: backlog
+  epic-13-retrospective: optional

@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * ISBN Assignment Modal
+ * Story 7.6: Simplified - removed format (physical/ebook) selection
+ * ISBNs are now unified without type distinction
+ */
+
 import { AlertCircle, CheckCircle2, Hash, Info, Loader2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -12,16 +18,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { assignISBNToTitle } from "@/modules/isbn/actions";
 import { getNextAvailableISBN } from "@/modules/isbn/queries";
-import type { ISBNType, NextAvailableISBNPreview } from "@/modules/isbn/types";
+import type { NextAvailableISBNPreview } from "@/modules/isbn/types";
 
 interface ISBNAssignmentModalProps {
   titleId: string;
   titleName: string;
   currentISBN: string | null;
-  currentEISBN: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
@@ -31,74 +35,52 @@ interface ISBNAssignmentModalProps {
  * ISBN Assignment Modal for titles
  *
  * Story 2.9 - Smart ISBN Assignment with Row Locking
+ * Story 7.6 - Simplified: Removed format tabs, ISBNs are unified
  *
  * AC 1: Modal displays the specific ISBN-13 that will be assigned
- * AC 1: Shows available count for the selected format
+ * AC 1: Shows available count
  * AC 1: Displays title name for confirmation
  * AC 1: "Assign This ISBN" primary action button
- * AC 8: Shows "Already assigned" message if format already has ISBN
+ * AC 8: Shows "Already assigned" message if title already has ISBN
  */
 export function ISBNAssignmentModal({
   titleId,
   titleName,
   currentISBN,
-  currentEISBN,
   open,
   onOpenChange,
   onSuccess,
 }: ISBNAssignmentModalProps) {
-  const [activeTab, setActiveTab] = useState<ISBNType>("physical");
-  const [physicalPreview, setPhysicalPreview] =
-    useState<NextAvailableISBNPreview | null>(null);
-  const [ebookPreview, setEbookPreview] =
-    useState<NextAvailableISBNPreview | null>(null);
-  const [loadingPhysical, setLoadingPhysical] = useState(false);
-  const [loadingEbook, setLoadingEbook] = useState(false);
+  const [preview, setPreview] = useState<NextAvailableISBNPreview | null>(null);
+  const [loading, setLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // Load previews when modal opens
+  // Load preview when modal opens
   useEffect(() => {
-    if (open) {
-      // Load physical preview if not already assigned
-      if (!currentISBN) {
-        setLoadingPhysical(true);
-        startTransition(async () => {
-          const result = await getNextAvailableISBN("physical");
-          if (result.success) {
-            setPhysicalPreview(result.data);
-          }
-          setLoadingPhysical(false);
-        });
-      }
-
-      // Load ebook preview if not already assigned
-      if (!currentEISBN) {
-        setLoadingEbook(true);
-        startTransition(async () => {
-          const result = await getNextAvailableISBN("ebook");
-          if (result.success) {
-            setEbookPreview(result.data);
-          }
-          setLoadingEbook(false);
-        });
-      }
-    } else {
+    if (open && !currentISBN) {
+      setLoading(true);
+      startTransition(async () => {
+        // Story 7.6: Use "physical" as default format for backward compatibility
+        // The backend will ignore the format for unified ISBN assignment
+        const result = await getNextAvailableISBN("physical");
+        if (result.success) {
+          setPreview(result.data);
+        }
+        setLoading(false);
+      });
+    } else if (!open) {
       // Reset state when modal closes
-      setPhysicalPreview(null);
-      setEbookPreview(null);
+      setPreview(null);
     }
-  }, [open, currentISBN, currentEISBN]);
+  }, [open, currentISBN]);
 
-  const handleAssign = async (format: ISBNType) => {
+  const handleAssign = async () => {
     startTransition(async () => {
-      const result = await assignISBNToTitle({ titleId, format });
+      // Story 7.6: Unified ISBN assignment - no format needed
+      const result = await assignISBNToTitle({ titleId });
 
       if (result.success) {
-        toast.success(
-          `${format === "physical" ? "ISBN" : "eISBN"} assigned: ${
-            result.data.isbn_13
-          }`,
-        );
+        toast.success(`ISBN assigned: ${result.data.isbn_13}`);
         onSuccess();
         onOpenChange(false);
       } else {
@@ -107,26 +89,19 @@ export function ISBNAssignmentModal({
     });
   };
 
-  const renderFormatContent = (
-    format: ISBNType,
-    currentValue: string | null,
-    preview: NextAvailableISBNPreview | null,
-    loading: boolean,
-  ) => {
-    const formatLabel = format === "physical" ? "Physical ISBN" : "Ebook ISBN";
-
-    // Already assigned case (AC 8)
-    if (currentValue) {
+  const renderContent = () => {
+    // Already assigned case
+    if (currentISBN) {
       return (
         <div className="space-y-4">
           <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
             <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
             <div>
               <p className="font-medium text-blue-900">
-                This title already has a {formatLabel} assigned
+                This title already has an ISBN assigned
               </p>
               <code className="mt-2 block text-lg font-mono text-blue-800">
-                {formatISBN(currentValue)}
+                {formatISBN(currentISBN)}
               </code>
             </div>
           </div>
@@ -143,18 +118,16 @@ export function ISBNAssignmentModal({
       );
     }
 
-    // No available ISBNs (AC 5)
+    // No available ISBNs
     if (!preview) {
       return (
         <div className="space-y-4">
           <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-lg border border-amber-100">
             <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-amber-900">
-                No {formatLabel}s available
-              </p>
+              <p className="font-medium text-amber-900">No ISBNs available</p>
               <p className="text-sm text-amber-700 mt-1">
-                Import an ISBN block first to assign {formatLabel}s to titles.
+                Import an ISBN block first to assign ISBNs to titles.
               </p>
             </div>
           </div>
@@ -162,7 +135,7 @@ export function ISBNAssignmentModal({
       );
     }
 
-    // Available ISBN preview (AC 1)
+    // Available ISBN preview
     return (
       <div className="space-y-4">
         {/* Title confirmation */}
@@ -177,7 +150,7 @@ export function ISBNAssignmentModal({
         <div className="p-4 bg-muted/50 rounded-lg border">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-muted-foreground">
-              Next Available {formatLabel}
+              Next Available ISBN
             </span>
             <Badge
               variant="outline"
@@ -192,11 +165,7 @@ export function ISBNAssignmentModal({
         </div>
 
         {/* Assignment button */}
-        <Button
-          className="w-full"
-          onClick={() => handleAssign(format)}
-          disabled={isPending}
-        >
+        <Button className="w-full" onClick={handleAssign} disabled={isPending}>
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -230,47 +199,7 @@ export function ISBNAssignmentModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as ISBNType)}
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="physical" className="relative">
-              Physical
-              {currentISBN && (
-                <Badge variant="secondary" className="ml-2 text-xs px-1.5">
-                  ✓
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="ebook" className="relative">
-              Ebook
-              {currentEISBN && (
-                <Badge variant="secondary" className="ml-2 text-xs px-1.5">
-                  ✓
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="physical" className="mt-4">
-            {renderFormatContent(
-              "physical",
-              currentISBN,
-              physicalPreview,
-              loadingPhysical,
-            )}
-          </TabsContent>
-
-          <TabsContent value="ebook" className="mt-4">
-            {renderFormatContent(
-              "ebook",
-              currentEISBN,
-              ebookPreview,
-              loadingEbook,
-            )}
-          </TabsContent>
-        </Tabs>
+        {renderContent()}
       </DialogContent>
     </Dialog>
   );

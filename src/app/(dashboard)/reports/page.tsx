@@ -10,7 +10,7 @@
  * Permission: owner, admin, editor, finance (NOT author)
  */
 
-import { BarChart3, DollarSign, Hash, Shield, TrendingUp } from "lucide-react";
+import { BarChart3, CreditCard, DollarSign, Hash, Shield, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -65,6 +65,14 @@ const reportCards: ReportCard[] = [
     available: true,
   },
   {
+    title: "Accounts Receivable",
+    description:
+      "Track outstanding invoices, customer aging, and payment patterns.",
+    href: "/reports/accounts-receivable",
+    icon: <CreditCard className="h-8 w-8 text-[#1e3a5f]" />,
+    available: true,
+  },
+  {
     title: "Revenue Trends",
     description:
       "Monitor revenue performance over time with period comparisons.",
@@ -76,7 +84,12 @@ const reportCards: ReportCard[] = [
 
 export default async function ReportsPage() {
   // AC-10: Block Author role from accessing reports
-  const canAccess = await hasPermission(["owner", "admin", "editor", "finance"]);
+  const canAccess = await hasPermission([
+    "owner",
+    "admin",
+    "editor",
+    "finance",
+  ]);
   if (!canAccess) {
     redirect("/dashboard");
   }

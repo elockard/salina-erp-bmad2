@@ -21,97 +21,97 @@ so that I can ensure the platform is operating correctly and troubleshoot failur
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create admin module structure (AC: 1)
-  - [ ] 1.1 Create `src/modules/admin/` directory structure
-  - [ ] 1.2 Create `src/modules/admin/types.ts` with JobStatus, HealthCheckStatus interfaces
-  - [ ] 1.3 Create `src/modules/admin/components/index.ts` for component exports
+- [x] Task 1: Create admin module structure (AC: 1)
+  - [x] 1.1 Create `src/modules/admin/` directory structure
+  - [x] 1.2 Create `src/modules/admin/types.ts` with JobStatus, HealthCheckStatus interfaces
+  - [x] 1.3 Create `src/modules/admin/components/index.ts` for component exports
 
-- [ ] Task 2: Implement health check utilities (AC: 7, 8)
-  - [ ] 2.1 Create `src/lib/health-checks.ts` with health check functions
-  - [ ] 2.2 Implement `checkDatabaseHealth()` - execute `SELECT 1` query
-  - [ ] 2.3 Implement `checkClerkHealth()` - verify API key with users.getCount()
-  - [ ] 2.4 Implement `checkS3Health()` - headBucket() operation on configured bucket
-  - [ ] 2.5 Implement `checkResendHealth()` - API key validation
-  - [ ] 2.6 Implement `checkInngestHealth()` - dashboard API ping
-  - [ ] 2.7 Create `runAllHealthChecks()` aggregating all checks with status/latency
+- [x] Task 2: Implement health check utilities (AC: 7, 8)
+  - [x] 2.1 Create `src/lib/health-checks.ts` with health check functions
+  - [x] 2.2 Implement `checkDatabaseHealth()` - execute `SELECT 1` query
+  - [x] 2.3 Implement `checkClerkHealth()` - verify API key with users.getCount()
+  - [x] 2.4 Implement `checkS3Health()` - headBucket() operation on configured bucket
+  - [x] 2.5 Implement `checkResendHealth()` - API key validation
+  - [x] 2.6 Implement `checkInngestHealth()` - dashboard API ping
+  - [x] 2.7 Create `runAllHealthChecks()` aggregating all checks with status/latency
 
-- [ ] Task 3: Create system monitoring queries (AC: 2, 3, 4)
-  - [ ] 3.1 Create `src/modules/admin/queries.ts`
-  - [ ] 3.2 Implement `getJobSummary()` - counts for active, queued, completed, failed
-  - [ ] 3.3 Implement `getRecentJobs()` - paginated list with filters for status/type
-  - [ ] 3.4 Implement `getJobDetail()` - single job details including error info
-  - [ ] 3.5 Note: Job data sourced via Inngest SDK or API (not custom DB table)
+- [x] Task 3: Create system monitoring queries (AC: 2, 3, 4)
+  - [x] 3.1 Create `src/modules/admin/queries.ts`
+  - [x] 3.2 Implement `getJobSummary()` - counts for active, queued, completed, failed
+  - [x] 3.3 Implement `getRecentJobs()` - paginated list with filters for status/type
+  - [x] 3.4 Implement `getJobDetail()` - single job details including error info
+  - [x] 3.5 Note: Job data sourced via Inngest SDK or API (not custom DB table)
 
-- [ ] Task 4: Build system health status component (AC: 7, 8)
-  - [ ] 4.1 Create `src/modules/admin/components/health-status.tsx`
-  - [ ] 4.2 Display 5 service cards: Database, Clerk, S3, Resend, Inngest
-  - [ ] 4.3 Each card shows: Service name, Status indicator (green/red/yellow), Latency
-  - [ ] 4.4 Use green checkmark for healthy, red X for failure, yellow spinner for checking
-  - [ ] 4.5 Add refresh button to re-run health checks
-  - [ ] 4.6 Show last checked timestamp
+- [x] Task 4: Build system health status component (AC: 7, 8)
+  - [x] 4.1 Create `src/modules/admin/components/health-status.tsx`
+  - [x] 4.2 Display 5 service cards: Database, Clerk, S3, Resend, Inngest
+  - [x] 4.3 Each card shows: Service name, Status indicator (green/red/yellow), Latency
+  - [x] 4.4 Use green checkmark for healthy, red X for failure, yellow spinner for checking
+  - [x] 4.5 Add refresh button to re-run health checks
+  - [x] 4.6 Show last checked timestamp
 
-- [ ] Task 5: Build job summary cards component (AC: 2)
-  - [ ] 5.1 Create `src/modules/admin/components/job-summary-cards.tsx`
-  - [ ] 5.2 Display 4 stat cards: Active Jobs, Queued Jobs, Recent Completions (24h), Recent Failures (24h)
-  - [ ] 5.3 Use appropriate icons and colors (blue for active, amber for queued, green for completed, red for failed)
-  - [ ] 5.4 Cards clickable to filter job list
+- [x] Task 5: Build job summary cards component (AC: 2)
+  - [x] 5.1 Create `src/modules/admin/components/job-summary-cards.tsx`
+  - [x] 5.2 Display 4 stat cards: Active Jobs, Queued Jobs, Recent Completions (24h), Recent Failures (24h)
+  - [x] 5.3 Use appropriate icons and colors (blue for active, amber for queued, green for completed, red for failed)
+  - [x] 5.4 Cards clickable to filter job list
 
-- [ ] Task 6: Build job list table component (AC: 3, 4, 5)
-  - [ ] 6.1 Create `src/modules/admin/components/job-list.tsx`
-  - [ ] 6.2 Table columns: ID (truncated), Type, Status, Started, Duration, Actions
-  - [ ] 6.3 Status badge styling: running (blue pulse), completed (green), failed (red), queued (amber)
-  - [ ] 6.4 Duration calculated as completed_at - started_at (or ongoing for running)
-  - [ ] 6.5 Add filters: Job Type dropdown, Status dropdown
-  - [ ] 6.6 Implement pagination (20 per page default)
-  - [ ] 6.7 Add expandable row to show error message and retry count for failed jobs
+- [x] Task 6: Build job list table component (AC: 3, 4, 5)
+  - [x] 6.1 Create `src/modules/admin/components/job-list.tsx`
+  - [x] 6.2 Table columns: ID (truncated), Type, Status, Started, Duration, Actions
+  - [x] 6.3 Status badge styling: running (blue pulse), completed (green), failed (red), queued (amber)
+  - [x] 6.4 Duration calculated as completed_at - started_at (or ongoing for running)
+  - [x] 6.5 Add filters: Job Type dropdown, Status dropdown
+  - [x] 6.6 Implement pagination (20 per page default)
+  - [x] 6.7 Add expandable row to show error message and retry count for failed jobs
 
-- [ ] Task 7: Create Inngest dashboard link component (AC: 6)
-  - [ ] 7.1 Create `src/modules/admin/components/inngest-link.tsx`
-  - [ ] 7.2 External link button to Inngest dashboard URL
-  - [ ] 7.3 Include tooltip explaining "View detailed job logs in Inngest"
-  - [ ] 7.4 Open in new tab with proper rel attributes
+- [x] Task 7: Create Inngest dashboard link component (AC: 6)
+  - [x] 7.1 Create `src/modules/admin/components/inngest-link.tsx`
+  - [x] 7.2 External link button to Inngest dashboard URL
+  - [x] 7.3 Include tooltip explaining "View detailed job logs in Inngest"
+  - [x] 7.4 Open in new tab with proper rel attributes
 
-- [ ] Task 8: Create system monitoring page (AC: 1)
-  - [ ] 8.1 Create `src/app/(dashboard)/admin/system/page.tsx`
-  - [ ] 8.2 Add permission check: Owner, Admin roles only
-  - [ ] 8.3 Use dynamic = "force-dynamic" (real-time data, no caching)
-  - [ ] 8.4 Add page title "System Monitoring" and description
+- [x] Task 8: Create system monitoring page (AC: 1)
+  - [x] 8.1 Create `src/app/(dashboard)/admin/system/page.tsx`
+  - [x] 8.2 Add permission check: Owner, Admin roles only
+  - [x] 8.3 Use dynamic = "force-dynamic" (real-time data, no caching)
+  - [x] 8.4 Add page title "System Monitoring" and description
 
-- [ ] Task 9: Assemble system monitoring page (AC: 1-8)
-  - [ ] 9.1 Compose health status, job summary, job list components
-  - [ ] 9.2 Layout: Health status at top, Job summary cards row, Job list table below
-  - [ ] 9.3 Add Inngest dashboard link in header area
-  - [ ] 9.4 Add loading states for each section using Suspense boundaries
-  - [ ] 9.5 Add refresh button to reload all data
+- [x] Task 9: Assemble system monitoring page (AC: 1-8)
+  - [x] 9.1 Compose health status, job summary, job list components
+  - [x] 9.2 Layout: Health status at top, Job summary cards row, Job list table below
+  - [x] 9.3 Add Inngest dashboard link in header area
+  - [x] 9.4 Add loading states for each section using Suspense boundaries
+  - [x] 9.5 Add refresh button to reload all data
 
-- [ ] Task 10: Add navigation link (AC: 1)
-  - [ ] 10.1 Add "System" link to admin section of dashboard sidebar (Owner/Admin only)
-  - [ ] 10.2 Use Server icon from lucide-react
-  - [ ] 10.3 Verify navigation works correctly
+- [x] Task 10: Add navigation link (AC: 1)
+  - [x] 10.1 Add "System" link to admin section of dashboard sidebar (Owner/Admin only)
+  - [x] 10.2 Use Server icon from lucide-react
+  - [x] 10.3 Verify navigation works correctly
 
-- [ ] Task 11: Write unit tests for health checks (AC: 7, 8)
-  - [ ] 11.1 Create `tests/unit/health-checks.test.ts`
-  - [ ] 11.2 Test each health check function with mock services
-  - [ ] 11.3 Test runAllHealthChecks() aggregation
-  - [ ] 11.4 Test timeout handling for slow services
-  - [ ] 11.5 Test error handling for failed services
+- [x] Task 11: Write unit tests for health checks (AC: 7, 8)
+  - [x] 11.1 Create `tests/unit/health-checks.test.ts`
+  - [x] 11.2 Test each health check function with mock services
+  - [x] 11.3 Test runAllHealthChecks() aggregation
+  - [x] 11.4 Test timeout handling for slow services
+  - [x] 11.5 Test error handling for failed services
 
-- [ ] Task 12: Write integration tests for system page (AC: 1-8)
-  - [ ] 12.1 Create `tests/integration/system-monitoring.test.tsx`
-  - [ ] 12.2 Test health status component renders all 5 services
-  - [ ] 12.3 Test job summary cards display counts
-  - [ ] 12.4 Test job list renders with mock data
-  - [ ] 12.5 Test filter interactions
-  - [ ] 12.6 Test error states display correctly
-  - [ ] 12.7 Test permission enforcement
+- [x] Task 12: Write integration tests for system page (AC: 1-8)
+  - [x] 12.1 Create `tests/integration/system-monitoring.test.tsx`
+  - [x] 12.2 Test health status component renders all 5 services
+  - [x] 12.3 Test job summary cards display counts
+  - [x] 12.4 Test job list renders with mock data
+  - [x] 12.5 Test filter interactions
+  - [x] 12.6 Test error states display correctly
+  - [x] 12.7 Test permission enforcement
 
-- [ ] Task 13: Write E2E tests for system monitoring (AC: 1, 2, 6, 7)
-  - [ ] 13.1 Create `tests/e2e/system-monitoring.spec.ts`
-  - [ ] 13.2 Test page navigation to /admin/system
-  - [ ] 13.3 Test health status section displays
-  - [ ] 13.4 Test job summary cards display
-  - [ ] 13.5 Test Inngest dashboard link opens external page
-  - [ ] 13.6 Test permission enforcement (Admin/Owner access; others blocked)
+- [x] Task 13: Write E2E tests for system monitoring (AC: 1, 2, 6, 7)
+  - [x] 13.1 Create `tests/e2e/system-monitoring.spec.ts`
+  - [x] 13.2 Test page navigation to /admin/system
+  - [x] 13.3 Test health status section displays
+  - [x] 13.4 Test job summary cards display
+  - [x] 13.5 Test Inngest dashboard link opens external page
+  - [x] 13.6 Test permission enforcement (Admin/Owner access; others blocked)
 
 ## Dev Notes
 
@@ -384,13 +384,42 @@ For production: Use environment variable `INNGEST_DASHBOARD_URL`
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+N/A - Implementation completed successfully without major issues.
+
 ### Completion Notes List
 
+- All 13 tasks completed and verified by Senior Developer Review
+- Health checks implemented for Database, Clerk, S3, Resend, and Inngest services
+- System monitoring page accessible at /admin/system with Owner/Admin permission enforcement
+- Job monitoring displays summary cards and filterable job list with expandable error details
+- Inngest dashboard link provided for detailed job monitoring (Inngest SDK doesn't expose job status API directly)
+- Unit tests (18/18 pass), integration tests (15/16 pass - 1 async timing issue), E2E tests implemented
+- Documentation updated: Story 0.4 task completed checkboxes and Dev Agent Record populated
+
 ### File List
+
+**New Files Created:**
+- src/lib/health-checks.ts
+- src/modules/admin/types.ts
+- src/modules/admin/queries.ts
+- src/modules/admin/components/health-status.tsx
+- src/modules/admin/components/job-summary-cards.tsx
+- src/modules/admin/components/job-list.tsx
+- src/modules/admin/components/inngest-link.tsx
+- src/modules/admin/components/index.ts
+- src/app/(dashboard)/admin/system/page.tsx
+- src/app/(dashboard)/admin/system/client.tsx
+- tests/unit/health-checks.test.ts
+- tests/integration/system-monitoring.test.tsx
+- tests/e2e/system-monitoring.spec.ts
+
+**Modified Files:**
+- src/lib/dashboard-nav.ts (added System nav link)
+- src/components/layout/dashboard-sidebar.tsx (added System nav item)
 
 ---
 
@@ -508,8 +537,8 @@ Note: All tasks are implemented but checkboxes were not updated in the story fil
 ### Action Items
 
 **Code Changes Required:**
-- [ ] [Low] Update story task checkboxes from `[ ]` to `[x]` for all 13 tasks [file: docs/sprint-artifacts/6-6-build-background-job-monitoring-for-system-administration.md]
-- [ ] [Low] Populate Dev Agent Record sections (File List, Completion Notes, Agent Model) [file: docs/sprint-artifacts/6-6-build-background-job-monitoring-for-system-administration.md]
+- [x] [Low] Update story task checkboxes from `[ ]` to `[x]` for all 13 tasks [file: docs/sprint-artifacts/6-6-build-background-job-monitoring-for-system-administration.md] - COMPLETED by Story 0.4
+- [x] [Low] Populate Dev Agent Record sections (File List, Completion Notes, Agent Model) [file: docs/sprint-artifacts/6-6-build-background-job-monitoring-for-system-administration.md] - COMPLETED by Story 0.4
 - [ ] [Low] Fix integration test async timing issue for refresh button test [file: tests/integration/system-monitoring.test.tsx:216-269]
 
 **Advisory Notes:**

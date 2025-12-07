@@ -1,3 +1,16 @@
+/**
+ * @deprecated This module is deprecated. Use `@/modules/contacts/schema` instead.
+ *
+ * Author Schema (Validation)
+ *
+ * Story 0.5: Consolidate Authors into Contacts
+ *
+ * For new code, use the contacts module schema:
+ *   - import { createContactSchema } from "@/modules/contacts/schema"
+ *
+ * This schema is maintained for backward compatibility only.
+ */
+
 import { z } from "zod";
 
 /** Payment method enum for Zod validation */

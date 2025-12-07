@@ -47,39 +47,25 @@ test.describe("Royalty Liability Report Page - Summary Stats (AC 2, 3)", () => {
   });
 
   test("AC2: Total Unpaid Liability card is visible", async ({ page }) => {
-    await expect(
-      page.getByTestId("total-liability-card"),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Total Unpaid Liability"),
-    ).toBeVisible();
+    await expect(page.getByTestId("total-liability-card")).toBeVisible();
+    await expect(page.getByText("Total Unpaid Liability")).toBeVisible();
   });
 
-  test("AC2: Authors with Pending Payments card is visible", async ({ page }) => {
-    await expect(
-      page.getByTestId("authors-pending-card"),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Authors with Pending Payments"),
-    ).toBeVisible();
+  test("AC2: Authors with Pending Payments card is visible", async ({
+    page,
+  }) => {
+    await expect(page.getByTestId("authors-pending-card")).toBeVisible();
+    await expect(page.getByText("Authors with Pending Payments")).toBeVisible();
   });
 
   test("AC2: Oldest Unpaid Statement card is visible", async ({ page }) => {
-    await expect(
-      page.getByTestId("oldest-statement-card"),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Oldest Unpaid Statement"),
-    ).toBeVisible();
+    await expect(page.getByTestId("oldest-statement-card")).toBeVisible();
+    await expect(page.getByText("Oldest Unpaid Statement")).toBeVisible();
   });
 
   test("AC3: Average Payment per Author card is visible", async ({ page }) => {
-    await expect(
-      page.getByTestId("average-payment-card"),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Average Payment per Author"),
-    ).toBeVisible();
+    await expect(page.getByTestId("average-payment-card")).toBeVisible();
+    await expect(page.getByText("Average Payment per Author")).toBeVisible();
   });
 
   test("AC2, AC3: Stats cards display values", async ({ page }) => {
@@ -98,9 +84,7 @@ test.describe("Royalty Liability Report Page - Liability Table (AC 4, 5)", () =>
   });
 
   test("AC4: Liability by author table exists", async ({ page }) => {
-    await expect(
-      page.getByTestId("liability-by-author-table"),
-    ).toBeVisible();
+    await expect(page.getByTestId("liability-by-author-table")).toBeVisible();
   });
 
   test("AC4: Table has correct columns", async ({ page }) => {
@@ -147,9 +131,7 @@ test.describe("Royalty Liability Report Page - Advance Tracking (AC 6)", () => {
   });
 
   test("AC6: Advance tracking section exists", async ({ page }) => {
-    await expect(
-      page.getByTestId("advance-tracking-section"),
-    ).toBeVisible();
+    await expect(page.getByTestId("advance-tracking-section")).toBeVisible();
   });
 
   test("AC6: Advance section has correct title", async ({ page }) => {
@@ -161,7 +143,10 @@ test.describe("Royalty Liability Report Page - Advance Tracking (AC 6)", () => {
 
     // Check for column headers if data exists
     // These may not be visible if there are no active advances
-    const hasData = await section.locator("table").isVisible().catch(() => false);
+    const hasData = await section
+      .locator("table")
+      .isVisible()
+      .catch(() => false);
 
     if (hasData) {
       await expect(section.getByText("Author")).toBeVisible();
@@ -172,9 +157,7 @@ test.describe("Royalty Liability Report Page - Advance Tracking (AC 6)", () => {
       await expect(section.getByText("Progress")).toBeVisible();
     } else {
       // If no data, should show empty state
-      await expect(
-        section.getByTestId("no-active-advances"),
-      ).toBeVisible();
+      await expect(section.getByTestId("no-active-advances")).toBeVisible();
     }
   });
 });
@@ -195,7 +178,9 @@ test.describe("Royalty Liability Report Page - CSV Export (AC 7)", () => {
     const exportButton = page.getByTestId("liability-export-button");
 
     // Set up download listener
-    const downloadPromise = page.waitForEvent("download", { timeout: 5000 }).catch(() => null);
+    const downloadPromise = page
+      .waitForEvent("download", { timeout: 5000 })
+      .catch(() => null);
 
     // Click export
     await exportButton.click();
@@ -205,7 +190,9 @@ test.describe("Royalty Liability Report Page - CSV Export (AC 7)", () => {
 
     if (download) {
       // Verify filename pattern: royalty-liability-YYYY-MM-DD.csv
-      expect(download.suggestedFilename()).toMatch(/^royalty-liability-\d{4}-\d{2}-\d{2}\.csv$/);
+      expect(download.suggestedFilename()).toMatch(
+        /^royalty-liability-\d{4}-\d{2}-\d{2}\.csv$/,
+      );
     }
   });
 });
@@ -271,9 +258,7 @@ test.describe("Royalty Liability Report Page - Reports Index Integration", () =>
     await page.goto("/reports");
 
     // Should see Reports heading
-    await expect(
-      page.getByRole("heading", { name: "Reports" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Reports" })).toBeVisible();
 
     // Should have a card for Royalty Liability
     await expect(page.getByText("Royalty Liability")).toBeVisible();
@@ -294,9 +279,7 @@ test.describe("Royalty Liability Report Page - Responsive Design", () => {
     await page.goto("/reports/royalty-liability");
 
     // Stats should be visible (stacked on mobile)
-    await expect(
-      page.getByTestId("liability-summary-stats"),
-    ).toBeVisible();
+    await expect(page.getByTestId("liability-summary-stats")).toBeVisible();
   });
 
   test("Tablet layout - 2 column stats grid", async ({ page }) => {
@@ -304,9 +287,7 @@ test.describe("Royalty Liability Report Page - Responsive Design", () => {
     await page.goto("/reports/royalty-liability");
 
     // Stats should be visible in grid
-    await expect(
-      page.getByTestId("liability-summary-stats"),
-    ).toBeVisible();
+    await expect(page.getByTestId("liability-summary-stats")).toBeVisible();
   });
 
   test("Desktop layout - 4 column stats grid", async ({ page }) => {
@@ -327,7 +308,10 @@ test.describe("Royalty Liability Report Page - Empty State Handling", () => {
     await page.goto("/reports/royalty-liability");
 
     // Either data exists or empty state is shown
-    const hasData = await page.locator("table").isVisible().catch(() => false);
+    const hasData = await page
+      .locator("table")
+      .isVisible()
+      .catch(() => false);
 
     if (!hasData) {
       // Should show empty state message
@@ -357,7 +341,9 @@ test.describe("Royalty Liability Report Page - Navigation", () => {
     }
   });
 
-  test("Reports navigation item in sidebar links correctly", async ({ page }) => {
+  test("Reports navigation item in sidebar links correctly", async ({
+    page,
+  }) => {
     await page.goto("/dashboard");
 
     // Find Reports link in navigation
@@ -378,14 +364,19 @@ test.describe("Royalty Liability Report Page - Table Pagination", () => {
 
   test("Pagination controls are visible when data exists", async ({ page }) => {
     const table = page.getByTestId("liability-by-author-table");
-    const hasData = await table.locator("tbody tr").count().catch(() => 0);
+    const hasData = await table
+      .locator("tbody tr")
+      .count()
+      .catch(() => 0);
 
     if (hasData > 0) {
       // Should show page info
       await expect(page.getByText(/Page \d+ of \d+/)).toBeVisible();
 
       // Should have Previous/Next buttons
-      await expect(page.getByRole("button", { name: "Previous" })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Previous" }),
+      ).toBeVisible();
       await expect(page.getByRole("button", { name: "Next" })).toBeVisible();
     }
   });

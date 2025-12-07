@@ -37,6 +37,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { authors } from "./authors";
+import { contacts } from "./contacts";
 import { contracts } from "./contracts";
 import { tenants } from "./tenants";
 import { users } from "./users";
@@ -82,10 +83,20 @@ export const statements = pgTable(
     /**
      * Foreign key to authors table - the author receiving this statement
      * ON DELETE RESTRICT - cannot delete an author with statements
+     * @deprecated Use contact_id instead. Kept for migration rollback capability.
      */
     author_id: uuid("author_id")
       .notNull()
       .references(() => authors.id, { onDelete: "restrict" }),
+
+    /**
+     * Foreign key to contacts table - links statement to contact with author role
+     * Added in Story 7.3: Migrate Authors to Contacts
+     * Nullable initially for migration, then NOT NULL after population
+     */
+    contact_id: uuid("contact_id").references(() => contacts.id, {
+      onDelete: "restrict",
+    }),
 
     /**
      * Foreign key to contracts table - the contract for this statement

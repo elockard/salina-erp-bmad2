@@ -1,5 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
+import { RefreshButton } from "@/components/dashboard/refresh-button";
 import {
   Card,
   CardContent,
@@ -7,9 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
-import { RefreshButton } from "@/components/dashboard/refresh-button";
-import { authors } from "@/db/schema/authors";
+import { contacts } from "@/db/schema/contacts";
 import { getCurrentUser, getDb } from "@/lib/auth";
 import { PortalStatementList } from "@/modules/statements/components/portal-statement-list";
 import { getMyStatements } from "@/modules/statements/queries";
@@ -22,11 +22,12 @@ import { AuthorNextStatement } from "./components/author-next-statement";
  * Author Portal Landing Page
  *
  * Story 5.6 - Build Author Portal Statement Access
+ * Story 7.3 - Migrate Authors to Contacts
  *
  * AC-5.6.1: Portal accessible at /portal with simplified nav
  * AC-5.6.2: Statement list shows only author's own statements
  *
- * Previously Story 2.3 - Updated from placeholder to statement list
+ * Authors are now stored as contacts with role='author'.
  */
 export default async function PortalPage() {
   const user = await getCurrentUser();
@@ -36,17 +37,18 @@ export default async function PortalPage() {
     redirect("/sign-in");
   }
 
-  // Get author information linked to this portal user
+  // Get author contact linked to this portal user (Story 7.3)
   const db = await getDb();
-  const author = await db.query.authors.findFirst({
+  const contact = await db.query.contacts.findFirst({
     where: and(
-      eq(authors.portal_user_id, user.id),
-      eq(authors.is_active, true),
+      eq(contacts.portal_user_id, user.id),
+      eq(contacts.status, "active"),
     ),
+    with: { roles: true },
   });
 
-  // If no author linked, something went wrong
-  if (!author) {
+  // If no author contact linked, something went wrong
+  if (!contact || !contact.roles.some((r) => r.role === "author")) {
     return (
       <div className="space-y-6">
         <div className="text-center py-12">
@@ -61,6 +63,14 @@ export default async function PortalPage() {
     );
   }
 
+  // Map contact to author-like object for template compatibility
+  const author = {
+    id: contact.id,
+    name: `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "Unknown",
+    email: contact.email,
+    payment_method: (contact.payment_info as { method?: string } | null)?.method || null,
+  };
+
   // Fetch author's statements
   const statements = await getMyStatements();
 
@@ -73,8 +83,8 @@ export default async function PortalPage() {
             Your Royalty Statements
           </h1>
           <p className="text-muted-foreground mt-2">
-            Welcome back, {author.name}. View and download your royalty statements
-            below.
+            Welcome back, {author.name}. View and download your royalty
+            statements below.
           </p>
         </div>
         <RefreshButton />

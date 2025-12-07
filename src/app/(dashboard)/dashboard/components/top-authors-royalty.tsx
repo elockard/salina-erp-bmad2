@@ -1,6 +1,6 @@
-import { getFinanceDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/charts/bar-chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getFinanceDashboardData } from "@/modules/reports/queries";
 
 /**
  * Top Authors by Royalty Widget
@@ -25,7 +25,9 @@ export async function TopAuthorsRoyalty() {
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Top Authors by Royalty</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Top Authors by Royalty
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
@@ -39,7 +41,9 @@ export async function TopAuthorsRoyalty() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Top Authors by Royalty</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Top Authors by Royalty
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <BarChart

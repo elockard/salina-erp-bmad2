@@ -58,7 +58,9 @@ describe("Owner/Admin Dashboard Data (AC-1)", () => {
     });
 
     it("handles single month with single sale", () => {
-      const sales: MonthlySale[] = [{ yearMonth: "2025-01", revenue: "100.00" }];
+      const sales: MonthlySale[] = [
+        { yearMonth: "2025-01", revenue: "100.00" },
+      ];
       const result = aggregateRevenueTrend(sales);
 
       expect(result).toHaveLength(1);
@@ -402,14 +404,17 @@ describe("Editor Dashboard Data (AC-3)", () => {
       quarterStart: Date,
     ): number => {
       return titles.filter(
-        (t) =>
-          t.assignedByUserId === userId && t.assignedAt >= quarterStart,
+        (t) => t.assignedByUserId === userId && t.assignedAt >= quarterStart,
       ).length;
     };
 
     it("counts titles assigned by user this quarter", () => {
       const now = new Date();
-      const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+      const quarterStart = new Date(
+        now.getFullYear(),
+        Math.floor(now.getMonth() / 3) * 3,
+        1,
+      );
 
       const titles: Title[] = [
         { titleId: "t1", assignedByUserId: "user1", assignedAt: now },
@@ -423,7 +428,11 @@ describe("Editor Dashboard Data (AC-3)", () => {
 
     it("excludes titles from previous quarters", () => {
       const now = new Date();
-      const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+      const quarterStart = new Date(
+        now.getFullYear(),
+        Math.floor(now.getMonth() / 3) * 3,
+        1,
+      );
       const lastQuarter = new Date(quarterStart);
       lastQuarter.setMonth(lastQuarter.getMonth() - 3);
 
@@ -443,10 +452,7 @@ describe("Editor Dashboard Data (AC-3)", () => {
       assignedByUserId: string;
     }
 
-    const countMyIsbnAssignments = (
-      isbns: ISBN[],
-      userId: string,
-    ): number => {
+    const countMyIsbnAssignments = (isbns: ISBN[], userId: string): number => {
       return isbns.filter((isbn) => isbn.assignedByUserId === userId).length;
     };
 
@@ -462,9 +468,7 @@ describe("Editor Dashboard Data (AC-3)", () => {
     });
 
     it("returns 0 for no assignments", () => {
-      const isbns: ISBN[] = [
-        { isbnId: "isbn1", assignedByUserId: "user2" },
-      ];
+      const isbns: ISBN[] = [{ isbnId: "isbn1", assignedByUserId: "user2" }];
       const result = countMyIsbnAssignments(isbns, "user1");
 
       expect(result).toBe(0);
@@ -486,10 +490,7 @@ describe("Author Portal Dashboard Data (AC-4)", () => {
 
       for (const item of data) {
         const current = earningsMap.get(item.quarter) ?? new Decimal(0);
-        earningsMap.set(
-          item.quarter,
-          current.plus(new Decimal(item.earnings)),
-        );
+        earningsMap.set(item.quarter, current.plus(new Decimal(item.earnings)));
       }
 
       return Array.from(earningsMap.entries())

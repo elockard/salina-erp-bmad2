@@ -1,5 +1,7 @@
 import { BookOpen, DollarSign, Users } from "lucide-react";
 import Link from "next/link";
+import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
+import { RefreshButton } from "@/components/dashboard/refresh-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,8 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
-import { RefreshButton } from "@/components/dashboard/refresh-button";
 import type { User } from "@/db/schema";
 import type { DashboardStats } from "@/modules/dashboard/actions";
 import { ISBNPoolWidget } from "@/modules/isbn/components/isbn-pool-widget";

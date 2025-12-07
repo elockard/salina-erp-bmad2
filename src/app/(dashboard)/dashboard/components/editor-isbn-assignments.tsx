@@ -1,6 +1,6 @@
-import { getEditorDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hash } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getEditorDashboardData } from "@/modules/reports/queries";
 
 /**
  * Editor ISBN Assignments Widget
@@ -16,20 +16,22 @@ interface EditorIsbnAssignmentsProps {
   userId: string;
 }
 
-export async function EditorIsbnAssignments({ userId }: EditorIsbnAssignmentsProps) {
+export async function EditorIsbnAssignments({
+  userId,
+}: EditorIsbnAssignmentsProps) {
   const data = await getEditorDashboardData(userId);
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">My ISBN Assignments</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          My ISBN Assignments
+        </CardTitle>
         <Hash className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{data.myISBNAssignments}</div>
-        <p className="text-xs text-muted-foreground">
-          ISBNs you have assigned
-        </p>
+        <p className="text-xs text-muted-foreground">ISBNs you have assigned</p>
       </CardContent>
     </Card>
   );

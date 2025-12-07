@@ -353,7 +353,9 @@ describe("ISBN Assignment History Grouping (AC-5, subtask 3.2)", () => {
     expect(result).toHaveLength(6);
 
     // Current month should have 2
-    const currentMonth = result.find((r) => r.month === format(now, "MMM yyyy"));
+    const currentMonth = result.find(
+      (r) => r.month === format(now, "MMM yyyy"),
+    );
     expect(currentMonth?.assigned).toBe(2);
 
     // Last month should have 1

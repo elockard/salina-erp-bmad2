@@ -94,13 +94,13 @@ export function TitleAutocomplete({
   }, [searchQuery]);
 
   // Handle title selection
+  // Story 7.6: Removed has_eisbn - ISBNs are unified without type distinction
   const handleSelect = (title: TitleForSalesSelect) => {
     onSelect({
       id: title.id,
       title: title.title,
       author_name: title.author_name,
       has_isbn: title.has_isbn,
-      has_eisbn: title.has_eisbn,
     });
     setOpen(false);
     setSearchQuery("");
@@ -112,11 +112,11 @@ export function TitleAutocomplete({
     setSearchQuery("");
   };
 
-  // Format badges showing available formats
+  // Format badges showing ISBN status
+  // Story 7.6: Simplified - just show if ISBN is assigned
   const formatBadges = (title: TitleForSalesSelect) => {
     const badges: string[] = [];
-    if (title.has_isbn) badges.push("Physical");
-    if (title.has_eisbn) badges.push("Ebook");
+    if (title.has_isbn) badges.push("ISBN");
     return badges;
   };
 

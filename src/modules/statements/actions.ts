@@ -1,7 +1,10 @@
 /**
- * Statement Server Actions
+ * Statement Server Actions (Contact-Based)
+ *
+ * Story 7.3: Migrate Authors to Contacts
  *
  * Server-side actions for statement operations.
+ * Authors are now queried from the contacts table with role='author'.
  * All actions enforce tenant isolation and role-based access control.
  *
  * Story: 5.2 - Implement PDF Statement Generation
@@ -17,6 +20,7 @@
  * - src/inngest/generate-statement-pdf.ts (background job)
  * - src/inngest/generate-statements-batch.ts (batch generation job)
  * - src/lib/auth.ts (permission utilities)
+ * - actions-legacy.ts (original authors table implementation)
  */
 
 "use server";
@@ -24,16 +28,17 @@
 import { and, eq } from "drizzle-orm";
 import { adminDb } from "@/db";
 import { authors } from "@/db/schema/authors";
+import { contacts, contactRoles } from "@/db/schema/contacts";
 import { contracts } from "@/db/schema/contracts";
 import { statements } from "@/db/schema/statements";
 import { inngest } from "@/inngest/client";
+import { logAuditEvent } from "@/lib/audit";
 import {
   getCurrentTenantId,
   getCurrentUser,
   getDb,
   requirePermission,
 } from "@/lib/auth";
-import { logAuditEvent } from "@/lib/audit";
 import type { ActionResult } from "@/lib/types";
 import { calculateRoyaltyForPeriod } from "@/modules/royalties/calculator";
 import { sendStatementEmail } from "./email-service";
@@ -211,6 +216,7 @@ export async function getStatementPDFUrl(
  * Get authors with pending royalties for wizard selection
  *
  * Story 5.3 AC-5.3.3: Author selection with pending royalties display
+ * Story 7.3: Now queries contacts table with author role
  * Required roles: finance, admin, owner
  *
  * @param params.periodStart - Start of period for royalty estimate
@@ -227,20 +233,29 @@ export async function getAuthorsWithPendingRoyalties(params: {
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
 
-    // Get all active authors with contracts in the tenant
-    const authorList = await db.query.authors.findMany({
-      where: and(eq(authors.tenant_id, tenantId), eq(authors.is_active, true)),
+    // Get all active contacts with author role in the tenant
+    const contactList = await db.query.contacts.findMany({
+      where: and(
+        eq(contacts.tenant_id, tenantId),
+        eq(contacts.status, "active"),
+      ),
+      with: { roles: true },
     });
 
-    // For each author, get their contract and estimate pending royalties
+    // Filter to only contacts with author role
+    const authorContacts = contactList.filter((c) =>
+      c.roles.some((r) => r.role === "author"),
+    );
+
+    // For each author (contact), get their contract and estimate pending royalties
     const authorsWithRoyalties: AuthorWithPendingRoyalties[] = [];
 
-    for (const author of authorList) {
+    for (const contact of authorContacts) {
       // Check if author has a contract
       const contract = await db.query.contracts.findFirst({
         where: and(
           eq(contracts.tenant_id, tenantId),
-          eq(contracts.author_id, author.id),
+          eq(contracts.author_id, contact.id),
           eq(contracts.status, "active"),
         ),
       });
@@ -252,7 +267,7 @@ export async function getAuthorsWithPendingRoyalties(params: {
       let pendingRoyalties = 0;
       try {
         const result = await calculateRoyaltyForPeriod(
-          author.id,
+          contact.id,
           tenantId,
           params.periodStart,
           params.periodEnd,
@@ -265,10 +280,12 @@ export async function getAuthorsWithPendingRoyalties(params: {
         pendingRoyalties = 0;
       }
 
+      // Map contact fields to author format
+      const name = `${contact.first_name || ""} ${contact.last_name || ""}`.trim();
       authorsWithRoyalties.push({
-        id: author.id,
-        name: author.name,
-        email: author.email,
+        id: contact.id,
+        name: name || "Unknown",
+        email: contact.email,
         pendingRoyalties,
       });
     }
@@ -305,11 +322,12 @@ export async function getAuthorsWithPendingRoyalties(params: {
  * Preview statement calculations without persisting
  *
  * Story 5.3 AC-5.3.4: Preview step shows calculation estimates
+ * Story 7.3: Now queries contacts table with author role
  * Required roles: finance, admin, owner
  *
  * @param params.periodStart - Start of period
  * @param params.periodEnd - End of period
- * @param params.authorIds - Author IDs to calculate for
+ * @param params.authorIds - Author IDs (now contact IDs) to calculate for
  * @returns Preview calculations for each author
  */
 export async function previewStatementCalculations(params: {
@@ -326,12 +344,20 @@ export async function previewStatementCalculations(params: {
     const previews: PreviewCalculation[] = [];
 
     for (const authorId of params.authorIds) {
-      // Get author details
-      const author = await db.query.authors.findFirst({
-        where: and(eq(authors.id, authorId), eq(authors.tenant_id, tenantId)),
+      // Get contact with author role details
+      const contact = await db.query.contacts.findFirst({
+        where: and(
+          eq(contacts.id, authorId),
+          eq(contacts.tenant_id, tenantId),
+        ),
+        with: { roles: true },
       });
 
-      if (!author) continue;
+      // Verify contact exists and has author role
+      if (!contact || !contact.roles.some((r) => r.role === "author")) continue;
+
+      // Map contact to author name
+      const authorName = `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "Unknown";
 
       // Calculate royalties
       const result = await calculateRoyaltyForPeriod(
@@ -345,7 +371,7 @@ export async function previewStatementCalculations(params: {
         // Include with zeros and a warning
         previews.push({
           authorId,
-          authorName: author.name,
+          authorName,
           totalSales: 0,
           totalReturns: 0,
           royaltyEarned: 0,
@@ -395,7 +421,7 @@ export async function previewStatementCalculations(params: {
 
       previews.push({
         authorId,
-        authorName: author.name,
+        authorName,
         totalSales,
         totalReturns,
         royaltyEarned: calc.totalRoyaltyEarned,
@@ -621,7 +647,10 @@ export async function resendStatementEmail(
       resourceType: "statement",
       resourceId: statementId,
       changes: {
-        before: { status: statement.status, email_sent_at: statement.email_sent_at },
+        before: {
+          status: statement.status,
+          email_sent_at: statement.email_sent_at,
+        },
         after: { status: "sent", email_sent_at: new Date().toISOString() },
       },
       metadata: {
@@ -668,6 +697,7 @@ export async function resendStatementEmail(
  *
  * AC-5.6.4: Download PDF button generates presigned S3 URL (15-minute expiry)
  * AC-5.6.5: RLS prevents access to other authors' data
+ * Story 7.3: Uses legacy authors table during transition, will migrate to contacts
  *
  * Required role: author (portal user)
  *
@@ -689,6 +719,7 @@ export async function getMyStatementPDFUrl(
     }
 
     // Find author linked to this portal user
+    // Story 7.3: Uses legacy authors table during transition
     const author = await db.query.authors.findFirst({
       where: and(
         eq(authors.portal_user_id, user.id),

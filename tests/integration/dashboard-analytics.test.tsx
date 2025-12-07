@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * Integration Tests for Dashboard Analytics Widgets
@@ -23,11 +23,9 @@ vi.mock("next/navigation", () => ({
 
 // Mock recharts (complex SVG rendering)
 vi.mock("recharts", () => ({
-  ResponsiveContainer: ({
-    children,
-  }: {
-    children: React.ReactNode;
-  }) => <div data-testid="responsive-container">{children}</div>,
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
   AreaChart: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="area-chart">{children}</div>
   ),
@@ -51,10 +49,14 @@ vi.mock("recharts", () => ({
 // Mock lucide-react
 vi.mock("lucide-react", () => ({
   AlertCircle: () => <span data-testid="icon-alert">Alert</span>,
-  AlertTriangle: () => <span data-testid="icon-alert-triangle">AlertTriangle</span>,
+  AlertTriangle: () => (
+    <span data-testid="icon-alert-triangle">AlertTriangle</span>
+  ),
   RefreshCw: () => <span data-testid="icon-refresh">Refresh</span>,
   TrendingUp: () => <span data-testid="icon-trending">TrendingUp</span>,
-  TrendingDown: () => <span data-testid="icon-trending-down">TrendingDown</span>,
+  TrendingDown: () => (
+    <span data-testid="icon-trending-down">TrendingDown</span>
+  ),
   Calendar: () => <span data-testid="icon-calendar">Calendar</span>,
   BookOpen: () => <span data-testid="icon-book">Book</span>,
   Hash: () => <span data-testid="icon-hash">Hash</span>,
@@ -63,10 +65,10 @@ vi.mock("lucide-react", () => ({
 
 // Import components after mocks
 import {
-  DashboardChartWrapper,
-  ChartSkeleton,
-  WidgetError,
   ChartErrorBoundary,
+  ChartSkeleton,
+  DashboardChartWrapper,
+  WidgetError,
 } from "@/components/charts/dashboard-chart-wrapper";
 import { RefreshButton } from "@/components/dashboard/refresh-button";
 
@@ -210,7 +212,9 @@ describe("DashboardChartWrapper Component (AC-6, AC-7)", () => {
     });
 
     it("uses custom fallback when provided", () => {
-      const customFallback = <div data-testid="custom-error">Custom error UI</div>;
+      const customFallback = (
+        <div data-testid="custom-error">Custom error UI</div>
+      );
 
       render(
         <ChartErrorBoundary title="Widget" fallback={customFallback}>

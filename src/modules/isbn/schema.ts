@@ -2,7 +2,8 @@ import { z } from "zod";
 
 /**
  * ISBN type enum for Zod validation
- * Matches database enum: physical, ebook
+ * @deprecated Story 7.6: ISBN type distinction removed. ISBNs are unified without type.
+ * Kept for backward compatibility with existing data.
  */
 export const isbnTypeSchema = z.enum(["physical", "ebook"]);
 
@@ -41,12 +42,11 @@ export const isbn13Schema = z
 /**
  * Zod schema for creating/importing an ISBN
  * Used during CSV import and manual ISBN entry
+ * Story 7.6: Removed type field - ISBNs are unified without type distinction
  * - isbn_13 is required and must be valid ISBN-13 format
- * - type is required (physical or ebook)
  */
 export const createIsbnSchema = z.object({
   isbn_13: isbn13Schema,
-  type: isbnTypeSchema,
 });
 
 /**
@@ -71,13 +71,12 @@ export const assignIsbnSchema = z.object({
 /**
  * Zod schema for ISBN assignment input
  * Story 2.9 - Smart ISBN Assignment with Row Locking
+ * Story 7.6 - Removed format field (ISBNs are unified)
  * Used by assignISBNToTitle Server Action
  * - titleId is the target title (valid UUID)
- * - format specifies physical or ebook ISBN pool
  */
 export const assignISBNInputSchema = z.object({
   titleId: z.string().uuid("Invalid title ID"),
-  format: isbnTypeSchema,
 });
 
 /** Input type inferred from assignISBNInputSchema */
@@ -93,10 +92,10 @@ export const updateIsbnStatusSchema = z.object({
 
 /**
  * Zod schema for filtering ISBN pool list
+ * Story 7.6: Removed type filter - ISBNs are unified without type distinction
  */
 export const isbnFilterSchema = z.object({
   search: z.string().optional(),
-  type: isbnTypeSchema.optional(),
   status: isbnStatusSchema.optional(),
   assigned_to_title_id: z.string().uuid().optional().nullable(),
 });

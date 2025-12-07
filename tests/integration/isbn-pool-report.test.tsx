@@ -51,7 +51,9 @@ vi.mock("lucide-react", () => ({
   Book: () => <span data-testid="icon-book">Book</span>,
   Calendar: () => <span data-testid="icon-calendar">Calendar</span>,
   Hash: () => <span data-testid="icon-hash">Hash</span>,
-  TrendingDown: () => <span data-testid="icon-trending-down">TrendingDown</span>,
+  TrendingDown: () => (
+    <span data-testid="icon-trending-down">TrendingDown</span>
+  ),
   TrendingUp: () => <span data-testid="icon-trending-up">TrendingUp</span>,
   Upload: () => <span data-testid="icon-upload">Upload</span>,
 }));
@@ -78,52 +80,44 @@ import { ISBNPoolAlert } from "@/modules/reports/components/isbn-pool-alert";
 import { ISBNPoolCharts } from "@/modules/reports/components/isbn-pool-charts";
 import { ISBNPoolInsights } from "@/modules/reports/components/isbn-pool-insights";
 import { ISBNPoolStats } from "@/modules/reports/components/isbn-pool-stats";
-import type { ISBNAssignmentHistoryItem, ISBNPoolMetrics } from "@/modules/reports/types";
+import type {
+  ISBNAssignmentHistoryItem,
+  ISBNPoolMetrics,
+} from "@/modules/reports/types";
 
 // Test fixtures
+// Story 7.6: Updated to unified ISBN metrics (no physical/ebook breakdown)
 const mockMetricsNormal: ISBNPoolMetrics = {
-  physical: { available: 25, assigned: 50, total: 75 },
-  ebook: { available: 30, assigned: 20, total: 50 },
+  available: 55,
+  assigned: 70,
+  total: 125,
   utilizationPercent: 56,
   burnRate: 4.2,
   estimatedRunout: new Date("2026-06-01"),
 };
 
-const mockMetricsLowPhysical: ISBNPoolMetrics = {
-  physical: { available: 5, assigned: 70, total: 75 },
-  ebook: { available: 30, assigned: 20, total: 50 },
-  utilizationPercent: 72,
+const mockMetricsLow: ISBNPoolMetrics = {
+  available: 5,
+  assigned: 120,
+  total: 125,
+  utilizationPercent: 96,
   burnRate: 4.2,
   estimatedRunout: new Date("2026-01-01"),
 };
 
-const mockMetricsLowEbook: ISBNPoolMetrics = {
-  physical: { available: 25, assigned: 50, total: 75 },
-  ebook: { available: 3, assigned: 47, total: 50 },
-  utilizationPercent: 77.6,
-  burnRate: 4.2,
-  estimatedRunout: new Date("2026-02-01"),
-};
-
-const mockMetricsLowBoth: ISBNPoolMetrics = {
-  physical: { available: 5, assigned: 70, total: 75 },
-  ebook: { available: 8, assigned: 42, total: 50 },
-  utilizationPercent: 89.6,
-  burnRate: 6.5,
-  estimatedRunout: new Date("2025-08-01"),
-};
-
 const mockMetricsEmpty: ISBNPoolMetrics = {
-  physical: { available: 0, assigned: 0, total: 0 },
-  ebook: { available: 0, assigned: 0, total: 0 },
+  available: 0,
+  assigned: 0,
+  total: 0,
   utilizationPercent: 0,
   burnRate: 0,
   estimatedRunout: null,
 };
 
 const mockMetricsZeroBurnRate: ISBNPoolMetrics = {
-  physical: { available: 50, assigned: 0, total: 50 },
-  ebook: { available: 30, assigned: 0, total: 30 },
+  available: 80,
+  assigned: 0,
+  total: 80,
   utilizationPercent: 0,
   burnRate: 0,
   estimatedRunout: null,
@@ -148,30 +142,23 @@ const emptyHistory: ISBNAssignmentHistoryItem[] = [
 ];
 
 describe("ISBNPoolStats Component (AC-2, AC-3)", () => {
+  // Story 7.6: Updated tests for unified ISBN stats (no physical/ebook breakdown)
   describe("Stats Cards Display (subtask 10.6)", () => {
-    it("renders physical ISBN card with correct data", () => {
+    it("renders ISBN pool card with correct data", () => {
       render(<ISBNPoolStats metrics={mockMetricsNormal} />);
 
-      expect(screen.getByTestId("physical-isbn-card")).toBeTruthy();
-      expect(screen.getByText("Physical ISBNs")).toBeTruthy();
-      expect(screen.getByText("75")).toBeTruthy(); // total
-    });
-
-    it("renders ebook ISBN card with correct data", () => {
-      render(<ISBNPoolStats metrics={mockMetricsNormal} />);
-
-      expect(screen.getByTestId("ebook-isbn-card")).toBeTruthy();
-      expect(screen.getByText("Ebook ISBNs")).toBeTruthy();
-      // The total "50" appears on the card (may appear multiple times so use getAllByText)
-      const fiftyElements = screen.getAllByText("50");
-      expect(fiftyElements.length).toBeGreaterThan(0);
+      expect(screen.getByTestId("isbn-pool-card")).toBeTruthy();
+      expect(screen.getByText("ISBN Pool")).toBeTruthy();
+      // Total appears in both cards, so use getAllByText
+      const totalElements = screen.getAllByText("125");
+      expect(totalElements.length).toBeGreaterThan(0);
     });
 
     it("renders utilization card with percentage", () => {
       render(<ISBNPoolStats metrics={mockMetricsNormal} />);
 
       expect(screen.getByTestId("utilization-card")).toBeTruthy();
-      expect(screen.getByText("Overall Utilization")).toBeTruthy();
+      expect(screen.getByText("Utilization")).toBeTruthy();
       expect(screen.getByText("56%")).toBeTruthy();
     });
 
@@ -190,14 +177,14 @@ describe("ISBNPoolStats Component (AC-2, AC-3)", () => {
     it("handles empty pool metrics", () => {
       render(<ISBNPoolStats metrics={mockMetricsEmpty} />);
 
-      expect(screen.getByText("Physical ISBNs")).toBeTruthy();
-      expect(screen.getByText("Ebook ISBNs")).toBeTruthy();
+      expect(screen.getByText("ISBN Pool")).toBeTruthy();
       expect(screen.getByText("0%")).toBeTruthy();
     });
   });
 });
 
 describe("ISBNPoolAlert Component (AC-6)", () => {
+  // Story 7.6: Updated tests for unified ISBN alert (no physical/ebook breakdown)
   describe("Warning Alert Display (subtask 10.5)", () => {
     it("shows no alerts when inventory is sufficient", () => {
       const { container } = render(
@@ -205,37 +192,24 @@ describe("ISBNPoolAlert Component (AC-6)", () => {
       );
 
       // Should not render any alerts
-      expect(container.querySelector('[data-testid="isbn-pool-alerts"]')).toBeFalsy();
+      expect(
+        container.querySelector('[data-testid="isbn-pool-alerts"]'),
+      ).toBeFalsy();
     });
 
-    it("shows physical ISBN warning when available < 10", () => {
-      render(<ISBNPoolAlert metrics={mockMetricsLowPhysical} />);
+    it("shows ISBN warning when available < 10", () => {
+      render(<ISBNPoolAlert metrics={mockMetricsLow} />);
 
-      expect(screen.getByTestId("physical-isbn-alert")).toBeTruthy();
-      expect(screen.getByText("Low Physical ISBN Inventory")).toBeTruthy();
+      expect(screen.getByTestId("isbn-pool-alert")).toBeTruthy();
+      expect(screen.getByText("Low ISBN Inventory")).toBeTruthy();
       expect(screen.getByText(/5/)).toBeTruthy(); // Shows the count
     });
 
-    it("shows ebook ISBN warning when available < 10", () => {
-      render(<ISBNPoolAlert metrics={mockMetricsLowEbook} />);
-
-      expect(screen.getByTestId("ebook-isbn-alert")).toBeTruthy();
-      expect(screen.getByText("Low Ebook ISBN Inventory")).toBeTruthy();
-      expect(screen.getByText(/3/)).toBeTruthy(); // Shows the count
-    });
-
-    it("shows both warnings when both types are low", () => {
-      render(<ISBNPoolAlert metrics={mockMetricsLowBoth} />);
-
-      expect(screen.getByTestId("physical-isbn-alert")).toBeTruthy();
-      expect(screen.getByTestId("ebook-isbn-alert")).toBeTruthy();
-    });
-
     it("respects custom threshold", () => {
-      // With threshold of 30, even normal metrics should trigger
-      render(<ISBNPoolAlert metrics={mockMetricsNormal} threshold={30} />);
+      // With threshold of 60, even normal metrics should trigger
+      render(<ISBNPoolAlert metrics={mockMetricsNormal} threshold={60} />);
 
-      expect(screen.getByTestId("physical-isbn-alert")).toBeTruthy();
+      expect(screen.getByTestId("isbn-pool-alert")).toBeTruthy();
     });
 
     it("shows no alert for empty pool (total = 0)", () => {
@@ -244,8 +218,9 @@ describe("ISBNPoolAlert Component (AC-6)", () => {
         <ISBNPoolAlert metrics={mockMetricsEmpty} />,
       );
 
-      expect(container.querySelector('[data-testid="physical-isbn-alert"]')).toBeFalsy();
-      expect(container.querySelector('[data-testid="ebook-isbn-alert"]')).toBeFalsy();
+      expect(
+        container.querySelector('[data-testid="isbn-pool-alert"]'),
+      ).toBeFalsy();
     });
   });
 });
@@ -253,35 +228,45 @@ describe("ISBNPoolAlert Component (AC-6)", () => {
 describe("ISBNPoolCharts Component (AC-4, AC-5)", () => {
   describe("Chart Rendering", () => {
     it("renders distribution chart container", () => {
-      render(<ISBNPoolCharts metrics={mockMetricsNormal} history={mockHistory} />);
+      render(
+        <ISBNPoolCharts metrics={mockMetricsNormal} history={mockHistory} />,
+      );
 
       expect(screen.getByTestId("isbn-distribution-chart")).toBeTruthy();
       expect(screen.getByText("ISBN Distribution")).toBeTruthy();
     });
 
     it("renders timeline chart container", () => {
-      render(<ISBNPoolCharts metrics={mockMetricsNormal} history={mockHistory} />);
+      render(
+        <ISBNPoolCharts metrics={mockMetricsNormal} history={mockHistory} />,
+      );
 
       expect(screen.getByTestId("isbn-timeline-chart")).toBeTruthy();
       expect(screen.getByText("Assignment History")).toBeTruthy();
     });
 
     it("shows empty state for pie chart when no data", () => {
-      render(<ISBNPoolCharts metrics={mockMetricsEmpty} history={mockHistory} />);
+      render(
+        <ISBNPoolCharts metrics={mockMetricsEmpty} history={mockHistory} />,
+      );
 
       expect(screen.getByTestId("empty-pie-chart")).toBeTruthy();
       expect(screen.getByText("No ISBN data available")).toBeTruthy();
     });
 
     it("shows empty state for timeline when no assignments", () => {
-      render(<ISBNPoolCharts metrics={mockMetricsNormal} history={emptyHistory} />);
+      render(
+        <ISBNPoolCharts metrics={mockMetricsNormal} history={emptyHistory} />,
+      );
 
       expect(screen.getByTestId("empty-timeline-chart")).toBeTruthy();
       expect(screen.getByText("No assignment history available")).toBeTruthy();
     });
 
     it("renders charts when data is available", () => {
-      render(<ISBNPoolCharts metrics={mockMetricsNormal} history={mockHistory} />);
+      render(
+        <ISBNPoolCharts metrics={mockMetricsNormal} history={mockHistory} />,
+      );
 
       // Should have chart containers (ResponsiveContainer mock)
       const chartContainers = screen.getAllByTestId("chart-container");
@@ -326,18 +311,19 @@ describe("ISBNPoolInsights Component (AC-7, AC-8, AC-9)", () => {
   });
 
   describe("Available Summary Display", () => {
+    // Story 7.6: Updated for unified ISBN (no physical/ebook breakdown)
     it("displays available ISBNs summary", () => {
       render(<ISBNPoolInsights metrics={mockMetricsNormal} />);
 
       expect(screen.getByTestId("available-summary")).toBeTruthy();
       expect(screen.getByText("Available Now")).toBeTruthy();
-      expect(screen.getByText("55")).toBeTruthy(); // 25 + 30
+      expect(screen.getByText("55")).toBeTruthy(); // total available
     });
 
-    it("shows breakdown by type", () => {
+    it("shows ready to assign text", () => {
       render(<ISBNPoolInsights metrics={mockMetricsNormal} />);
 
-      expect(screen.getByText("25 Physical, 30 Ebook")).toBeTruthy();
+      expect(screen.getByText("Ready to assign")).toBeTruthy();
     });
   });
 
@@ -363,33 +349,43 @@ describe("Permission Enforcement (AC-1)", () => {
   const ALLOWED_ROLES = ["finance", "admin", "owner", "editor"];
   const BLOCKED_ROLES = ["author"];
 
-  it.each(ALLOWED_ROLES)("allows %s role to access ISBN pool report", (role) => {
+  it.each(
+    ALLOWED_ROLES,
+  )("allows %s role to access ISBN pool report", (role) => {
     expect(ALLOWED_ROLES.includes(role)).toBe(true);
   });
 
-  it.each(BLOCKED_ROLES)(
-    "blocks %s role from accessing ISBN pool report",
-    (role) => {
-      expect(ALLOWED_ROLES.includes(role)).toBe(false);
-    },
-  );
+  it.each(
+    BLOCKED_ROLES,
+  )("blocks %s role from accessing ISBN pool report", (role) => {
+    expect(ALLOWED_ROLES.includes(role)).toBe(false);
+  });
 });
 
 describe("Component Integration", () => {
+  // Story 7.6: Updated to use unified metrics fixture
   it("all components render together without errors", () => {
     const { container } = render(
       <div>
-        <ISBNPoolAlert metrics={mockMetricsLowPhysical} />
-        <ISBNPoolStats metrics={mockMetricsLowPhysical} />
-        <ISBNPoolCharts metrics={mockMetricsLowPhysical} history={mockHistory} />
-        <ISBNPoolInsights metrics={mockMetricsLowPhysical} />
+        <ISBNPoolAlert metrics={mockMetricsLow} />
+        <ISBNPoolStats metrics={mockMetricsLow} />
+        <ISBNPoolCharts metrics={mockMetricsLow} history={mockHistory} />
+        <ISBNPoolInsights metrics={mockMetricsLow} />
       </div>,
     );
 
     // All sections should be present
-    expect(container.querySelector('[data-testid="isbn-pool-alerts"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="isbn-pool-stats"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="isbn-pool-charts"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="isbn-pool-insights"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="isbn-pool-alerts"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="isbn-pool-stats"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="isbn-pool-charts"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="isbn-pool-insights"]'),
+    ).toBeTruthy();
   });
 });

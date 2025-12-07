@@ -166,7 +166,11 @@ export function DashboardChartWrapper({
 }: DashboardChartWrapperProps) {
   return (
     <ChartErrorBoundary title={title} fallback={errorFallback}>
-      <Suspense fallback={loadingFallback || <ChartSkeleton title={title} height={height} />}>
+      <Suspense
+        fallback={
+          loadingFallback || <ChartSkeleton title={title} height={height} />
+        }
+      >
         {children}
       </Suspense>
     </ChartErrorBoundary>

@@ -392,6 +392,7 @@ describe("Statement Type for RLS Context", () => {
       id: "550e8400-e29b-41d4-a716-446655440000",
       tenant_id: "660e8400-e29b-41d4-a716-446655440001", // RLS tenant filter
       author_id: "770e8400-e29b-41d4-a716-446655440002", // RLS author filter
+      contact_id: null, // Added for Story 7.3 migration compatibility
       contract_id: "880e8400-e29b-41d4-a716-446655440003",
       period_start: new Date("2024-01-01"),
       period_end: new Date("2024-03-31"),

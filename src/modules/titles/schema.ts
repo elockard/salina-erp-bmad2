@@ -37,6 +37,8 @@ export const isbnSchema = z
  * - author_id is required (valid UUID)
  * - publication_status defaults to 'draft' if not provided
  * - other fields are optional
+ *
+ * Story 7.6: Removed eisbn - ISBNs are unified without type distinction
  */
 export const createTitleSchema = z.object({
   title: z.string().min(1, "Title is required").max(500, "Title is too long"),
@@ -55,7 +57,6 @@ export const createTitleSchema = z.object({
     .nullable(),
   publication_status: publicationStatusSchema.optional().default("draft"),
   isbn: isbnSchema,
-  eisbn: isbnSchema,
   publication_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
@@ -77,13 +78,14 @@ export const updateTitleSchema = createTitleSchema
 
 /**
  * Schema for filtering titles list
+ *
+ * Story 7.6: Removed has_eisbn - ISBNs are unified without type distinction
  */
 export const titleFilterSchema = z.object({
   search: z.string().optional(),
   author_id: z.string().uuid().optional(),
   publication_status: publicationStatusSchema.optional(),
   has_isbn: z.boolean().optional(),
-  has_eisbn: z.boolean().optional(),
 });
 
 /**

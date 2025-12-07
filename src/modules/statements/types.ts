@@ -8,15 +8,25 @@
  * Story: 5.1 - Create Statements Database Schema and PDF Storage
  * AC-5.1.2: JSONB calculations field stores full breakdown structure
  *
+ * Story 7.3: Migrate Authors to Contacts
+ * Author type supports both legacy authors table and contacts table during transition.
+ *
  * Related:
  * - src/db/schema/statements.ts (statements.calculations column)
  * - src/modules/royalties/types.ts (similar calculation structures)
  * - tech-spec-epic-5.md (StatementCalculations interface spec)
  */
 
-import type { Author } from "@/db/schema/authors";
+import type { Author as LegacyAuthor } from "@/db/schema/authors";
 import type { Contract, ContractFormat } from "@/db/schema/contracts";
 import type { Statement } from "@/db/schema/statements";
+
+/**
+ * Author type for statements - supports both legacy and contact-based
+ * Story 7.3: During migration transition, this maintains backward compatibility
+ * with the legacy authors table while supporting the new contacts table.
+ */
+export type Author = LegacyAuthor;
 
 /**
  * Tier breakdown within a format calculation

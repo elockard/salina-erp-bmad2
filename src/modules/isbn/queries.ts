@@ -1,12 +1,14 @@
 "use server";
 
-import { and, count, eq, ilike, sql } from "drizzle-orm";
+import { and, count, eq, ilike, isNull, sql } from "drizzle-orm";
+import { isbnPrefixes } from "@/db/schema/isbn-prefixes";
 import { isbns } from "@/db/schema/isbns";
 import { titles } from "@/db/schema/titles";
 import { users } from "@/db/schema/users";
 import { getCurrentTenantId, getDb, requirePermission } from "@/lib/auth";
 import { VIEW_OWN_STATEMENTS } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
+import { formatPrefix } from "@/modules/isbn-prefixes/utils";
 import type {
   ISBNListItem,
   ISBNPoolStats,
@@ -33,6 +35,8 @@ export interface ISBNListFilters {
   type?: ISBNType;
   status?: ISBNStatus;
   search?: string;
+  /** Filter by prefix ID, or "legacy" for ISBNs without a prefix */
+  prefix?: string;
   page?: number;
   pageSize?: number;
 }
@@ -55,7 +59,7 @@ export async function getISBNPoolStats(): Promise<ActionResult<ISBNPoolStats>> {
     const db = await getDb();
 
     // Single aggregation query for efficiency
-    // Uses conditional counting for each status and type combination
+    // Story 7.6: Removed type-based counting - ISBNs are unified without type distinction
     const result = await db
       .select({
         total: count(),
@@ -63,16 +67,13 @@ export async function getISBNPoolStats(): Promise<ActionResult<ISBNPoolStats>> {
         assigned: sql<number>`count(*) filter (where ${isbns.status} = 'assigned')`,
         registered: sql<number>`count(*) filter (where ${isbns.status} = 'registered')`,
         retired: sql<number>`count(*) filter (where ${isbns.status} = 'retired')`,
-        physicalTotal: sql<number>`count(*) filter (where ${isbns.type} = 'physical')`,
-        ebookTotal: sql<number>`count(*) filter (where ${isbns.type} = 'ebook')`,
-        physicalAvailable: sql<number>`count(*) filter (where ${isbns.type} = 'physical' and ${isbns.status} = 'available')`,
-        ebookAvailable: sql<number>`count(*) filter (where ${isbns.type} = 'ebook' and ${isbns.status} = 'available')`,
       })
       .from(isbns)
       .where(eq(isbns.tenant_id, tenantId));
 
     const stats = result[0];
 
+    // Story 7.6: Removed byType and availableByType - ISBNs are unified
     return {
       success: true,
       data: {
@@ -81,14 +82,6 @@ export async function getISBNPoolStats(): Promise<ActionResult<ISBNPoolStats>> {
         assigned: Number(stats?.assigned) ?? 0,
         registered: Number(stats?.registered) ?? 0,
         retired: Number(stats?.retired) ?? 0,
-        byType: {
-          physical: Number(stats?.physicalTotal) ?? 0,
-          ebook: Number(stats?.ebookTotal) ?? 0,
-        },
-        availableByType: {
-          physical: Number(stats?.physicalAvailable) ?? 0,
-          ebook: Number(stats?.ebookAvailable) ?? 0,
-        },
       },
     };
   } catch (error) {
@@ -111,9 +104,12 @@ export async function getISBNPoolStats(): Promise<ActionResult<ISBNPoolStats>> {
  * Story 2.8 - Build ISBN Pool Status View and Availability Tracking
  * AC 4, 5, 6: Table with columns, filtering, pagination
  *
+ * Story 7.4 - AC 7.4.7: Filter ISBN pool table by prefix
+ *
  * Supports:
  * - Type filter (physical/ebook)
  * - Status filter (available/assigned/registered/retired)
+ * - Prefix filter (specific prefix ID or "legacy" for ISBNs without prefix)
  * - Search by ISBN-13 partial match (ILIKE)
  * - Pagination (default 20 per page)
  *
@@ -128,7 +124,7 @@ export async function getISBNList(
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
 
-    const { type, status, search, page = 1, pageSize = 20 } = filters;
+    const { type, status, search, prefix, page = 1, pageSize = 20 } = filters;
     const offset = (page - 1) * pageSize;
 
     // Build WHERE conditions
@@ -146,6 +142,15 @@ export async function getISBNList(
       conditions.push(ilike(isbns.isbn_13, `%${search}%`));
     }
 
+    // Story 7.4 AC-7.4.7: Prefix filter
+    if (prefix) {
+      if (prefix === "legacy") {
+        conditions.push(isNull(isbns.prefix_id));
+      } else {
+        conditions.push(eq(isbns.prefix_id, prefix));
+      }
+    }
+
     const whereClause = and(...conditions);
 
     // Get total count for pagination
@@ -156,7 +161,7 @@ export async function getISBNList(
 
     const total = countResult?.count ?? 0;
 
-    // Get paginated data with joins
+    // Get paginated data with joins (including prefix for Story 7.4)
     const data = await db
       .select({
         id: isbns.id,
@@ -167,22 +172,27 @@ export async function getISBNList(
         assignedAt: isbns.assigned_at,
         assignedToTitleId: isbns.assigned_to_title_id,
         assignedByUserName: users.email,
+        prefixId: isbns.prefix_id,
+        prefixValue: isbnPrefixes.prefix,
       })
       .from(isbns)
       .leftJoin(titles, eq(isbns.assigned_to_title_id, titles.id))
       .leftJoin(users, eq(isbns.assigned_by_user_id, users.id))
+      .leftJoin(isbnPrefixes, eq(isbns.prefix_id, isbnPrefixes.id))
       .where(whereClause)
       .orderBy(isbns.created_at)
       .limit(pageSize)
       .offset(offset);
 
+    // Story 7.6: Removed type field from mapping - ISBNs are unified
     const items: ISBNListItem[] = data.map((row) => ({
       id: row.id,
       isbn_13: row.isbn_13,
-      type: row.type as ISBNType,
       status: row.status as ISBNStatus,
       assignedTitleName: row.assignedTitleName,
       assignedAt: row.assignedAt,
+      prefixId: row.prefixId,
+      prefixName: row.prefixValue ? formatPrefix(row.prefixValue) : null,
     }));
 
     return {

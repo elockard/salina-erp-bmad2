@@ -34,6 +34,7 @@ export async function getDashboardStats(): Promise<
     let stats: Record<string, number | string> = {};
 
     // Fetch ISBN stats for all dashboard users (AC 8: all authenticated users)
+    // Story 7.6: Removed type-based counting - ISBNs are unified without type distinction
     const isbnStatsResult = await db
       .select({
         total: count(),
@@ -41,29 +42,18 @@ export async function getDashboardStats(): Promise<
         assigned: sql<number>`count(*) filter (where ${isbns.status} = 'assigned')`,
         registered: sql<number>`count(*) filter (where ${isbns.status} = 'registered')`,
         retired: sql<number>`count(*) filter (where ${isbns.status} = 'retired')`,
-        physicalTotal: sql<number>`count(*) filter (where ${isbns.type} = 'physical')`,
-        ebookTotal: sql<number>`count(*) filter (where ${isbns.type} = 'ebook')`,
-        physicalAvailable: sql<number>`count(*) filter (where ${isbns.type} = 'physical' and ${isbns.status} = 'available')`,
-        ebookAvailable: sql<number>`count(*) filter (where ${isbns.type} = 'ebook' and ${isbns.status} = 'available')`,
       })
       .from(isbns)
       .where(eq(isbns.tenant_id, tenantId));
 
     const isbnData = isbnStatsResult[0];
+    // Story 7.6: Removed byType and availableByType - ISBNs are unified
     const isbnStats: ISBNPoolStats = {
       total: isbnData?.total ?? 0,
       available: Number(isbnData?.available) ?? 0,
       assigned: Number(isbnData?.assigned) ?? 0,
       registered: Number(isbnData?.registered) ?? 0,
       retired: Number(isbnData?.retired) ?? 0,
-      byType: {
-        physical: Number(isbnData?.physicalTotal) ?? 0,
-        ebook: Number(isbnData?.ebookTotal) ?? 0,
-      },
-      availableByType: {
-        physical: Number(isbnData?.physicalAvailable) ?? 0,
-        ebook: Number(isbnData?.ebookAvailable) ?? 0,
-      },
     };
 
     switch (user.role) {

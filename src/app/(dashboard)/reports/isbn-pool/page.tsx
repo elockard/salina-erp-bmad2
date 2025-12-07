@@ -18,9 +18,11 @@ import { ISBNPoolAlert } from "@/modules/reports/components/isbn-pool-alert";
 import { ISBNPoolCharts } from "@/modules/reports/components/isbn-pool-charts";
 import { ISBNPoolInsights } from "@/modules/reports/components/isbn-pool-insights";
 import { ISBNPoolStats } from "@/modules/reports/components/isbn-pool-stats";
+import { ISBNPrefixBreakdown } from "@/modules/reports/components/isbn-prefix-breakdown";
 import {
   getISBNAssignmentHistory,
   getISBNPoolMetrics,
+  getISBNPrefixBreakdown,
 } from "@/modules/reports/queries";
 
 export const dynamic = "force-dynamic";
@@ -45,9 +47,10 @@ function ChartsSkeleton() {
 }
 
 async function ISBNPoolContent() {
-  const [metrics, history] = await Promise.all([
+  const [metrics, history, prefixBreakdown] = await Promise.all([
     getISBNPoolMetrics(),
     getISBNAssignmentHistory(6),
+    getISBNPrefixBreakdown(),
   ]);
 
   return (
@@ -60,6 +63,9 @@ async function ISBNPoolContent() {
 
       {/* AC-4, AC-5: Pie chart and timeline chart */}
       <ISBNPoolCharts metrics={metrics} history={history} />
+
+      {/* Story 7.4 AC-7.4.7: Prefix breakdown */}
+      <ISBNPrefixBreakdown breakdown={prefixBreakdown} />
 
       {/* AC-7, AC-8, AC-9: Burn rate, runout, and import button */}
       <ISBNPoolInsights metrics={metrics} />

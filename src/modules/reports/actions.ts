@@ -13,23 +13,31 @@ import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth";
 import {
   exportAuditLogsCsv,
+  getAgingReportByCustomer,
+  getARSummary,
   getAuditLogs,
   getAuditLogUsers,
+  getCustomerARDetail as getCustomerARDetailQuery,
   getFinanceDashboardStats,
   getLiabilityMetrics,
   getRevenueMetrics,
   getRoyaltyLiabilitySummary,
   getSalesReport,
+  getTenantForReport,
 } from "./queries";
 import type { ReportPeriodInput, SalesReportFilterInput } from "./schema";
 import type {
+  AgingReportRow,
+  ARSummary,
   AuditLogFilters,
+  CustomerARDetail,
   FinanceDashboardStats,
   LiabilityMetrics,
   PaginatedAuditLogs,
   RevenueMetrics,
   RoyaltyLiabilitySummary,
   SalesReportResult,
+  TenantForReport,
 } from "./types";
 
 /**
@@ -274,7 +282,10 @@ export async function fetchRoyaltyLiabilitySummary(): Promise<
       };
     }
     console.error("[Reports] fetchRoyaltyLiabilitySummary error:", error);
-    return { success: false, error: "Failed to fetch royalty liability summary" };
+    return {
+      success: false,
+      error: "Failed to fetch royalty liability summary",
+    };
   }
 }
 
@@ -286,7 +297,9 @@ export async function fetchRoyaltyLiabilitySummary(): Promise<
  *
  * @returns CSV string or error
  */
-export async function exportLiabilityReportCSV(): Promise<ActionResult<string>> {
+export async function exportLiabilityReportCSV(): Promise<
+  ActionResult<string>
+> {
   try {
     await requirePermission(["finance", "admin", "owner"]);
 
@@ -496,5 +509,112 @@ export async function exportAuditLogsCSV(
     }
     console.error("[Reports] exportAuditLogsCSV error:", error);
     return { success: false, error: "Failed to export audit logs" };
+  }
+}
+
+// ============================================================================
+// Accounts Receivable Actions (Story 8.5)
+// ============================================================================
+
+/**
+ * Fetch AR summary statistics
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.2: Summary stats cards showing total receivables, current, overdue, etc.
+ *
+ * @returns AR summary or error
+ */
+export async function fetchARSummary(): Promise<ActionResult<ARSummary>> {
+  try {
+    const summary = await getARSummary();
+    return { success: true, data: summary };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You do not have permission to view AR summary",
+      };
+    }
+    console.error("[Reports] fetchARSummary error:", error);
+    return { success: false, error: "Failed to fetch AR summary" };
+  }
+}
+
+/**
+ * Fetch aging report by customer
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.3: Aging report table with customer + buckets + total
+ *
+ * @returns Aging report rows or error
+ */
+export async function fetchAgingReport(): Promise<
+  ActionResult<AgingReportRow[]>
+> {
+  try {
+    const rows = await getAgingReportByCustomer();
+    return { success: true, data: rows };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You do not have permission to view aging report",
+      };
+    }
+    console.error("[Reports] fetchAgingReport error:", error);
+    return { success: false, error: "Failed to fetch aging report" };
+  }
+}
+
+/**
+ * Fetch customer AR detail for drill-down
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.4: Customer drill-down showing invoices and payment history
+ *
+ * @param customerId - Contact ID of the customer
+ * @returns Customer AR detail or error
+ */
+export async function getCustomerARDetail(
+  customerId: string,
+): Promise<ActionResult<CustomerARDetail | null>> {
+  try {
+    const detail = await getCustomerARDetailQuery(customerId);
+    return { success: true, data: detail };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You do not have permission to view customer AR detail",
+      };
+    }
+    console.error("[Reports] getCustomerARDetail error:", error);
+    return { success: false, error: "Failed to fetch customer AR detail" };
+  }
+}
+
+/**
+ * Fetch tenant info for report headers
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.7: PDF export with company name header
+ *
+ * @returns Tenant info or error
+ */
+export async function fetchTenantForReport(): Promise<
+  ActionResult<TenantForReport>
+> {
+  try {
+    const tenant = await getTenantForReport();
+    return { success: true, data: tenant };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You do not have permission to view tenant info",
+      };
+    }
+    console.error("[Reports] fetchTenantForReport error:", error);
+    return { success: false, error: "Failed to fetch tenant info" };
   }
 }

@@ -1,6 +1,6 @@
-import { getOwnerAdminDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AreaChart } from "@/components/charts/area-chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getOwnerAdminDashboardData } from "@/modules/reports/queries";
 
 /**
  * Revenue Trend Chart Widget

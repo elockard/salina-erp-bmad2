@@ -1,7 +1,7 @@
-import { getFinanceDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getFinanceDashboardData } from "@/modules/reports/queries";
 
 /**
  * Pending Returns Urgency Widget

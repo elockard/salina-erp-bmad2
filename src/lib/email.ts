@@ -160,5 +160,5 @@ export async function sendEmail(
  * @returns Sender email address
  */
 export function getDefaultFromEmail(): string {
-  return process.env.FROM_EMAIL || "statements@salina-erp.com";
+  return process.env.FROM_EMAIL || "statements@salina.media";
 }

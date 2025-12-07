@@ -48,9 +48,9 @@ const STEPS = [
 ] as const;
 
 /**
- * Period type options (AC-5.3.2)
+ * Period type options (AC-5.3.2, Story 7.5 AC-5)
  */
-export type PeriodType = "quarterly" | "annual" | "custom";
+export type PeriodType = "royalty_period" | "quarterly" | "annual" | "custom";
 
 /**
  * Quarter options for quarterly period selection
@@ -62,8 +62,8 @@ export type Quarter = 1 | 2 | 3 | 4;
  * Validation happens per-step and on final submission
  */
 const wizardFormSchema = z.object({
-  // Step 1: Period Selection (AC-5.3.2)
-  periodType: z.enum(["quarterly", "annual", "custom"]),
+  // Step 1: Period Selection (AC-5.3.2, Story 7.5 AC-5)
+  periodType: z.enum(["royalty_period", "quarterly", "annual", "custom"]),
   quarter: z.number().min(1).max(4).optional(),
   year: z.number().min(2020).max(2100),
   customStartDate: z.date().optional(),

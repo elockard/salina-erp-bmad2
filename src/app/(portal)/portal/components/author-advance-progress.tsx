@@ -1,6 +1,6 @@
-import { getAuthorPortalDashboardData } from "@/modules/reports/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { getAuthorPortalDashboardData } from "@/modules/reports/queries";
 
 /**
  * Author Advance Progress Widget
@@ -16,7 +16,9 @@ interface AuthorAdvanceProgressProps {
   authorId: string;
 }
 
-export async function AuthorAdvanceProgress({ authorId }: AuthorAdvanceProgressProps) {
+export async function AuthorAdvanceProgress({
+  authorId,
+}: AuthorAdvanceProgressProps) {
   const data = await getAuthorPortalDashboardData(authorId);
   const { total, recouped, remaining } = data.advanceRecoupmentProgress;
 
@@ -29,7 +31,9 @@ export async function AuthorAdvanceProgress({ authorId }: AuthorAdvanceProgressP
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Advance Recoupment</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Advance Recoupment
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center h-[120px] text-muted-foreground text-sm">
@@ -43,7 +47,9 @@ export async function AuthorAdvanceProgress({ authorId }: AuthorAdvanceProgressP
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Advance Recoupment</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Advance Recoupment
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-4">
         <Progress value={percentRecouped} className="h-3" />

@@ -39,15 +39,14 @@ export async function getTitles(
     conditions.push(eq(titles.author_id, filters.authorId));
   }
 
-  // Search filter (title, author name, ISBN, eISBN)
+  // Search filter (title, author name, ISBN)
   // Note: Author name search requires a join, handled separately
-  // Search filter (title, author name, ISBN, eISBN)
+  // Story 7.6: Removed eisbn - ISBNs are unified without type distinction
   if (filters?.search) {
     const searchTerm = `%${filters.search}%`;
     const searchCondition = or(
       ilike(titles.title, searchTerm),
       ilike(titles.isbn, searchTerm),
-      ilike(titles.eisbn, searchTerm),
     );
     if (searchCondition) {
       conditions.push(searchCondition);
@@ -64,14 +63,14 @@ export async function getTitles(
 
   // If searching by author name, filter results in memory
   // This is a tradeoff for simpler query structure
+  // Story 7.6: Removed eisbn - ISBNs are unified without type distinction
   if (filters?.search) {
     const searchLower = filters.search.toLowerCase();
     return result.filter(
       (title) =>
         title.title.toLowerCase().includes(searchLower) ||
         title.author.name.toLowerCase().includes(searchLower) ||
-        title.isbn?.toLowerCase().includes(searchLower) ||
-        title.eisbn?.toLowerCase().includes(searchLower),
+        title.isbn?.toLowerCase().includes(searchLower),
     );
   }
 

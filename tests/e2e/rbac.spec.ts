@@ -96,15 +96,15 @@ test.describe("RBAC System - Role-Based Access Control", () => {
       ).toBeVisible();
     });
 
-    test("Editor can access author management page", async ({ page }) => {
-      await page.goto("/authors");
+    test("Editor can access contact management page (authors)", async ({ page }) => {
+      await page.goto("/contacts?role=author");
 
-      // Should see authors page
-      await expect(page.locator("h1:has-text('Authors')")).toBeVisible();
+      // Should see contacts page (Story 0.5: Authors consolidated into Contacts)
+      await expect(page.locator("h1:has-text('Contacts')")).toBeVisible();
 
       // Should see create button
       await expect(
-        page.locator("button:has-text('Create Author')"),
+        page.locator("button:has-text('Create Contact')"),
       ).toBeVisible();
     });
 
@@ -145,13 +145,14 @@ test.describe("RBAC System - Role-Based Access Control", () => {
       ).toBeVisible();
     });
 
-    test("Finance cannot create authors or titles", async ({ page }) => {
-      await page.goto("/authors");
+    test("Finance cannot create contacts or titles", async ({ page }) => {
+      await page.goto("/contacts?role=author");
 
-      // Should see authors list but NOT create button (editor/admin/owner only)
-      await expect(page.locator("h1:has-text('Authors')")).toBeVisible();
+      // Should see contacts list but NOT create button (editor/admin/owner only)
+      // Story 0.5: Authors consolidated into Contacts
+      await expect(page.locator("h1:has-text('Contacts')")).toBeVisible();
       await expect(
-        page.locator("button:has-text('Create Author')"),
+        page.locator("button:has-text('Create Contact')"),
       ).not.toBeVisible();
     });
   });
@@ -195,10 +196,11 @@ test.describe("RBAC System - Role-Based Access Control", () => {
       await expect(page).toHaveURL("**/portal");
     });
 
-    test("Author cannot access author management page", async ({ page }) => {
-      await page.goto("/authors");
+    test("Author cannot access contact management page", async ({ page }) => {
+      // Story 0.5: /authors redirects to /contacts?role=author
+      await page.goto("/contacts");
 
-      // Should see 403 or redirect
+      // Should see 403 or redirect to portal
       await expect(
         page.locator("text=You don't have permission"),
       ).toBeVisible();

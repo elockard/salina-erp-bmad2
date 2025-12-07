@@ -27,12 +27,12 @@ test.describe("Sales Report Page - Access and Layout", () => {
   test("AC1: Page renders with correct header", async ({ page }) => {
     // Page header
     await expect(
-      page.getByRole("heading", { name: "Sales Report" })
+      page.getByRole("heading", { name: "Sales Report" }),
     ).toBeVisible();
 
     // Subtitle
     await expect(
-      page.getByText("Analyze sales data with multi-dimensional filtering")
+      page.getByText("Analyze sales data with multi-dimensional filtering"),
     ).toBeVisible();
   });
 
@@ -47,7 +47,9 @@ test.describe("Sales Report Page - Access and Layout", () => {
   }) => {
     // Before generating, should show initial message
     await expect(
-      page.getByText('Select filters and click "Generate Report" to view results')
+      page.getByText(
+        'Select filters and click "Generate Report" to view results',
+      ),
     ).toBeVisible();
   });
 });
@@ -79,7 +81,7 @@ test.describe("Sales Report Page - Filters (AC 2, 3)", () => {
     await expect(page.getByRole("option", { name: "Format" })).toBeVisible();
     await expect(page.getByRole("option", { name: "Channel" })).toBeVisible();
     await expect(
-      page.getByRole("option", { name: /Date|Month|Period/i })
+      page.getByRole("option", { name: /Date|Month|Period/i }),
     ).toBeVisible();
   });
 
@@ -108,7 +110,9 @@ test.describe("Sales Report Page - Filters (AC 2, 3)", () => {
   });
 
   test("AC4: Generate Report button is visible", async ({ page }) => {
-    const generateButton = page.getByRole("button", { name: "Generate Report" });
+    const generateButton = page.getByRole("button", {
+      name: "Generate Report",
+    });
     await expect(generateButton).toBeVisible();
   });
 });
@@ -129,7 +133,9 @@ test.describe("Sales Report Page - Report Generation (AC 4, 5, 6)", () => {
     // For now, we'll check that the button exists and loading state works
 
     // Click Generate Report
-    const generateButton = page.getByRole("button", { name: "Generate Report" });
+    const generateButton = page.getByRole("button", {
+      name: "Generate Report",
+    });
 
     // If we can submit, check loading state appears
     // Note: This may fail if date range isn't valid yet
@@ -173,16 +179,16 @@ test.describe("Sales Report Page - Report Generation (AC 4, 5, 6)", () => {
 
     if (tableExists) {
       await expect(
-        table.getByRole("columnheader", { name: /Group/i })
+        table.getByRole("columnheader", { name: /Group/i }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: /Total Units/i })
+        table.getByRole("columnheader", { name: /Total Units/i }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: /Total Revenue/i })
+        table.getByRole("columnheader", { name: /Total Revenue/i }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: /Avg Unit Price/i })
+        table.getByRole("columnheader", { name: /Avg Unit Price/i }),
       ).toBeVisible();
     }
   });
@@ -199,11 +205,9 @@ test.describe("Sales Report Page - Charts (AC 7, 8)", () => {
   }) => {
     // Charts should appear in the results section
     // Look for chart card headers
-
     // The charts appear after generating a report
     // For this test, we verify the chart containers exist in the DOM
     // when results are displayed
-
     // Chart titles: "Top 10 [X] by Revenue" and "Revenue Distribution by [X]"
     // These only appear after report generation
   });
@@ -236,11 +240,9 @@ test.describe("Sales Report Page - CSV Export (AC 9)", () => {
   }) => {
     // This test requires a valid report to be generated first
     // with actual data in the database
-
     // 1. Generate a report
     // 2. Click Export CSV
     // 3. Verify download is triggered with correct filename
-
     // For now, we verify the button is present in the results section
   });
 });
@@ -254,7 +256,7 @@ test.describe("Sales Report Page - Permission Enforcement (AC 10)", () => {
 
     // Should see the report page
     await expect(
-      page.getByRole("heading", { name: "Sales Report" })
+      page.getByRole("heading", { name: "Sales Report" }),
     ).toBeVisible();
   });
 
@@ -265,7 +267,7 @@ test.describe("Sales Report Page - Permission Enforcement (AC 10)", () => {
     await page.goto("/reports/sales");
 
     await expect(
-      page.getByRole("heading", { name: "Sales Report" })
+      page.getByRole("heading", { name: "Sales Report" }),
     ).toBeVisible();
   });
 
@@ -276,7 +278,7 @@ test.describe("Sales Report Page - Permission Enforcement (AC 10)", () => {
     await page.goto("/reports/sales");
 
     await expect(
-      page.getByRole("heading", { name: "Sales Report" })
+      page.getByRole("heading", { name: "Sales Report" }),
     ).toBeVisible();
   });
 
@@ -287,7 +289,7 @@ test.describe("Sales Report Page - Permission Enforcement (AC 10)", () => {
     await page.goto("/reports/sales");
 
     await expect(
-      page.getByRole("heading", { name: "Sales Report" })
+      page.getByRole("heading", { name: "Sales Report" }),
     ).toBeVisible();
   });
 
@@ -310,9 +312,7 @@ test.describe("Sales Report Page - Reports Index", () => {
     await page.goto("/reports");
 
     // Should see Reports heading
-    await expect(
-      page.getByRole("heading", { name: "Reports" })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Reports" })).toBeVisible();
 
     // Should have a card/link to Sales Report
     await expect(page.getByText("Sales Report")).toBeVisible();

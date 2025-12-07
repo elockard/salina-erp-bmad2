@@ -253,6 +253,7 @@ describe("Contract type (AC 6)", () => {
       id: "550e8400-e29b-41d4-a716-446655440000",
       tenant_id: "550e8400-e29b-41d4-a716-446655440001",
       author_id: "550e8400-e29b-41d4-a716-446655440002",
+      contact_id: null, // Added for Story 7.3 migration compatibility
       title_id: "550e8400-e29b-41d4-a716-446655440003",
       advance_amount: "5000.00",
       advance_paid: "2500.00",
@@ -277,6 +278,7 @@ describe("Contract type (AC 6)", () => {
       id: "550e8400-e29b-41d4-a716-446655440000",
       tenant_id: "550e8400-e29b-41d4-a716-446655440001",
       author_id: "550e8400-e29b-41d4-a716-446655440002",
+      contact_id: null, // Added for Story 7.3 migration compatibility
       title_id: "550e8400-e29b-41d4-a716-446655440003",
       advance_amount: "0",
       advance_paid: "0",

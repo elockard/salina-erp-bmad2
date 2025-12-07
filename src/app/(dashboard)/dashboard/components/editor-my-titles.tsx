@@ -1,6 +1,6 @@
-import { getEditorDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getEditorDashboardData } from "@/modules/reports/queries";
 
 /**
  * Editor My Titles Widget
@@ -22,7 +22,9 @@ export async function EditorMyTitles({ userId }: EditorMyTitlesProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">My Titles This Quarter</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          My Titles This Quarter
+        </CardTitle>
         <FileText className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>

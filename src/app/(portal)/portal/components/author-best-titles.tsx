@@ -1,6 +1,6 @@
-import { getAuthorPortalDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAuthorPortalDashboardData } from "@/modules/reports/queries";
 
 /**
  * Author Best Titles Widget
@@ -23,7 +23,9 @@ export async function AuthorBestTitles({ authorId }: AuthorBestTitlesProps) {
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Best Performing Titles</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Best Performing Titles
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
@@ -37,7 +39,9 @@ export async function AuthorBestTitles({ authorId }: AuthorBestTitlesProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Best Performing Titles</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Best Performing Titles
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">

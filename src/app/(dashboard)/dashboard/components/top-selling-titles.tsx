@@ -1,6 +1,6 @@
-import { getOwnerAdminDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/charts/bar-chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getOwnerAdminDashboardData } from "@/modules/reports/queries";
 
 /**
  * Top Selling Titles Widget
@@ -26,7 +26,9 @@ export async function TopSellingTitles() {
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Top Selling Titles</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Top Selling Titles
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
@@ -40,7 +42,9 @@ export async function TopSellingTitles() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Top Selling Titles</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Top Selling Titles
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <BarChart

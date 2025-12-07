@@ -1,7 +1,7 @@
-import { getEditorDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getEditorDashboardData } from "@/modules/reports/queries";
 
 /**
  * Editor Pending Tasks Widget
@@ -19,16 +19,17 @@ interface EditorPendingTasksProps {
 
 export async function EditorPendingTasks({ userId }: EditorPendingTasksProps) {
   const data = await getEditorDashboardData(userId);
-  const totalTasks = data.pendingTasks.reduce((sum, task) => sum + task.count, 0);
+  const totalTasks = data.pendingTasks.reduce(
+    (sum, task) => sum + task.count,
+    0,
+  );
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center justify-between">
           <span>Pending Tasks</span>
-          {totalTasks > 0 && (
-            <Badge variant="secondary">{totalTasks}</Badge>
-          )}
+          {totalTasks > 0 && <Badge variant="secondary">{totalTasks}</Badge>}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
@@ -38,20 +39,21 @@ export async function EditorPendingTasks({ userId }: EditorPendingTasksProps) {
           </div>
         ) : (
           <div className="space-y-2">
-            {data.pendingTasks.map((task) => (
-              task.count > 0 && (
-                <div
-                  key={task.type}
-                  className="flex items-center justify-between p-2 bg-amber-500/10 rounded-md"
-                >
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <span className="text-sm">{task.type}</span>
+            {data.pendingTasks.map(
+              (task) =>
+                task.count > 0 && (
+                  <div
+                    key={task.type}
+                    className="flex items-center justify-between p-2 bg-amber-500/10 rounded-md"
+                  >
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <span className="text-sm">{task.type}</span>
+                    </div>
+                    <Badge variant="outline">{task.count}</Badge>
                   </div>
-                  <Badge variant="outline">{task.count}</Badge>
-                </div>
-              )
-            ))}
+                ),
+            )}
           </div>
         )}
       </CardContent>

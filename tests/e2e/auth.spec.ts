@@ -65,9 +65,9 @@ test.describe("Role-Based Access Control (RBAC)", () => {
     );
     await page.click('button[type="submit"]');
 
-    // Editor CAN access Authors
-    await page.goto(`${tenantURL}/authors`);
-    await expect(page.locator("h1")).toContainText(/authors/i);
+    // Editor CAN access Contacts (Story 0.5: Authors consolidated into Contacts)
+    await page.goto(`${tenantURL}/contacts?role=author`);
+    await expect(page.locator("h1")).toContainText(/contacts/i);
 
     // Editor CANNOT access Returns approval (Finance only)
     await page.goto(`${tenantURL}/returns`);
@@ -133,10 +133,10 @@ test.describe("Multi-Tenant Isolation", () => {
     );
     await page.click('button[type="submit"]');
 
-    // Navigate to authors in Tenant 2
-    await page.goto(`${tenant2URL}/authors`);
+    // Navigate to contacts in Tenant 2 (Story 0.5: Authors consolidated into Contacts)
+    await page.goto(`${tenant2URL}/contacts?role=author`);
 
-    // Should NOT see Tenant 1's author
+    // Should NOT see Tenant 1's author (contact)
     await expect(page.locator("text=Jane Doe")).not.toBeVisible();
   });
 });

@@ -218,6 +218,7 @@ export function ReturnsForm({
   const returnAmount = calculateReturnAmount();
 
   // Get available formats based on selected title (AC 3)
+  // Story 7.6: Simplified - all formats enabled if title has ISBN (no type distinction)
   const getAvailableFormats = (): {
     value: SalesFormat;
     label: string;
@@ -225,9 +226,9 @@ export function ReturnsForm({
   }[] => {
     return salesFormatValues.map((fmt) => {
       let disabled = true;
-      if (selectedTitle) {
-        if (fmt === "physical" && selectedTitle.has_isbn) disabled = false;
-        if (fmt === "ebook" && selectedTitle.has_eisbn) disabled = false;
+      if (selectedTitle?.has_isbn) {
+        // Physical and ebook enabled if title has ISBN
+        if (fmt === "physical" || fmt === "ebook") disabled = false;
         // Audiobook always disabled for now
       }
       return {
@@ -239,15 +240,14 @@ export function ReturnsForm({
   };
 
   // Handle title selection (AC 2, AC 3)
+  // Story 7.6: Simplified - auto-select physical format if ISBN assigned
   const handleTitleSelect = (title: SelectedTitleForReturn | null) => {
     setSelectedTitle(title);
     if (title) {
       form.setValue("title_id", title.id);
-      // Auto-select first available format (AC 3)
+      // Auto-select physical format if title has ISBN
       if (title.has_isbn) {
         form.setValue("format", "physical");
-      } else if (title.has_eisbn) {
-        form.setValue("format", "ebook");
       }
     } else {
       form.setValue("title_id", "");

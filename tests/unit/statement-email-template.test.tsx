@@ -32,7 +32,7 @@ function createMockEmailProps(
     grossRoyalties: 6165.0,
     recoupment: 2000.0,
     netPayable: 4165.0,
-    portalUrl: "https://acme.salina-erp.com",
+    portalUrl: "https://acme.salina.media",
     statementId: "test-statement-123",
     ...overrides,
   };
@@ -139,14 +139,14 @@ describe("Statement Email Template", () => {
 
     it("should include CTA button with correct portal URL", async () => {
       const props = createMockEmailProps({
-        portalUrl: "https://publisher.salina-erp.com",
+        portalUrl: "https://publisher.salina.media",
         statementId: "abc-123",
       });
       const html = await renderStatementEmail(props);
 
       expect(html).toContain("View Statement in Portal");
       expect(html).toContain(
-        "https://publisher.salina-erp.com/portal/statements/abc-123",
+        "https://publisher.salina.media/portal/statements/abc-123",
       );
     });
 

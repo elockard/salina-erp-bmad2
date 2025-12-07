@@ -24,6 +24,7 @@
  */
 
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { isbnPrefixes } from "./isbn-prefixes";
 import { tenants } from "./tenants";
 import { titles } from "./titles";
 import { users } from "./users";
@@ -32,9 +33,11 @@ import { users } from "./users";
  * ISBN type values - indicates format the ISBN is for
  * - physical: Physical book (print edition)
  * - ebook: Electronic book (digital edition)
+ * @deprecated Story 7.6: ISBN type distinction removed. Field kept for migration rollback.
  */
 export const isbnTypeValues = ["physical", "ebook"] as const;
 
+/** @deprecated Story 7.6: ISBN type distinction removed */
 export type ISBNType = (typeof isbnTypeValues)[number];
 
 /**
@@ -81,9 +84,10 @@ export const isbns = pgTable(
 
     /**
      * Type of ISBN - physical or ebook
+     * @deprecated Story 7.6: ISBN type distinction removed. Field kept for migration rollback.
      * Enforced via text enum at database level
      */
-    type: text("type", { enum: isbnTypeValues }).notNull(),
+    type: text("type", { enum: isbnTypeValues }),
 
     /**
      * Status of ISBN in pool lifecycle
@@ -111,6 +115,13 @@ export const isbns = pgTable(
      */
     assigned_by_user_id: uuid("assigned_by_user_id").references(() => users.id),
 
+    /**
+     * Foreign key to isbn_prefixes table - links ISBN to its source prefix
+     * Nullable - null for legacy imported ISBNs (before prefix system)
+     * Story 7.4: Publisher ISBN Prefix System
+     */
+    prefix_id: uuid("prefix_id").references(() => isbnPrefixes.id),
+
     /** Record creation timestamp (UTC, auto-generated) */
     created_at: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -128,13 +139,19 @@ export const isbns = pgTable(
     /** Index on status for filtering by availability */
     statusIdx: index("isbns_status_idx").on(table.status),
 
-    /** Index on type for filtering by physical/ebook */
-    typeIdx: index("isbns_type_idx").on(table.type),
+    /**
+     * Index on type for filtering by physical/ebook
+     * @deprecated Story 7.6: Type index no longer used - ISBNs are unified
+     */
+    // typeIdx: index("isbns_type_idx").on(table.type),
 
     /** Index on assigned_to_title_id for title lookups */
     assignedTitleIdx: index("isbns_assigned_to_title_id_idx").on(
       table.assigned_to_title_id,
     ),
+
+    /** Index on prefix_id for prefix-based filtering (Story 7.4) */
+    prefixIdIdx: index("isbns_prefix_id_idx").on(table.prefix_id),
   }),
 );
 

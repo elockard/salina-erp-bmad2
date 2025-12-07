@@ -16,13 +16,13 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { contracts, contractTiers } from "@/db/schema/contracts";
+import { logAuditEvent } from "@/lib/audit";
 import {
   getCurrentTenantId,
   getCurrentUser,
   getDb,
   requirePermission,
 } from "@/lib/auth";
-import { logAuditEvent } from "@/lib/audit";
 import { CALCULATE_ROYALTIES, MANAGE_CONTRACTS } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
 import { calculateRoyaltyForPeriod } from "./calculator";

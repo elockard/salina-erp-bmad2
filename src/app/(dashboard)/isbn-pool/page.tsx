@@ -6,6 +6,7 @@ import { ISBNPoolFilters } from "@/modules/isbn/components/isbn-pool-filters";
 import { ISBNPoolStats } from "@/modules/isbn/components/isbn-pool-stats";
 import { ISBNPoolTable } from "@/modules/isbn/components/isbn-pool-table";
 import { getISBNList, getISBNPoolStats } from "@/modules/isbn/queries";
+import { getPrefixFilterOptions } from "@/modules/isbn-prefixes/queries";
 
 /**
  * ISBN Pool page - Server Component
@@ -14,6 +15,8 @@ import { getISBNList, getISBNPoolStats } from "@/modules/isbn/queries";
  * AC 3: Full /isbn-pool page displays stats cards
  * AC 4-6: Table with columns, filtering, pagination
  * AC 8: Page accessible to all authenticated dashboard users
+ *
+ * Story 7.4 - AC 7.4.7: Filter ISBN pool table by prefix
  */
 
 export const metadata = {
@@ -26,6 +29,7 @@ interface ISBNPoolPageProps {
     type?: string;
     status?: string;
     search?: string;
+    prefix?: string;
     page?: string;
   }>;
 }
@@ -54,12 +58,14 @@ export default async function ISBNPoolPage({
     | "retired"
     | undefined;
   const search = params.search;
+  const prefix = params.prefix;
   const page = parseInt(params.page || "1", 10);
 
-  // Fetch stats and list data in parallel
-  const [statsResult, listResult] = await Promise.all([
+  // Fetch stats, list data, and prefix options in parallel
+  const [statsResult, listResult, prefixOptionsResult] = await Promise.all([
     getISBNPoolStats(),
-    getISBNList({ type, status, search, page, pageSize: 20 }),
+    getISBNList({ type, status, search, prefix, page, pageSize: 20 }),
+    getPrefixFilterOptions(),
   ]);
 
   if (!statsResult.success) {
@@ -111,10 +117,12 @@ export default async function ISBNPoolPage({
       <ISBNPoolStats stats={statsResult.data} />
 
       {/* Filters */}
+      {/* Story 7.6: Removed currentType - ISBNs are unified without type distinction */}
       <ISBNPoolFilters
-        currentType={type}
         currentStatus={status}
         currentSearch={search}
+        currentPrefix={prefix}
+        prefixOptions={prefixOptionsResult.success ? prefixOptionsResult.data : []}
       />
 
       {/* Data Table */}

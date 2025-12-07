@@ -8,6 +8,7 @@ const settingsNav = [
   { href: "/settings", label: "General", exact: true },
   { href: "/settings/users", label: "Users", exact: false },
   { href: "/settings/isbn-import", label: "ISBN Import", exact: false },
+  { href: "/settings/isbn-prefixes", label: "ISBN Prefixes", exact: false },
 ];
 
 export default function SettingsLayout({
@@ -38,7 +39,7 @@ export default function SettingsLayout({
               "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
               isActive(item.href, item.exact)
                 ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/50",
             )}
           >
             {item.label}

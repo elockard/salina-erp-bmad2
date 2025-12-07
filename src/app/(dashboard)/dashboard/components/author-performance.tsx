@@ -1,6 +1,6 @@
-import { getOwnerAdminDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/charts/bar-chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getOwnerAdminDashboardData } from "@/modules/reports/queries";
 
 /**
  * Author Performance Widget
@@ -25,7 +25,9 @@ export async function AuthorPerformance() {
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Author Performance</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Author Performance
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
@@ -39,7 +41,9 @@ export async function AuthorPerformance() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Author Performance</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Author Performance
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <BarChart

@@ -1,9 +1,12 @@
 "use server";
 
 /**
- * Statement Query Functions
+ * Statement Query Functions (Contact-Based)
+ *
+ * Story 7.3: Migrate Authors to Contacts
  *
  * Read-only query functions for statements list and detail views.
+ * Authors are now queried from the contacts table with role='author'.
  * All queries enforce tenant isolation via getDb() authenticated connection.
  *
  * Story: 5.5 - Build Statements List and Detail View for Finance
@@ -15,6 +18,7 @@
  * - src/modules/statements/types.ts (StatementWithRelations, PaginatedStatements)
  * - src/db/schema/statements.ts (statements table)
  * - src/lib/auth.ts (getDb, requirePermission)
+ * - queries-legacy.ts (original authors table implementation)
  */
 
 import {
@@ -26,10 +30,12 @@ import {
   ilike,
   lte,
   ne,
+  or,
   sql,
   sum,
 } from "drizzle-orm";
 import { authors } from "@/db/schema/authors";
+import { contacts, contactRoles } from "@/db/schema/contacts";
 import { statements } from "@/db/schema/statements";
 import { getCurrentUser, getDb, requirePermission } from "@/lib/auth";
 import type {
@@ -115,13 +121,23 @@ export async function getStatements(params: {
   }
 
   // For author search, we need a subquery approach
+  // Search contacts with author role by first_name/last_name
   let authorIds: string[] | undefined;
   if (params.filters?.authorSearch) {
-    const matchingAuthors = await db.query.authors.findMany({
-      where: ilike(authors.name, `%${params.filters.authorSearch}%`),
+    const searchTerm = `%${params.filters.authorSearch}%`;
+    const matchingContacts = await db.query.contacts.findMany({
+      where: or(
+        ilike(contacts.first_name, searchTerm),
+        ilike(contacts.last_name, searchTerm),
+      ),
       columns: { id: true },
+      with: { roles: true },
     });
-    authorIds = matchingAuthors.map((a) => a.id);
+
+    // Filter to only contacts with author role
+    authorIds = matchingContacts
+      .filter((c) => c.roles.some((r) => r.role === "author"))
+      .map((a) => a.id);
 
     // If no matching authors, return empty result
     if (authorIds.length === 0) {
@@ -134,7 +150,7 @@ export async function getStatements(params: {
       };
     }
 
-    // Use IN clause for matching author IDs
+    // Use IN clause for matching author IDs (now contact IDs)
     conditions.push(
       sql`${statements.author_id} IN (${sql.join(
         authorIds.map((id) => sql`${id}`),
@@ -208,6 +224,7 @@ export async function getStatementById(
   }
 
   // Transform to StatementWithDetails
+  // Story 7.3: Uses legacy author relation during transition
   return {
     ...statement,
     author: {
@@ -340,6 +357,7 @@ export async function getStatementStats(): Promise<StatementStats> {
  * Search authors for filter autocomplete
  *
  * AC-5.5.2: Author search filter with autocomplete
+ * Story 7.3: Now searches contacts with author role
  *
  * Required roles: finance, admin, owner
  *
@@ -357,13 +375,25 @@ export async function searchAuthorsForFilter(
     return [];
   }
 
-  const matchingAuthors = await db.query.authors.findMany({
-    where: ilike(authors.name, `%${searchQuery}%`),
-    columns: { id: true, name: true },
-    limit: 10,
+  const searchTerm = `%${searchQuery}%`;
+  const matchingContacts = await db.query.contacts.findMany({
+    where: or(
+      ilike(contacts.first_name, searchTerm),
+      ilike(contacts.last_name, searchTerm),
+    ),
+    columns: { id: true, first_name: true, last_name: true },
+    with: { roles: true },
+    limit: 20, // Get more to filter
   });
 
-  return matchingAuthors;
+  // Filter to contacts with author role and map to expected format
+  return matchingContacts
+    .filter((c) => c.roles.some((r) => r.role === "author"))
+    .slice(0, 10) // Limit after filtering
+    .map((c) => ({
+      id: c.id,
+      name: `${c.first_name || ""} ${c.last_name || ""}`.trim() || "Unknown",
+    }));
 }
 
 /**
@@ -425,14 +455,23 @@ export async function getStatementsPageData(params: {
     conditions.push(lte(statements.created_at, params.filters.generatedBefore));
   }
 
-  // Author search
+  // Author search - now using contacts with author role (Story 7.3)
   let authorIds: string[] | undefined;
   if (params.filters?.authorSearch) {
-    const matchingAuthors = await db.query.authors.findMany({
-      where: ilike(authors.name, `%${params.filters.authorSearch}%`),
+    const searchTerm = `%${params.filters.authorSearch}%`;
+    const matchingContacts = await db.query.contacts.findMany({
+      where: or(
+        ilike(contacts.first_name, searchTerm),
+        ilike(contacts.last_name, searchTerm),
+      ),
       columns: { id: true },
+      with: { roles: true },
     });
-    authorIds = matchingAuthors.map((a) => a.id);
+
+    // Filter to only contacts with author role
+    authorIds = matchingContacts
+      .filter((c) => c.roles.some((r) => r.role === "author"))
+      .map((a) => a.id);
 
     if (authorIds.length === 0) {
       // No matching authors - return empty statements but still fetch stats/periods
@@ -497,30 +536,31 @@ async function fetchStatsInternal(
   const quarterStart = new Date(now.getFullYear(), (currentQuarter - 1) * 3, 1);
   const quarterEnd = new Date(now.getFullYear(), currentQuarter * 3, 0);
 
-  const [quarterCountResult, liabilityResult, pendingResult] = await Promise.all([
-    db
-      .select({ count: count() })
-      .from(statements)
-      .where(
-        and(
-          gte(statements.created_at, quarterStart),
-          lte(statements.created_at, quarterEnd),
+  const [quarterCountResult, liabilityResult, pendingResult] =
+    await Promise.all([
+      db
+        .select({ count: count() })
+        .from(statements)
+        .where(
+          and(
+            gte(statements.created_at, quarterStart),
+            lte(statements.created_at, quarterEnd),
+          ),
         ),
-      ),
-    db
-      .select({ total: sum(statements.net_payable) })
-      .from(statements)
-      .where(
-        and(
-          gte(statements.created_at, quarterStart),
-          lte(statements.created_at, quarterEnd),
+      db
+        .select({ total: sum(statements.net_payable) })
+        .from(statements)
+        .where(
+          and(
+            gte(statements.created_at, quarterStart),
+            lte(statements.created_at, quarterEnd),
+          ),
         ),
-      ),
-    db
-      .select({ count: count() })
-      .from(statements)
-      .where(ne(statements.status, "sent")),
-  ]);
+      db
+        .select({ count: count() })
+        .from(statements)
+        .where(ne(statements.status, "sent")),
+    ]);
 
   return {
     thisQuarterCount: quarterCountResult[0]?.count || 0,
@@ -564,6 +604,7 @@ async function fetchPeriodsInternal(
  *
  * AC-5.6.2: Statement list shows only author's own statements
  * AC-5.6.5: RLS prevents access to other authors' data
+ * Story 7.3: Migrated to use contacts table with author role
  *
  * Required role: author (portal user)
  *
@@ -577,22 +618,23 @@ export async function getMyStatements(): Promise<StatementWithRelations[]> {
     return [];
   }
 
-  // Find author linked to this portal user via portal_user_id
-  const author = await db.query.authors.findFirst({
+  // Find contact with author role linked to this portal user (Story 7.3)
+  const contact = await db.query.contacts.findFirst({
     where: and(
-      eq(authors.portal_user_id, user.id),
-      eq(authors.is_active, true),
+      eq(contacts.portal_user_id, user.id),
+      eq(contacts.status, "active"),
     ),
+    with: { roles: true },
   });
 
-  if (!author) {
-    // User is not linked to any author - return empty
+  // Verify contact exists and has author role
+  if (!contact || !contact.roles.some((r) => r.role === "author")) {
     return [];
   }
 
-  // Get statements for this author only
+  // Get statements for this author using contact_id (Story 7.3 migration)
   const items = await db.query.statements.findMany({
-    where: eq(statements.author_id, author.id),
+    where: eq(statements.contact_id, contact.id),
     with: {
       author: true,
       contract: true,
@@ -608,6 +650,7 @@ export async function getMyStatements(): Promise<StatementWithRelations[]> {
  *
  * AC-5.6.3: Statement detail view matches PDF content structure
  * AC-5.6.5: RLS prevents access to other authors' data
+ * Story 7.3: Migrated to use contacts table with author role
  *
  * Required role: author (portal user)
  *
@@ -624,23 +667,25 @@ export async function getMyStatementById(
     return null;
   }
 
-  // Find author linked to this portal user
-  const author = await db.query.authors.findFirst({
+  // Find contact with author role linked to this portal user (Story 7.3)
+  const contact = await db.query.contacts.findFirst({
     where: and(
-      eq(authors.portal_user_id, user.id),
-      eq(authors.is_active, true),
+      eq(contacts.portal_user_id, user.id),
+      eq(contacts.status, "active"),
     ),
+    with: { roles: true },
   });
 
-  if (!author) {
+  // Verify contact exists and has author role
+  if (!contact || !contact.roles.some((r) => r.role === "author")) {
     return null;
   }
 
-  // Get statement with ownership check via author_id
+  // Get statement with ownership check via contact_id (Story 7.3 migration)
   const statement = await db.query.statements.findFirst({
     where: and(
       eq(statements.id, statementId),
-      eq(statements.author_id, author.id),
+      eq(statements.contact_id, contact.id),
     ),
     with: {
       author: true,
@@ -657,6 +702,7 @@ export async function getMyStatementById(
   }
 
   // Transform to StatementWithDetails
+  // Uses legacy author relation for backward compatibility, contact data available via contact relation
   return {
     ...statement,
     author: {

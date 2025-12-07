@@ -18,6 +18,8 @@ const isProtectedRoute = createRouteMatcher([
   "/statements(.*)", // Story 5.x: Statement generation
   "/reports(.*)", // Story 6.x: Reports module
   "/admin(.*)", // Story 6.6: System administration
+  "/contacts(.*)", // Story 7.2: Contact management
+  "/invoices(.*)", // Story 8.x: Invoice management
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -136,7 +138,17 @@ export default clerkMiddleware(async (auth, req) => {
           headers: requestHeaders,
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      // Let Clerk auth redirects pass through (e.g., redirect to sign-in)
+      if (
+        error &&
+        typeof error === "object" &&
+        "digest" in error &&
+        typeof (error as { digest?: string }).digest === "string" &&
+        (error as { digest: string }).digest.includes("NEXT_REDIRECT")
+      ) {
+        throw error;
+      }
       console.error("Middleware error:", error);
       // Fail closed - redirect to error page on any failure
       return NextResponse.redirect(new URL("/error", req.url));

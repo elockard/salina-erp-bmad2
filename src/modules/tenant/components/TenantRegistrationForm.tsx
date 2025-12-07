@@ -100,7 +100,7 @@ export function TenantRegistrationForm() {
         const protocol = window.location.protocol;
         const baseDomain =
           process.env.NEXT_PUBLIC_APP_URL?.replace(/^https?:\/\//, "") ||
-          "salina-erp.com";
+          "salina.media";
         const tenantUrl = `${protocol}//${result.data.subdomain}.${baseDomain}/welcome`;
 
         // Small delay to show toast
@@ -166,7 +166,7 @@ export function TenantRegistrationForm() {
               <FormDescription>
                 Your workspace URL:{" "}
                 <span className="font-medium text-[#1E3A5F]">
-                  {subdomain || "[subdomain]"}.salina-erp.com
+                  {subdomain || "[subdomain]"}.salina.media
                 </span>
               </FormDescription>
               {subdomainStatus === "checking" && (

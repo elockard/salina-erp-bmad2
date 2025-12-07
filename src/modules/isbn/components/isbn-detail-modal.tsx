@@ -42,8 +42,6 @@ import { getTitles } from "@/modules/titles/queries";
 import type { TitleWithAuthor } from "@/modules/titles/types";
 import { assignISBNToTitle } from "../actions";
 import { getISBNById } from "../queries";
-import type { ISBNType } from "../types";
-
 interface ISBNDetailModalProps {
   isbnId: string | null;
   open: boolean;
@@ -51,10 +49,12 @@ interface ISBNDetailModalProps {
   onAssignmentComplete?: () => void;
 }
 
+/**
+ * Story 7.6: Removed type field - ISBNs are unified without type distinction
+ */
 interface ISBNDetail {
   id: string;
   isbn_13: string;
-  type: "physical" | "ebook";
   status: "available" | "assigned" | "registered" | "retired";
   assignedToTitleId: string | null;
   assignedTitleName: string | null;
@@ -62,13 +62,6 @@ interface ISBNDetail {
   assignedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-/**
- * Get badge variant for ISBN type
- */
-function getTypeBadgeVariant(type: string): "secondary" | "outline" {
-  return type === "physical" ? "secondary" : "outline";
 }
 
 /**
@@ -154,6 +147,7 @@ export function ISBNDetailModal({
   }, [open, isbnId]);
 
   // Load titles when needed for assignment
+  // Story 7.6: Filter titles that don't already have an ISBN assigned (unified, no type distinction)
   useEffect(() => {
     if (
       open &&
@@ -164,14 +158,8 @@ export function ISBNDetailModal({
       setTitlesLoading(true);
       startTransition(async () => {
         const allTitles = await getTitles();
-        // Filter titles that don't already have the ISBN type assigned
-        const eligibleTitles = allTitles.filter((t) => {
-          if (isbn.type === "physical") {
-            return !t.isbn;
-          } else {
-            return !t.eisbn;
-          }
-        });
+        // Story 7.6: Filter titles that don't already have an ISBN assigned
+        const eligibleTitles = allTitles.filter((t) => !t.isbn);
         setTitles(eligibleTitles);
         setTitlesLoading(false);
       });
@@ -188,13 +176,13 @@ export function ISBNDetailModal({
   };
 
   // Handle ISBN assignment
+  // Story 7.6: Simplified - no format/type distinction
   const handleAssign = async () => {
     if (!isbn || !selectedTitle) return;
 
     setAssigning(true);
     const result = await assignISBNToTitle({
       titleId: selectedTitle.id,
-      format: isbn.type as ISBNType,
     });
 
     if (result.success) {
@@ -207,12 +195,8 @@ export function ISBNDetailModal({
     setAssigning(false);
   };
 
-  // Check if selected title already has this ISBN type
-  const titleHasFormat = selectedTitle
-    ? isbn?.type === "physical"
-      ? !!selectedTitle.isbn
-      : !!selectedTitle.eisbn
-    : false;
+  // Story 7.6: Check if selected title already has an ISBN (unified, no type distinction)
+  const titleHasIsbn = selectedTitle ? !!selectedTitle.isbn : false;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -262,27 +246,15 @@ export function ISBNDetailModal({
               </div>
             </div>
 
-            {/* Type and Status */}
-            <div className="flex gap-4">
-              <div className="space-y-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Type
-                </span>
-                <div>
-                  <Badge variant={getTypeBadgeVariant(isbn.type)}>
-                    {isbn.type === "physical" ? "Physical" : "Ebook"}
-                  </Badge>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Status
-                </span>
-                <div>
-                  <Badge {...getStatusBadgeProps(isbn.status)}>
-                    {isbn.status.charAt(0).toUpperCase() + isbn.status.slice(1)}
-                  </Badge>
-                </div>
+            {/* Status - Story 7.6: Removed Type badge, ISBNs are unified */}
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                Status
+              </span>
+              <div>
+                <Badge {...getStatusBadgeProps(isbn.status)}>
+                  {isbn.status.charAt(0).toUpperCase() + isbn.status.slice(1)}
+                </Badge>
               </div>
             </div>
 
@@ -341,11 +313,7 @@ export function ISBNDetailModal({
                   <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
                     <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
                     <p className="text-sm text-amber-700">
-                      No titles without a{" "}
-                      {isbn.type === "physical"
-                        ? "Physical ISBN"
-                        : "Ebook ISBN"}{" "}
-                      found. Create a title first.
+                      No titles without an ISBN found. Create a title first.
                     </p>
                   </div>
                 ) : (
@@ -413,16 +381,12 @@ export function ISBNDetailModal({
                       </PopoverContent>
                     </Popover>
 
-                    {/* Warning if title already has ISBN of this type */}
-                    {titleHasFormat && selectedTitle && (
+                    {/* Warning if title already has an ISBN */}
+                    {titleHasIsbn && selectedTitle && (
                       <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
                         <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
                         <p className="text-sm text-amber-700">
-                          This title already has a{" "}
-                          {isbn.type === "physical"
-                            ? "Physical ISBN"
-                            : "Ebook ISBN"}{" "}
-                          assigned.
+                          This title already has an ISBN assigned.
                         </p>
                       </div>
                     )}
@@ -431,7 +395,7 @@ export function ISBNDetailModal({
                     <Button
                       className="w-full"
                       onClick={handleAssign}
-                      disabled={!selectedTitle || titleHasFormat || assigning}
+                      disabled={!selectedTitle || titleHasIsbn || assigning}
                     >
                       {assigning ? (
                         <>

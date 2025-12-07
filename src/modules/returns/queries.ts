@@ -75,15 +75,15 @@ export async function searchTitlesForReturns(
 
   const searchPattern = `%${search}%`;
 
-  // Query titles with at least one ISBN assigned
+  // Query titles with ISBN assigned
   // Join with authors for author_name
+  // Story 7.6: Simplified - check for single isbn field (no type distinction)
   const results = await db
     .select({
       id: titles.id,
       title: titles.title,
       author_name: authors.name,
       isbn: titles.isbn,
-      eisbn: titles.eisbn,
     })
     .from(titles)
     .innerJoin(authors, eq(titles.author_id, authors.id))
@@ -91,8 +91,8 @@ export async function searchTitlesForReturns(
       and(
         // Tenant isolation
         eq(titles.tenant_id, tenantId),
-        // Must have at least one ISBN assigned
-        or(isNotNull(titles.isbn), isNotNull(titles.eisbn)),
+        // Story 7.6: Must have ISBN assigned (unified, no type distinction)
+        isNotNull(titles.isbn),
         // Search in title or author name
         or(
           ilike(titles.title, searchPattern),
@@ -103,12 +103,12 @@ export async function searchTitlesForReturns(
     .limit(limit);
 
   // Transform to TitleForReturnSelect with boolean flags
+  // Story 7.6: Removed has_eisbn - ISBNs are unified without type distinction
   return results.map((row) => ({
     id: row.id,
     title: row.title,
     author_name: row.author_name,
     has_isbn: row.isbn !== null,
-    has_eisbn: row.eisbn !== null,
   }));
 }
 
@@ -126,13 +126,13 @@ export async function getTitleForReturn(
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
 
+  // Story 7.6: Simplified - check for single isbn field (no type distinction)
   const results = await db
     .select({
       id: titles.id,
       title: titles.title,
       author_name: authors.name,
       isbn: titles.isbn,
-      eisbn: titles.eisbn,
     })
     .from(titles)
     .innerJoin(authors, eq(titles.author_id, authors.id))
@@ -140,8 +140,8 @@ export async function getTitleForReturn(
       and(
         eq(titles.tenant_id, tenantId),
         eq(titles.id, titleId),
-        // Must have at least one ISBN assigned
-        or(isNotNull(titles.isbn), isNotNull(titles.eisbn)),
+        // Story 7.6: Must have ISBN assigned (unified, no type distinction)
+        isNotNull(titles.isbn),
       ),
     )
     .limit(1);
@@ -151,12 +151,12 @@ export async function getTitleForReturn(
   }
 
   const row = results[0];
+  // Story 7.6: Removed has_eisbn - ISBNs are unified without type distinction
   return {
     id: row.id,
     title: row.title,
     author_name: row.author_name,
     has_isbn: row.isbn !== null,
-    has_eisbn: row.eisbn !== null,
   };
 }
 

@@ -228,6 +228,10 @@ export async function getTenantSettings(): Promise<
       fiscal_year_start: tenant.fiscal_year_start,
       default_currency: tenant.default_currency,
       statement_frequency: tenant.statement_frequency,
+      // Royalty period settings (Story 7.5)
+      royalty_period_type: tenant.royalty_period_type as TenantSettings["royalty_period_type"],
+      royalty_period_start_month: tenant.royalty_period_start_month,
+      royalty_period_start_day: tenant.royalty_period_start_day,
       created_at: tenant.created_at,
       updated_at: tenant.updated_at,
     };
@@ -282,6 +286,10 @@ export async function updateTenantSettings(
         fiscal_year_start: validated.fiscal_year_start || null,
         default_currency: validated.default_currency,
         statement_frequency: validated.statement_frequency,
+        // Royalty period settings (Story 7.5)
+        royalty_period_type: validated.royalty_period_type,
+        royalty_period_start_month: validated.royalty_period_start_month,
+        royalty_period_start_day: validated.royalty_period_start_day,
         updated_at: new Date(),
       })
       .where(eq(tenants.id, tenantId))
@@ -304,6 +312,10 @@ export async function updateTenantSettings(
       fiscal_year_start: updated.fiscal_year_start,
       default_currency: updated.default_currency,
       statement_frequency: updated.statement_frequency,
+      // Royalty period settings (Story 7.5)
+      royalty_period_type: updated.royalty_period_type as TenantSettings["royalty_period_type"],
+      royalty_period_start_month: updated.royalty_period_start_month,
+      royalty_period_start_day: updated.royalty_period_start_day,
       created_at: updated.created_at,
       updated_at: updated.updated_at,
     };

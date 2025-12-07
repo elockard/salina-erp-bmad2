@@ -55,3 +55,23 @@ export const VIEW_TAX_ID: UserRole[] = ["owner", "admin", "finance"];
 
 /** Users who can create/edit royalty contracts (Story 4.2 AC 9) */
 export const MANAGE_CONTRACTS: UserRole[] = ["owner", "admin", "editor"];
+
+/** Users who can create/edit contacts (Story 7.2 AC-7.2.5) */
+export const MANAGE_CONTACTS: UserRole[] = ["owner", "admin", "editor"];
+
+/** Users who can assign customer role to contacts (Story 7.2 AC-7.2.5) */
+export const ASSIGN_CUSTOMER_ROLE: UserRole[] = ["owner", "admin", "finance"];
+
+/** Users who can view contact list (Story 7.2 AC-7.2.1) */
+export const VIEW_CONTACTS: UserRole[] = [
+  "owner",
+  "admin",
+  "editor",
+  "finance",
+];
+
+/** Users who can create/edit invoices (Story 8.2 AC-8.2.1) */
+export const MANAGE_INVOICES: UserRole[] = ["owner", "admin", "finance"];
+
+/** Users who can view invoices (Story 8.2 AC-8.2.1) */
+export const VIEW_INVOICES: UserRole[] = ["owner", "admin", "finance"];

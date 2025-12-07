@@ -1,4 +1,19 @@
-// Author module exports
+/**
+ * @deprecated This module is deprecated. Use `@/modules/contacts` instead.
+ *
+ * Author Module
+ *
+ * Story 0.5: Consolidate Authors into Contacts
+ *
+ * Authors are now managed through the unified Contacts system.
+ * All new code should import from the contacts module:
+ *   - import { ContactsSplitView } from "@/modules/contacts/components/contacts-split-view"
+ *   - import { createContact, getContacts } from "@/modules/contacts"
+ *   - Filter by role='author' when querying contacts
+ *
+ * This module is maintained for backward compatibility only.
+ * Navigation has been updated to redirect /authors → /contacts?role=author
+ */
 
 // Actions (Server Actions)
 export * from "./actions";

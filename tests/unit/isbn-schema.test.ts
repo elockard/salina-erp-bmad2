@@ -240,37 +240,33 @@ describe("isbn13Schema", () => {
 });
 
 describe("createIsbnSchema", () => {
+  // Story 7.6: Updated tests - type field removed, ISBNs are unified
   describe("valid inputs", () => {
-    it("accepts valid input with physical type", () => {
+    it("accepts valid ISBN-13", () => {
       const result = createIsbnSchema.safeParse({
         isbn_13: "9780123456789",
-        type: "physical",
       });
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.isbn_13).toBe("9780123456789");
-        expect(result.data.type).toBe("physical");
       }
     });
 
-    it("accepts valid input with ebook type", () => {
+    it("accepts ISBN-13 starting with 979", () => {
       const result = createIsbnSchema.safeParse({
         isbn_13: "9791234567890",
-        type: "ebook",
       });
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.isbn_13).toBe("9791234567890");
-        expect(result.data.type).toBe("ebook");
       }
     });
 
     it("accepts ISBN-13 with hyphens", () => {
       const result = createIsbnSchema.safeParse({
         isbn_13: "978-0-12-345678-9",
-        type: "physical",
       });
 
       expect(result.success).toBe(true);
@@ -279,17 +275,7 @@ describe("createIsbnSchema", () => {
 
   describe("invalid inputs", () => {
     it("rejects missing isbn_13", () => {
-      const result = createIsbnSchema.safeParse({
-        type: "physical",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects missing type", () => {
-      const result = createIsbnSchema.safeParse({
-        isbn_13: "9780123456789",
-      });
+      const result = createIsbnSchema.safeParse({});
 
       expect(result.success).toBe(false);
     });
@@ -297,16 +283,6 @@ describe("createIsbnSchema", () => {
     it("rejects invalid isbn_13 format", () => {
       const result = createIsbnSchema.safeParse({
         isbn_13: "invalid",
-        type: "physical",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects invalid type", () => {
-      const result = createIsbnSchema.safeParse({
-        isbn_13: "9780123456789",
-        type: "hardcover",
       });
 
       expect(result.success).toBe(false);
@@ -315,7 +291,6 @@ describe("createIsbnSchema", () => {
     it("rejects empty isbn_13", () => {
       const result = createIsbnSchema.safeParse({
         isbn_13: "",
-        type: "physical",
       });
 
       expect(result.success).toBe(false);
@@ -324,10 +299,11 @@ describe("createIsbnSchema", () => {
 });
 
 describe("batchImportIsbnSchema", () => {
+  // Story 7.6: Updated tests - type field removed, ISBNs are unified
   describe("valid inputs", () => {
     it("accepts single ISBN in array", () => {
       const result = batchImportIsbnSchema.safeParse({
-        isbns: [{ isbn_13: "9780123456789", type: "physical" }],
+        isbns: [{ isbn_13: "9780123456789" }],
       });
 
       expect(result.success).toBe(true);
@@ -339,9 +315,9 @@ describe("batchImportIsbnSchema", () => {
     it("accepts multiple ISBNs", () => {
       const result = batchImportIsbnSchema.safeParse({
         isbns: [
-          { isbn_13: "9780123456789", type: "physical" },
-          { isbn_13: "9791234567890", type: "ebook" },
-          { isbn_13: "978-0-12-345678-9", type: "physical" },
+          { isbn_13: "9780123456789" },
+          { isbn_13: "9791234567890" },
+          { isbn_13: "978-0-12-345678-9" },
         ],
       });
 
@@ -368,10 +344,7 @@ describe("batchImportIsbnSchema", () => {
 
     it("rejects array with invalid ISBN", () => {
       const result = batchImportIsbnSchema.safeParse({
-        isbns: [
-          { isbn_13: "9780123456789", type: "physical" },
-          { isbn_13: "invalid", type: "ebook" },
-        ],
+        isbns: [{ isbn_13: "9780123456789" }, { isbn_13: "invalid" }],
       });
 
       expect(result.success).toBe(false);
@@ -491,13 +464,13 @@ describe("updateIsbnStatusSchema", () => {
 });
 
 describe("isbnFilterSchema", () => {
+  // Story 7.6: Updated tests - type field removed from filter schema
   const validTitleId = "123e4567-e89b-12d3-a456-426614174000";
 
   describe("valid inputs", () => {
     it("accepts valid filter with all fields", () => {
       const result = isbnFilterSchema.safeParse({
         search: "978",
-        type: "physical",
         status: "available",
         assigned_to_title_id: validTitleId,
       });
@@ -510,9 +483,9 @@ describe("isbnFilterSchema", () => {
       expect(result.success).toBe(true);
     });
 
-    it("accepts partial filter with type only", () => {
+    it("accepts partial filter with search only", () => {
       const result = isbnFilterSchema.safeParse({
-        type: "ebook",
+        search: "978-0",
       });
 
       expect(result.success).toBe(true);
@@ -536,14 +509,6 @@ describe("isbnFilterSchema", () => {
   });
 
   describe("invalid inputs", () => {
-    it("rejects invalid type in filter", () => {
-      const result = isbnFilterSchema.safeParse({
-        type: "hardcover",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
     it("rejects invalid status in filter", () => {
       const result = isbnFilterSchema.safeParse({
         status: "pending",

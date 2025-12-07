@@ -81,14 +81,14 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
   };
 
   // Filter titles by search query (client-side for instant feedback)
+  // Story 7.6: Removed eisbn - ISBNs are unified without type distinction
   const filteredTitles = titles.filter((title) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
       title.title.toLowerCase().includes(query) ||
       title.author.name.toLowerCase().includes(query) ||
-      title.isbn?.toLowerCase().includes(query) ||
-      title.eisbn?.toLowerCase().includes(query)
+      title.isbn?.toLowerCase().includes(query)
     );
   });
 

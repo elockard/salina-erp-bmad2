@@ -17,9 +17,9 @@
 
 import { adminDb } from "@/db";
 import {
-  auditLogs,
   type AuditActionType,
   type AuditResourceType,
+  auditLogs,
 } from "@/db/schema/audit-logs";
 
 /**

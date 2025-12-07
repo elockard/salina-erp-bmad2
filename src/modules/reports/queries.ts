@@ -41,21 +41,30 @@ import {
 } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { authors } from "@/db/schema/authors";
+import { contacts } from "@/db/schema/contacts";
 import { contracts } from "@/db/schema/contracts";
+import { invoices, payments } from "@/db/schema/invoices";
+import { isbnPrefixes } from "@/db/schema/isbn-prefixes";
 import { isbns } from "@/db/schema/isbns";
+import { returns } from "@/db/schema/returns";
 import { sales } from "@/db/schema/sales";
 import { statements } from "@/db/schema/statements";
+import { tenants } from "@/db/schema/tenants";
 import { titles } from "@/db/schema/titles";
 import { users } from "@/db/schema/users";
 import { getCurrentTenantId, getDb, requirePermission } from "@/lib/auth";
+import { formatPrefix } from "@/modules/isbn-prefixes/utils";
 import type { ReportPeriodInput } from "./schema";
-import { returns } from "@/db/schema/returns";
 import type {
   AdvanceBalanceRow,
+  AgingReportRow,
+  ARSummary,
   AuditLogEntry,
   AuditLogFilters,
   AuthorLiabilityRow,
   AuthorPortalDashboardData,
+  CustomerARDetail,
+  CustomerInvoiceDetail,
   EditorDashboardData,
   FinanceDashboardData,
   FinanceDashboardStats,
@@ -72,6 +81,7 @@ import type {
   SalesReportFilters,
   SalesReportResult,
   SalesReportRow,
+  TenantForReport,
 } from "./types";
 
 /**
@@ -700,7 +710,8 @@ export async function getSalesReport(
  * Get ISBN pool metrics for status report
  *
  * Story: 6.3 - Build ISBN Pool Status Report
- * AC-2: Stats cards show Physical ISBNs (Available/Assigned/Total), Ebook ISBNs (Available/Assigned/Total)
+ * Story: 7.6 - Remove ISBN Type Distinction (unified stats)
+ * AC-2: Stats cards show ISBNs (Available/Assigned/Total) - unified, no type breakdown
  * AC-3: Utilization percentage is calculated and displayed
  * AC-7: Burn rate calculation shows ISBNs assigned per month
  * AC-8: Estimated runout date displayed based on burn rate
@@ -716,57 +727,42 @@ export async function getISBNPoolMetrics(): Promise<ISBNPoolMetrics> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
 
-  // Query ISBN counts by type and status
+  // Story 7.6: Query ISBN counts by status only (no type distinction)
   // CRITICAL: tenant_id FIRST in all conditions
   const countsResult = await db
     .select({
-      type: isbns.type,
       status: isbns.status,
       count: count(),
     })
     .from(isbns)
     .where(eq(isbns.tenant_id, tenantId))
-    .groupBy(isbns.type, isbns.status);
+    .groupBy(isbns.status);
 
-  // Initialize counters
-  const physical = { available: 0, assigned: 0, total: 0 };
-  const ebook = { available: 0, assigned: 0, total: 0 };
+  // Initialize unified counters (Story 7.6: no type breakdown)
+  let available = 0;
+  let assigned = 0;
+  let total = 0;
 
-  // Aggregate counts by type
+  // Aggregate counts
   // ISBN statuses: available, assigned, registered, retired
   // For pool metrics: available = "available", assigned = "assigned" + "registered"
   for (const row of countsResult) {
     const countValue = Number(row.count);
 
-    if (row.type === "physical") {
-      if (row.status === "available") {
-        physical.available += countValue;
-      } else if (row.status === "assigned" || row.status === "registered") {
-        physical.assigned += countValue;
-      }
-      // retired ISBNs don't count toward total
-      if (row.status !== "retired") {
-        physical.total += countValue;
-      }
-    } else if (row.type === "ebook") {
-      if (row.status === "available") {
-        ebook.available += countValue;
-      } else if (row.status === "assigned" || row.status === "registered") {
-        ebook.assigned += countValue;
-      }
-      if (row.status !== "retired") {
-        ebook.total += countValue;
-      }
+    if (row.status === "available") {
+      available += countValue;
+    } else if (row.status === "assigned" || row.status === "registered") {
+      assigned += countValue;
+    }
+    // retired ISBNs don't count toward total
+    if (row.status !== "retired") {
+      total += countValue;
     }
   }
 
   // Calculate utilization percentage (AC-3)
-  const totalAll = physical.total + ebook.total;
-  const assignedAll = physical.assigned + ebook.assigned;
   const utilizationPercent =
-    totalAll > 0
-      ? new Decimal(assignedAll).div(totalAll).mul(100).toNumber()
-      : 0;
+    total > 0 ? new Decimal(assigned).div(total).mul(100).toNumber() : 0;
 
   // Calculate burn rate - ISBNs assigned per month (last 6 months average) (AC-7)
   const now = new Date();
@@ -786,21 +782,93 @@ export async function getISBNPoolMetrics(): Promise<ISBNPoolMetrics> {
 
   // Calculate estimated runout date (AC-8)
   // Available / burnRate = months until runout
-  const totalAvailable = physical.available + ebook.available;
   let estimatedRunout: Date | null = null;
 
-  if (burnRate > 0 && totalAvailable > 0) {
-    const monthsUntilRunout = Math.ceil(totalAvailable / burnRate);
+  if (burnRate > 0 && available > 0) {
+    const monthsUntilRunout = Math.ceil(available / burnRate);
     estimatedRunout = addMonths(now, monthsUntilRunout);
   }
 
   return {
-    physical,
-    ebook,
+    available,
+    assigned,
+    total,
     utilizationPercent: Math.round(utilizationPercent * 10) / 10, // 1 decimal
     burnRate: Math.round(burnRate * 10) / 10, // 1 decimal
     estimatedRunout,
   };
+}
+
+/**
+ * ISBN prefix breakdown item for reports
+ * Story 7.6: Removed type field - ISBNs are unified
+ */
+export interface PrefixBreakdownItem {
+  id: string | null;
+  prefix: string | null;
+  formattedPrefix: string;
+  totalIsbns: number;
+  availableCount: number;
+  assignedCount: number;
+  utilizationPercentage: number;
+}
+
+/**
+ * Get ISBN pool breakdown by prefix
+ *
+ * Story 7.4 - AC 7.4.7: ISBN pool report includes prefix breakdown
+ * Story 7.6 - Remove type grouping (ISBNs are unified)
+ *
+ * Groups ISBNs by prefix (or null for legacy imports) and calculates
+ * utilization for each prefix.
+ *
+ * Required roles: finance, admin, owner, editor
+ *
+ * @returns Array of prefix breakdown items
+ */
+export async function getISBNPrefixBreakdown(): Promise<PrefixBreakdownItem[]> {
+  await requirePermission(["finance", "admin", "owner", "editor"]);
+  const tenantId = await getCurrentTenantId();
+  const db = await getDb();
+
+  // Story 7.6: Query ISBN counts grouped by prefix_id only (no type grouping)
+  // CRITICAL: tenant_id FIRST in all conditions
+  const result = await db
+    .select({
+      prefixId: isbns.prefix_id,
+      prefixValue: isbnPrefixes.prefix,
+      total: count(),
+      available: sql<number>`count(*) filter (where ${isbns.status} = 'available')`,
+      assigned: sql<number>`count(*) filter (where ${isbns.status} in ('assigned', 'registered'))`,
+    })
+    .from(isbns)
+    .leftJoin(isbnPrefixes, eq(isbns.prefix_id, isbnPrefixes.id))
+    .where(eq(isbns.tenant_id, tenantId))
+    .groupBy(isbns.prefix_id, isbnPrefixes.prefix)
+    .orderBy(isbnPrefixes.prefix);
+
+  // Map to PrefixBreakdownItem
+  const breakdown: PrefixBreakdownItem[] = result.map((row) => {
+    const totalIsbns = Number(row.total);
+    const availableCount = Number(row.available);
+    const assignedCount = Number(row.assigned);
+    const utilizationPercentage =
+      totalIsbns > 0 ? Math.round((assignedCount / totalIsbns) * 100) : 0;
+
+    return {
+      id: row.prefixId,
+      prefix: row.prefixValue,
+      formattedPrefix: row.prefixValue
+        ? formatPrefix(row.prefixValue)
+        : "Legacy (Imported)",
+      totalIsbns,
+      availableCount,
+      assignedCount,
+      utilizationPercentage,
+    };
+  });
+
+  return breakdown;
 }
 
 /**
@@ -1375,10 +1443,7 @@ export async function getOwnerAdminDashboardData(): Promise<OwnerAdminDashboardD
     .from(sales)
     .innerJoin(titles, eq(sales.title_id, titles.id))
     .where(
-      and(
-        eq(sales.tenant_id, tenantId),
-        gte(sales.sale_date, sixMonthsAgoStr),
-      ),
+      and(eq(sales.tenant_id, tenantId), gte(sales.sale_date, sixMonthsAgoStr)),
     )
     .groupBy(sales.title_id, titles.title)
     .orderBy(desc(sum(sales.total_amount)))
@@ -1403,10 +1468,7 @@ export async function getOwnerAdminDashboardData(): Promise<OwnerAdminDashboardD
     .innerJoin(contracts, eq(titles.id, contracts.title_id))
     .innerJoin(authors, eq(contracts.author_id, authors.id))
     .where(
-      and(
-        eq(sales.tenant_id, tenantId),
-        gte(sales.sale_date, sixMonthsAgoStr),
-      ),
+      and(eq(sales.tenant_id, tenantId), gte(sales.sale_date, sixMonthsAgoStr)),
     )
     .groupBy(authors.id, authors.name)
     .orderBy(desc(sum(sales.total_amount)))
@@ -1426,10 +1488,7 @@ export async function getOwnerAdminDashboardData(): Promise<OwnerAdminDashboardD
     })
     .from(isbns)
     .where(
-      and(
-        eq(isbns.tenant_id, tenantId),
-        gte(isbns.assigned_at, sixMonthsAgo),
-      ),
+      and(eq(isbns.tenant_id, tenantId), gte(isbns.assigned_at, sixMonthsAgo)),
     )
     .groupBy(sql`to_char(${isbns.assigned_at}, 'YYYY-MM')`)
     .orderBy(sql`to_char(${isbns.assigned_at}, 'YYYY-MM')`);
@@ -1463,8 +1522,7 @@ export async function getOwnerAdminDashboardData(): Promise<OwnerAdminDashboardD
     const displayMonth = format(monthDate, "MMM yyyy");
     isbnUtilizationTrend.push({
       month: displayMonth,
-      utilization:
-        Math.round((utilizationMap.get(yearMonth) ?? 0) * 10) / 10,
+      utilization: Math.round((utilizationMap.get(yearMonth) ?? 0) * 10) / 10,
     });
   }
 
@@ -1540,9 +1598,7 @@ export async function getFinanceDashboardData(): Promise<FinanceDashboardData> {
   const [pendingCountResult] = await db
     .select({ count: count() })
     .from(returns)
-    .where(
-      and(eq(returns.tenant_id, tenantId), eq(returns.status, "pending")),
-    );
+    .where(and(eq(returns.tenant_id, tenantId), eq(returns.status, "pending")));
 
   const [urgentCountResult] = await db
     .select({ count: count() })
@@ -1635,7 +1691,9 @@ export async function getEditorDashboardData(
   // 1. My titles this quarter (titles with ISBNs assigned by this user in this quarter)
   // Since titles don't track created_by, we use ISBN assignments as proxy for "my titles"
   const [myTitlesResult] = await db
-    .select({ count: sql<number>`COUNT(DISTINCT ${isbns.assigned_to_title_id})` })
+    .select({
+      count: sql<number>`COUNT(DISTINCT ${isbns.assigned_to_title_id})`,
+    })
     .from(isbns)
     .where(
       and(
@@ -1680,10 +1738,7 @@ export async function getEditorDashboardData(
     .select({ count: count() })
     .from(isbns)
     .where(
-      and(
-        eq(isbns.tenant_id, tenantId),
-        eq(isbns.assigned_by_user_id, userId),
-      ),
+      and(eq(isbns.tenant_id, tenantId), eq(isbns.assigned_by_user_id, userId)),
     );
 
   const myISBNAssignments = Number(myIsbnResult?.count ?? 0);
@@ -1693,12 +1748,7 @@ export async function getEditorDashboardData(
     .select({ count: count() })
     .from(titles)
     .leftJoin(isbns, eq(titles.id, isbns.assigned_to_title_id))
-    .where(
-      and(
-        eq(titles.tenant_id, tenantId),
-        isNull(isbns.id),
-      ),
-    );
+    .where(and(eq(titles.tenant_id, tenantId), isNull(isbns.id)));
 
   const pendingTasks: { type: string; count: number }[] = [
     {
@@ -1719,14 +1769,15 @@ export async function getEditorDashboardData(
  * Get Author Portal Dashboard Data
  *
  * Story: 6.7 - Enhance All Dashboards with Role-Specific Analytics
+ * Story 7.3 - Migrate Authors to Contacts
  * AC-4: Earnings timeline, Best performing titles, Advance recoupment progress, Next statement date
  *
  * Required roles: author (portal access)
  *
  * CRITICAL: tenant_id filter is ALWAYS the FIRST condition
- * CRITICAL: Data is filtered by authorId - authors only see their own data
+ * CRITICAL: Data is filtered by authorId (now contactId) - authors only see their own data
  *
- * @param authorId - The author's ID for filtering
+ * @param authorId - The author's contact ID for filtering (Story 7.3: author.id = contact.id)
  * @returns Author portal dashboard data
  */
 export async function getAuthorPortalDashboardData(
@@ -1736,14 +1787,14 @@ export async function getAuthorPortalDashboardData(
   // This query is called from portal routes which verify author access
   const db = await getDb();
 
-  // Get tenantId from the author record
-  const [authorRecord] = await db
-    .select({ tenantId: authors.tenant_id })
-    .from(authors)
-    .where(eq(authors.id, authorId))
+  // Get tenantId from the contact record (Story 7.3: authors migrated to contacts)
+  const [contactRecord] = await db
+    .select({ tenantId: contacts.tenant_id })
+    .from(contacts)
+    .where(eq(contacts.id, authorId))
     .limit(1);
 
-  if (!authorRecord) {
+  if (!contactRecord) {
     return {
       earningsTimeline: [],
       bestPerformingTitles: [],
@@ -1752,7 +1803,7 @@ export async function getAuthorPortalDashboardData(
     };
   }
 
-  const tenantId = authorRecord.tenantId;
+  const tenantId = contactRecord.tenantId;
   const now = new Date();
 
   // 1. Earnings timeline (quarterly, last 8 quarters)
@@ -1791,10 +1842,7 @@ export async function getAuthorPortalDashboardData(
     .innerJoin(titles, eq(sales.title_id, titles.id))
     .innerJoin(contracts, eq(titles.id, contracts.title_id))
     .where(
-      and(
-        eq(sales.tenant_id, tenantId),
-        eq(contracts.author_id, authorId),
-      ),
+      and(eq(sales.tenant_id, tenantId), eq(contracts.author_id, authorId)),
     )
     .groupBy(titles.id, titles.title)
     .orderBy(desc(sum(sales.quantity)))
@@ -1814,10 +1862,7 @@ export async function getAuthorPortalDashboardData(
     })
     .from(contracts)
     .where(
-      and(
-        eq(contracts.tenant_id, tenantId),
-        eq(contracts.author_id, authorId),
-      ),
+      and(eq(contracts.tenant_id, tenantId), eq(contracts.author_id, authorId)),
     );
 
   let totalAdvance = new Decimal(0);
@@ -1843,5 +1888,369 @@ export async function getAuthorPortalDashboardData(
     bestPerformingTitles,
     advanceRecoupmentProgress,
     nextStatementDate,
+  };
+}
+
+// ============================================================================
+// Accounts Receivable Queries (Story 8.5)
+// ============================================================================
+
+/**
+ * Valid invoice statuses for AR calculations
+ * Excludes draft (not sent) and void (cancelled)
+ * Includes sent, partially_paid, overdue (all have receivable balances)
+ */
+const AR_VALID_STATUSES = ["sent", "partially_paid", "overdue"];
+
+/**
+ * Get AR Summary statistics
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.2: Summary stats cards showing total receivables, current, overdue, etc.
+ *
+ * Required roles: finance, admin, owner
+ *
+ * CRITICAL: tenant_id filter is ALWAYS the FIRST condition
+ *
+ * @returns AR summary statistics
+ */
+export async function getARSummary(): Promise<ARSummary> {
+  await requirePermission(["finance", "admin", "owner"]);
+  const tenantId = await getCurrentTenantId();
+  const db = await getDb();
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+
+  // Get all open invoices (valid statuses with balance > 0)
+  const openInvoices = await db.query.invoices.findMany({
+    where: and(
+      eq(invoices.tenant_id, tenantId),
+      inArray(invoices.status, AR_VALID_STATUSES),
+    ),
+  });
+
+  // Filter to those with balance > 0 and calculate totals
+  let totalReceivables = new Decimal(0);
+  let currentAmount = new Decimal(0);
+  let overdueAmount = new Decimal(0);
+  let openInvoiceCount = 0;
+
+  for (const invoice of openInvoices) {
+    const balance = new Decimal(invoice.balance_due);
+    if (balance.lte(0)) continue;
+
+    openInvoiceCount++;
+    totalReceivables = totalReceivables.plus(balance);
+
+    // Check if overdue (due_date < today)
+    const dueDate = invoice.due_date;
+    if (dueDate && dueDate < today) {
+      overdueAmount = overdueAmount.plus(balance);
+    } else {
+      currentAmount = currentAmount.plus(balance);
+    }
+  }
+
+  // Calculate average days to pay from paid invoices
+  const paidInvoices = await db.query.invoices.findMany({
+    where: and(
+      eq(invoices.tenant_id, tenantId),
+      eq(invoices.status, "paid"),
+    ),
+    with: {
+      payments: true,
+    },
+  });
+
+  let totalDays = 0;
+  let paidCount = 0;
+
+  for (const invoice of paidInvoices) {
+    if (invoice.payments.length > 0 && invoice.invoice_date) {
+      // Find the final payment date (last payment)
+      const sortedPayments = [...invoice.payments].sort(
+        (a, b) =>
+          new Date(b.payment_date).getTime() -
+          new Date(a.payment_date).getTime(),
+      );
+      const lastPayment = sortedPayments[0];
+
+      const invoiceDate = new Date(invoice.invoice_date);
+      const paymentDate = new Date(lastPayment.payment_date);
+      const daysDiff = Math.ceil(
+        (paymentDate.getTime() - invoiceDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      if (daysDiff >= 0) {
+        totalDays += daysDiff;
+        paidCount++;
+      }
+    }
+  }
+
+  const averageDaysToPay = paidCount > 0 ? Math.round(totalDays / paidCount) : 0;
+
+  return {
+    totalReceivables: totalReceivables.toFixed(2),
+    currentAmount: currentAmount.toFixed(2),
+    overdueAmount: overdueAmount.toFixed(2),
+    averageDaysToPay,
+    openInvoiceCount,
+  };
+}
+
+/**
+ * Get Aging Report grouped by customer
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.3: Aging report table with customer + buckets + total
+ *
+ * Required roles: finance, admin, owner
+ *
+ * CRITICAL: tenant_id filter is ALWAYS the FIRST condition
+ *
+ * @returns Array of aging report rows by customer
+ */
+export async function getAgingReportByCustomer(): Promise<AgingReportRow[]> {
+  await requirePermission(["finance", "admin", "owner"]);
+  const tenantId = await getCurrentTenantId();
+  const db = await getDb();
+  const today = new Date();
+
+  // Get all open invoices with balance > 0
+  const openInvoices = await db.query.invoices.findMany({
+    where: and(
+      eq(invoices.tenant_id, tenantId),
+      inArray(invoices.status, AR_VALID_STATUSES),
+    ),
+  });
+
+  // Filter to those with balance > 0
+  const invoicesWithBalance = openInvoices.filter(
+    (inv) => new Decimal(inv.balance_due).gt(0),
+  );
+
+  if (invoicesWithBalance.length === 0) {
+    return [];
+  }
+
+  // Get unique customer IDs
+  const customerIds = [
+    ...new Set(invoicesWithBalance.map((inv) => inv.customer_id)),
+  ];
+
+  // Get customer info
+  const customers = await db.query.contacts.findMany({
+    where: inArray(contacts.id, customerIds),
+  });
+
+  const customerMap = new Map(
+    customers.map((c) => [c.id, `${c.first_name} ${c.last_name}`]),
+  );
+
+  // Group by customer and calculate aging buckets
+  const customerBuckets = new Map<
+    string,
+    {
+      current: Decimal;
+      days1to30: Decimal;
+      days31to60: Decimal;
+      days61to90: Decimal;
+      days90plus: Decimal;
+      total: Decimal;
+    }
+  >();
+
+  for (const invoice of invoicesWithBalance) {
+    const customerId = invoice.customer_id;
+    const balance = new Decimal(invoice.balance_due);
+    const dueDate = invoice.due_date ? new Date(invoice.due_date) : today;
+    const daysOverdue = Math.ceil(
+      (today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    if (!customerBuckets.has(customerId)) {
+      customerBuckets.set(customerId, {
+        current: new Decimal(0),
+        days1to30: new Decimal(0),
+        days31to60: new Decimal(0),
+        days61to90: new Decimal(0),
+        days90plus: new Decimal(0),
+        total: new Decimal(0),
+      });
+    }
+
+    const buckets = customerBuckets.get(customerId)!;
+
+    // Assign to appropriate bucket
+    if (daysOverdue <= 0) {
+      buckets.current = buckets.current.plus(balance);
+    } else if (daysOverdue <= 30) {
+      buckets.days1to30 = buckets.days1to30.plus(balance);
+    } else if (daysOverdue <= 60) {
+      buckets.days31to60 = buckets.days31to60.plus(balance);
+    } else if (daysOverdue <= 90) {
+      buckets.days61to90 = buckets.days61to90.plus(balance);
+    } else {
+      buckets.days90plus = buckets.days90plus.plus(balance);
+    }
+
+    buckets.total = buckets.total.plus(balance);
+  }
+
+  // Convert to array and format
+  const rows: AgingReportRow[] = Array.from(customerBuckets.entries()).map(
+    ([customerId, buckets]) => ({
+      customerId,
+      customerName: customerMap.get(customerId) ?? "Unknown Customer",
+      current: buckets.current.toFixed(2),
+      days1to30: buckets.days1to30.toFixed(2),
+      days31to60: buckets.days31to60.toFixed(2),
+      days61to90: buckets.days61to90.toFixed(2),
+      days90plus: buckets.days90plus.toFixed(2),
+      total: buckets.total.toFixed(2),
+    }),
+  );
+
+  // Sort by total descending (highest first)
+  rows.sort(
+    (a, b) => Number.parseFloat(b.total) - Number.parseFloat(a.total),
+  );
+
+  return rows;
+}
+
+/**
+ * Get Customer AR Detail for drill-down view
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.4: Customer drill-down showing invoices and payment history
+ *
+ * Required roles: finance, admin, owner
+ *
+ * CRITICAL: tenant_id filter is ALWAYS the FIRST condition
+ *
+ * @param customerId - Contact ID of the customer
+ * @returns Customer AR detail or null if not found
+ */
+export async function getCustomerARDetail(
+  customerId: string,
+): Promise<CustomerARDetail | null> {
+  await requirePermission(["finance", "admin", "owner"]);
+  const tenantId = await getCurrentTenantId();
+  const db = await getDb();
+  const today = new Date();
+
+  // Get customer info
+  const customer = await db.query.contacts.findFirst({
+    where: and(eq(contacts.id, customerId), eq(contacts.tenant_id, tenantId)),
+  });
+
+  if (!customer) return null;
+
+  // Get all invoices for this customer
+  const customerInvoices = await db.query.invoices.findMany({
+    where: and(
+      eq(invoices.tenant_id, tenantId),
+      eq(invoices.customer_id, customerId),
+    ),
+    with: { payments: true },
+    orderBy: [desc(invoices.invoice_date)],
+  });
+
+  // Filter to open invoices (valid status with balance > 0)
+  const openInvoices = customerInvoices.filter(
+    (inv) =>
+      AR_VALID_STATUSES.includes(inv.status) &&
+      new Decimal(inv.balance_due).gt(0),
+  );
+
+  // Calculate invoice details with days overdue
+  const invoiceDetails: CustomerInvoiceDetail[] = openInvoices.map((inv) => {
+    const dueDate = inv.due_date ? new Date(inv.due_date) : today;
+    const daysOverdue = Math.max(
+      0,
+      Math.ceil(
+        (today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
+      ),
+    );
+    return {
+      id: inv.id,
+      invoiceNumber: inv.invoice_number,
+      invoiceDate: new Date(inv.invoice_date),
+      dueDate,
+      total: inv.total,
+      balanceDue: inv.balance_due,
+      status: inv.status,
+      daysOverdue,
+    };
+  });
+
+  // Calculate payment history stats
+  let totalBilled = new Decimal(0);
+  let totalPaid = new Decimal(0);
+
+  for (const inv of customerInvoices) {
+    totalBilled = totalBilled.plus(new Decimal(inv.total));
+    totalPaid = totalPaid.plus(new Decimal(inv.amount_paid));
+  }
+
+  // Calculate average days to pay from paid invoices
+  const paidInvoices = customerInvoices.filter(
+    (inv) => inv.status === "paid" && inv.payments.length > 0,
+  );
+  let avgDaysToPay = 0;
+  if (paidInvoices.length > 0) {
+    const totalDays = paidInvoices.reduce((sum, inv) => {
+      const sortedPayments = [...inv.payments].sort(
+        (a, b) =>
+          new Date(b.payment_date).getTime() -
+          new Date(a.payment_date).getTime(),
+      );
+      const lastPayment = sortedPayments[0];
+      const days = Math.ceil(
+        (new Date(lastPayment.payment_date).getTime() -
+          new Date(inv.invoice_date).getTime()) /
+          (1000 * 60 * 60 * 24),
+      );
+      return sum + Math.max(0, days);
+    }, 0);
+    avgDaysToPay = Math.round(totalDays / paidInvoices.length);
+  }
+
+  return {
+    customerId,
+    customerName: `${customer.first_name} ${customer.last_name}`,
+    invoices: invoiceDetails,
+    paymentHistory: {
+      totalBilled: totalBilled.toFixed(2),
+      totalPaid: totalPaid.toFixed(2),
+      avgDaysToPay,
+    },
+  };
+}
+
+/**
+ * Get tenant info for report headers (PDF export)
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.7: PDF export with company name header
+ *
+ * Required roles: finance, admin, owner
+ *
+ * @returns Tenant info for report header
+ */
+export async function getTenantForReport(): Promise<TenantForReport> {
+  await requirePermission(["finance", "admin", "owner"]);
+  const tenantId = await getCurrentTenantId();
+  const db = await getDb();
+
+  const tenant = await db.query.tenants.findFirst({
+    where: eq(tenants.id, tenantId),
+    columns: { name: true },
+  });
+
+  return {
+    name: tenant?.name ?? "Unknown",
   };
 }

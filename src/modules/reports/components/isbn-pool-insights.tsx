@@ -6,6 +6,7 @@
  * Displays burn rate, estimated runout date, and quick action button.
  *
  * Story: 6.3 - Build ISBN Pool Status Report
+ * Story: 7.6 - Remove ISBN Type Distinction (unified insights)
  * AC: 7 (Burn rate calculation shows ISBNs assigned per month)
  * AC: 8 (Estimated runout date displayed based on burn rate)
  * AC: 9 ("Import ISBN Block" quick action button links to ISBN import page)
@@ -29,12 +30,12 @@ interface ISBNPoolInsightsProps {
 }
 
 export function ISBNPoolInsights({ metrics }: ISBNPoolInsightsProps) {
-  const { physical, ebook, burnRate, estimatedRunout } = metrics;
-  const totalAvailable = physical.available + ebook.available;
+  // Story 7.6: Unified metrics - no physical/ebook breakdown
+  const { available, burnRate, estimatedRunout } = metrics;
 
   // Calculate months until runout
   const monthsUntilRunout =
-    burnRate > 0 ? Math.ceil(totalAvailable / burnRate) : null;
+    burnRate > 0 ? Math.ceil(available / burnRate) : null;
 
   return (
     <Card data-testid="isbn-pool-insights">
@@ -108,7 +109,10 @@ export function ISBNPoolInsights({ metrics }: ISBNPoolInsightsProps) {
           </div>
 
           {/* Available Summary */}
-          <div className="flex items-start space-x-3" data-testid="available-summary">
+          <div
+            className="flex items-start space-x-3"
+            data-testid="available-summary"
+          >
             <div className="rounded-lg bg-muted p-2">
               <ArrowRight className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -117,13 +121,13 @@ export function ISBNPoolInsights({ metrics }: ISBNPoolInsightsProps) {
                 Available Now
               </p>
               <p className="text-lg font-semibold">
-                {totalAvailable}{" "}
+                {available}{" "}
                 <span className="text-sm font-normal text-muted-foreground">
                   ISBNs
                 </span>
               </p>
               <p className="text-xs text-muted-foreground">
-                {physical.available} Physical, {ebook.available} Ebook
+                Ready to assign
               </p>
             </div>
           </div>

@@ -1,8 +1,14 @@
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { User } from "@/db/schema";
-import { requirePermission } from "@/lib/auth";
 import type { ActionResult } from "@/lib/types";
+
+// Unmock @/lib/auth to test the real implementation
+// The global setup.ts mocks it for integration tests, but this test
+// needs to test the actual auth module behavior with mocked dependencies
+vi.unmock("@/lib/auth");
+
+import { requirePermission } from "@/lib/auth";
 
 // Mock dependencies
 vi.mock("@clerk/nextjs/server", () => ({
@@ -21,6 +27,46 @@ vi.mock("@/db", () => ({
 import { currentUser as mockCurrentUser } from "@clerk/nextjs/server";
 import { headers as mockHeaders } from "next/headers";
 import { getAuthenticatedDb as mockGetAuthenticatedDb } from "@/db";
+
+/**
+ * Options for setupAuthMocks helper
+ */
+interface SetupAuthMocksOptions {
+  /** If true, omits the x-tenant-id header to test missing tenant scenarios */
+  missingTenantId?: boolean;
+}
+
+/**
+ * Helper to setup auth mocks for a given user
+ * Reduces repetitive mock setup across tests
+ */
+function setupAuthMocks(user: User | null, options: SetupAuthMocksOptions = {}) {
+  if (user) {
+    (mockCurrentUser as Mock).mockResolvedValue({
+      id: user.clerk_user_id,
+    });
+
+    (mockHeaders as Mock).mockResolvedValue({
+      get: vi.fn((key: string) => {
+        if (key === "x-tenant-id") {
+          return options.missingTenantId ? null : user.tenant_id;
+        }
+        if (key === "x-clerk-jwt") return "mock-jwt-token";
+        return null;
+      }),
+    });
+
+    (mockGetAuthenticatedDb as Mock).mockResolvedValue({
+      query: {
+        users: {
+          findFirst: vi.fn().mockResolvedValue(user),
+        },
+      },
+    });
+  } else {
+    (mockCurrentUser as Mock).mockResolvedValue(null);
+  }
+}
 
 /**
  * Example Server Action with permission check
@@ -68,25 +114,7 @@ describe("Permission Enforcement in Server Actions", () => {
       updated_at: new Date(),
     };
 
-    (mockCurrentUser as Mock).mockResolvedValue({
-      id: "clerk_123",
-    });
-
-    (mockHeaders as Mock).mockResolvedValue({
-      get: vi.fn((key: string) => {
-        if (key === "x-tenant-id") return "tenant-123";
-        if (key === "x-clerk-jwt") return "mock-jwt-token";
-        return null;
-      }),
-    });
-
-    (mockGetAuthenticatedDb as Mock).mockResolvedValue({
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue(mockUser),
-        },
-      },
-    });
+    setupAuthMocks(mockUser);
 
     const result = await protectedAction("test data");
 
@@ -108,25 +136,7 @@ describe("Permission Enforcement in Server Actions", () => {
       updated_at: new Date(),
     };
 
-    (mockCurrentUser as Mock).mockResolvedValue({
-      id: "clerk_456",
-    });
-
-    (mockHeaders as Mock).mockResolvedValue({
-      get: vi.fn((key: string) => {
-        if (key === "x-tenant-id") return "tenant-123";
-        if (key === "x-clerk-jwt") return "mock-jwt-token";
-        return null;
-      }),
-    });
-
-    (mockGetAuthenticatedDb as Mock).mockResolvedValue({
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue(mockUser),
-        },
-      },
-    });
+    setupAuthMocks(mockUser);
 
     const result = await protectedAction("test data");
 
@@ -145,25 +155,7 @@ describe("Permission Enforcement in Server Actions", () => {
       updated_at: new Date(),
     };
 
-    (mockCurrentUser as Mock).mockResolvedValue({
-      id: "clerk_789",
-    });
-
-    (mockHeaders as Mock).mockResolvedValue({
-      get: vi.fn((key: string) => {
-        if (key === "x-tenant-id") return "tenant-123";
-        if (key === "x-clerk-jwt") return "mock-jwt-token";
-        return null;
-      }),
-    });
-
-    (mockGetAuthenticatedDb as Mock).mockResolvedValue({
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue(mockUser),
-        },
-      },
-    });
+    setupAuthMocks(mockUser);
 
     const result = await protectedAction("test data");
 
@@ -176,7 +168,7 @@ describe("Permission Enforcement in Server Actions", () => {
   });
 
   it("returns 403 error for unauthenticated user", async () => {
-    (mockCurrentUser as Mock).mockResolvedValue(null);
+    setupAuthMocks(null);
 
     const result = await protectedAction("test data");
 
@@ -185,6 +177,30 @@ describe("Permission Enforcement in Server Actions", () => {
       expect(result.error).toBe(
         "You don't have permission to perform this action",
       );
+    }
+  });
+
+  it("returns error when tenant-id header is missing", async () => {
+    const mockUser: User = {
+      id: "user-no-tenant",
+      tenant_id: "tenant-123",
+      clerk_user_id: "clerk_123",
+      email: "user@example.com",
+      role: "admin",
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    // Setup with missing tenant-id header
+    setupAuthMocks(mockUser, { missingTenantId: true });
+
+    const result = await protectedAction("test data");
+
+    // Missing tenant-id triggers an error (either permission or unexpected)
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBeDefined();
     }
   });
 
@@ -200,25 +216,7 @@ describe("Permission Enforcement in Server Actions", () => {
       updated_at: new Date(),
     };
 
-    (mockCurrentUser as Mock).mockResolvedValue({
-      id: "clerk_inactive",
-    });
-
-    (mockHeaders as Mock).mockResolvedValue({
-      get: vi.fn((key: string) => {
-        if (key === "x-tenant-id") return "tenant-123";
-        if (key === "x-clerk-jwt") return "mock-jwt-token";
-        return null;
-      }),
-    });
-
-    (mockGetAuthenticatedDb as Mock).mockResolvedValue({
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue(mockUser),
-        },
-      },
-    });
+    setupAuthMocks(mockUser);
 
     const result = await protectedAction("test data");
 
@@ -242,25 +240,7 @@ describe("Permission Enforcement in Server Actions", () => {
       updated_at: new Date(),
     };
 
-    (mockCurrentUser as Mock).mockResolvedValue({
-      id: "clerk_789",
-    });
-
-    (mockHeaders as Mock).mockResolvedValue({
-      get: vi.fn((key: string) => {
-        if (key === "x-tenant-id") return "tenant-123";
-        if (key === "x-clerk-jwt") return "mock-jwt-token";
-        return null;
-      }),
-    });
-
-    (mockGetAuthenticatedDb as Mock).mockResolvedValue({
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue(mockUser),
-        },
-      },
-    });
+    setupAuthMocks(mockUser);
 
     const result = await protectedAction("test data");
 
@@ -292,25 +272,7 @@ describe("Permission Matrix Enforcement", () => {
       updated_at: new Date(),
     };
 
-    (mockCurrentUser as Mock).mockResolvedValue({
-      id: "clerk_owner",
-    });
-
-    (mockHeaders as Mock).mockResolvedValue({
-      get: vi.fn((key: string) => {
-        if (key === "x-tenant-id") return "tenant-123";
-        if (key === "x-clerk-jwt") return "mock-jwt-token";
-        return null;
-      }),
-    });
-
-    (mockGetAuthenticatedDb as Mock).mockResolvedValue({
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue(mockOwner),
-        },
-      },
-    });
+    setupAuthMocks(mockOwner);
 
     // Owner should be able to execute
     await expect(
@@ -330,25 +292,7 @@ describe("Permission Matrix Enforcement", () => {
       updated_at: new Date(),
     };
 
-    (mockCurrentUser as Mock).mockResolvedValue({
-      id: "clerk_editor",
-    });
-
-    (mockHeaders as Mock).mockResolvedValue({
-      get: vi.fn((key: string) => {
-        if (key === "x-tenant-id") return "tenant-123";
-        if (key === "x-clerk-jwt") return "mock-jwt-token";
-        return null;
-      }),
-    });
-
-    (mockGetAuthenticatedDb as Mock).mockResolvedValue({
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue(mockEditor),
-        },
-      },
-    });
+    setupAuthMocks(mockEditor);
 
     // Editor should be denied
     await expect(requirePermission(["owner", "admin"])).rejects.toThrow(

@@ -34,12 +34,14 @@ export type { SalesChannel, SalesFormat };
 
 /**
  * Title data for sales form autocomplete
- * AC 2: Shows "[Title] ([Author]) - Physical, Ebook"
+ * AC 2: Shows "[Title] ([Author])"
  * AC 3: Format dropdown shows only formats with assigned ISBN
  *
  * Used by:
  * - Title autocomplete component (searchTitlesForSales query)
- * - Format dropdown filtering (has_isbn, has_eisbn determine options)
+ * - Format dropdown filtering
+ *
+ * Story 7.6: Removed has_eisbn - ISBNs are unified without type distinction
  */
 export interface TitleForSalesSelect {
   /** Title UUID for form submission */
@@ -48,10 +50,8 @@ export interface TitleForSalesSelect {
   title: string;
   /** Author name for display in autocomplete */
   author_name: string;
-  /** Whether title has physical ISBN assigned (enables "Physical Book" format) */
+  /** Whether title has an ISBN assigned */
   has_isbn: boolean;
-  /** Whether title has eISBN assigned (enables "Ebook" format) */
-  has_eisbn: boolean;
 }
 
 /**
@@ -80,13 +80,14 @@ export interface SalesFormValues {
 /**
  * Selected title state for the form
  * Stores title info after selection from autocomplete
+ *
+ * Story 7.6: Removed has_eisbn - ISBNs are unified without type distinction
  */
 export interface SelectedTitle {
   id: string;
   title: string;
   author_name: string;
   has_isbn: boolean;
-  has_eisbn: boolean;
 }
 
 /**

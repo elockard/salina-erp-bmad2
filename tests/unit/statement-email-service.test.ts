@@ -43,7 +43,7 @@ vi.mock("@/modules/statements/storage", () => ({
 
 vi.mock("@/lib/email", () => ({
   sendEmail: vi.fn(),
-  getDefaultFromEmail: vi.fn(() => "test@salina-erp.com"),
+  getDefaultFromEmail: vi.fn(() => "test@salina.media"),
 }));
 
 describe("Statement Email Service", () => {

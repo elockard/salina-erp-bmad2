@@ -1,6 +1,6 @@
-import { getOwnerAdminDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart } from "@/components/charts/line-chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getOwnerAdminDashboardData } from "@/modules/reports/queries";
 
 /**
  * ISBN Utilization Trend Widget
@@ -24,7 +24,9 @@ export async function IsbnUtilizationTrend() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">ISBN Utilization Trend</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          ISBN Utilization Trend
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <LineChart

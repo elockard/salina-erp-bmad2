@@ -1,6 +1,6 @@
-import { getAuthorPortalDashboardData } from "@/modules/reports/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/charts/bar-chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAuthorPortalDashboardData } from "@/modules/reports/queries";
 
 /**
  * Author Earnings Timeline Widget
@@ -17,7 +17,9 @@ interface AuthorEarningsTimelineProps {
   authorId: string;
 }
 
-export async function AuthorEarningsTimeline({ authorId }: AuthorEarningsTimelineProps) {
+export async function AuthorEarningsTimeline({
+  authorId,
+}: AuthorEarningsTimelineProps) {
   const data = await getAuthorPortalDashboardData(authorId);
 
   const chartData = data.earningsTimeline.map((item) => ({
@@ -29,7 +31,9 @@ export async function AuthorEarningsTimeline({ authorId }: AuthorEarningsTimelin
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Earnings Timeline</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Earnings Timeline
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">

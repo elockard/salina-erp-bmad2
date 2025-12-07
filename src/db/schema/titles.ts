@@ -40,6 +40,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { authors } from "./authors";
+import { contacts } from "./contacts";
 import { tenants } from "./tenants";
 
 /**
@@ -82,10 +83,18 @@ export const titles = pgTable(
     /**
      * Foreign key to authors table - every title must have an author
      * No cascade delete - titles preserve when author is soft-deleted
+     * @deprecated Use contact_id instead. Kept for migration rollback capability.
      */
     author_id: uuid("author_id")
       .notNull()
       .references(() => authors.id),
+
+    /**
+     * Foreign key to contacts table - links title to contact with author role
+     * Added in Story 7.3: Migrate Authors to Contacts
+     * Nullable initially for migration, then NOT NULL after population
+     */
+    contact_id: uuid("contact_id").references(() => contacts.id),
 
     /** Title of the work (required) */
     title: text("title").notNull(),
@@ -121,6 +130,9 @@ export const titles = pgTable(
      * ISBN-13 for ebook format (nullable until assigned)
      * Globally unique across ALL tenants - industry standard identifier
      * Assigned from ISBN pool (Story 2.9)
+     *
+     * @deprecated Story 7.6: ISBN type distinction removed. Use `isbn` field instead.
+     * ISBNs are format-agnostic. Kept for migration rollback capability.
      */
     eisbn: text("eisbn"),
 

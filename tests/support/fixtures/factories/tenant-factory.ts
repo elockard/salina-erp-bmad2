@@ -14,6 +14,10 @@ export interface Tenant {
   timezone: string;
   default_currency: string;
   statement_frequency: "monthly" | "quarterly" | "annual";
+  // Royalty period settings (Story 7.5)
+  royalty_period_type: "calendar_year" | "fiscal_year" | "custom";
+  royalty_period_start_month: number | null;
+  royalty_period_start_day: number | null;
 }
 
 export class TenantFactory {
@@ -36,6 +40,10 @@ export class TenantFactory {
       timezone: overrides.timezone || "America/New_York",
       default_currency: overrides.default_currency || "USD",
       statement_frequency: overrides.statement_frequency || "quarterly",
+      // Royalty period settings (Story 7.5)
+      royalty_period_type: overrides.royalty_period_type || "fiscal_year",
+      royalty_period_start_month: overrides.royalty_period_start_month ?? null,
+      royalty_period_start_day: overrides.royalty_period_start_day ?? null,
     };
 
     // API call to create tenant

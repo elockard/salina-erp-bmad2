@@ -87,19 +87,19 @@ describe("FinanceDashboard Component", () => {
 
       // Check for Monthly Revenue card
       const revenueText = screen.getByText("Monthly Revenue");
-      expect(revenueText).toBeTruthy();
+      expect(revenueText).toBeInTheDocument();
 
       // Check for Royalty Liability card
       const liabilityText = screen.getByText("Royalty Liability");
-      expect(liabilityText).toBeTruthy();
+      expect(liabilityText).toBeInTheDocument();
 
       // Check for Statement Deadline card
       const deadlineText = screen.getByText("Statement Deadline");
-      expect(deadlineText).toBeTruthy();
+      expect(deadlineText).toBeInTheDocument();
 
-      // Check for Pending Returns card
-      const returnsText = screen.getByText("Pending Returns");
-      expect(returnsText).toBeTruthy();
+      // Check for Pending Returns card (may appear multiple times in UI)
+      const returnsTexts = screen.getAllByText("Pending Returns");
+      expect(returnsTexts.length).toBeGreaterThanOrEqual(1);
     });
 
     it("displays revenue amount correctly (AC-7)", () => {
@@ -109,7 +109,7 @@ describe("FinanceDashboard Component", () => {
 
       // Find the revenue value
       const revenueValue = screen.getByText("$45,678.90");
-      expect(revenueValue).toBeTruthy();
+      expect(revenueValue).toBeInTheDocument();
     });
 
     it("displays liability amount correctly (AC-7)", () => {
@@ -119,7 +119,7 @@ describe("FinanceDashboard Component", () => {
 
       // Find the liability value
       const liabilityValue = screen.getByText("$12,345.67");
-      expect(liabilityValue).toBeTruthy();
+      expect(liabilityValue).toBeInTheDocument();
     });
 
     it("displays days until deadline (AC-7)", () => {
@@ -129,7 +129,7 @@ describe("FinanceDashboard Component", () => {
 
       // Find days remaining text
       const daysText = screen.getByText("30 days remaining");
-      expect(daysText).toBeTruthy();
+      expect(daysText).toBeInTheDocument();
     });
 
     it("displays pending returns count (AC-7)", () => {
@@ -162,7 +162,7 @@ describe("FinanceDashboard Component", () => {
 
       // Find link to royalties page
       const royaltiesLink = screen.getByTestId("link--royalties");
-      expect(royaltiesLink).toBeTruthy();
+      expect(royaltiesLink).toBeInTheDocument();
       expect(royaltiesLink.getAttribute("href")).toBe("/royalties");
     });
 
@@ -173,7 +173,7 @@ describe("FinanceDashboard Component", () => {
 
       // Find link to statements page
       const statementsLink = screen.getByTestId("link--statements");
-      expect(statementsLink).toBeTruthy();
+      expect(statementsLink).toBeInTheDocument();
       expect(statementsLink.getAttribute("href")).toBe("/statements");
     });
 
@@ -201,7 +201,7 @@ describe("FinanceDashboard Component", () => {
 
       // Should show 0 for pending returns
       const zeroCount = screen.getByText("0");
-      expect(zeroCount).toBeTruthy();
+      expect(zeroCount).toBeInTheDocument();
     });
 
     it("handles missing deadline gracefully", () => {
@@ -217,7 +217,7 @@ describe("FinanceDashboard Component", () => {
 
       // Should show "Not set" or default deadline text
       const deadlineCard = screen.getByText("Statement Deadline");
-      expect(deadlineCard).toBeTruthy();
+      expect(deadlineCard).toBeInTheDocument();
     });
   });
 
@@ -229,7 +229,7 @@ describe("FinanceDashboard Component", () => {
 
       // Should show "Welcome back, finance (Finance)"
       const welcomeText = screen.getByText(/Welcome back, finance \(Finance\)/);
-      expect(welcomeText).toBeTruthy();
+      expect(welcomeText).toBeInTheDocument();
     });
 
     it("displays Finance role indicator", () => {
@@ -239,7 +239,7 @@ describe("FinanceDashboard Component", () => {
 
       // Check for (Finance) in the title
       const roleIndicator = screen.getByText(/\(Finance\)/);
-      expect(roleIndicator).toBeTruthy();
+      expect(roleIndicator).toBeInTheDocument();
     });
   });
 
@@ -250,7 +250,7 @@ describe("FinanceDashboard Component", () => {
       );
 
       const quickActionsTitle = screen.getByText("Quick Actions");
-      expect(quickActionsTitle).toBeTruthy();
+      expect(quickActionsTitle).toBeInTheDocument();
     });
 
     it("shows Approve Returns action button", () => {
@@ -259,7 +259,7 @@ describe("FinanceDashboard Component", () => {
       );
 
       const approveButton = screen.getByText("Approve Returns");
-      expect(approveButton).toBeTruthy();
+      expect(approveButton).toBeInTheDocument();
     });
 
     it("shows Generate Statements action button", () => {
@@ -268,7 +268,7 @@ describe("FinanceDashboard Component", () => {
       );
 
       const statementsButton = screen.getByText("Generate Statements");
-      expect(statementsButton).toBeTruthy();
+      expect(statementsButton).toBeInTheDocument();
     });
 
     it("shows Record Sale action button", () => {
@@ -277,7 +277,7 @@ describe("FinanceDashboard Component", () => {
       );
 
       const saleButton = screen.getByText("Record Sale");
-      expect(saleButton).toBeTruthy();
+      expect(saleButton).toBeInTheDocument();
     });
 
     it("shows View Reports action button", () => {
@@ -286,7 +286,7 @@ describe("FinanceDashboard Component", () => {
       );
 
       const reportsButton = screen.getByText("View Reports");
-      expect(reportsButton).toBeTruthy();
+      expect(reportsButton).toBeInTheDocument();
     });
 
     it("shows pending returns badge when count > 0", () => {
@@ -306,7 +306,7 @@ describe("FinanceDashboard Component", () => {
 
       // Quick Actions section should exist
       const quickActions = screen.getByText("Quick Actions");
-      expect(quickActions).toBeTruthy();
+      expect(quickActions).toBeInTheDocument();
 
       // But destructive badge should not appear (no pending returns)
       // The "0" should only appear once (in the stats card, not as a badge)
@@ -351,7 +351,7 @@ describe("FinanceDashboard Component", () => {
       // ISBNPoolWidget should render (it's a separate component)
       // Just verify the dashboard doesn't crash with isbnStats
       const welcomeText = screen.getByText(/Welcome back/);
-      expect(welcomeText).toBeTruthy();
+      expect(welcomeText).toBeInTheDocument();
     });
 
     it("renders without ISBN widget when isbnStats not provided", () => {
@@ -361,7 +361,7 @@ describe("FinanceDashboard Component", () => {
 
       // Dashboard should still render
       const welcomeText = screen.getByText(/Welcome back/);
-      expect(welcomeText).toBeTruthy();
+      expect(welcomeText).toBeInTheDocument();
     });
   });
 });
@@ -384,6 +384,6 @@ describe("Permission Enforcement (AC-9.4)", () => {
 
     // Component should render without errors
     const dashboard = screen.getByText(/Welcome back/);
-    expect(dashboard).toBeTruthy();
+    expect(dashboard).toBeInTheDocument();
   });
 });

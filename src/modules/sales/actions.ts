@@ -16,13 +16,13 @@ import Decimal from "decimal.js";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sales } from "@/db/schema/sales";
+import { logAuditEvent } from "@/lib/audit";
 import {
   getCurrentTenantId,
   getCurrentUser,
   getDb,
   requirePermission,
 } from "@/lib/auth";
-import { logAuditEvent } from "@/lib/audit";
 import { RECORD_SALES } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
 import {
@@ -116,18 +116,12 @@ export async function recordSale(
       };
     }
 
-    // Validate format is available for this title
-    if (validated.format === "physical" && !title.has_isbn) {
+    // Story 7.6: Validate format and ISBN assignment (unified ISBN, no type distinction)
+    // All formats require an ISBN to be assigned
+    if (!title.has_isbn) {
       return {
         success: false,
-        error:
-          "Physical format not available for this title (no ISBN assigned)",
-      };
-    }
-    if (validated.format === "ebook" && !title.has_eisbn) {
-      return {
-        success: false,
-        error: "Ebook format not available for this title (no eISBN assigned)",
+        error: "This title does not have an ISBN assigned",
       };
     }
     // Audiobook format validation - for future when audiobook ISBNs are tracked

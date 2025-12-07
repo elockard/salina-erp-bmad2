@@ -367,19 +367,17 @@ describe("Permission Enforcement (AC-1)", () => {
   const ALLOWED_ROLES = ["finance", "admin", "owner"];
   const BLOCKED_ROLES = ["editor", "author"];
 
-  it.each(ALLOWED_ROLES)(
-    "allows %s role to access royalty liability report",
-    (role) => {
-      expect(ALLOWED_ROLES.includes(role)).toBe(true);
-    },
-  );
+  it.each(
+    ALLOWED_ROLES,
+  )("allows %s role to access royalty liability report", (role) => {
+    expect(ALLOWED_ROLES.includes(role)).toBe(true);
+  });
 
-  it.each(BLOCKED_ROLES)(
-    "blocks %s role from accessing royalty liability report",
-    (role) => {
-      expect(ALLOWED_ROLES.includes(role)).toBe(false);
-    },
-  );
+  it.each(
+    BLOCKED_ROLES,
+  )("blocks %s role from accessing royalty liability report", (role) => {
+    expect(ALLOWED_ROLES.includes(role)).toBe(false);
+  });
 });
 
 describe("Component Integration", () => {

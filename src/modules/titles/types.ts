@@ -46,6 +46,8 @@ export interface TitleWithAuthor extends Title {
 /**
  * Title list item for split-view display
  * Minimal fields needed for list rendering
+ *
+ * Story 7.6: Removed eisbn - ISBNs are unified without type distinction
  */
 export interface TitleListItem {
   id: string;
@@ -55,12 +57,13 @@ export interface TitleListItem {
   author_name: string;
   publication_status: PublicationStatus;
   isbn: string | null;
-  eisbn: string | null;
   publication_date: string | null;
 }
 
 /**
  * Title statistics for dashboard display
+ *
+ * Story 7.6: Removed withEisbn - ISBNs are unified without type distinction
  */
 export interface TitleStats {
   total: number;
@@ -71,5 +74,4 @@ export interface TitleStats {
     out_of_print: number;
   };
   withIsbn: number;
-  withEisbn: number;
 }

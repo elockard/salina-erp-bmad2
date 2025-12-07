@@ -4,11 +4,11 @@ import {
   type AuditLog,
   type AuditResourceType,
   type AuditStatus,
-  type InsertAuditLog,
   auditActionTypeValues,
   auditLogs,
   auditResourceTypeValues,
   auditStatusValues,
+  type InsertAuditLog,
 } from "@/db/schema/audit-logs";
 
 /**
@@ -79,8 +79,9 @@ describe("auditActionTypeValues", () => {
 
 describe("auditResourceTypeValues", () => {
   describe("valid values (AC-6.5.1)", () => {
-    it("has exactly 7 values", () => {
-      expect(auditResourceTypeValues).toHaveLength(7);
+    // Story 7.3 added 'contact', Story 7.4 added 'isbn_prefix', Story 8.x added 'invoice' and 'payment' - now 11 values
+    it("has exactly 11 values", () => {
+      expect(auditResourceTypeValues).toHaveLength(11);
     });
 
     it("contains 'author'", () => {
@@ -109,6 +110,22 @@ describe("auditResourceTypeValues", () => {
 
     it("contains 'user'", () => {
       expect(auditResourceTypeValues).toContain("user");
+    });
+
+    it("contains 'contact'", () => {
+      expect(auditResourceTypeValues).toContain("contact");
+    });
+
+    it("contains 'isbn_prefix' (Story 7.4)", () => {
+      expect(auditResourceTypeValues).toContain("isbn_prefix");
+    });
+
+    it("contains 'invoice' (Epic 8)", () => {
+      expect(auditResourceTypeValues).toContain("invoice");
+    });
+
+    it("contains 'payment' (Epic 8)", () => {
+      expect(auditResourceTypeValues).toContain("payment");
     });
   });
 });

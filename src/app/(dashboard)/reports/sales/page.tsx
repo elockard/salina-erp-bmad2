@@ -12,14 +12,19 @@
 import { redirect } from "next/navigation";
 import { hasPermission } from "@/lib/auth";
 import { getAuthors } from "@/modules/authors/queries";
-import { getTitles } from "@/modules/titles/queries";
 import { SalesReportClient } from "@/modules/reports/components/sales-report-client";
+import { getTitles } from "@/modules/titles/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function SalesReportPage() {
   // AC-10: Block Author role from accessing sales reports
-  const canAccess = await hasPermission(["owner", "admin", "editor", "finance"]);
+  const canAccess = await hasPermission([
+    "owner",
+    "admin",
+    "editor",
+    "finance",
+  ]);
   if (!canAccess) {
     redirect("/dashboard");
   }

@@ -41,10 +41,10 @@ This document provides the complete epic and story breakdown for Salina ERP, dec
 - FR17: System tracks ISBN pool status (available, assigned, registered, retired)
 - FR18: Editors can assign available ISBNs to titles from the pool
 - FR19: System prevents duplicate ISBN assignment across all titles
-- FR20: Editors can assign separate ISBNs for physical books and ebooks (eISBN)
+- FR20: Editors can assign ISBNs to titles for each format requiring an ISBN
 - FR21: System validates ISBN-13 format before accepting
 - FR22: Editors can update title metadata and publication status
-- FR23: System displays ISBN pool availability count by type (physical/ebook)
+- FR23: System displays ISBN pool availability count
 
 ### Sales Transaction Management (FR24-29)
 - FR24: Editors can record individual sales transactions in real-time
@@ -122,6 +122,36 @@ This document provides the complete epic and story breakdown for Salina ERP, dec
 - FR80: System provides tenant-level configuration management
 - FR81: System handles background jobs (PDF generation, email delivery) asynchronously
 
+### Advanced Royalty Features (FR111-118)
+- FR111: Users can assign multiple authors to a single title with ownership percentages
+- FR112: System calculates split royalties based on author ownership percentages
+- FR113: System generates separate royalty statements for each co-author
+- FR114: Users can configure escalating royalty rates based on cumulative lifetime sales
+- FR115: System tracks lifetime sales across all periods for escalation calculation
+- FR116: System applies correct tier based on cumulative sales, not period sales
+- FR117: Users can view royalty projection based on current sales trajectory
+- FR118: System maintains co-author relationship history for audit
+
+### Tax & Compliance (FR119-124)
+- FR119: System collects and validates tax identification (TIN/SSN) for US-based authors
+- FR120: System tracks annual earnings per author for 1099 threshold determination
+- FR121: System generates 1099-MISC forms for authors earning $600+ annually
+- FR122: System provides batch 1099 generation for all qualifying authors
+- FR123: Users can download individual or bulk 1099 PDFs
+- FR124: System maintains 1099 generation audit trail for IRS compliance
+
+### Platform Administration (FR125-134)
+- FR125: Platform administrators can view list of all tenants with status
+- FR126: Platform administrators can view detailed tenant information (users, usage, subscription)
+- FR127: Platform administrators can suspend tenant access
+- FR128: Platform administrators can reactivate suspended tenants
+- FR129: Platform administrators can impersonate tenant users for support
+- FR130: System logs all platform administrator actions for audit
+- FR131: Platform administrators can view platform-wide analytics (total tenants, users, activity)
+- FR132: Platform administrators can broadcast announcements to all tenants
+- FR133: Platform administrators can view system health and job status
+- FR134: Platform authentication is separate from tenant authentication
+
 ---
 
 ## FR Coverage Map
@@ -134,7 +164,13 @@ This document provides the complete epic and story breakdown for Salina ERP, dec
 | Epic 4 | Royalty Contracts & Calculation Engine | FR38-52 | 15 FRs |
 | Epic 5 | Royalty Statements & Author Portal | FR53-66 | 14 FRs |
 | Epic 6 | Financial Reporting & Analytics | FR67-81 | 15 FRs |
-| **Total** | | **FR1-81** | **81 FRs** |
+| Epic 7 | Contact & ISBN Foundation | FR82-95 | 14 FRs |
+| Epic 8 | Invoicing & Accounts Receivable | FR96-106 | 11 FRs |
+| Epic 9 | Public Presence | FR107-110 | 4 FRs |
+| Epic 10 | Advanced Royalty Features | FR111-118 | 8 FRs |
+| Epic 11 | Tax & Compliance | FR119-124 | 6 FRs |
+| Epic 13 | Platform Administration | FR125-134 | 10 FRs |
+| **Total** | | **FR1-134** | **134 FRs** |
 
 ---
 
@@ -718,20 +754,20 @@ CREATE POLICY tenant_isolation_policy ON users
 **Then** the following is implemented:
 
 **And** `titles` table is created per architecture.md schema:
-- id, tenant_id, title, subtitle, genre, word_count, publication_status, isbn (physical), eisbn (ebook), publication_date, created_at, updated_at
+- id, tenant_id, title, subtitle, genre, word_count, publication_status, publication_date, created_at, updated_at
 
 **And** Publication status enum: draft, pending, published, out-of-print
 
-**And** Unique constraints on isbn and eisbn (globally unique across all tenants)
+**And** Unique constraints on isbn (globally unique across all tenants)
 
 **And** RLS policy enabled for tenant isolation
 
-**And** Indexes created on: tenant_id, publication_status, isbn, eisbn
+**And** Indexes created on: tenant_id, publication_status, isbn
 
 **And** Supports tracking 3 formats per architecture:
-- Physical (uses isbn field)
-- Ebook (uses eisbn field)
-- Audiobook (future: separate ISBN field or format tracking table)
+- Physical book
+- Ebook
+- Audiobook
 
 **Prerequisites:** Story 2.1 (author schema exists for foreign key relationships)
 
@@ -768,7 +804,7 @@ CREATE POLICY tenant_isolation_policy ON users
 - Publication status (dropdown with visual badge)
 - Formats section showing:
   - Physical: ISBN or "Not assigned" + Assign ISBN button
-  - Ebook: eISBN or "Not assigned" + Assign ISBN button
+  - Ebook: ISBN or "Not assigned" + Assign ISBN button
   - Audiobook: "Coming soon" (future feature)
 - Publication date (date picker)
 - Sales summary (total units sold by format)
@@ -905,25 +941,20 @@ CREATE POLICY tenant_isolation_policy ON users
 **Then** I see ISBN pool status:
 
 **And** Dashboard widget displays summary:
-- Physical ISBNs: X available / Y total
-- Ebook ISBNs: X available / Y total
-- Progress bars showing utilization
-- Warning badge if available < 10 for either type
+- ISBNs: X available / Y total
+- Progress bar showing utilization
+- Warning badge if available < 10
 
 **And** Full /isbn-pool page displays:
-- Stats cards:
-  - Physical: Available / Assigned / Retired counts
-  - Ebook: Available / Assigned / Retired counts
+- Stats cards: Available / Assigned / Retired counts
 - Table of all ISBNs with columns:
   - ISBN-13 (monospace font)
-  - Type badge (Physical/Ebook)
   - Status badge (Available/Assigned/Registered/Retired)
   - Assigned To (title link, if assigned)
   - Assigned Date
   - Actions (View Details)
 
 **And** Filters:
-- Type (All / Physical / Ebook)
 - Status (All / Available / Assigned / Retired)
 - Search ISBN (partial match)
 
@@ -931,7 +962,7 @@ CREATE POLICY tenant_isolation_policy ON users
 
 **And** Click ISBN row shows detail modal:
 - Full ISBN
-- Type, Status
+- Status
 - If assigned: Title name, assigned by user, assigned date
 - If available: "Assign to Title" button (opens title selector)
 
@@ -960,7 +991,7 @@ CREATE POLICY tenant_isolation_policy ON users
 **And** Modal opens showing:
 - Format: Physical Book (or Ebook)
 - Next available ISBN preview: "978-1-234567-90-7"
-- Available count: "42 Physical ISBNs available"
+- Available count: "42 ISBNs available"
 - Primary button: "Assign This ISBN"
 - Secondary link: "Choose Different ISBN"
 
@@ -969,7 +1000,7 @@ CREATE POLICY tenant_isolation_policy ON users
 - SELECT ... FOR UPDATE ensures no concurrent assignment
 - Updates ISBN status to "assigned"
 - Updates ISBN assigned_to_title_id, assigned_at, assigned_by_user_id
-- Updates title.isbn or title.eisbn field
+- Updates title ISBN assignment
 - Success toast: "✓ ISBN 978-1-234567-90-7 assigned to [Title]"
 - Title detail refreshes showing assigned ISBN
 
@@ -979,9 +1010,9 @@ CREATE POLICY tenant_isolation_policy ON users
 - Same assignment flow as fast path
 
 **And** Error handling:
-- No ISBNs available: "⚠️ No Physical ISBNs available. Import ISBN block first."
+- No ISBNs available: "⚠️ No ISBNs available. Import ISBN block first."
 - Race condition (ISBN assigned concurrently): "This ISBN was just assigned. Please try again." → auto-loads next available
-- Already assigned: "This title already has a Physical ISBN assigned."
+- Already assigned: "This title already has an ISBN assigned."
 
 **And** Permission check: Only Editor/Admin/Owner can assign ISBNs
 
@@ -2168,23 +2199,22 @@ async function calculateRoyaltyForPeriod(
 
 **And** Report displays:
 - Stats cards:
-  - Physical ISBNs: X Available / Y Assigned / Z Total
-  - Ebook ISBNs: X Available / Y Assigned / Z Total
+  - ISBNs: X Available / Y Assigned / Z Total
   - Utilization: X% (percent assigned)
 - Charts:
-  - Pie chart: Available vs Assigned by type
+  - Pie chart: Available vs Assigned
   - Timeline: ISBN assignments over time
 - Warning alerts:
-  - "⚠️ Only 8 Physical ISBNs remaining - consider importing more"
+  - "⚠️ Only 8 ISBNs remaining - consider importing more"
   - Alert threshold: < 10 available
 
 **And** Detailed breakdown table:
-- Import Date | Type | Count Imported | Currently Available | Currently Assigned
+- Import Date | Prefix | Count Imported | Currently Available | Currently Assigned
 - Grouped by import batch
 - Shows "burn rate" (ISBNs assigned per month)
 
 **And** Actionable insights:
-- "At current rate, Physical ISBNs will run out in approximately 3 months"
+- "At current rate, ISBNs will run out in approximately 3 months"
 - "Import ISBN Block" quick action button
 
 **Prerequisites:** Story 2.6 (ISBN data exists)
@@ -2416,6 +2446,1383 @@ async function calculateRoyaltyForPeriod(
 
 ---
 
+## Epic 7: Contact & ISBN Foundation
+
+**Epic Goal:** Establish unified contact database with multi-role support, enhance ISBN management with publisher prefix system, and add customizable royalty period configuration
+
+**FRs Covered:** FR82-95 (14 FRs) - Note: FR90-91 consolidated into prefix management
+
+**Dependencies:** Epics 1-6 complete (MVP delivered)
+
+**Architectural Note:** This epic includes a significant data model refactor - Authors become Contacts with roles. Migration strategy required.
+
+---
+
+### Story 7.1: Create Unified Contact Database Schema
+
+**As a** system architect,
+**I want** to create a unified contact database with multi-role support,
+**So that** contacts can serve as authors, customers, vendors, or multiple roles simultaneously.
+
+**Acceptance Criteria:**
+
+**Given** the existing authors table exists with data
+**When** I implement the contact refactor
+**Then** the system has:
+
+**And** New contacts table schema:
+- id (UUID, primary key)
+- tenant_id (UUID, foreign key)
+- first_name, last_name (required)
+- email (unique per tenant)
+- phone, address fields
+- tax_id (encrypted, for 1099 reporting)
+- payment_info (JSON, bank details for royalty payments)
+- notes (text)
+- status (active/inactive)
+- created_at, updated_at, created_by
+
+**And** Contact roles table (many-to-many):
+- contact_id (FK to contacts)
+- role (enum: 'author', 'customer', 'vendor', 'distributor')
+- role_specific_data (JSON for role-specific fields)
+- assigned_at, assigned_by
+
+**And** Role-specific fields in role_specific_data:
+- Author: pen_name, bio, website, social_links
+- Customer: billing_address, shipping_address, credit_limit, payment_terms
+- Vendor: vendor_code, lead_time, min_order
+- Distributor: territory, commission_rate, contract_terms
+
+**And** Migration strategy:
+- Create contacts table
+- Migrate all authors to contacts with role='author'
+- Update foreign keys (royalty_contracts.author_id → contact_id)
+- Preserve all historical data and relationships
+- Backward-compatible queries during transition
+
+**And** RLS policies on contacts table:
+- tenant_id isolation
+- Author portal: contacts can only see own record
+
+**Prerequisites:** Epic 1 (database infrastructure)
+
+**Technical Notes:**
+- Implement FR82, FR83, FR84
+- Use Drizzle schema for type-safe migrations
+- Create migration script with rollback capability
+- Update all queries that reference authors table
+- Consider soft-delete for authors table during transition
+
+---
+
+### Story 7.2: Build Contact Management Interface
+
+**As an** editor or admin,
+**I want** to manage contacts with multiple roles,
+**So that** I can maintain a unified contact database.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as Editor, Admin, or Owner
+**When** I navigate to /contacts
+**Then** I see contact management interface:
+
+**And** Contact list view displays:
+- Table: Name | Email | Roles (badges) | Status | Actions
+- Role badges: 🖊️ Author, 🛒 Customer, 🏭 Vendor, 📦 Distributor
+- Filter by role (multi-select)
+- Search by name, email
+- Sort by name, created date
+
+**And** Create contact form:
+- Basic info: First/Last name, Email, Phone
+- Address fields (collapsible)
+- Tax ID (masked input, encrypted storage)
+- Role assignment (checkbox list)
+- Role-specific fields shown based on selected roles
+- Save button
+
+**And** Contact detail/edit view:
+- All fields editable
+- Role management: Add/remove roles
+- Role-specific sections expand based on assigned roles
+- Activity history: Recent transactions, statements, invoices
+- Related entities: Titles (if author), Invoices (if customer)
+
+**And** Permission enforcement:
+- Editors: Create/edit contacts, assign author role
+- Finance: Assign customer role, view payment info
+- Admin/Owner: All permissions, delete contacts
+
+**And** Validation:
+- Email unique per tenant
+- Required fields enforced
+- Tax ID format validation
+
+**Prerequisites:** Story 7.1 (schema exists)
+
+**Technical Notes:**
+- Implement FR85, FR86, FR87
+- Create pages in src/app/(dashboard)/contacts/
+- Reuse form patterns from author management
+- Badge component for role display
+
+---
+
+### Story 7.3: Migrate Authors to Contacts
+
+**As a** system administrator,
+**I want** existing author data migrated to the contacts table,
+**So that** the unified contact system is populated with existing data.
+
+**Acceptance Criteria:**
+
+**Given** authors table has existing records
+**When** migration runs
+**Then** all data is preserved:
+
+**And** Migration process:
+- Create contact record for each author
+- Copy all fields (name, email, tax_id, payment_info, etc.)
+- Create contact_role record with role='author'
+- Move author-specific fields to role_specific_data JSON
+- Update royalty_contracts to reference contact_id
+- Update statements to reference contact_id
+- Preserve audit trail linkages
+
+**And** Data validation:
+- Count authors before = Count contacts with author role after
+- All foreign key references updated
+- No orphaned records
+
+**And** Rollback capability:
+- Authors table preserved (not deleted)
+- Rollback script available
+- Can revert within 30 days
+
+**And** Application updates:
+- Author queries use contacts table with role filter
+- Author portal login uses contacts table
+- All author references updated in UI
+
+**Prerequisites:** Story 7.1, Story 7.2
+
+**Technical Notes:**
+- Implement FR84 (migration preserving relationships)
+- Create migration script in drizzle/migrations/
+- Run in transaction for atomicity
+- Test on staging before production
+- Schedule during low-usage window
+
+---
+
+### Story 7.4: Implement Publisher ISBN Prefix System
+
+**As an** administrator,
+**I want** to register publisher ISBN prefixes and auto-generate ISBN ranges,
+**So that** ISBN management reflects real-world publisher prefix allocation.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as Admin or Owner
+**When** I navigate to /settings/isbn-prefixes
+**Then** I can manage ISBN prefixes:
+
+**And** Prefix registration form:
+- Publisher prefix input (e.g., "978-1-234567")
+- Block size selection: 10, 100, 1,000, 10,000, 100,000, 1,000,000
+- Notes field (agency, purchase date, etc.)
+- "Register & Generate" button
+
+**And** Prefix validation:
+- Validates ISBN-13 prefix format (978 or 979 start)
+- Validates check digit algorithm compatibility
+- Prevents duplicate prefix registration
+- Shows calculated ISBN range (first ISBN - last ISBN)
+
+**And** Auto-generation on registration:
+- System generates all ISBNs in the block
+- Example: Prefix "978-1-234567" with block size 100 generates:
+  - 978-1-234567-00-X through 978-1-234567-99-X
+  - Check digits calculated per ISBN-13 algorithm
+- ISBNs added to isbn_pool with status='available'
+- Linked to prefix record for organization
+
+**And** Prefix management view:
+- Table: Prefix | Block Size | Type | Total | Available | Assigned | Actions
+- Expand row shows all ISBNs in that block
+- Visual utilization bar
+
+**And** ISBN pool updates:
+- New column: prefix_id (FK to isbn_prefixes)
+- Existing ISBNs marked as "legacy" (no prefix)
+
+**Prerequisites:** Story 2.6 (ISBN pool exists)
+
+**Technical Notes:**
+- Implement FR88, FR89, FR92
+- Create isbn_prefixes table
+- ISBN-13 check digit algorithm implementation
+- Batch insert for large blocks (100K, 1M)
+- Consider async job for very large blocks
+
+---
+
+### Story 7.5: Add Customizable Royalty Period Setting
+
+**As a** tenant owner,
+**I want** to configure the royalty calculation period independently of fiscal year,
+**So that** royalty periods match our business practices.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as Owner or Admin
+**When** I navigate to /settings/tenant
+**Then** I can configure royalty period:
+
+**And** Royalty Period Settings section:
+- Period Type dropdown:
+  - Calendar Year (Jan 1 - Dec 31)
+  - Fiscal Year (uses existing fiscal_year_start setting)
+  - Custom
+- If Custom selected:
+  - Start Month dropdown (1-12)
+  - Start Day dropdown (1-31, validated per month)
+- Preview: "Your royalty year runs from [date] to [date]"
+
+**And** Impact on royalty calculations:
+- Statement generation wizard shows royalty period options
+- Period filter defaults to current royalty period
+- Reports respect royalty period setting
+
+**And** Validation:
+- Start date must be valid
+- Warning if changing mid-period: "Changing period settings may affect in-progress calculations"
+
+**And** Database updates:
+- New tenant settings: royalty_period_type, royalty_period_start_month, royalty_period_start_day
+- Migration for existing tenants (default to fiscal year)
+
+**Prerequisites:** Story 1.7 (tenant settings exists)
+
+**Technical Notes:**
+- Implement FR93, FR94, FR95
+- Update tenant settings schema
+- Update royalty calculation date filtering
+- Update statement generation wizard
+
+---
+
+## Epic 8: Invoicing & Accounts Receivable
+
+**Epic Goal:** Implement full invoicing capability with line items, customer management, and accounts receivable tracking
+
+**FRs Covered:** FR96-106 (11 FRs)
+
+**Dependencies:** Epic 7 (Contact system with Customer role)
+
+---
+
+### Story 8.1: Create Invoice Database Schema
+
+**As a** system architect,
+**I want** to create invoice and AR database schema,
+**So that** the system can track invoices and receivables.
+
+**Acceptance Criteria:**
+
+**Given** the contacts table exists with Customer role support
+**When** I implement invoice schema
+**Then** the system has:
+
+**And** Invoices table:
+- id (UUID, primary key)
+- tenant_id (UUID, foreign key)
+- invoice_number (auto-generated, tenant-unique)
+- customer_id (FK to contacts with Customer role)
+- invoice_date, due_date
+- status (draft/sent/paid/partially_paid/overdue/void)
+- bill_to_address (JSON)
+- ship_to_address (JSON)
+- po_number (optional)
+- payment_terms (enum: net_30, net_60, due_on_receipt, custom)
+- custom_terms_days (if custom)
+- shipping_method, shipping_cost
+- subtotal, tax_rate, tax_amount, total
+- amount_paid, balance_due
+- notes, internal_notes
+- created_at, updated_at, created_by
+
+**And** Invoice line items table:
+- id (UUID)
+- invoice_id (FK)
+- line_number (sequence)
+- item_code (optional, for catalog items)
+- description (required)
+- quantity (decimal)
+- unit_price (decimal)
+- tax_rate (decimal, line-level override)
+- amount (calculated: quantity * unit_price)
+- title_id (optional FK, if selling a title)
+
+**And** Payments table:
+- id (UUID)
+- tenant_id (FK)
+- invoice_id (FK)
+- payment_date
+- amount
+- payment_method (check, wire, credit_card, other)
+- reference_number (check number, transaction ID)
+- notes
+- created_at, created_by
+
+**And** Indexes for performance:
+- invoice_number + tenant_id (unique)
+- customer_id for customer queries
+- status for queue filtering
+- due_date for aging queries
+
+**And** RLS policies enforcing tenant isolation
+
+**Prerequisites:** Story 7.1 (contacts with Customer role)
+
+**Technical Notes:**
+- Implement FR96, FR97, FR98, FR99, FR100, FR101
+- Use Decimal for all monetary values
+- Invoice number format: INV-YYYYMMDD-XXXX
+
+---
+
+### Story 8.2: Build Invoice Creation Form
+
+**As a** finance user,
+**I want** to create invoices with bill-to, ship-to, and line items,
+**So that** I can bill customers for products and services.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as Finance, Admin, or Owner
+**When** I navigate to /invoices/new
+**Then** I see invoice creation form:
+
+**And** Header section:
+- Customer selector (contacts with Customer role, searchable)
+- Auto-populate bill-to from customer record
+- Ship-to address (copy from bill-to or enter different)
+- Invoice date (default today)
+- Due date (calculated from payment terms)
+- P.O. Number (optional)
+- Payment terms dropdown
+- Shipping method, shipping cost
+
+**And** Line items section:
+- Grid with columns: Item Code | Description | Qty | Unit Price | Tax | Amount
+- Add row button
+- Delete row button (X)
+- Item code autocomplete (optional - for future catalog)
+- Description text input
+- Quantity number input
+- Unit price currency input
+- Tax checkbox or rate input
+- Amount auto-calculated and displayed
+- Subtotal row
+- Tax row
+- Shipping row
+- Grand total row
+
+**And** Footer section:
+- Notes to customer (appears on invoice)
+- Internal notes (not on invoice)
+- Save as Draft button
+- Save & Send button (generates PDF, emails to customer)
+
+**And** Validation:
+- Customer required
+- At least one line item required
+- All line items need description and quantity
+- Unit price must be positive
+
+**And** UX patterns (similar to QuickBooks screenshot):
+- Clean, professional layout
+- Tab navigation between fields
+- Keyboard shortcuts for efficiency
+
+**Prerequisites:** Story 8.1 (schema exists)
+
+**Technical Notes:**
+- Implement FR96, FR97, FR98, FR99, FR100
+- Create pages in src/app/(dashboard)/invoices/
+- Line item component with add/remove
+- Currency formatting with Decimal.js
+
+---
+
+### Story 8.3: Build Invoice List and Detail Views
+
+**As a** finance user,
+**I want** to view and manage invoices,
+**So that** I can track billing status.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as Finance, Admin, or Owner
+**When** I navigate to /invoices
+**Then** I see invoice management interface:
+
+**And** Invoice list view:
+- Table: Invoice # | Date | Customer | Amount | Balance | Status | Actions
+- Status badges with colors (Draft=gray, Sent=blue, Paid=green, Overdue=red)
+- Filters: Status, Customer, Date Range
+- Sort by date (default newest first), amount, customer
+- Quick actions: View, Edit (if draft), Record Payment, Send
+
+**And** Invoice detail view (/invoices/[id]):
+- Full invoice display (print-ready layout)
+- Header: Company info, Invoice #, dates
+- Bill-to / Ship-to addresses
+- Line items table
+- Totals section
+- Payment history (if any payments)
+- Action buttons: Edit (draft only), Send, Record Payment, Void, Print, Download PDF
+
+**And** Edit invoice (draft only):
+- Same form as create
+- Pre-populated with existing data
+- Save changes
+
+**And** Invoice status workflow:
+- Draft → Sent (on first send)
+- Sent → Paid (when balance = 0)
+- Sent → Partially Paid (when payment recorded but balance > 0)
+- Sent → Overdue (automatic when past due_date)
+- Any → Void (manual action with confirmation)
+
+**Prerequisites:** Story 8.2 (create form exists)
+
+**Technical Notes:**
+- Implement FR101 (link to customers)
+- Status badge component
+- Print-friendly CSS
+- PDF generation (reuse React-PDF from statements)
+
+---
+
+### Story 8.4: Implement Payment Recording
+
+**As a** finance user,
+**I want** to record payments against invoices,
+**So that** I can track accounts receivable accurately.
+
+**Acceptance Criteria:**
+
+**Given** I have sent invoices with balances due
+**When** I record a payment
+**Then** the invoice balance updates:
+
+**And** Record payment modal:
+- Invoice reference (read-only)
+- Current balance due (read-only)
+- Payment date (default today)
+- Payment amount (default to balance due)
+- Payment method dropdown (Check, Wire, Credit Card, ACH, Other)
+- Reference number (check #, transaction ID)
+- Notes (optional)
+- Apply Payment button
+
+**And** Payment processing:
+- Payment record created
+- Invoice.amount_paid incremented
+- Invoice.balance_due decremented
+- Invoice.status updated:
+  - If balance_due = 0 → status = 'paid'
+  - If balance_due > 0 and amount_paid > 0 → status = 'partially_paid'
+
+**And** Overpayment handling:
+- Warning if payment amount > balance due
+- Option to apply as credit (future feature)
+- Or adjust to balance due
+
+**And** Payment history on invoice:
+- Table: Date | Amount | Method | Reference | Recorded By
+- Running balance after each payment
+
+**And** Audit logging:
+- Payment recorded events logged
+- Includes who, when, amount, invoice
+
+**Prerequisites:** Story 8.3 (invoice detail view)
+
+**Technical Notes:**
+- Implement FR103 (record payments)
+- Transaction wrapping for payment + invoice update
+- Decimal arithmetic for accuracy
+
+---
+
+### Story 8.5: Build Accounts Receivable Dashboard
+
+**As a** finance user,
+**I want** to see AR summary and aging report,
+**So that** I can manage cash flow and collections.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as Finance, Admin, or Owner
+**When** I navigate to /reports/accounts-receivable
+**Then** I see AR dashboard:
+
+**And** Summary stats cards:
+- Total Receivables: $XX,XXX (sum of all balance_due)
+- Current (not yet due): $X,XXX
+- Overdue: $X,XXX
+- Average Days to Pay: XX days
+- Number of Open Invoices: XX
+
+**And** Aging report table:
+- Customer | Current | 1-30 Days | 31-60 Days | 61-90 Days | 90+ Days | Total
+- Sortable by total (highest first default)
+- Click customer drills down to their invoices
+- Totals row at bottom
+
+**And** Aging chart:
+- Stacked bar chart showing aging buckets
+- Visual representation of AR health
+
+**And** Customer detail drill-down:
+- Shows all invoices for customer
+- Payment history
+- Average days to pay
+- Credit status
+
+**And** Export options:
+- CSV export of aging report
+- PDF summary report
+
+**Prerequisites:** Story 8.4 (invoices and payments exist)
+
+**Technical Notes:**
+- Implement FR102 (track AR balance), FR104 (aging reports)
+- Aging calculation: due_date vs today for bucket assignment
+- Use Recharts for visualization
+
+---
+
+### Story 8.6: Implement Invoice PDF Generation and Email
+
+**As a** finance user,
+**I want** to generate invoice PDFs and email them to customers,
+**So that** customers receive professional invoices.
+
+**Acceptance Criteria:**
+
+**Given** I have created an invoice
+**When** I click "Send" or "Download PDF"
+**Then** professional PDF is generated:
+
+**And** Invoice PDF layout:
+- Header: Company logo, name, address
+- Invoice title with number and date
+- Bill-to and Ship-to addresses
+- Line items table (professional formatting)
+- Subtotal, Tax, Shipping, Total
+- Payment terms and due date
+- Notes section
+- Footer: Thank you message, payment instructions
+
+**And** PDF generation:
+- Uses React-PDF (same as statements)
+- Stored in S3 for retrieval
+- Linked to invoice record
+
+**And** Email delivery:
+- Send button triggers email via Resend
+- Email includes:
+  - Subject: "Invoice [#] from [Company Name]"
+  - Body: Professional template with summary
+  - PDF attachment
+- Customer email from contact record
+
+**And** Send tracking:
+- Invoice.status → 'sent'
+- sent_at timestamp recorded
+- Email delivery status tracked (via Resend webhooks, future)
+
+**And** Resend option:
+- Can resend invoice email
+- Tracks resend count
+
+**Prerequisites:** Story 8.3 (invoice detail view)
+
+**Technical Notes:**
+- Implement FR105 (PDF generation), FR106 (email delivery)
+- Reuse React-PDF patterns from statement generation
+- Reuse Resend patterns from statement email
+
+---
+
+## Epic 9: Public Presence
+
+**Epic Goal:** Create public-facing landing page to market Salina ERP
+
+**FRs Covered:** FR107-110 (4 FRs)
+
+**Dependencies:** None (independent of app functionality)
+
+---
+
+### Story 9.1: Build Marketing Landing Page
+
+**As a** potential customer,
+**I want** to view a professional landing page for Salina ERP,
+**So that** I can understand the product and sign up.
+
+**Acceptance Criteria:**
+
+**Given** I visit the root domain (salina-erp.com or localhost:3000/)
+**When** not logged in
+**Then** I see the marketing landing page:
+
+**And** Hero section:
+- Headline: "Publishing ERP Built for Publishers"
+- Subheadline: Value proposition (royalties, ISBN, authors)
+- CTA button: "Start Free Trial" or "Get Started"
+- Hero image or illustration
+
+**And** Features section:
+- 4-6 feature cards highlighting key capabilities:
+  - Tiered Royalty Calculations
+  - ISBN Pool Management
+  - Author Portal
+  - Financial Reporting
+  - Multi-tenant SaaS
+  - Returns Approval Workflow
+- Icons and brief descriptions
+
+**And** How It Works section:
+- 3-4 step process illustration
+- Simple explanation of user journey
+
+**And** Pricing section (if applicable):
+- Tier cards (Starter, Professional, Enterprise)
+- Feature comparison
+- CTA buttons per tier
+
+**And** Social proof section:
+- Testimonials (placeholder or real)
+- "Trusted by X publishers" (future)
+
+**And** Footer:
+- Navigation links
+- Contact information
+- Legal links (Privacy, Terms)
+- Copyright
+
+**And** Responsive design:
+- Mobile-first approach
+- Works on all device sizes
+
+**And** Navigation:
+- Logo (links to home)
+- Features, Pricing, Contact links
+- Login button (links to /sign-in)
+- Get Started button (links to /sign-up or tenant registration)
+
+**And** SEO basics:
+- Proper meta tags
+- Open Graph tags
+- Semantic HTML
+
+**Prerequisites:** None
+
+**Technical Notes:**
+- Implement FR107, FR108, FR109, FR110
+- Create public route at src/app/(public)/page.tsx
+- Use Tailwind for styling
+- Consistent with app branding (Editorial Navy theme)
+- No authentication required
+- Static generation for performance
+
+---
+
+### Story 9.2: Add Contact and Legal Pages
+
+**As a** potential customer,
+**I want** to access contact information and legal pages,
+**So that** I can reach out with questions and understand terms.
+
+**Acceptance Criteria:**
+
+**Given** I am viewing the public site
+**When** I click footer links
+**Then** I see additional pages:
+
+**And** Contact page (/contact):
+- Contact form: Name, Email, Company, Message
+- Form submission (email notification or store in DB)
+- Company contact information
+- Support email address
+
+**And** Privacy Policy page (/privacy):
+- Standard privacy policy content
+- Data collection practices
+- Cookie usage
+- Contact for privacy questions
+
+**And** Terms of Service page (/terms):
+- Standard terms of service
+- Subscription terms
+- Acceptable use policy
+- Liability limitations
+
+**And** All pages:
+- Consistent header/footer with landing page
+- Responsive design
+- Back to home navigation
+
+**Prerequisites:** Story 9.1 (landing page)
+
+**Technical Notes:**
+- Create pages in src/app/(public)/
+- Contact form can use server action
+- Legal pages can be static MDX content
+- Consider legal review for production
+
+---
+
+## Epic 10: Advanced Royalty Features
+
+**Epic Goal:** Enable complex royalty scenarios including multiple authors per title with split percentages and escalating lifetime royalty rates
+
+**FRs Covered:** FR111-118
+
+**Business Value:** Unlocks the co-authored book market segment (a significant portion of publishing) and provides sophisticated royalty structures that larger publishers require.
+
+---
+
+### Story 10.1: Add Multiple Authors Per Title with Ownership Percentages
+
+**As an** Editor,
+**I want** to assign multiple authors to a single title with ownership percentages,
+**So that** co-authored books can have royalties split correctly between contributors.
+
+**Acceptance Criteria:**
+
+**Given** I am editing a title
+**When** I access the author assignment section
+**Then** I can add multiple authors to the title
+
+**And** for each author I specify an ownership percentage (1-100%)
+
+**And** the system validates that all percentages sum to exactly 100%
+
+**And** I can set different ownership percentages for each author (e.g., Author A: 60%, Author B: 40%)
+
+**And** the system prevents saving if percentages don't sum to 100%
+
+**And** existing single-author titles continue to work (default 100% ownership)
+
+**And** I can view all authors assigned to a title with their percentages
+
+**And** I can update ownership percentages after initial assignment
+
+**And** the system maintains history of ownership changes for audit
+
+**Prerequisites:** Epic 7 (Contacts), Epic 4 (Royalty Contracts)
+
+**Technical Notes:**
+- Implement FR111, FR118
+- Create `title_authors` junction table: title_id, contact_id (author), ownership_percentage, created_at, updated_at
+- Update Title detail view with multi-author assignment UI
+- Validate ownership percentages sum to 100% (use Decimal.js for precision)
+- Support both new titles and editing existing titles
+- Consider UX for common splits (50/50, 60/40, etc.) as presets
+
+---
+
+### Story 10.2: Implement Split Royalty Calculation Engine
+
+**As the** royalty calculation system,
+**I want** to calculate royalties based on author ownership percentages,
+**So that** co-authors receive their fair share of earnings.
+
+**Acceptance Criteria:**
+
+**Given** a title has multiple authors with ownership percentages
+**When** royalties are calculated for a period
+**Then** the system calculates total royalty for the title first
+
+**And** the system splits the total royalty by each author's ownership percentage
+
+**And** each author's split is applied to their individual royalty calculation
+
+**And** advance recoupment is tracked separately per author
+
+**And** each author's advance is recouped only from their split portion
+
+**And** the calculation handles edge cases:
+- One author fully recouped, other still recouping
+- Negative periods don't reverse recoupment for either author
+- Different advance amounts per author
+
+**And** the calculation detail shows per-author breakdown
+
+**Prerequisites:** Story 10.1
+
+**Technical Notes:**
+- Implement FR112
+- Extend royalty calculation engine from Epic 4
+- Calculate title-level royalty first, then split by ownership
+- Handle Decimal precision for splits (avoid rounding errors that don't sum correctly)
+- Update contracts to support per-author advances on shared titles
+- Test with various split scenarios
+
+---
+
+### Story 10.3: Generate Split Royalty Statements for Co-Authors
+
+**As a** Finance user,
+**I want** to generate separate royalty statements for each co-author,
+**So that** each author receives their individual earnings statement.
+
+**Acceptance Criteria:**
+
+**Given** a title has multiple authors
+**When** I generate royalty statements for a period
+**Then** the system generates a separate statement for each author
+
+**And** each statement shows only that author's share of the royalty
+
+**And** each statement shows their individual advance and recoupment status
+
+**And** statements clearly indicate co-authored titles and ownership percentage
+
+**And** the statement displays: "Your share: X% of [Title Name]"
+
+**And** email delivery sends individual statements to each co-author
+
+**And** the author portal shows each author only their own statements
+
+**Prerequisites:** Story 10.2, Epic 5 (Statement Generation)
+
+**Technical Notes:**
+- Implement FR113
+- Extend statement generation wizard to handle multi-author titles
+- PDF template updated to show ownership percentage context
+- Ensure author portal RLS only shows author's own split data
+- Bulk statement generation iterates through all authors on shared titles
+
+---
+
+### Story 10.4: Implement Escalating Lifetime Royalty Rates
+
+**As an** Editor,
+**I want** to configure royalty rates that escalate based on cumulative lifetime sales,
+**So that** authors earn higher percentages as their books achieve long-term success.
+
+**Acceptance Criteria:**
+
+**Given** I am creating or editing a royalty contract
+**When** I configure tiered rates
+**Then** I can choose between "Period Sales" (existing) or "Lifetime Sales" tier calculation
+
+**And** when "Lifetime Sales" is selected, tiers apply based on total historical sales
+
+**And** the system tracks cumulative sales across all periods for lifetime calculation
+
+**And** example: If lifetime tiers are 0-10K @ 10%, 10K-50K @ 12%, 50K+ @ 15%:
+- An author who has sold 45K lifetime, selling 10K more this period
+- First 5K of period sales apply at 12% (until hitting 50K lifetime)
+- Remaining 5K apply at 15% (after crossing 50K lifetime threshold)
+
+**And** the calculation correctly handles tier transitions mid-period
+
+**And** lifetime totals are displayed in contract detail view
+
+**And** royalty statements show lifetime context when applicable
+
+**Prerequisites:** Story 10.2
+
+**Technical Notes:**
+- Implement FR114, FR115, FR116, FR117
+- Add `tier_calculation_mode` to contracts: 'period' | 'lifetime'
+- Create `author_lifetime_sales` tracking table or computed from historical data
+- Extend calculation engine to support lifetime tier lookups
+- Handle complexity of split royalties + lifetime tiers together
+- Consider performance for lifetime calculations (may need pre-computed totals)
+
+---
+
+## Epic 11: Tax & Compliance
+
+**Epic Goal:** Generate IRS 1099-MISC forms for authors earning $600+ annually, ensuring regulatory compliance for US-based publishers
+
+**FRs Covered:** FR119-124
+
+**Business Value:** Legal requirement for US publishers - automating 1099 generation saves significant time and reduces compliance risk.
+
+---
+
+### Story 11.1: Collect and Validate Tax Identification Information
+
+**As an** Editor,
+**I want** to collect and validate author tax identification numbers,
+**So that** we have accurate information for 1099 reporting.
+
+**Acceptance Criteria:**
+
+**Given** I am editing a contact with Author role
+**When** I access the tax information section
+**Then** I can enter a Tax Identification Number (TIN)
+
+**And** I can specify TIN type: SSN (individual) or EIN (business entity)
+
+**And** the system validates TIN format:
+- SSN: XXX-XX-XXXX pattern
+- EIN: XX-XXXXXXX pattern
+
+**And** TIN is stored encrypted at rest
+
+**And** TIN display is masked except last 4 digits (***-**-1234)
+
+**And** I can indicate if author is US-based (required for 1099)
+
+**And** I can indicate if author has submitted W-9 form
+
+**And** the system flags authors missing TIN when they have US earnings
+
+**And** audit log captures TIN additions/changes (without logging actual TIN)
+
+**Prerequisites:** Epic 7 (Contacts)
+
+**Technical Notes:**
+- Implement FR119
+- Add to contacts table: tin_encrypted, tin_type, tin_last_four, is_us_based, w9_received, w9_received_date
+- Use encryption for TIN storage (consider Clerk encryption or separate secrets management)
+- Create TIN validation utilities
+- Update contact form with tax information section (Finance/Admin only)
+
+---
+
+### Story 11.2: Track Annual Earnings for 1099 Threshold
+
+**As the** system,
+**I want** to track annual earnings per author for 1099 threshold determination,
+**So that** we know which authors require 1099 forms.
+
+**Acceptance Criteria:**
+
+**Given** royalty statements are generated throughout the year
+**When** I view the 1099 preparation report
+**Then** the system shows all authors with their annual earnings
+
+**And** earnings are calculated from all paid royalty statements in the calendar year
+
+**And** authors earning $600+ are flagged as requiring 1099
+
+**And** the report shows:
+- Author name
+- TIN status (provided/missing)
+- Annual earnings
+- 1099 required (Yes/No)
+- W-9 status
+
+**And** I can filter to show only authors requiring 1099
+
+**And** I can filter by TIN status to identify missing information
+
+**And** the system warns about authors over $600 with missing TIN
+
+**Prerequisites:** Story 11.1, Epic 5 (Statements)
+
+**Technical Notes:**
+- Implement FR120
+- Create 1099 preparation report/dashboard
+- Query paid statements by calendar year
+- Sum royalties per author
+- $600 threshold is IRS requirement for 1099-MISC
+- Consider that some authors may have multiple payment types
+
+---
+
+### Story 11.3: Generate 1099-MISC Forms
+
+**As a** Finance user,
+**I want** to generate 1099-MISC forms for qualifying authors,
+**So that** I can fulfill IRS reporting requirements.
+
+**Acceptance Criteria:**
+
+**Given** the tax year has ended
+**When** I access the 1099 generation feature
+**Then** I can select the tax year to generate forms for
+
+**And** the system shows list of authors requiring 1099 (earnings >= $600)
+
+**And** I can generate individual 1099 PDFs
+
+**And** I can generate all 1099s in batch (bulk download as ZIP)
+
+**And** the generated 1099-MISC includes:
+- Box 1: Payer information (publisher/tenant)
+- Box 2: Recipient information (author)
+- Box 3: Recipient TIN
+- Box 7: Nonemployee compensation (royalty amount)
+- Tax year
+
+**And** the form follows official IRS 1099-MISC format
+
+**And** the system records when each 1099 was generated
+
+**And** I can regenerate a 1099 if corrections are needed
+
+**And** the system prevents generation for authors with missing TIN (with override option)
+
+**Prerequisites:** Story 11.2
+
+**Technical Notes:**
+- Implement FR121, FR122, FR123, FR124
+- Create 1099-MISC PDF template following IRS specifications
+- Use similar PDF generation infrastructure from statements (Epic 5)
+- Store generated 1099s for audit trail
+- Consider Copy B (recipient) vs Copy A (IRS) formats
+- May need tenant's EIN for payer information (add to tenant settings)
+
+---
+
+## Epic 13: Platform Administration
+
+**Epic Goal:** Provide SaaS operator tools to manage tenants, monitor platform health, and support customers effectively
+
+**FRs Covered:** FR125-134
+
+**Business Value:** Essential for operating a multi-tenant SaaS business - enables customer support, abuse prevention, and business metrics tracking.
+
+---
+
+### Story 13.1: Implement Platform Administrator Authentication
+
+**As a** platform administrator,
+**I want** to authenticate separately from tenant users,
+**So that** platform admin access is secure and distinct from customer access.
+
+**Acceptance Criteria:**
+
+**Given** I am a designated platform administrator
+**When** I access the platform admin area
+**Then** I authenticate using platform admin credentials
+
+**And** platform admin authentication is separate from tenant Clerk auth
+
+**And** platform admins are defined by email whitelist in environment configuration
+
+**And** platform admin sessions are separate from tenant user sessions
+
+**And** the platform admin area is accessible at /platform-admin route
+
+**And** non-platform-admins receive 403 Forbidden on platform admin routes
+
+**And** platform admin authentication events are logged
+
+**Prerequisites:** Epic 1 (Foundation)
+
+**Technical Notes:**
+- Implement FR134
+- Create platform admin middleware checking against PLATFORM_ADMIN_EMAILS env var
+- Can use Clerk metadata or separate auth mechanism
+- /platform-admin route group with dedicated layout
+- Consider 2FA requirement for platform admins
+- All platform admin routes protected by this middleware
+
+---
+
+### Story 13.2: Build Tenant List and Search Interface
+
+**As a** platform administrator,
+**I want** to view and search all tenants on the platform,
+**So that** I can manage and support customers effectively.
+
+**Acceptance Criteria:**
+
+**Given** I am authenticated as platform admin
+**When** I access the tenant management page
+**Then** I see a list of all tenants on the platform
+
+**And** the list shows: tenant name, subdomain, status, created date, user count
+
+**And** I can search tenants by name or subdomain
+
+**And** I can filter by status (active, suspended)
+
+**And** I can sort by name, created date, or user count
+
+**And** the list is paginated for performance
+
+**And** I can click a tenant to view detailed information
+
+**Prerequisites:** Story 13.1
+
+**Technical Notes:**
+- Implement FR125
+- Create platform admin queries that bypass tenant RLS
+- Tenant list page at /platform-admin/tenants
+- Server-side pagination and filtering
+- Display aggregate metrics (user count requires cross-tenant query)
+
+---
+
+### Story 13.3: Build Tenant Detail View
+
+**As a** platform administrator,
+**I want** to view detailed information about a specific tenant,
+**So that** I can understand their usage and support them effectively.
+
+**Acceptance Criteria:**
+
+**Given** I am viewing a tenant in platform admin
+**When** I access the tenant detail page
+**Then** I see comprehensive tenant information:
+
+**And** Basic info: name, subdomain, created date, status
+
+**And** Configuration: timezone, fiscal year, statement frequency
+
+**And** Users: list of all users with roles, last login, status
+
+**And** Usage metrics:
+- Total authors/contacts
+- Total titles
+- Total sales transactions
+- Total royalty statements generated
+
+**And** Activity: recent activity log for the tenant
+
+**And** I can see when the tenant was last active
+
+**Prerequisites:** Story 13.2
+
+**Technical Notes:**
+- Implement FR126
+- Tenant detail page at /platform-admin/tenants/[id]
+- Cross-tenant queries for usage metrics
+- Consider caching for expensive metrics calculations
+- Activity data from existing audit logs filtered by tenant
+
+---
+
+### Story 13.4: Implement Tenant Suspension and Reactivation
+
+**As a** platform administrator,
+**I want** to suspend and reactivate tenant access,
+**So that** I can handle non-payment, abuse, or customer requests.
+
+**Acceptance Criteria:**
+
+**Given** I am viewing a tenant in platform admin
+**When** I click "Suspend Tenant"
+**Then** I must provide a suspension reason
+
+**And** the tenant status changes to "suspended"
+
+**And** all users of that tenant are immediately blocked from accessing the application
+
+**And** suspended tenant users see a "Account Suspended" message when trying to log in
+
+**And** the suspension is logged with timestamp and admin who performed it
+
+**And** I can reactivate a suspended tenant
+
+**And** reactivation restores normal access for all tenant users
+
+**And** reactivation is logged with timestamp and admin
+
+**And** suspension/reactivation events trigger notification to tenant owner (email)
+
+**Prerequisites:** Story 13.3
+
+**Technical Notes:**
+- Implement FR127, FR128, FR130
+- Add `status` and `suspended_at`, `suspended_reason` to tenants table
+- Middleware checks tenant status before allowing access
+- Suspended tenants redirect to suspension notice page
+- Email notification to tenant owner on status change
+- Cannot suspend your own platform admin tenant (safety check)
+
+---
+
+### Story 13.5: Build Platform Analytics Dashboard
+
+**As a** platform administrator,
+**I want** to view platform-wide analytics and metrics,
+**So that** I can understand business health and growth.
+
+**Acceptance Criteria:**
+
+**Given** I am authenticated as platform admin
+**When** I access the platform dashboard
+**Then** I see key platform metrics:
+
+**And** Tenant metrics:
+- Total tenants
+- Active tenants (logged in last 30 days)
+- New tenants this month
+- Tenant growth trend chart
+
+**And** User metrics:
+- Total users across all tenants
+- Active users (last 30 days)
+- Users by role distribution
+
+**And** Usage metrics:
+- Total titles across platform
+- Total sales transactions this month
+- Total royalty statements generated this month
+
+**And** System health:
+- Database connection status
+- Background job queue status (Inngest)
+- Recent error count
+
+**And** the dashboard updates in near real-time (refreshes on page load)
+
+**Prerequisites:** Story 13.1
+
+**Technical Notes:**
+- Implement FR131, FR133
+- Platform admin dashboard at /platform-admin
+- Aggregate queries across all tenants
+- Consider caching for expensive queries (Redis or in-memory)
+- Inngest job monitoring via Inngest dashboard link or API
+- Error tracking integration if Sentry is set up
+
+---
+
+### Story 13.6: Implement Tenant Impersonation for Support
+
+**As a** platform administrator,
+**I want** to impersonate a tenant user for support purposes,
+**So that** I can see exactly what customers see and debug issues.
+
+**Acceptance Criteria:**
+
+**Given** I am viewing a tenant's user list in platform admin
+**When** I click "Impersonate" on a user
+**Then** I am logged in as that user and see their view
+
+**And** a clear banner indicates I am in impersonation mode
+
+**And** I can click "End Impersonation" to return to platform admin
+
+**And** all actions taken while impersonating are logged with my platform admin identity
+
+**And** impersonation events are logged: who impersonated whom, when, duration
+
+**And** impersonated users are notified that an admin accessed their account (optional)
+
+**And** impersonation requires confirmation dialog with reason field
+
+**And** I can only impersonate users, not perform destructive actions while impersonating
+
+**Prerequisites:** Story 13.3
+
+**Technical Notes:**
+- Implement FR129, FR130
+- Create impersonation session mechanism (store original admin identity)
+- Banner component showing impersonation status
+- Audit log all actions with `impersonated_by` field
+- Consider limiting impersonation duration (auto-expire after X minutes)
+- Privacy consideration: document impersonation policy
+
+---
+
+### Story 13.7: Build System Health and Job Monitoring
+
+**As a** platform administrator,
+**I want** to monitor system health and background job status,
+**So that** I can ensure the platform is operating correctly.
+
+**Acceptance Criteria:**
+
+**Given** I am authenticated as platform admin
+**When** I access the system monitoring page
+**Then** I see current system status:
+
+**And** Database status:
+- Connection pool health
+- Recent slow queries (if available)
+- Database size
+
+**And** Background jobs (Inngest):
+- Queue depth
+- Recent job failures with errors
+- Job success rate
+- Link to Inngest dashboard
+
+**And** Application health:
+- Memory usage (if available)
+- Recent application errors
+- API response times (if tracked)
+
+**And** Email delivery status:
+- Recent sends
+- Delivery failures
+- Resend dashboard link
+
+**And** I can acknowledge/dismiss alerts
+
+**Prerequisites:** Story 13.5
+
+**Technical Notes:**
+- Implement FR133
+- System monitoring page at /platform-admin/system
+- Integrate with Inngest API for job monitoring
+- Consider health check endpoints
+- Error aggregation from logging service
+- This builds on Story 6.6 (background job monitoring) but at platform level
+
+---
+
+### Story 13.8: Implement Platform-Wide Announcements
+
+**As a** platform administrator,
+**I want** to broadcast announcements to all tenants,
+**So that** I can communicate maintenance, updates, or important information.
+
+**Acceptance Criteria:**
+
+**Given** I am authenticated as platform admin
+**When** I create a platform announcement
+**Then** I can specify:
+- Announcement message (supports markdown)
+- Announcement type: info, warning, critical
+- Start date/time
+- End date/time (optional, for temporary announcements)
+- Target: all users or specific roles
+
+**And** active announcements display in a banner on all tenant dashboards
+
+**And** users can dismiss informational announcements (stored in localStorage)
+
+**And** critical announcements cannot be dismissed
+
+**And** I can view all current and past announcements
+
+**And** I can edit or deactivate announcements
+
+**And** announcements are ordered by type (critical first) then date
+
+**Prerequisites:** Story 13.1
+
+**Technical Notes:**
+- Implement FR132
+- Create `platform_announcements` table (outside tenant context)
+- Announcement management UI at /platform-admin/announcements
+- Global banner component checking for active announcements
+- Use localStorage to track dismissed announcements per user
+- Consider announcement targeting (e.g., only Finance users see finance-related announcements)
+
+---
+
 ## FR Coverage Matrix (Complete)
 
 | FR | Requirement | Epic | Story |
@@ -2501,33 +3908,98 @@ async function calculateRoyaltyForPeriod(
 | FR79 | Log data modifications | 6 | 6.5 |
 | FR80 | Tenant configuration management | 1 | 1.7 |
 | FR81 | Handle background jobs | 5, 6 | 5.2, 5.3, 6.6 |
+| FR82 | Unified contact database with multi-role | 7 | 7.1 |
+| FR83 | Assign multiple roles to contact | 7 | 7.1, 7.2 |
+| FR84 | Migrate authors to contacts | 7 | 7.3 |
+| FR85 | Role-specific contact profiles | 7 | 7.2 |
+| FR86 | Author portal via contact role | 7 | 7.2, 7.3 |
+| FR87 | Customer invoicing via contact role | 7 | 7.2 |
+| FR88 | Register publisher ISBN prefixes | 7 | 7.4 |
+| FR89 | Auto-generate ISBN range from prefix | 7 | 7.4 |
+| FR90 | Organize ISBN pool by prefix | 7 | 7.4 |
+| FR91 | View ISBN pool by prefix and block | 7 | 7.4 |
+| FR92 | Validate ISBN prefix format | 7 | 7.4 |
+| FR93 | Configure royalty period | 7 | 7.5 |
+| FR94 | Support multiple period types | 7 | 7.5 |
+| FR95 | Royalty calculation uses period setting | 7 | 7.5 |
+| FR96 | Create invoices with addresses | 8 | 8.1, 8.2 |
+| FR97 | Invoice line items | 8 | 8.1, 8.2 |
+| FR98 | Calculate invoice totals | 8 | 8.2 |
+| FR99 | Payment terms on invoices | 8 | 8.1, 8.2 |
+| FR100 | P.O. and shipping on invoices | 8 | 8.1, 8.2 |
+| FR101 | Link invoices to customers | 8 | 8.1, 8.3 |
+| FR102 | Track AR balance per customer | 8 | 8.5 |
+| FR103 | Record payments against invoices | 8 | 8.4 |
+| FR104 | AR aging reports | 8 | 8.5 |
+| FR105 | Generate invoice PDFs | 8 | 8.6 |
+| FR106 | Email invoices to customers | 8 | 8.6 |
+| FR107 | Public landing page | 9 | 9.1 |
+| FR108 | Landing page features display | 9 | 9.1 |
+| FR109 | Landing page CTA | 9 | 9.1 |
+| FR110 | Landing page branding | 9 | 9.1, 9.2 |
+| FR111 | Multiple authors per title | 10 | 10.1 |
+| FR112 | Split royalty calculation | 10 | 10.2 |
+| FR113 | Separate co-author statements | 10 | 10.3 |
+| FR114 | Escalating lifetime royalty rates | 10 | 10.4 |
+| FR115 | Track lifetime sales | 10 | 10.4 |
+| FR116 | Apply lifetime-based tiers | 10 | 10.4 |
+| FR117 | View royalty projection | 10 | 10.4 |
+| FR118 | Co-author relationship history | 10 | 10.1 |
+| FR119 | Collect and validate TIN | 11 | 11.1 |
+| FR120 | Track annual earnings for 1099 | 11 | 11.2 |
+| FR121 | Generate 1099-MISC forms | 11 | 11.3 |
+| FR122 | Batch 1099 generation | 11 | 11.3 |
+| FR123 | Download 1099 PDFs | 11 | 11.3 |
+| FR124 | 1099 generation audit trail | 11 | 11.3 |
+| FR125 | View all tenants | 13 | 13.2 |
+| FR126 | View tenant details | 13 | 13.3 |
+| FR127 | Suspend tenant access | 13 | 13.4 |
+| FR128 | Reactivate suspended tenants | 13 | 13.4 |
+| FR129 | Impersonate tenant users | 13 | 13.6 |
+| FR130 | Log platform admin actions | 13 | 13.4, 13.6 |
+| FR131 | Platform-wide analytics | 13 | 13.5 |
+| FR132 | Broadcast announcements | 13 | 13.8 |
+| FR133 | System health monitoring | 13 | 13.5, 13.7 |
+| FR134 | Platform admin authentication | 13 | 13.1 |
 
-**Validation:** ✅ All 81 FRs mapped to specific stories across all 6 epics
+**Validation:** ✅ All 134 FRs mapped to specific stories across all 12 epics
 
 ---
 
 ## Summary
 
-**✅ Epic Breakdown Complete**
+**✅ Epic Breakdown Complete (Updated 2025-12-07)**
 
-**Total Epics:** 6
-**Total Stories:** 45
-**Total FRs Covered:** 81
+**Total Epics:** 12
+**Total Stories:** 73
+**Total FRs Covered:** 134
 
 ### Epic Summary
 
-| Epic | Title | Stories | FRs | Key Value |
-|------|-------|---------|-----|-----------|
-| 1 | Foundation & Multi-Tenant Infrastructure | 8 | FR1-8 | Secure platform foundation with tenant registration and user management |
-| 2 | Author & Title Catalog Management | 9 | FR9-23 | Complete catalog management with ISBN tracking |
-| 3 | Sales & Returns Processing | 7 | FR24-37 | Daily operational tracking with approval workflow |
-| 4 | Royalty Contracts & Calculation Engine | 5 | FR38-52 | Complex tiered royalty automation |
-| 5 | Royalty Statements & Author Portal | 6 | FR53-66 | Transparent statement generation and author self-service |
-| 6 | Financial Reporting & Analytics | 7 | FR67-81 | Comprehensive financial visibility and compliance |
+| Epic | Title | Stories | FRs | Key Value | Status |
+|------|-------|---------|-----|-----------|--------|
+| 1 | Foundation & Multi-Tenant Infrastructure | 8 | FR1-8 | Secure platform foundation with tenant registration and user management | ✅ COMPLETE |
+| 2 | Author & Title Catalog Management | 9 | FR9-23 | Complete catalog management with ISBN tracking | ✅ COMPLETE |
+| 3 | Sales & Returns Processing | 7 | FR24-37 | Daily operational tracking with approval workflow | ✅ COMPLETE |
+| 4 | Royalty Contracts & Calculation Engine | 5 | FR38-52 | Complex tiered royalty automation | ✅ COMPLETE |
+| 5 | Royalty Statements & Author Portal | 6 | FR53-66 | Transparent statement generation and author self-service | ✅ COMPLETE |
+| 6 | Financial Reporting & Analytics | 7 | FR67-81 | Comprehensive financial visibility and compliance | ✅ COMPLETE |
+| 7 | Contact & ISBN Foundation | 6 | FR82-95 | Unified contacts with multi-role, enhanced ISBN with prefix system | ✅ COMPLETE |
+| 8 | Invoicing & Accounts Receivable | 6 | FR96-106 | Full invoicing, AR tracking, aging reports | ✅ COMPLETE |
+| 9 | Public Presence | 2 | FR107-110 | Marketing landing page and legal pages | ✅ COMPLETE |
+| 10 | Advanced Royalty Features | 4 | FR111-118 | Split royalties for co-authors, lifetime escalating rates | 🆕 PHASE 2 |
+| 11 | Tax & Compliance | 3 | FR119-124 | 1099-MISC generation for IRS compliance | 🆕 PHASE 2 |
+| 13 | Platform Administration | 8 | FR125-134 | SaaS operator tools for tenant management and monitoring | 🆕 PHASE 2 |
+
+### Implementation Status
+
+**MVP (Epics 1-6):** ✅ COMPLETE - All 81 FRs implemented
+**Growth Phase 1 (Epics 7-9):** ✅ COMPLETE - 29 FRs implemented
+**Growth Phase 2 (Epics 10, 11, 13):** 🆕 Ready for implementation - 24 FRs, 15 stories
 
 ### Implementation Readiness
 
-**✅ Complete Coverage:** All 81 FRs from PRD mapped to implementable stories
+**✅ Complete Coverage:** All 134 FRs from PRD mapped to implementable stories
 **✅ Full Context Integration:** Every story incorporates PRD + UX patterns + Architecture decisions
 **✅ Detailed Acceptance Criteria:** BDD-style criteria with specific UX/technical requirements
 **✅ Sequential Dependencies:** No forward dependencies, clear prerequisite chains
@@ -2535,12 +4007,13 @@ async function calculateRoyaltyForPeriod(
 
 ### Next Steps
 
-1. **Sprint Planning**: Use this epic breakdown to create sprint backlogs
-2. **Story Refinement**: Development team reviews stories for estimation
-3. **Implementation**: Begin with Epic 1, Story 1.1 (project initialization)
-4. **Validation**: Run architecture validation workflow before Phase 4 implementation
+1. **Sprint Planning**: Run `*sprint-planning` to update sprint-status.yaml with Phase 2 epics
+2. **Story Drafting**: SM to create detailed story files starting with Story 10.1
+3. **Implementation Order**: Recommended sequence: Epic 10 → Epic 11 → Epic 13
+4. **Architecture Review**: Winston to review multi-author schema and platform admin patterns
 
 **Document Location:** `/Users/elockard/office/salina-erp-bmad2/docs/epics.md`
+**Last Updated:** 2025-12-07
 
 ---
 

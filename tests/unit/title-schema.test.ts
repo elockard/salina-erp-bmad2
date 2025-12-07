@@ -187,15 +187,7 @@ describe("createTitleSchema", () => {
       }
     });
 
-    it("rejects invalid eISBN format", () => {
-      const result = createTitleSchema.safeParse({
-        title: "Test Title",
-        author_id: validAuthorId,
-        eisbn: "abc123", // letters not allowed
-      });
-
-      expect(result.success).toBe(false);
-    });
+    // Story 7.6: Removed eisbn test - ISBNs are unified without type distinction
 
     it("rejects invalid publication date format", () => {
       const result = createTitleSchema.safeParse({

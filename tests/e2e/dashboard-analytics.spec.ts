@@ -200,10 +200,12 @@ test.describe("Interactive Charts (AC-5)", () => {
     await page.waitForTimeout(1000);
 
     // Look for chart elements (Recharts renders SVG)
-    const chartContainer = page.locator('[class*="recharts-responsive-container"]');
+    const chartContainer = page.locator(
+      '[class*="recharts-responsive-container"]',
+    );
 
     // If charts are visible, try hovering
-    if (await chartContainer.count() > 0) {
+    if ((await chartContainer.count()) > 0) {
       await chartContainer.first().hover();
       // Tooltips appear on hover - difficult to test without chart data
     }
@@ -239,7 +241,7 @@ test.describe("Dashboard Navigation Integration", () => {
     // Test that clickable cards work (finance dashboard)
     // This test assumes finance user role
     const salesLink = page.getByRole("link", { name: /sales|record sale/i });
-    if (await salesLink.count() > 0) {
+    if ((await salesLink.count()) > 0) {
       await salesLink.first().click();
       await expect(page).toHaveURL(/\/sales/);
     }

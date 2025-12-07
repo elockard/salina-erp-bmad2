@@ -194,7 +194,7 @@ export async function sendStatementEmail(
     const basePortalUrl =
       portalUrl ||
       process.env.PORTAL_URL ||
-      `https://${tenant.subdomain}.salina-erp.com`;
+      `https://${tenant.subdomain}.salina.media`;
 
     const templateProps: StatementEmailProps = {
       authorName: author.name,

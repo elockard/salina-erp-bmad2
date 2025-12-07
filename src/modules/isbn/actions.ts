@@ -1,8 +1,9 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { isbnPrefixes } from "@/db/schema/isbn-prefixes";
 import { isbns, type NewISBN } from "@/db/schema/isbns";
 import { titles } from "@/db/schema/titles";
 import {
@@ -13,11 +14,7 @@ import {
 } from "@/lib/auth";
 import { CREATE_AUTHORS_TITLES, MANAGE_SETTINGS } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
-import {
-  type AssignISBNInput,
-  assignISBNInputSchema,
-  isbnTypeSchema,
-} from "./schema";
+import { type AssignISBNInput, assignISBNInputSchema } from "./schema";
 import type { AssignedISBN, ISBNImportResult } from "./types";
 import { normalizeIsbn13, validateIsbn13 } from "./utils";
 
@@ -32,13 +29,13 @@ export type ImportISBNsResult =
 /**
  * Import ISBNs schema for server-side validation
  * Re-validates all ISBNs on the server (never trust client)
+ * Story 7.6: Removed type field - ISBNs are unified without type distinction
  */
 const importIsbnInputSchema = z.object({
   isbns: z
     .array(z.string())
     .min(1, "At least one ISBN is required")
     .max(100, "Maximum 100 ISBNs per import"),
-  type: isbnTypeSchema,
 });
 
 type ImportIsbnInput = z.infer<typeof importIsbnInputSchema>;
@@ -147,11 +144,11 @@ export async function importISBNs(
     }
 
     // Prepare records for bulk insert (AC 8)
+    // Story 7.6: Removed type field - ISBNs are unified without type distinction
     const now = new Date();
     const records: NewISBN[] = validIsbns.map((isbn_13) => ({
       tenant_id: tenantId,
       isbn_13,
-      type: validated.type,
       status: "available" as const,
       created_at: now,
       updated_at: now,
@@ -233,8 +230,9 @@ export async function assignISBNToTitle(
     await requirePermission(CREATE_AUTHORS_TITLES);
 
     // Validate input schema
+    // Story 7.6: Removed format - ISBNs are unified without type distinction
     const validated = assignISBNInputSchema.parse(input);
-    const { titleId, format } = validated;
+    const { titleId } = validated;
 
     // Get tenant and user context
     const tenantId = await getCurrentTenantId();
@@ -260,12 +258,12 @@ export async function assignISBNToTitle(
       return { success: false, error: "Title not found" };
     }
 
-    // AC 8: Check if title already has ISBN assigned for this format
-    const existingIsbn = format === "physical" ? title.isbn : title.eisbn;
-    if (existingIsbn) {
+    // AC 8: Check if title already has ISBN assigned
+    // Story 7.6: Unified ISBN check - no type distinction
+    if (title.isbn) {
       return {
         success: false,
-        error: `This title already has a ${format === "physical" ? "Physical" : "Ebook"} ISBN assigned: ${existingIsbn}`,
+        error: `This title already has an ISBN assigned: ${title.isbn}`,
       };
     }
 
@@ -280,24 +278,19 @@ export async function assignISBNToTitle(
         // AC 2, 3: Transaction with row-level locking
         const result = await db.transaction(async (tx) => {
           // Step 1: Find and lock available ISBN (AC 2 - FOR UPDATE row lock)
+          // Story 7.6: Removed type filter - ISBNs are unified
           const availableISBNs = await tx
             .select()
             .from(isbns)
             .where(
-              and(
-                eq(isbns.tenant_id, tenantId),
-                eq(isbns.status, "available"),
-                eq(isbns.type, format),
-              ),
+              and(eq(isbns.tenant_id, tenantId), eq(isbns.status, "available")),
             )
             .limit(1)
             .for("update", { skipLocked: true }); // Skip locked rows to avoid waiting
 
           if (availableISBNs.length === 0) {
             // AC 5: Clear error message when no ISBNs available
-            throw new Error(
-              `No ${format === "physical" ? "Physical" : "Ebook"} ISBNs available. Import an ISBN block first.`,
-            );
+            throw new Error("No ISBNs available. Import an ISBN block first.");
           }
 
           const selectedISBN = availableISBNs[0];
@@ -315,15 +308,24 @@ export async function assignISBNToTitle(
             })
             .where(eq(isbns.id, selectedISBN.id));
 
+          // Step 2b: Update prefix counts if ISBN has a prefix (Story 7.4)
+          if (selectedISBN.prefix_id) {
+            await tx
+              .update(isbnPrefixes)
+              .set({
+                available_count: sql`${isbnPrefixes.available_count} - 1`,
+                assigned_count: sql`${isbnPrefixes.assigned_count} + 1`,
+                updated_at: now,
+              })
+              .where(eq(isbnPrefixes.id, selectedISBN.prefix_id));
+          }
+
           // Step 3: Update title with ISBN (AC 3)
-          const updateField =
-            format === "physical"
-              ? { isbn: selectedISBN.isbn_13 }
-              : { eisbn: selectedISBN.isbn_13 };
+          // Story 7.6: Unified ISBN assignment - always use isbn field
           await tx
             .update(titles)
             .set({
-              ...updateField,
+              isbn: selectedISBN.isbn_13,
               updated_at: now,
             })
             .where(and(eq(titles.id, titleId), eq(titles.tenant_id, tenantId)));
@@ -335,12 +337,12 @@ export async function assignISBNToTitle(
         });
 
         // AC 6: Audit trail logging
+        // Story 7.6: Removed format field - ISBNs are unified
         console.info("ISBN assigned to title", {
           isbn_id: result.isbn.id,
           isbn_13: result.isbn.isbn_13,
           title_id: titleId,
           title_name: title.title,
-          format,
           assigned_by: user.id,
           assigned_by_email: user.email,
           tenant_id: tenantId,
@@ -352,13 +354,14 @@ export async function assignISBNToTitle(
         revalidatePath("/isbn-pool");
         revalidatePath("/titles");
         revalidatePath(`/titles/${titleId}`);
+        revalidatePath("/settings/isbn-prefixes"); // Story 7.4: Refresh prefix counts
 
+        // Story 7.6: Removed type field - ISBNs are unified without type distinction
         return {
           success: true,
           data: {
             id: result.isbn.id,
             isbn_13: result.isbn.isbn_13,
-            type: result.isbn.type as "physical" | "ebook",
             titleId,
             titleName: title.title,
             assignedAt: result.assignedAt,
@@ -381,7 +384,6 @@ export async function assignISBNToTitle(
           `ISBN assignment attempt ${attempts} failed, retrying...`,
           {
             titleId,
-            format,
             error: lastError,
           },
         );
@@ -396,7 +398,6 @@ export async function assignISBNToTitle(
     // All retries exhausted
     console.error("ISBN assignment failed after max retries", {
       titleId,
-      format,
       attempts,
       lastError,
     });

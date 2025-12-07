@@ -34,6 +34,8 @@ export type ReturnFormat = SalesFormat; // Returns use same format enum as sales
 /**
  * Title data for returns form autocomplete
  * Similar to TitleForSalesSelect but for returns
+ *
+ * Story 7.6: Removed has_eisbn - ISBNs are unified without type distinction
  */
 export interface TitleForReturnSelect {
   /** Title UUID for form submission */
@@ -42,10 +44,8 @@ export interface TitleForReturnSelect {
   title: string;
   /** Author name for display in autocomplete */
   author_name: string;
-  /** Whether title has physical ISBN assigned (enables "Physical Book" format) */
+  /** Whether title has an ISBN assigned */
   has_isbn: boolean;
-  /** Whether title has eISBN assigned (enables "Ebook" format) */
-  has_eisbn: boolean;
 }
 
 /**
@@ -132,13 +132,14 @@ export interface ReturnsFormValues {
 /**
  * Selected title state for the form
  * Stores title info after selection from autocomplete
+ *
+ * Story 7.6: Removed has_eisbn - ISBNs are unified without type distinction
  */
 export interface SelectedTitleForReturn {
   id: string;
   title: string;
   author_name: string;
   has_isbn: boolean;
-  has_eisbn: boolean;
 }
 
 /**

@@ -45,10 +45,7 @@ const GROUPING_LABELS: Record<string, string> = {
   date: "Periods",
 };
 
-export function SalesReportClient({
-  titles,
-  authors,
-}: SalesReportClientProps) {
+export function SalesReportClient({ titles, authors }: SalesReportClientProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [reportData, setReportData] = React.useState<SalesReportResult | null>(
     null,
@@ -110,7 +107,9 @@ export function SalesReportClient({
             </h2>
             <ExportButton
               filters={currentFilters}
-              disabled={isLoading || !reportData || reportData.rows.length === 0}
+              disabled={
+                isLoading || !reportData || reportData.rows.length === 0
+              }
             />
           </div>
 

@@ -16,7 +16,10 @@
 import { relations } from "drizzle-orm";
 import { auditLogs } from "./audit-logs";
 import { authors } from "./authors";
+import { contactRoles, contacts } from "./contacts";
 import { contracts, contractTiers } from "./contracts";
+import { invoiceLineItems, invoices, payments } from "./invoices";
+import { isbnPrefixes } from "./isbn-prefixes";
 import { isbns } from "./isbns";
 import { returns } from "./returns";
 import { sales } from "./sales";
@@ -27,18 +30,23 @@ import { users } from "./users";
 
 /**
  * Tenant relations
- * One tenant has many users, authors, titles, isbns, sales, returns, contracts, statements, and audit logs
+ * One tenant has many users, authors, titles, isbns, isbnPrefixes, sales, returns, contracts, statements, audit logs, contacts, invoices, and payments
+ * Story 8.1: Added invoices and payments relations
  */
 export const tenantsRelations = relations(tenants, ({ many }) => ({
   users: many(users),
   authors: many(authors),
   titles: many(titles),
   isbns: many(isbns),
+  isbnPrefixes: many(isbnPrefixes),
   sales: many(sales),
   returns: many(returns),
   contracts: many(contracts),
   statements: many(statements),
   auditLogs: many(auditLogs),
+  contacts: many(contacts),
+  invoices: many(invoices),
+  payments: many(payments),
 }));
 
 /**
@@ -90,15 +98,21 @@ export const authorsRelations = relations(authors, ({ one, many }) => ({
  * Story 3.1: Added sales relation for sales transaction ledger
  * Story 3.4: Added returns relation for returns tracking
  * Story 4.1: Added contracts relation for royalty contracts
+ * Story 7.3: Added contact relation for unified contact system
  */
 export const titlesRelations = relations(titles, ({ one, many }) => ({
   tenant: one(tenants, {
     fields: [titles.tenant_id],
     references: [tenants.id],
   }),
+  /** @deprecated Use contact relation instead */
   author: one(authors, {
     fields: [titles.author_id],
     references: [authors.id],
+  }),
+  contact: one(contacts, {
+    fields: [titles.contact_id],
+    references: [contacts.id],
   }),
   assignedIsbns: many(isbns),
   sales: many(sales),
@@ -111,7 +125,9 @@ export const titlesRelations = relations(titles, ({ one, many }) => ({
  * Each ISBN belongs to one tenant
  * Each ISBN may be assigned to one title (optional)
  * Each ISBN may have been assigned by one user (optional)
+ * Each ISBN may belong to one prefix (optional, null for legacy imports)
  * Story 2.6: ISBN pool management relations
+ * Story 7.4: Added prefix relation for publisher ISBN prefix system
  */
 export const isbnsRelations = relations(isbns, ({ one }) => ({
   tenant: one(tenants, {
@@ -126,7 +142,33 @@ export const isbnsRelations = relations(isbns, ({ one }) => ({
     fields: [isbns.assigned_by_user_id],
     references: [users.id],
   }),
+  prefix: one(isbnPrefixes, {
+    fields: [isbns.prefix_id],
+    references: [isbnPrefixes.id],
+  }),
 }));
+
+/**
+ * ISBN Prefixes relations
+ * Each prefix belongs to one tenant
+ * Each prefix was created by one user (optional)
+ * Each prefix can have many ISBNs generated from it
+ * Story 7.4: Publisher ISBN Prefix System
+ */
+export const isbnPrefixesRelations = relations(
+  isbnPrefixes,
+  ({ one, many }) => ({
+    tenant: one(tenants, {
+      fields: [isbnPrefixes.tenant_id],
+      references: [tenants.id],
+    }),
+    createdByUser: one(users, {
+      fields: [isbnPrefixes.created_by_user_id],
+      references: [users.id],
+    }),
+    isbns: many(isbns),
+  }),
+);
 
 /**
  * Sales relations
@@ -189,15 +231,21 @@ export const returnsRelations = relations(returns, ({ one }) => ({
  * Each contract can have many tiers (tiered royalty rates) and statements
  * Story 4.1: Royalty contract management with tiered rates
  * Story 5.1: Added statements relation
+ * Story 7.3: Added contact relation for unified contact system
  */
 export const contractsRelations = relations(contracts, ({ one, many }) => ({
   tenant: one(tenants, {
     fields: [contracts.tenant_id],
     references: [tenants.id],
   }),
+  /** @deprecated Use contact relation instead */
   author: one(authors, {
     fields: [contracts.author_id],
     references: [authors.id],
+  }),
+  contact: one(contacts, {
+    fields: [contracts.contact_id],
+    references: [contacts.id],
   }),
   title: one(titles, {
     fields: [contracts.title_id],
@@ -223,15 +271,21 @@ export const contractTiersRelations = relations(contractTiers, ({ one }) => ({
  * Statements relations
  * Each statement belongs to one tenant, one author, one contract, and one user (generator)
  * Story 5.1: Royalty statements with PDF storage
+ * Story 7.3: Added contact relation for unified contact system
  */
 export const statementsRelations = relations(statements, ({ one }) => ({
   tenant: one(tenants, {
     fields: [statements.tenant_id],
     references: [tenants.id],
   }),
+  /** @deprecated Use contact relation instead */
   author: one(authors, {
     fields: [statements.author_id],
     references: [authors.id],
+  }),
+  contact: one(contacts, {
+    fields: [statements.contact_id],
+    references: [contacts.id],
   }),
   contract: one(contracts, {
     fields: [statements.contract_id],
@@ -257,6 +311,124 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   }),
   user: one(users, {
     fields: [auditLogs.user_id],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * Contacts relations
+ * Each contact belongs to one tenant
+ * Each contact may have one portal user account (via portal_user_id)
+ * Each contact may have been created by one user
+ * Each contact can have multiple roles
+ * Story 7.1: Unified contact management with multi-role support
+ * Story 7.3: Added titles, contracts, statements relations
+ */
+export const contactsRelations = relations(contacts, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [contacts.tenant_id],
+    references: [tenants.id],
+  }),
+  portalUser: one(users, {
+    fields: [contacts.portal_user_id],
+    references: [users.id],
+    relationName: "contactPortalUser",
+  }),
+  createdByUser: one(users, {
+    fields: [contacts.created_by],
+    references: [users.id],
+    relationName: "contactCreatedBy",
+  }),
+  roles: many(contactRoles),
+  titles: many(titles),
+  contracts: many(contracts),
+  statements: many(statements),
+}));
+
+/**
+ * Contact Roles relations
+ * Each contact role belongs to one contact
+ * Each role assignment may have been made by one user
+ * Story 7.1: Multi-role support for contacts
+ *
+ * Note: Tenant isolation is inherited via CASCADE from contacts table
+ */
+export const contactRolesRelations = relations(contactRoles, ({ one }) => ({
+  contact: one(contacts, {
+    fields: [contactRoles.contact_id],
+    references: [contacts.id],
+  }),
+  assignedByUser: one(users, {
+    fields: [contactRoles.assigned_by],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * Invoices relations
+ * Each invoice belongs to one tenant and one customer (contact)
+ * Each invoice can have many line items and payments
+ * Each invoice may have been created by one user
+ * Story 8.1: Invoice database schema
+ */
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [invoices.tenant_id],
+    references: [tenants.id],
+  }),
+  customer: one(contacts, {
+    fields: [invoices.customer_id],
+    references: [contacts.id],
+  }),
+  lineItems: many(invoiceLineItems),
+  payments: many(payments),
+  createdByUser: one(users, {
+    fields: [invoices.created_by],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * Invoice Line Items relations
+ * Each line item belongs to one invoice
+ * Each line item may be associated with one title (optional)
+ * Story 8.1: Invoice database schema
+ *
+ * Note: Tenant isolation is inherited via CASCADE from invoices table
+ */
+export const invoiceLineItemsRelations = relations(
+  invoiceLineItems,
+  ({ one }) => ({
+    invoice: one(invoices, {
+      fields: [invoiceLineItems.invoice_id],
+      references: [invoices.id],
+    }),
+    title: one(titles, {
+      fields: [invoiceLineItems.title_id],
+      references: [titles.id],
+    }),
+  }),
+);
+
+/**
+ * Payments relations
+ * Each payment belongs to one tenant and one invoice
+ * Each payment may have been created by one user
+ * Story 8.1: Invoice database schema
+ *
+ * APPEND-ONLY: Payments are immutable - no update or delete operations
+ */
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [payments.tenant_id],
+    references: [tenants.id],
+  }),
+  invoice: one(invoices, {
+    fields: [payments.invoice_id],
+    references: [invoices.id],
+  }),
+  createdByUser: one(users, {
+    fields: [payments.created_by],
     references: [users.id],
   }),
 }));

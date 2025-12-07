@@ -10,6 +10,7 @@ export type IconName =
   | "RotateCcw"
   | "DollarSign"
   | "FileText"
+  | "ClipboardList"
   | "BarChart"
   | "Settings"
   | "Server";
@@ -40,10 +41,10 @@ export const NAV_ITEMS: NavItem[] = [
     allowedRoles: ["owner", "admin"],
   },
   {
-    label: "Authors",
-    href: "/authors",
+    label: "Contacts",
+    href: "/contacts",
     icon: "Users",
-    allowedRoles: ["owner", "admin", "editor"],
+    allowedRoles: ["owner", "admin", "editor", "finance"],
   },
   {
     label: "Titles",
@@ -80,6 +81,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Statements",
     href: "/statements",
     icon: "FileText",
+    allowedRoles: ["owner", "admin", "finance"],
+  },
+  {
+    label: "Invoices",
+    href: "/invoices",
+    icon: "ClipboardList",
     allowedRoles: ["owner", "admin", "finance"],
   },
   {

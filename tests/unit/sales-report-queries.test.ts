@@ -515,7 +515,9 @@ describe("Sales Report Totals Calculation (subtask 8.9)", () => {
       totalUnits,
       totalRevenue,
       avgUnitPrice:
-        totalUnits > 0 ? new Decimal(totalRevenue).div(totalUnits).toNumber() : 0,
+        totalUnits > 0
+          ? new Decimal(totalRevenue).div(totalUnits).toNumber()
+          : 0,
     };
   };
 

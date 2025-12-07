@@ -5,6 +5,7 @@
  *
  * Provides multi-dimensional filtering for sales reports including:
  * - Date range picker (required)
+ * - Date presets including Royalty Period (Story 7.5 AC-6)
  * - Title multi-select (searchable)
  * - Author multi-select (searchable)
  * - Format dropdown
@@ -12,6 +13,7 @@
  * - Grouping radio/select
  *
  * Story: 6.2 - Build Sales Reports with Multi-Dimensional Filtering
+ * Story: 7.5 - Royalty Period integration (AC-6)
  * AC: 2 (Date range picker)
  * AC: 3 (Multi-select filters for Title, Author, Format, Channel)
  * AC: 4 (Grouping options: by Title, Format, Channel, Date)
@@ -21,8 +23,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2, X } from "lucide-react";
 import * as React from "react";
-import { useForm } from "react-hook-form";
 import type { DateRange } from "react-day-picker";
+import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -46,10 +48,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getCurrentRoyaltyPeriod } from "@/lib/royalty-period";
 import { cn } from "@/lib/utils";
+import { getTenantSettings } from "@/modules/tenant/actions";
 import {
-  salesReportFilterSchema,
   type SalesReportFilterInput,
+  salesReportFilterSchema,
 } from "../schema";
 
 interface FilterOption {
@@ -92,6 +96,18 @@ const GROUPING_OPTIONS = [
   { value: "date", label: "By Date" },
 ] as const;
 
+// Story 7.5 AC-6: Date preset options including Royalty Period
+const DATE_PRESET_OPTIONS = [
+  { value: "custom", label: "Custom Range" },
+  { value: "royalty_period", label: "Royalty Period" },
+  { value: "last_30", label: "Last 30 Days" },
+  { value: "last_90", label: "Last 90 Days" },
+  { value: "this_year", label: "This Year" },
+  { value: "last_year", label: "Last Year" },
+] as const;
+
+type DatePreset = (typeof DATE_PRESET_OPTIONS)[number]["value"];
+
 // Compute default dates (30 days ago to today)
 function getDefaultDates() {
   const end = new Date();
@@ -115,6 +131,10 @@ export function SalesReportFilters({
 
   // Compute dates once on client only (after mount)
   const defaultDates = React.useMemo(() => getDefaultDates(), []);
+
+  // Story 7.5 AC-6: Date preset state
+  const [datePreset, setDatePreset] = React.useState<DatePreset>("last_30");
+  const [loadingRoyaltyPeriod, setLoadingRoyaltyPeriod] = React.useState(false);
 
   // Multi-select state for titles and authors
   const [selectedTitles, setSelectedTitles] = React.useState<string[]>(
@@ -171,6 +191,60 @@ export function SalesReportFilters({
     onSubmit(data);
   };
 
+  // Story 7.5 AC-6: Handle date preset change
+  const handleDatePresetChange = async (preset: DatePreset) => {
+    setDatePreset(preset);
+    const today = new Date();
+    const currentYear = today.getFullYear();
+
+    switch (preset) {
+      case "custom":
+        // Keep current dates, user will select manually
+        break;
+
+      case "royalty_period": {
+        setLoadingRoyaltyPeriod(true);
+        try {
+          const result = await getTenantSettings();
+          if (result.success) {
+            const period = getCurrentRoyaltyPeriod(result.data);
+            form.setValue("startDate", period.start);
+            form.setValue("endDate", period.end);
+          }
+        } finally {
+          setLoadingRoyaltyPeriod(false);
+        }
+        break;
+      }
+
+      case "last_30": {
+        const start = new Date();
+        start.setDate(start.getDate() - 30);
+        form.setValue("startDate", start);
+        form.setValue("endDate", today);
+        break;
+      }
+
+      case "last_90": {
+        const start = new Date();
+        start.setDate(start.getDate() - 90);
+        form.setValue("startDate", start);
+        form.setValue("endDate", today);
+        break;
+      }
+
+      case "this_year":
+        form.setValue("startDate", new Date(currentYear, 0, 1));
+        form.setValue("endDate", today);
+        break;
+
+      case "last_year":
+        form.setValue("startDate", new Date(currentYear - 1, 0, 1));
+        form.setValue("endDate", new Date(currentYear - 1, 11, 31));
+        break;
+    }
+  };
+
   const toggleTitle = (id: string) => {
     setSelectedTitles((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
@@ -225,7 +299,36 @@ export function SalesReportFilters({
         onSubmit={form.handleSubmit(handleSubmit)}
         className="space-y-6 rounded-lg border p-6"
       >
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Story 7.5 AC-6: Date Preset and Range Selection */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* Date Preset Dropdown */}
+          <FormItem>
+            <FormLabel>Date Preset</FormLabel>
+            <Select
+              value={datePreset}
+              onValueChange={(v) => handleDatePresetChange(v as DatePreset)}
+              disabled={loadingRoyaltyPeriod}
+            >
+              <SelectTrigger>
+                {loadingRoyaltyPeriod ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading...</span>
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Select preset" />
+                )}
+              </SelectTrigger>
+              <SelectContent>
+                {DATE_PRESET_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormItem>
+
           {/* Date Range Picker (AC-2) */}
           <FormField
             control={form.control}
@@ -313,14 +416,21 @@ export function SalesReportFilters({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Title Multi-Select (AC-3) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <span
+              id="titles-label"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               Titles
-            </label>
-            <Popover open={titleDropdownOpen} onOpenChange={setTitleDropdownOpen}>
+            </span>
+            <Popover
+              open={titleDropdownOpen}
+              onOpenChange={setTitleDropdownOpen}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className="w-full justify-between font-normal"
+                  aria-labelledby="titles-label"
                 >
                   {selectedTitles.length > 0 ? (
                     <span className="truncate">
@@ -427,9 +537,12 @@ export function SalesReportFilters({
 
           {/* Author Multi-Select (AC-3) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <span
+              id="authors-label"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               Authors
-            </label>
+            </span>
             <Popover
               open={authorDropdownOpen}
               onOpenChange={setAuthorDropdownOpen}
@@ -438,6 +551,7 @@ export function SalesReportFilters({
                 <Button
                   variant="outline"
                   className="w-full justify-between font-normal"
+                  aria-labelledby="authors-label"
                 >
                   {selectedAuthors.length > 0 ? (
                     <span className="truncate">

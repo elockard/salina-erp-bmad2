@@ -29,7 +29,9 @@ test.describe("ISBN Pool Report Page - Access and Layout (AC-1)", () => {
     ).toBeVisible();
 
     await expect(
-      page.getByText("Monitor ISBN inventory, utilization, and plan for reorders"),
+      page.getByText(
+        "Monitor ISBN inventory, utilization, and plan for reorders",
+      ),
     ).toBeVisible();
   });
 
@@ -193,7 +195,9 @@ test.describe("ISBN Pool Report Page - Insights (AC-7, AC-8, AC-9)", () => {
   }) => {
     await expect(page.getByTestId("isbn-pool-insights")).toBeVisible();
     await expect(page.getByText("Pool Insights & Actions")).toBeVisible();
-    await expect(page.getByText("Usage trends and recommendations")).toBeVisible();
+    await expect(
+      page.getByText("Usage trends and recommendations"),
+    ).toBeVisible();
   });
 });
 

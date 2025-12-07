@@ -20,8 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Table,
   TableBody,
@@ -31,7 +29,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { importISBNs } from "../actions";
-import type { ISBNType } from "../types";
 import { detectDuplicates, normalizeIsbn13, validateIsbn13 } from "../utils";
 
 /** Max file size: 1MB (AC 2) */
@@ -74,7 +71,7 @@ export function IsbnImportForm() {
   const router = useRouter();
 
   // Form state
-  const [isbnType, setIsbnType] = useState<ISBNType | null>(null);
+  // Story 7.6: Removed isbnType - ISBNs are unified without type distinction
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -258,13 +255,9 @@ export function IsbnImportForm() {
 
   /**
    * Submit import (AC 8, 9)
+   * Story 7.6: Removed type requirement - ISBNs are unified
    */
   const handleSubmit = useCallback(async () => {
-    if (!isbnType) {
-      toast.error("Please select an ISBN type");
-      return;
-    }
-
     if (!validationSummary || validationSummary.invalid > 0) {
       toast.error("Please fix validation errors before importing");
       return;
@@ -279,7 +272,6 @@ export function IsbnImportForm() {
 
       const result = await importISBNs({
         isbns: validIsbns,
-        type: isbnType,
       });
 
       if (result.success) {
@@ -301,10 +293,10 @@ export function IsbnImportForm() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isbnType, validationSummary, parsedIsbns, router]);
+  }, [validationSummary, parsedIsbns, router]);
 
+  // Story 7.6: Removed isbnType check - ISBNs are unified without type distinction
   const canSubmit =
-    isbnType !== null &&
     validationSummary !== null &&
     validationSummary.valid > 0 &&
     validationSummary.invalid === 0 &&
@@ -312,40 +304,7 @@ export function IsbnImportForm() {
 
   return (
     <div className="space-y-6">
-      {/* ISBN Type Selection (AC 3) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>ISBN Type</CardTitle>
-          <CardDescription>
-            Select the type for all ISBNs in this import batch
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup
-            value={isbnType || ""}
-            onValueChange={(value) => setIsbnType(value as ISBNType)}
-            className="flex gap-6"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="physical" id="physical" />
-              <Label htmlFor="physical" className="font-normal cursor-pointer">
-                Physical (Print)
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="ebook" id="ebook" />
-              <Label htmlFor="ebook" className="font-normal cursor-pointer">
-                Ebook (Digital)
-              </Label>
-            </div>
-          </RadioGroup>
-          {!isbnType && parsedIsbns.length > 0 && (
-            <p className="text-sm text-amber-600 mt-2">
-              Please select an ISBN type before importing
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      {/* Story 7.6: Removed ISBN Type Selection - ISBNs are unified without type distinction */}
 
       {/* File Upload (AC 2) */}
       <Card>

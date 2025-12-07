@@ -12,11 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { PrefixFilterOption } from "@/modules/isbn-prefixes/queries";
 
+/**
+ * Story 7.6: Removed currentType prop - ISBNs are unified without type distinction
+ */
 interface ISBNPoolFiltersProps {
-  currentType?: string;
   currentStatus?: string;
   currentSearch?: string;
+  currentPrefix?: string;
+  prefixOptions?: PrefixFilterOption[];
 }
 
 /**
@@ -29,11 +34,16 @@ interface ISBNPoolFiltersProps {
  * - Filters apply immediately on change
  * - Clear filters button to reset all filters
  * - Filters update URL query params for shareable links
+ *
+ * Story 7.4 - AC 7.4.7: Filter ISBN pool table by prefix
+ * - Prefix filter dropdown: All / [registered prefixes] / Legacy
  */
+// Story 7.6: Removed currentType - ISBNs are unified without type distinction
 export function ISBNPoolFilters({
-  currentType,
   currentStatus,
   currentSearch,
+  currentPrefix,
+  prefixOptions = [],
 }: ISBNPoolFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -63,14 +73,16 @@ export function ISBNPoolFilters({
     [router, searchParams],
   );
 
-  // Handle type filter change
-  const handleTypeChange = (value: string) => {
-    updateParams({ type: value === "all" ? undefined : value });
-  };
+  // Story 7.6: Removed handleTypeChange - ISBNs are unified without type distinction
 
   // Handle status filter change
   const handleStatusChange = (value: string) => {
     updateParams({ status: value === "all" ? undefined : value });
+  };
+
+  // Handle prefix filter change (Story 7.4 AC-7.4.7)
+  const handlePrefixChange = (value: string) => {
+    updateParams({ prefix: value === "all" ? undefined : value });
   };
 
   // Handle search with debounce
@@ -100,26 +112,13 @@ export function ISBNPoolFilters({
     });
   };
 
-  const hasFilters = currentType || currentStatus || currentSearch;
+  // Story 7.6: Removed currentType from hasFilters - ISBNs are unified
+  const hasFilters = currentStatus || currentSearch || currentPrefix;
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:items-center">
-        {/* Type Filter */}
-        <Select
-          value={currentType || "all"}
-          onValueChange={handleTypeChange}
-          disabled={isPending}
-        >
-          <SelectTrigger className="w-full sm:w-[140px]">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="physical">Physical</SelectItem>
-            <SelectItem value="ebook">Ebook</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Story 7.6: Removed Type Filter - ISBNs are unified without type distinction */}
 
         {/* Status Filter */}
         <Select
@@ -136,6 +135,26 @@ export function ISBNPoolFilters({
             <SelectItem value="assigned">Assigned</SelectItem>
             <SelectItem value="registered">Registered</SelectItem>
             <SelectItem value="retired">Retired</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Prefix Filter - Story 7.4 AC-7.4.7 */}
+        <Select
+          value={currentPrefix || "all"}
+          onValueChange={handlePrefixChange}
+          disabled={isPending}
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Prefix" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Prefixes</SelectItem>
+            <SelectItem value="legacy">Legacy (No Prefix)</SelectItem>
+            {prefixOptions.map((prefix) => (
+              <SelectItem key={prefix.id} value={prefix.id}>
+                {prefix.formattedPrefix}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 

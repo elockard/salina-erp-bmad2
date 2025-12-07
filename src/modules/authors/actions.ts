@@ -1,10 +1,27 @@
 "use server";
 
+/**
+ * @deprecated This module is deprecated. Use `@/modules/contacts` instead.
+ *
+ * Author Actions (Contact-Based)
+ *
+ * Story 7.3: Migrate Authors to Contacts
+ * Story 0.5: Consolidate Authors into Contacts
+ *
+ * Authors are now contacts with role='author' in the contact_roles table.
+ * All new code should use the contacts module directly:
+ *   - import { createContact, updateContact } from "@/modules/contacts/actions"
+ *   - Filter by role='author' when querying contacts
+ *
+ * This module is maintained for backward compatibility only.
+ * See actions-legacy.ts for original authors table implementation.
+ */
+
 import { clerkClient } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { authors } from "@/db/schema/authors";
+import { contacts, contactRoles } from "@/db/schema/contacts";
 import { users } from "@/db/schema/users";
 import { getCurrentTenantId, getDb, requirePermission } from "@/lib/auth";
 import { encryptTaxId } from "@/lib/encryption";
@@ -14,7 +31,53 @@ import { createAuthorSchema, updateAuthorSchema } from "./schema";
 import type { Author } from "./types";
 
 /**
- * Create a new author
+ * Convert a contact to Author type for response compatibility
+ */
+function contactToAuthor(contact: typeof contacts.$inferSelect): Author {
+  // Convert payment_info JSONB to payment_method string
+  const paymentInfo = contact.payment_info as { method?: string } | null;
+  const paymentMethod = paymentInfo?.method || null;
+
+  return {
+    id: contact.id,
+    tenant_id: contact.tenant_id,
+    name: `${contact.first_name || ""} ${contact.last_name || ""}`.trim(),
+    email: contact.email,
+    phone: contact.phone,
+    address: contact.address_line1,
+    tax_id: contact.tax_id,
+    payment_method: paymentMethod,
+    portal_user_id: contact.portal_user_id,
+    is_active: contact.status === "active",
+    created_at: contact.created_at,
+    updated_at: contact.updated_at,
+    first_name: contact.first_name,
+    last_name: contact.last_name,
+    contact_id: contact.id,
+  };
+}
+
+/**
+ * Split a full name into first and last name
+ * Uses last word as last name, everything before as first name
+ */
+function splitName(name: string): { firstName: string; lastName: string } {
+  const trimmed = name.trim();
+  const lastSpaceIndex = trimmed.lastIndexOf(" ");
+
+  if (lastSpaceIndex === -1) {
+    // Single word name - use as last name
+    return { firstName: "", lastName: trimmed };
+  }
+
+  return {
+    firstName: trimmed.substring(0, lastSpaceIndex).trim(),
+    lastName: trimmed.substring(lastSpaceIndex + 1).trim(),
+  };
+}
+
+/**
+ * Create a new author (as a contact with author role)
  * Permission: CREATE_AUTHORS_TITLES (owner, admin, editor)
  *
  * AC: 17 - Server Action createAuthor checks permission CREATE_AUTHORS_TITLES before insert
@@ -34,30 +97,47 @@ export async function createAuthor(
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
 
+    // Split name into first/last
+    const { firstName, lastName } = splitName(validated.name);
+
     // Encrypt tax_id if provided
     const encryptedTaxId = validated.tax_id
       ? encryptTaxId(validated.tax_id)
       : null;
 
-    // Insert author
-    const [author] = await db
-      .insert(authors)
+    // Convert payment_method to payment_info JSONB
+    const paymentInfo = validated.payment_method
+      ? { method: validated.payment_method }
+      : null;
+
+    // Insert contact
+    const [contact] = await db
+      .insert(contacts)
       .values({
         tenant_id: tenantId,
-        name: validated.name,
+        first_name: firstName || lastName, // If only one name, use as first name
+        last_name: lastName || firstName,
         email: validated.email || null,
         phone: validated.phone || null,
-        address: validated.address || null,
+        address_line1: validated.address || null,
         tax_id: encryptedTaxId,
-        payment_method: validated.payment_method || null,
-        is_active: true,
+        payment_info: paymentInfo,
+        status: "active",
       })
       .returning();
 
+    // Insert author role
+    await db.insert(contactRoles).values({
+      contact_id: contact.id,
+      role: "author",
+      role_specific_data: {},
+    });
+
     // Revalidate cache
     revalidatePath("/dashboard/authors");
+    revalidatePath("/dashboard/contacts");
 
-    return { success: true, data: author };
+    return { success: true, data: contactToAuthor(contact) };
   } catch (error) {
     // AC: 20 - On permission denied, return error
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
@@ -84,7 +164,7 @@ export async function createAuthor(
 }
 
 /**
- * Update an existing author
+ * Update an existing author (contact)
  * Permission: CREATE_AUTHORS_TITLES (owner, admin, editor)
  *
  * AC: 18 - Server Action updateAuthor checks permission CREATE_AUTHORS_TITLES before update
@@ -104,13 +184,19 @@ export async function updateAuthor(
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
 
-    // Get existing author
-    const existing = await db.query.authors.findFirst({
-      where: and(eq(authors.id, id), eq(authors.tenant_id, tenantId)),
+    // Get existing contact with author role
+    const existing = await db.query.contacts.findFirst({
+      where: and(eq(contacts.id, id), eq(contacts.tenant_id, tenantId)),
+      with: { roles: true },
     });
 
     if (!existing) {
       return { success: false, error: "Author not found" };
+    }
+
+    // Verify contact has author role
+    if (!existing.roles.some((r) => r.role === "author")) {
+      return { success: false, error: "Contact is not an author" };
     }
 
     // Prepare update values
@@ -119,7 +205,9 @@ export async function updateAuthor(
     };
 
     if (validated.name !== undefined) {
-      updateValues.name = validated.name;
+      const { firstName, lastName } = splitName(validated.name);
+      updateValues.first_name = firstName || lastName;
+      updateValues.last_name = lastName || firstName;
     }
     if (validated.email !== undefined) {
       updateValues.email = validated.email || null;
@@ -128,10 +216,12 @@ export async function updateAuthor(
       updateValues.phone = validated.phone || null;
     }
     if (validated.address !== undefined) {
-      updateValues.address = validated.address || null;
+      updateValues.address_line1 = validated.address || null;
     }
     if (validated.payment_method !== undefined) {
-      updateValues.payment_method = validated.payment_method || null;
+      updateValues.payment_info = validated.payment_method
+        ? { method: validated.payment_method }
+        : null;
     }
 
     // Encrypt tax_id if provided
@@ -141,17 +231,18 @@ export async function updateAuthor(
         : null;
     }
 
-    // Update author
+    // Update contact
     const [updated] = await db
-      .update(authors)
+      .update(contacts)
       .set(updateValues)
-      .where(and(eq(authors.id, id), eq(authors.tenant_id, tenantId)))
+      .where(and(eq(contacts.id, id), eq(contacts.tenant_id, tenantId)))
       .returning();
 
     // Revalidate cache
     revalidatePath("/dashboard/authors");
+    revalidatePath("/dashboard/contacts");
 
-    return { success: true, data: updated };
+    return { success: true, data: contactToAuthor(updated) };
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return {
@@ -176,11 +267,11 @@ export async function updateAuthor(
 }
 
 /**
- * Deactivate an author (soft delete)
+ * Deactivate an author (soft delete via status change)
  * Permission: CREATE_AUTHORS_TITLES (owner, admin, editor)
  *
  * AC: 19 - Server Action deactivateAuthor checks permission CREATE_AUTHORS_TITLES before update
- * AC: 12 - Deactivate button sets author is_active=false
+ * AC: 12 - Deactivate button sets contact status='inactive'
  */
 export async function deactivateAuthor(
   id: string,
@@ -193,14 +284,14 @@ export async function deactivateAuthor(
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
 
-    // Update author
+    // Update contact status
     const [updated] = await db
-      .update(authors)
+      .update(contacts)
       .set({
-        is_active: false,
+        status: "inactive",
         updated_at: new Date(),
       })
-      .where(and(eq(authors.id, id), eq(authors.tenant_id, tenantId)))
+      .where(and(eq(contacts.id, id), eq(contacts.tenant_id, tenantId)))
       .returning();
 
     if (!updated) {
@@ -209,8 +300,9 @@ export async function deactivateAuthor(
 
     // Revalidate cache
     revalidatePath("/dashboard/authors");
+    revalidatePath("/dashboard/contacts");
 
-    return { success: true, data: updated };
+    return { success: true, data: contactToAuthor(updated) };
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return {
@@ -242,14 +334,14 @@ export async function reactivateAuthor(
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
 
-    // Update author
+    // Update contact status
     const [updated] = await db
-      .update(authors)
+      .update(contacts)
       .set({
-        is_active: true,
+        status: "active",
         updated_at: new Date(),
       })
-      .where(and(eq(authors.id, id), eq(authors.tenant_id, tenantId)))
+      .where(and(eq(contacts.id, id), eq(contacts.tenant_id, tenantId)))
       .returning();
 
     if (!updated) {
@@ -258,8 +350,9 @@ export async function reactivateAuthor(
 
     // Revalidate cache
     revalidatePath("/dashboard/authors");
+    revalidatePath("/dashboard/contacts");
 
-    return { success: true, data: updated };
+    return { success: true, data: contactToAuthor(updated) };
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return {
@@ -286,18 +379,25 @@ export async function fetchAuthors(options?: {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
 
-  const conditions = [eq(authors.tenant_id, tenantId)];
+  const conditions = [eq(contacts.tenant_id, tenantId)];
 
   if (!options?.includeInactive) {
-    conditions.push(eq(authors.is_active, true));
+    conditions.push(eq(contacts.status, "active"));
   }
 
-  const result = await db.query.authors.findMany({
+  // Query contacts with author role
+  const result = await db.query.contacts.findMany({
     where: and(...conditions),
-    orderBy: (authors, { asc }) => [asc(authors.name)],
+    with: { roles: true },
+    orderBy: (contacts, { asc }) => [asc(contacts.last_name), asc(contacts.first_name)],
   });
 
-  return result;
+  // Filter to only contacts with author role
+  const authorsOnly = result.filter((c) =>
+    c.roles.some((r) => r.role === "author"),
+  );
+
+  return authorsOnly.map(contactToAuthor);
 }
 
 /**
@@ -323,13 +423,13 @@ export async function getMaskedTaxIdAction(
 }
 
 /**
- * Grant portal access to an author
+ * Grant portal access to an author (contact)
  * Permission: MANAGE_USERS (owner, admin only)
  *
  * Story 2.3 - Author Portal Access Provisioning
  * AC: 6 - Server Action checks permission MANAGE_USERS
  * AC: 7 - Creates users record with role="author", tenant_id, is_active=false
- * AC: 8 - Links author record via portal_user_id foreign key
+ * AC: 8 - Links contact record via portal_user_id foreign key
  * AC: 9 - Calls Clerk invitations.createInvitation with author_id in metadata
  * AC: 10 - Clerk sends invitation email to author
  * AC: 11 - On success: returns user record for UI to show success toast
@@ -346,17 +446,23 @@ export async function grantPortalAccess(
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
 
-    // Get author and validate
-    const author = await db.query.authors.findFirst({
-      where: and(eq(authors.id, authorId), eq(authors.tenant_id, tenantId)),
+    // Get contact and validate it has author role
+    const contact = await db.query.contacts.findFirst({
+      where: and(eq(contacts.id, authorId), eq(contacts.tenant_id, tenantId)),
+      with: { roles: true },
     });
 
-    if (!author) {
+    if (!contact) {
       return { success: false, error: "Author not found" };
     }
 
+    // Verify contact has author role
+    if (!contact.roles.some((r) => r.role === "author")) {
+      return { success: false, error: "Contact is not an author" };
+    }
+
     // Validate author has email (required for portal invitation)
-    if (!author.email) {
+    if (!contact.email) {
       return {
         success: false,
         error: "Author must have an email address to receive portal access",
@@ -364,7 +470,7 @@ export async function grantPortalAccess(
     }
 
     // Check if author already has portal access
-    if (author.portal_user_id) {
+    if (contact.portal_user_id) {
       return {
         success: false,
         error: "Author already has portal access",
@@ -376,40 +482,41 @@ export async function grantPortalAccess(
       .insert(users)
       .values({
         tenant_id: tenantId,
-        email: author.email,
+        email: contact.email,
         role: "author",
         is_active: false, // Will be activated by webhook when invitation is accepted
         clerk_user_id: null, // Will be set by webhook when user completes signup
       })
       .returning();
 
-    // AC: 8 - Link author record via portal_user_id foreign key
+    // AC: 8 - Link contact record via portal_user_id foreign key
     await db
-      .update(authors)
+      .update(contacts)
       .set({
         portal_user_id: newUser.id,
         updated_at: new Date(),
       })
-      .where(eq(authors.id, authorId));
+      .where(eq(contacts.id, authorId));
 
     // AC: 9 - Send Clerk invitation with author metadata
     try {
       const clerk = await clerkClient();
       await clerk.invitations.createInvitation({
-        emailAddress: author.email,
+        emailAddress: contact.email,
         publicMetadata: {
-          author_id: authorId,
+          author_id: authorId, // Now refers to contact.id
+          contact_id: authorId, // Explicit contact reference
           tenant_id: tenantId,
           role: "author",
         },
         // redirectUrl is optional - Clerk will use default signup URL
       });
     } catch (clerkError) {
-      // Rollback: remove user record and author link if Clerk invitation fails
+      // Rollback: remove user record and contact link if Clerk invitation fails
       await db
-        .update(authors)
+        .update(contacts)
         .set({ portal_user_id: null, updated_at: new Date() })
-        .where(eq(authors.id, authorId));
+        .where(eq(contacts.id, authorId));
       await db.delete(users).where(eq(users.id, newUser.id));
 
       console.error("Clerk invitation error:", clerkError);
@@ -421,11 +528,12 @@ export async function grantPortalAccess(
 
     // Revalidate cache
     revalidatePath("/dashboard/authors");
+    revalidatePath("/dashboard/contacts");
 
     // AC: 11 - Return success with user info for toast
     return {
       success: true,
-      data: { userId: newUser.id, email: author.email },
+      data: { userId: newUser.id, email: contact.email },
     };
   } catch (error) {
     // AC: 6 - Permission denied handling
@@ -446,7 +554,7 @@ export async function grantPortalAccess(
 }
 
 /**
- * Revoke portal access from an author
+ * Revoke portal access from an author (contact)
  * Permission: MANAGE_USERS (owner, admin only)
  *
  * Story 2.3 - Author Portal Access Provisioning
@@ -464,17 +572,17 @@ export async function revokePortalAccess(
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
 
-    // Get author with portal user link
-    const author = await db.query.authors.findFirst({
-      where: and(eq(authors.id, authorId), eq(authors.tenant_id, tenantId)),
+    // Get contact with portal user link
+    const contact = await db.query.contacts.findFirst({
+      where: and(eq(contacts.id, authorId), eq(contacts.tenant_id, tenantId)),
     });
 
-    if (!author) {
+    if (!contact) {
       return { success: false, error: "Author not found" };
     }
 
     // Validate author has portal access to revoke
-    if (!author.portal_user_id) {
+    if (!contact.portal_user_id) {
       return {
         success: false,
         error: "Author does not have portal access",
@@ -488,10 +596,11 @@ export async function revokePortalAccess(
         is_active: false,
         updated_at: new Date(),
       })
-      .where(eq(users.id, author.portal_user_id));
+      .where(eq(users.id, contact.portal_user_id));
 
     // Revalidate cache
     revalidatePath("/dashboard/authors");
+    revalidatePath("/dashboard/contacts");
 
     // AC: 18 - Return success for UI to show toast
     return { success: true, data: undefined };
@@ -529,12 +638,33 @@ export async function getAuthorWithPortalStatus(authorId: string): Promise<
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
 
-  const author = await db.query.authors.findFirst({
-    where: and(eq(authors.id, authorId), eq(authors.tenant_id, tenantId)),
+  const contact = await db.query.contacts.findFirst({
+    where: and(eq(contacts.id, authorId), eq(contacts.tenant_id, tenantId)),
     with: {
       portalUser: true,
+      roles: true,
     },
   });
 
-  return author || null;
+  if (!contact) {
+    return null;
+  }
+
+  // Verify contact has author role
+  if (!contact.roles.some((r) => r.role === "author")) {
+    return null;
+  }
+
+  const author = contactToAuthor(contact);
+
+  return {
+    ...author,
+    portalUser: contact.portalUser
+      ? {
+          id: contact.portalUser.id,
+          is_active: contact.portalUser.is_active,
+          clerk_user_id: contact.portalUser.clerk_user_id,
+        }
+      : null,
+  };
 }

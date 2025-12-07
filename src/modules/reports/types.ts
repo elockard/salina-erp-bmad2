@@ -189,24 +189,17 @@ export interface SalesReportResult {
  * ISBN pool metrics for status report
  *
  * Story: 6.3 - Build ISBN Pool Status Report
- * AC: 2 (Stats cards with available/assigned/total by type)
+ * Story: 7.6 - Remove ISBN Type Distinction (unified stats, no physical/ebook breakdown)
+ * AC: 2 (Stats cards with available/assigned/total)
  * AC: 3 (Utilization percentage)
  * AC: 7 (Burn rate - ISBNs per month)
  * AC: 8 (Estimated runout date)
  */
 export interface ISBNPoolMetrics {
-  /** Physical ISBN counts */
-  physical: {
-    available: number;
-    assigned: number;
-    total: number;
-  };
-  /** Ebook ISBN counts */
-  ebook: {
-    available: number;
-    assigned: number;
-    total: number;
-  };
+  /** Total ISBN counts (Story 7.6: unified, no type distinction) */
+  available: number;
+  assigned: number;
+  total: number;
   /** Overall utilization percentage (assigned / total * 100) */
   utilizationPercent: number;
   /** ISBNs assigned per month (6-month average) */
@@ -455,4 +448,120 @@ export interface AuthorPortalDashboardData {
   };
   /** Next statement date (or null if none scheduled) */
   nextStatementDate: Date | null;
+}
+
+// ============================================================================
+// Accounts Receivable Types (Story 8.5)
+// ============================================================================
+
+/**
+ * AR Summary statistics for dashboard
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.2: Summary stats cards showing total receivables, current, overdue, etc.
+ */
+export interface ARSummary {
+  /** Total receivables - sum of all balance_due across open invoices */
+  totalReceivables: string;
+  /** Current amount - not yet due (due_date >= today) */
+  currentAmount: string;
+  /** Overdue amount - past due (due_date < today and status != 'paid') */
+  overdueAmount: string;
+  /** Average days to pay - calculated from paid invoices */
+  averageDaysToPay: number;
+  /** Number of open invoices (balance_due > 0) */
+  openInvoiceCount: number;
+}
+
+/**
+ * Aging bucket type union
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.3: Aging report with standard AR buckets
+ */
+export type AgingBucketType = "current" | "1-30" | "31-60" | "61-90" | "90+";
+
+/**
+ * Aging report row for a single customer
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.3: Aging report table with customer + buckets + total
+ */
+export interface AgingReportRow {
+  /** Customer contact ID */
+  customerId: string;
+  /** Customer display name */
+  customerName: string;
+  /** Current bucket (0 days past due) */
+  current: string;
+  /** 1-30 days past due */
+  days1to30: string;
+  /** 31-60 days past due */
+  days31to60: string;
+  /** 61-90 days past due */
+  days61to90: string;
+  /** 90+ days past due */
+  days90plus: string;
+  /** Total outstanding for this customer */
+  total: string;
+}
+
+/**
+ * Customer AR detail for drill-down view
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.4: Customer drill-down showing invoices and payment history
+ */
+export interface CustomerARDetail {
+  /** Customer contact ID */
+  customerId: string;
+  /** Customer display name */
+  customerName: string;
+  /** List of open invoices for this customer */
+  invoices: CustomerInvoiceDetail[];
+  /** Payment history summary */
+  paymentHistory: {
+    /** Total amount ever billed to this customer */
+    totalBilled: string;
+    /** Total amount paid by this customer */
+    totalPaid: string;
+    /** Average days to pay for paid invoices */
+    avgDaysToPay: number;
+  };
+}
+
+/**
+ * Invoice detail within customer AR drill-down
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.4: Invoice list in customer drill-down
+ */
+export interface CustomerInvoiceDetail {
+  /** Invoice UUID */
+  id: string;
+  /** Invoice number (e.g., INV-20251206-0001) */
+  invoiceNumber: string;
+  /** Invoice date */
+  invoiceDate: Date;
+  /** Due date */
+  dueDate: Date;
+  /** Invoice total */
+  total: string;
+  /** Balance due */
+  balanceDue: string;
+  /** Invoice status */
+  status: string;
+  /** Days overdue (0 if current) */
+  daysOverdue: number;
+}
+
+/**
+ * Tenant info for report headers (PDF export)
+ *
+ * Story: 8.5 - Build Accounts Receivable Dashboard
+ * AC-8.5.7: PDF export with company name header
+ */
+export interface TenantForReport {
+  /** Tenant name (used as company name in reports) */
+  name: string;
 }

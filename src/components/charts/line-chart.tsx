@@ -77,7 +77,9 @@ export function LineChart({
   strokeWidth = 2,
 }: LineChartProps) {
   // Function props take precedence over formatterType
-  const builtinFormatter = formatterType ? formatters[formatterType] : undefined;
+  const builtinFormatter = formatterType
+    ? formatters[formatterType]
+    : undefined;
   const yFormatter = yAxisFormatter || builtinFormatter;
   const tipFormatter = tooltipFormatter || builtinFormatter;
 
