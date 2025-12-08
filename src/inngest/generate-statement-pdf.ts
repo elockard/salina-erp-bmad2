@@ -39,10 +39,12 @@ interface PDFGenerateEventData {
 async function loadStatementWithDetails(
   statementId: string,
 ): Promise<StatementWithDetails> {
+  // Story 7.3: Load both author (legacy) and contact (new) relations
   const result = await adminDb.query.statements.findFirst({
     where: eq(statements.id, statementId),
     with: {
       author: true,
+      contact: true,
       contract: {
         with: {
           title: true,
@@ -55,15 +57,53 @@ async function loadStatementWithDetails(
     throw new Error(`Statement not found: ${statementId}`);
   }
 
-  // Transform to StatementWithDetails shape
-  return {
-    ...result,
-    author: {
+  // Story 7.3: Build author info from contact (new) or author (legacy)
+  let authorInfo: {
+    id: string;
+    name: string;
+    address: string | null;
+    email: string | null;
+  };
+
+  if (result.contact) {
+    // New statement with contact relation
+    const firstName = result.contact.first_name || "";
+    const lastName = result.contact.last_name || "";
+    const contactAddress = [
+      result.contact.address_line1,
+      result.contact.address_line2,
+      [result.contact.city, result.contact.state, result.contact.postal_code]
+        .filter(Boolean)
+        .join(" "),
+      result.contact.country,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    authorInfo = {
+      id: result.contact.id,
+      name: `${firstName} ${lastName}`.trim() || "Unknown",
+      address: contactAddress || null,
+      email: result.contact.email,
+    };
+  } else if (result.author) {
+    // Legacy statement with author relation
+    authorInfo = {
       id: result.author.id,
       name: result.author.name,
       address: result.author.address,
       email: result.author.email,
-    },
+    };
+  } else {
+    throw new Error(
+      `Statement ${statementId} has no author or contact relation`,
+    );
+  }
+
+  // Transform to StatementWithDetails shape
+  return {
+    ...result,
+    author: authorInfo,
     contract: {
       id: result.contract.id,
       title_id: result.contract.title_id,

@@ -453,6 +453,16 @@ export async function generateStatements(
       };
     }
 
+    // Convert dates from string (server action serialization) to Date objects
+    const periodStart =
+      request.periodStart instanceof Date
+        ? request.periodStart
+        : new Date(request.periodStart);
+    const periodEnd =
+      request.periodEnd instanceof Date
+        ? request.periodEnd
+        : new Date(request.periodEnd);
+
     // Validate request
     if (request.authorIds.length === 0) {
       return {
@@ -461,7 +471,7 @@ export async function generateStatements(
       };
     }
 
-    if (request.periodEnd <= request.periodStart) {
+    if (periodEnd <= periodStart) {
       return {
         success: false,
         error: "Period end date must be after start date",
@@ -473,8 +483,8 @@ export async function generateStatements(
       name: "statements/generate.batch",
       data: {
         tenantId,
-        periodStart: request.periodStart.toISOString(),
-        periodEnd: request.periodEnd.toISOString(),
+        periodStart: periodStart.toISOString(),
+        periodEnd: periodEnd.toISOString(),
         authorIds: request.authorIds,
         sendEmail: request.sendEmail,
         userId: user.id,
@@ -497,8 +507,8 @@ export async function generateStatements(
           jobId: result.ids[0],
           authorIds: request.authorIds,
           authorCount: request.authorIds.length,
-          periodStart: request.periodStart.toISOString(),
-          periodEnd: request.periodEnd.toISOString(),
+          periodStart: periodStart.toISOString(),
+          periodEnd: periodEnd.toISOString(),
           sendEmail: request.sendEmail,
         },
       },

@@ -25,7 +25,7 @@
 
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { adminDb } from "@/db";
 import { authors } from "@/db/schema/authors";
 import { contacts, contactRoles } from "@/db/schema/contacts";
@@ -224,14 +224,24 @@ export async function getStatementPDFUrl(
  * @returns List of authors with pending royalty estimates
  */
 export async function getAuthorsWithPendingRoyalties(params: {
-  periodStart: Date;
-  periodEnd: Date;
+  periodStart: Date | string;
+  periodEnd: Date | string;
 }): Promise<ActionResult<AuthorWithPendingRoyalties[]>> {
   try {
     // Verify permission (AC-5.3.7)
     await requirePermission(["finance", "admin", "owner"]);
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
+
+    // Convert dates from string (server action serialization) to Date objects
+    const periodStart =
+      params.periodStart instanceof Date
+        ? params.periodStart
+        : new Date(params.periodStart);
+    const periodEnd =
+      params.periodEnd instanceof Date
+        ? params.periodEnd
+        : new Date(params.periodEnd);
 
     // Get all active contacts with author role in the tenant
     const contactList = await db.query.contacts.findMany({
@@ -252,10 +262,14 @@ export async function getAuthorsWithPendingRoyalties(params: {
 
     for (const contact of authorContacts) {
       // Check if author has a contract
+      // Story 7.3: Check both contact_id (new) and author_id (legacy) for contracts
       const contract = await db.query.contracts.findFirst({
         where: and(
           eq(contracts.tenant_id, tenantId),
-          eq(contracts.author_id, contact.id),
+          or(
+            eq(contracts.contact_id, contact.id),
+            eq(contracts.author_id, contact.id),
+          ),
           eq(contracts.status, "active"),
         ),
       });
@@ -269,8 +283,8 @@ export async function getAuthorsWithPendingRoyalties(params: {
         const result = await calculateRoyaltyForPeriod(
           contact.id,
           tenantId,
-          params.periodStart,
-          params.periodEnd,
+          periodStart,
+          periodEnd,
         );
         if (result.success) {
           pendingRoyalties = result.calculation.netPayable;
@@ -331,8 +345,8 @@ export async function getAuthorsWithPendingRoyalties(params: {
  * @returns Preview calculations for each author
  */
 export async function previewStatementCalculations(params: {
-  periodStart: Date;
-  periodEnd: Date;
+  periodStart: Date | string;
+  periodEnd: Date | string;
   authorIds: string[];
 }): Promise<ActionResult<PreviewCalculation[]>> {
   try {
@@ -340,6 +354,16 @@ export async function previewStatementCalculations(params: {
     await requirePermission(["finance", "admin", "owner"]);
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
+
+    // Convert dates from string (server action serialization) to Date objects
+    const periodStart =
+      params.periodStart instanceof Date
+        ? params.periodStart
+        : new Date(params.periodStart);
+    const periodEnd =
+      params.periodEnd instanceof Date
+        ? params.periodEnd
+        : new Date(params.periodEnd);
 
     const previews: PreviewCalculation[] = [];
 
@@ -363,8 +387,8 @@ export async function previewStatementCalculations(params: {
       const result = await calculateRoyaltyForPeriod(
         authorId,
         tenantId,
-        params.periodStart,
-        params.periodEnd,
+        periodStart,
+        periodEnd,
       );
 
       if (!result.success) {
@@ -479,6 +503,16 @@ export async function generateStatements(
       };
     }
 
+    // Convert dates from string (server action serialization) to Date objects
+    const periodStart =
+      request.periodStart instanceof Date
+        ? request.periodStart
+        : new Date(request.periodStart);
+    const periodEnd =
+      request.periodEnd instanceof Date
+        ? request.periodEnd
+        : new Date(request.periodEnd);
+
     // Validate request
     if (request.authorIds.length === 0) {
       return {
@@ -487,7 +521,7 @@ export async function generateStatements(
       };
     }
 
-    if (request.periodEnd <= request.periodStart) {
+    if (periodEnd <= periodStart) {
       return {
         success: false,
         error: "Period end date must be after start date",
@@ -499,8 +533,8 @@ export async function generateStatements(
       name: "statements/generate.batch",
       data: {
         tenantId,
-        periodStart: request.periodStart.toISOString(),
-        periodEnd: request.periodEnd.toISOString(),
+        periodStart: periodStart.toISOString(),
+        periodEnd: periodEnd.toISOString(),
         authorIds: request.authorIds,
         sendEmail: request.sendEmail,
         userId: user.id,
@@ -523,8 +557,8 @@ export async function generateStatements(
           jobId: result.ids[0],
           authorIds: request.authorIds,
           authorCount: request.authorIds.length,
-          periodStart: request.periodStart.toISOString(),
-          periodEnd: request.periodEnd.toISOString(),
+          periodStart: periodStart.toISOString(),
+          periodEnd: periodEnd.toISOString(),
           sendEmail: request.sendEmail,
         },
       },

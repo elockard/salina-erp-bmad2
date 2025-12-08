@@ -208,13 +208,14 @@ export async function getStatementById(
   }
 
   // Transform to StatementWithDetails
+  // Note: This file is legacy and not used - author nullability handled with fallbacks
   return {
     ...statement,
     author: {
-      id: statement.author.id,
-      name: statement.author.name,
-      address: statement.author.address,
-      email: statement.author.email,
+      id: statement.author?.id ?? "",
+      name: statement.author?.name ?? "Unknown",
+      address: statement.author?.address ?? null,
+      email: statement.author?.email ?? null,
     },
     contract: {
       id: statement.contract.id,
@@ -658,13 +659,14 @@ export async function getMyStatementById(
   }
 
   // Transform to StatementWithDetails
+  // Note: This file is legacy and not used - author nullability handled with fallbacks
   return {
     ...statement,
     author: {
-      id: statement.author.id,
-      name: statement.author.name,
-      address: statement.author.address,
-      email: statement.author.email,
+      id: statement.author?.id ?? "",
+      name: statement.author?.name ?? "Unknown",
+      address: statement.author?.address ?? null,
+      email: statement.author?.email ?? null,
     },
     contract: {
       id: statement.contract.id,

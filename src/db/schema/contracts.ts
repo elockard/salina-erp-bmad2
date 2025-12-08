@@ -107,10 +107,11 @@ export const contracts = pgTable(
      * Foreign key to authors table - the author party to this contract
      * ON DELETE RESTRICT - cannot delete an author with contracts
      * @deprecated Use contact_id instead. Kept for migration rollback capability.
+     * Story 7.3: Made nullable since new contracts use contact_id
      */
-    author_id: uuid("author_id")
-      .notNull()
-      .references(() => authors.id, { onDelete: "restrict" }),
+    author_id: uuid("author_id").references(() => authors.id, {
+      onDelete: "restrict",
+    }),
 
     /**
      * Foreign key to contacts table - links contract to contact with author role

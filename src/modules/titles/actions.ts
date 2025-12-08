@@ -60,11 +60,12 @@ export async function createTitle(
 
     // Prepare insert values
     // Story 7.6: Removed eisbn - ISBNs are unified without type distinction
+    // Story 7.3: Use contact_id instead of deprecated author_id
     const insertValues: Record<string, unknown> = {
       tenant_id: tenantId,
       title: validated.title,
       subtitle: validated.subtitle || null,
-      author_id: validated.author_id,
+      contact_id: validated.author_id, // author_id from form is now a contact ID
       genre: validated.genre || null,
       word_count: validated.word_count || null,
       publication_status: validated.publication_status || "draft",
@@ -156,8 +157,9 @@ export async function updateTitle(
     if (validated.subtitle !== undefined) {
       updateValues.subtitle = validated.subtitle || null;
     }
+    // Story 7.3: Use contact_id instead of deprecated author_id
     if (validated.author_id !== undefined) {
-      updateValues.author_id = validated.author_id;
+      updateValues.contact_id = validated.author_id;
     }
     if (validated.genre !== undefined) {
       updateValues.genre = validated.genre || null;

@@ -169,10 +169,12 @@ export async function getStatements(params: {
   const total = countResult[0]?.count || 0;
 
   // Get paginated items with relations
+  // Story 7.3: Load both author (legacy) and contact (new) relations
   const items = await db.query.statements.findMany({
     where: whereClause,
     with: {
       author: true,
+      contact: true,
       contract: true,
     },
     limit: pageSize,
@@ -207,10 +209,12 @@ export async function getStatementById(
   const db = await getDb();
 
   // Get statement with relations
+  // Story 7.3: Load both author (legacy) and contact (new) relations
   const statement = await db.query.statements.findFirst({
     where: eq(statements.id, statementId),
     with: {
       author: true,
+      contact: true,
       contract: {
         with: {
           title: true,
@@ -223,16 +227,61 @@ export async function getStatementById(
     return null;
   }
 
-  // Transform to StatementWithDetails
-  // Story 7.3: Uses legacy author relation during transition
-  return {
-    ...statement,
-    author: {
+  // Story 7.3: Build author info from contact (new) or author (legacy)
+  let authorInfo: {
+    id: string;
+    name: string;
+    address: string | null;
+    email: string | null;
+  };
+
+  if (statement.contact) {
+    // New statement with contact relation
+    const firstName = statement.contact.first_name || "";
+    const lastName = statement.contact.last_name || "";
+    const contactAddress = [
+      statement.contact.address_line1,
+      statement.contact.address_line2,
+      [
+        statement.contact.city,
+        statement.contact.state,
+        statement.contact.postal_code,
+      ]
+        .filter(Boolean)
+        .join(" "),
+      statement.contact.country,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    authorInfo = {
+      id: statement.contact.id,
+      name: `${firstName} ${lastName}`.trim() || "Unknown",
+      address: contactAddress || null,
+      email: statement.contact.email,
+    };
+  } else if (statement.author) {
+    // Legacy statement with author relation
+    authorInfo = {
       id: statement.author.id,
       name: statement.author.name,
       address: statement.author.address,
       email: statement.author.email,
-    },
+    };
+  } else {
+    // No author or contact - use placeholder
+    authorInfo = {
+      id: "",
+      name: "Unknown",
+      address: null,
+      email: null,
+    };
+  }
+
+  // Transform to StatementWithDetails
+  return {
+    ...statement,
+    author: authorInfo,
     contract: {
       id: statement.contract.id,
       title_id: statement.contract.title_id,
@@ -497,11 +546,12 @@ export async function getStatementsPageData(params: {
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   // Parallel fetch: statements count, statements items, stats, periods
+  // Story 7.3: Load both author (legacy) and contact (new) relations
   const [countResult, items, stats, periods] = await Promise.all([
     db.select({ count: count() }).from(statements).where(whereClause),
     db.query.statements.findMany({
       where: whereClause,
-      with: { author: true, contract: true },
+      with: { author: true, contact: true, contract: true },
       limit: pageSize,
       offset,
       orderBy: desc(statements.created_at),
@@ -689,6 +739,7 @@ export async function getMyStatementById(
     ),
     with: {
       author: true,
+      contact: true,
       contract: {
         with: {
           title: true,
@@ -701,16 +752,28 @@ export async function getMyStatementById(
     return null;
   }
 
+  // Story 7.3: Build author info from the current portal user's contact data
+  // For portal statements, we use the contact data since they're accessed via contact_id
+  const contactAddress = [
+    contact.address_line1,
+    contact.address_line2,
+    [contact.city, contact.state, contact.postal_code].filter(Boolean).join(" "),
+    contact.country,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const authorInfo = {
+    id: contact.id,
+    name: `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "Unknown",
+    address: contactAddress || null,
+    email: contact.email,
+  };
+
   // Transform to StatementWithDetails
-  // Uses legacy author relation for backward compatibility, contact data available via contact relation
   return {
     ...statement,
-    author: {
-      id: statement.author.id,
-      name: statement.author.name,
-      address: statement.author.address,
-      email: statement.author.email,
-    },
+    author: authorInfo,
     contract: {
       id: statement.contract.id,
       title_id: statement.contract.title_id,

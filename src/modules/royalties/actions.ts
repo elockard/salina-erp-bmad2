@@ -151,25 +151,29 @@ export async function createContract(
       return { success: false, error: "Selected title not found" };
     }
 
-    // 8. Create contract and tiers atomically (AC 6)
-    const result = await db.transaction(async (tx) => {
-      // Step 1: Create contract
-      const [contract] = await tx
-        .insert(contracts)
-        .values({
-          tenant_id: tenantId,
-          author_id: validated.author_id,
-          title_id: validated.title_id,
-          status: validated.status,
-          advance_amount: validated.advance_amount || "0",
-          advance_paid: validated.advance_paid || "0",
-          advance_recouped: "0",
-        })
-        .returning();
+    // 8. Create contract and tiers
+    // Note: Using sequential operations instead of transaction due to Neon HTTP driver limitations
+    // Step 1: Create contract
+    // Story 7.3: Use contact_id instead of deprecated author_id
+    const [contract] = await db
+      .insert(contracts)
+      .values({
+        tenant_id: tenantId,
+        contact_id: validated.author_id, // author_id from form is now a contact ID
+        title_id: validated.title_id,
+        status: validated.status,
+        advance_amount: validated.advance_amount || "0",
+        advance_paid: validated.advance_paid || "0",
+        advance_recouped: "0",
+      })
+      .returning();
 
-      // Step 2: Create tiers
+    // Step 2: Create tiers
+    // If this fails, we should clean up the contract - but in practice tier insertion
+    // rarely fails after contract creation succeeds
+    try {
       for (const tier of validated.tiers) {
-        await tx.insert(contractTiers).values({
+        await db.insert(contractTiers).values({
           contract_id: contract.id,
           format: tier.format,
           min_quantity: tier.min_quantity,
@@ -177,9 +181,14 @@ export async function createContract(
           rate: tier.rate.toFixed(4), // Store as string for DECIMAL(5,4)
         });
       }
+    } catch (tierError) {
+      // Clean up the contract if tier creation fails
+      console.error("Tier creation failed, cleaning up contract:", tierError);
+      await db.delete(contracts).where(eq(contracts.id, contract.id));
+      throw tierError;
+    }
 
-      return contract;
-    });
+    const result = contract;
 
     // 9. Log audit event (fire and forget - non-blocking)
     logAuditEvent({
@@ -549,47 +558,46 @@ export async function updateContract(
       ),
     });
 
-    // 5. Update contract and tiers atomically
-    const result = await db.transaction(async (tx) => {
-      // Update contract
-      const [updated] = await tx
-        .update(contracts)
-        .set({
-          status: validated.status,
-          advance_amount: validated.advance_amount || "0",
-          advance_paid: validated.advance_paid || "0",
-          updated_at: new Date(),
-        })
-        .where(
-          and(
-            eq(contracts.id, validated.contractId),
-            eq(contracts.tenant_id, tenantId),
-          ),
-        )
-        .returning();
+    // 5. Update contract and tiers
+    // Note: Using sequential operations instead of transaction due to Neon HTTP driver limitations
+    // Update contract
+    const [updated] = await db
+      .update(contracts)
+      .set({
+        status: validated.status,
+        advance_amount: validated.advance_amount || "0",
+        advance_paid: validated.advance_paid || "0",
+        updated_at: new Date(),
+      })
+      .where(
+        and(
+          eq(contracts.id, validated.contractId),
+          eq(contracts.tenant_id, tenantId),
+        ),
+      )
+      .returning();
 
-      if (!updated) {
-        throw new Error("Contract not found");
-      }
+    if (!updated) {
+      return { success: false, error: "Contract not found" };
+    }
 
-      // Delete existing tiers
-      await tx
-        .delete(contractTiers)
-        .where(eq(contractTiers.contract_id, validated.contractId));
+    // Delete existing tiers and insert new ones
+    await db
+      .delete(contractTiers)
+      .where(eq(contractTiers.contract_id, validated.contractId));
 
-      // Insert new tiers
-      for (const tier of validated.tiers) {
-        await tx.insert(contractTiers).values({
-          contract_id: validated.contractId,
-          format: tier.format,
-          min_quantity: tier.min_quantity,
-          max_quantity: tier.max_quantity,
-          rate: tier.rate.toFixed(4),
-        });
-      }
+    // Insert new tiers
+    for (const tier of validated.tiers) {
+      await db.insert(contractTiers).values({
+        contract_id: validated.contractId,
+        format: tier.format,
+        min_quantity: tier.min_quantity,
+        max_quantity: tier.max_quantity,
+        rate: tier.rate.toFixed(4),
+      });
+    }
 
-      return updated;
-    });
+    const result = updated;
 
     // 6. Log audit event (fire and forget - non-blocking)
     logAuditEvent({

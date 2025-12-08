@@ -116,10 +116,26 @@ export interface StatementCalculations {
 }
 
 /**
+ * Contact type for statements (Story 7.3)
+ * Used for new statements created with contact_id
+ */
+export interface StatementContact {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  address: string | null;
+}
+
+/**
  * Statement with related entities for detail views
+ * Story 7.3: author is nullable (legacy), contact is the new relation
  */
 export interface StatementWithRelations extends Statement {
-  author: Author;
+  /** @deprecated Use contact instead - nullable during migration */
+  author: Author | null;
+  /** Contact with author role (Story 7.3) */
+  contact: StatementContact | null;
   contract: Contract;
 }
 
@@ -136,12 +152,13 @@ export interface PaginatedStatements {
 
 /**
  * Statement generation request parameters
+ * Note: Dates can be Date or string due to server action serialization
  */
 export interface StatementGenerationRequest {
   /** Start of royalty period */
-  periodStart: Date;
+  periodStart: Date | string;
   /** End of royalty period */
-  periodEnd: Date;
+  periodEnd: Date | string;
   /** Author IDs to generate statements for (empty = all authors) */
   authorIds: string[];
   /** Whether to send email after generation */

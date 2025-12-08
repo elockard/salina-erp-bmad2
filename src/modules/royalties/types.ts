@@ -20,9 +20,10 @@ import type { Title } from "@/db/schema/titles";
 /**
  * Contract with related author, title, and tiers
  * Used for detail views and lists
+ * Story 7.3: author is nullable since new contracts use contact_id
  */
 export interface ContractWithRelations extends Contract {
-  author: Author;
+  author: Author | null;
   title: Title;
   tiers: ContractTier[];
 }

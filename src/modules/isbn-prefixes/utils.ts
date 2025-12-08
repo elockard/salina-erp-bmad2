@@ -163,22 +163,39 @@ export function formatBlockSize(blockSize: IsbnPrefixBlockSize): string {
  * Format an ISBN prefix with hyphens for display
  * Uses standard ISBN-13 hyphenation pattern
  *
+ * Structure: GS1(3)-RegistrationGroup(1)-Registrant(variable)-Publication(X's)-Check(X)
+ *
+ * Block sizes and their publication digit count:
+ * - 10 ISBN: 1 publication digit → 978-X-XXXXXXX-X-X (11-digit prefix)
+ * - 100 ISBN: 2 publication digits → 978-X-XXXXXX-XX-X (10-digit prefix)
+ * - 1,000 ISBN: 3 publication digits → 978-X-XXXXX-XXX-X (9-digit prefix)
+ * - 10,000 ISBN: 4 publication digits → 978-X-XXXX-XXXX-X (8-digit prefix)
+ * - 100,000 ISBN: 5 publication digits → 978-X-XXX-XXXXX-X (7-digit prefix)
+ * - 1,000,000 ISBN: 6 publication digits → 978-X-XX-XXXXXX-X (6-digit prefix)
+ *
  * @param prefix - Prefix (with or without hyphens)
- * @returns Formatted prefix with hyphens
+ * @returns Formatted prefix with hyphens and X placeholders
  */
 export function formatPrefix(prefix: string): string {
   const normalized = prefix.replace(/[-\s]/g, "");
 
-  // Standard format: 978-X-XXXXXX or 979-X-XXXXXX
-  if (normalized.length >= 4) {
-    const gs1 = normalized.slice(0, 3);
-    const rest = normalized.slice(3);
-
-    // Simple format: GS1-rest
-    return `${gs1}-${rest}`;
+  if (normalized.length < 6 || normalized.length > 11) {
+    return normalized; // Invalid length, return as-is
   }
 
-  return normalized;
+  // Calculate publication digits (title identifier)
+  const publicationDigits = 12 - normalized.length;
+
+  // Split into components
+  const gs1 = normalized.slice(0, 3); // 978 or 979
+  const registrationGroup = normalized.slice(3, 4); // Usually 0 or 1 for English
+  const registrant = normalized.slice(4); // Remaining prefix digits
+
+  // Build X placeholders for publication element
+  const publicationXs = "X".repeat(publicationDigits);
+
+  // Format: GS1-RegGroup-Registrant-Publication-Check
+  return `${gs1}-${registrationGroup}-${registrant}-${publicationXs}-X`;
 }
 
 /**

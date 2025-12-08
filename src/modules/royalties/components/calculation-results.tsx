@@ -112,7 +112,7 @@ export function CalculationResults({
             <div className="flex flex-wrap gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Author:</span>{" "}
-                <span className="font-medium">{contract.author.name}</span>
+                <span className="font-medium">{contract.author?.name ?? "Author"}</span>
               </div>
               <div className="text-muted-foreground">|</div>
               <div>

@@ -74,9 +74,13 @@ export const assignIsbnSchema = z.object({
  * Story 7.6 - Removed format field (ISBNs are unified)
  * Used by assignISBNToTitle Server Action
  * - titleId is the target title (valid UUID)
+ * - prefixId is optional - if provided, assigns from specific prefix pool
+ * - isbnId is optional - if provided, assigns this specific ISBN (for manual entry)
  */
 export const assignISBNInputSchema = z.object({
   titleId: z.string().uuid("Invalid title ID"),
+  prefixId: z.string().uuid("Invalid prefix ID").optional(),
+  isbnId: z.string().uuid("Invalid ISBN ID").optional(),
 });
 
 /** Input type inferred from assignISBNInputSchema */

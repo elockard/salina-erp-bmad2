@@ -84,10 +84,11 @@ export const statements = pgTable(
      * Foreign key to authors table - the author receiving this statement
      * ON DELETE RESTRICT - cannot delete an author with statements
      * @deprecated Use contact_id instead. Kept for migration rollback capability.
+     * Made nullable in Story 7.3 migration - new statements use contact_id only.
      */
-    author_id: uuid("author_id")
-      .notNull()
-      .references(() => authors.id, { onDelete: "restrict" }),
+    author_id: uuid("author_id").references(() => authors.id, {
+      onDelete: "restrict",
+    }),
 
     /**
      * Foreign key to contacts table - links statement to contact with author role

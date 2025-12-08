@@ -1,6 +1,6 @@
 "use server";
 
-import { and, count, eq, ilike, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, ilike, isNull, sql } from "drizzle-orm";
 import { isbnPrefixes } from "@/db/schema/isbn-prefixes";
 import { isbns } from "@/db/schema/isbns";
 import { titles } from "@/db/schema/titles";
@@ -8,7 +8,10 @@ import { users } from "@/db/schema/users";
 import { getCurrentTenantId, getDb, requirePermission } from "@/lib/auth";
 import { VIEW_OWN_STATEMENTS } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
-import { formatPrefix } from "@/modules/isbn-prefixes/utils";
+import {
+  calculateIsbn13CheckDigit,
+  formatPrefix,
+} from "@/modules/isbn-prefixes/utils";
 import type {
   ISBNListItem,
   ISBNPoolStats,
@@ -295,6 +298,178 @@ export async function getISBNById(id: string): Promise<
 }
 
 /**
+ * ISBN prefix option for assignment modal dropdown
+ */
+export interface PrefixAssignmentOption {
+  id: string;
+  prefix: string;
+  prefixLength: number;
+  formattedPrefix: string;
+  availableCount: number;
+}
+
+/**
+ * Get ISBN prefixes with available counts for assignment modal
+ * Permission: VIEW_OWN_STATEMENTS (all authenticated users)
+ *
+ * Returns only prefixes that have available ISBNs for assignment.
+ * Used by ISBN assignment modal to let users choose which pool to assign from.
+ *
+ * @returns Array of prefix options with available counts
+ */
+export async function getAvailablePrefixesForAssignment(): Promise<
+  ActionResult<PrefixAssignmentOption[]>
+> {
+  try {
+    await requirePermission(VIEW_OWN_STATEMENTS);
+
+    const tenantId = await getCurrentTenantId();
+    const db = await getDb();
+
+    // Get completed prefixes with available ISBNs
+    const results = await db.query.isbnPrefixes.findMany({
+      where: and(
+        eq(isbnPrefixes.tenant_id, tenantId),
+        eq(isbnPrefixes.generation_status, "completed"),
+        gt(isbnPrefixes.available_count, 0),
+      ),
+      columns: {
+        id: true,
+        prefix: true,
+        available_count: true,
+      },
+      orderBy: (prefixes, { asc }) => [asc(prefixes.prefix)],
+    });
+
+    return {
+      success: true,
+      data: results.map((p) => ({
+        id: p.id,
+        prefix: p.prefix,
+        prefixLength: p.prefix.replace(/[-\s]/g, "").length,
+        formattedPrefix: formatPrefix(p.prefix),
+        availableCount: p.available_count,
+      })),
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to view ISBN prefixes",
+      };
+    }
+
+    console.error("getAvailablePrefixesForAssignment error:", error);
+    return { success: false, error: "Failed to load prefix options" };
+  }
+}
+
+/**
+ * Find a specific ISBN by publication number within a prefix
+ * Permission: VIEW_OWN_STATEMENTS (all authenticated users)
+ *
+ * Used when user wants to manually specify which ISBN to assign.
+ * Calculates the full ISBN-13 from prefix + publication number and checks availability.
+ *
+ * @param prefixId - The prefix UUID
+ * @param publicationNumber - The publication number (e.g., "5" for a 10-block, "42" for a 100-block)
+ * @returns The ISBN if found and available, null if not found or already assigned
+ */
+export async function findSpecificISBN(
+  prefixId: string,
+  publicationNumber: string,
+): Promise<
+  ActionResult<{
+    id: string;
+    isbn_13: string;
+    status: ISBNStatus;
+  } | null>
+> {
+  try {
+    await requirePermission(VIEW_OWN_STATEMENTS);
+
+    const tenantId = await getCurrentTenantId();
+    const db = await getDb();
+
+    // Get the prefix info to calculate the full ISBN
+    const prefix = await db.query.isbnPrefixes.findFirst({
+      where: and(
+        eq(isbnPrefixes.id, prefixId),
+        eq(isbnPrefixes.tenant_id, tenantId),
+      ),
+      columns: {
+        prefix: true,
+        block_size: true,
+      },
+    });
+
+    if (!prefix) {
+      return { success: false, error: "Prefix not found" };
+    }
+
+    // Calculate required publication number length based on block size
+    const pubNumLength = Math.log10(prefix.block_size);
+    const paddedPubNum = publicationNumber.padStart(pubNumLength, "0");
+
+    // Validate publication number is within range
+    const pubNumInt = parseInt(publicationNumber, 10);
+    if (isNaN(pubNumInt) || pubNumInt < 0 || pubNumInt >= prefix.block_size) {
+      return {
+        success: false,
+        error: `Publication number must be between 0 and ${prefix.block_size - 1}`,
+      };
+    }
+
+    // Calculate the full ISBN-13
+    const first12 = prefix.prefix + paddedPubNum;
+    const checkDigit = calculateIsbn13CheckDigit(first12);
+    const isbn13 = first12 + checkDigit.toString();
+
+    // Find this ISBN in the database
+    const [isbn] = await db
+      .select({
+        id: isbns.id,
+        isbn_13: isbns.isbn_13,
+        status: isbns.status,
+      })
+      .from(isbns)
+      .where(
+        and(
+          eq(isbns.tenant_id, tenantId),
+          eq(isbns.prefix_id, prefixId),
+          eq(isbns.isbn_13, isbn13),
+        ),
+      );
+
+    if (!isbn) {
+      return {
+        success: false,
+        error: `ISBN ${isbn13} not found in this prefix`,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: isbn.id,
+        isbn_13: isbn.isbn_13,
+        status: isbn.status as ISBNStatus,
+      },
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to search ISBNs",
+      };
+    }
+
+    console.error("findSpecificISBN error:", error);
+    return { success: false, error: "Failed to find ISBN" };
+  }
+}
+
+/**
  * Get preview of next available ISBN for assignment modal
  * Permission: VIEW_OWN_STATEMENTS (all authenticated users)
  *
@@ -304,11 +479,13 @@ export async function getISBNById(id: string): Promise<
  * Note: This is a READ-ONLY preview - actual assignment uses row locking
  * The displayed ISBN may be assigned by another user before assignment completes
  *
- * @param format - "physical" or "ebook"
+ * @param format - "physical" or "ebook" (deprecated, ignored)
+ * @param prefixId - Optional prefix ID to filter by specific pool
  * @returns Next available ISBN preview with count, or null if none available
  */
 export async function getNextAvailableISBN(
   format: ISBNType,
+  prefixId?: string,
 ): Promise<ActionResult<NextAvailableISBNPreview | null>> {
   try {
     await requirePermission(VIEW_OWN_STATEMENTS);
@@ -316,17 +493,21 @@ export async function getNextAvailableISBN(
     const tenantId = await getCurrentTenantId();
     const db = await getDb();
 
-    // Get count of available ISBNs for this format
+    // Build conditions - filter by prefix if specified
+    const conditions = [
+      eq(isbns.tenant_id, tenantId),
+      eq(isbns.status, "available"),
+    ];
+
+    if (prefixId) {
+      conditions.push(eq(isbns.prefix_id, prefixId));
+    }
+
+    // Get count of available ISBNs
     const [countResult] = await db
       .select({ count: count() })
       .from(isbns)
-      .where(
-        and(
-          eq(isbns.tenant_id, tenantId),
-          eq(isbns.status, "available"),
-          eq(isbns.type, format),
-        ),
-      );
+      .where(and(...conditions));
 
     const availableCount = countResult?.count ?? 0;
 
@@ -341,13 +522,7 @@ export async function getNextAvailableISBN(
     const [nextISBN] = await db
       .select({ id: isbns.id, isbn_13: isbns.isbn_13 })
       .from(isbns)
-      .where(
-        and(
-          eq(isbns.tenant_id, tenantId),
-          eq(isbns.status, "available"),
-          eq(isbns.type, format),
-        ),
-      )
+      .where(and(...conditions))
       .orderBy(isbns.created_at)
       .limit(1);
 

@@ -82,6 +82,25 @@ function formatCurrency(amount: string | number): string {
 }
 
 /**
+ * Get author name from statement
+ * Story 7.3: Supports both legacy author relation and new contact relation
+ */
+function getAuthorName(statement: StatementWithRelations): string {
+  // Try new contact relation first (Story 7.3)
+  if (statement.contact) {
+    const firstName = statement.contact.first_name || "";
+    const lastName = statement.contact.last_name || "";
+    const fullName = `${firstName} ${lastName}`.trim();
+    if (fullName) return fullName;
+  }
+  // Fall back to legacy author relation
+  if (statement.author?.name) {
+    return statement.author.name;
+  }
+  return "Unknown";
+}
+
+/**
  * Statements data table with TanStack Table
  *
  * AC-5.5.1: Table displays period, author, generated on date, status badge,
@@ -105,7 +124,8 @@ export function StatementsList({
       {
         accessorKey: "author.name",
         header: "Author",
-        cell: ({ row }) => row.original.author?.name || "Unknown",
+        // Story 7.3: Use helper to get author name from contact or legacy author
+        cell: ({ row }) => getAuthorName(row.original),
       },
       {
         accessorKey: "created_at",

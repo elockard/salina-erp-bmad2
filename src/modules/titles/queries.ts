@@ -34,9 +34,9 @@ export async function getTitles(
     conditions.push(eq(titles.publication_status, filters.status));
   }
 
-  // Author filter
+  // Author/Contact filter (Story 7.3: use contact_id)
   if (filters?.authorId) {
-    conditions.push(eq(titles.author_id, filters.authorId));
+    conditions.push(eq(titles.contact_id, filters.authorId));
   }
 
   // Search filter (title, author name, ISBN)
@@ -53,20 +53,33 @@ export async function getTitles(
     }
   }
 
+  // Story 7.3: Use contact relation instead of deprecated author relation
   const result = await db.query.titles.findMany({
     where: and(...conditions),
     with: {
-      author: true,
+      contact: true,
     },
     orderBy: desc(titles.updated_at),
   });
+
+  // Transform contact to author shape for backward compatibility
+  const transformed: TitleWithAuthor[] = result.map((title) => ({
+    ...title,
+    author: title.contact
+      ? {
+          id: title.contact.id,
+          name: `${title.contact.first_name || ""} ${title.contact.last_name || ""}`.trim(),
+          email: title.contact.email,
+        }
+      : { id: "", name: "Unknown Author", email: null },
+  }));
 
   // If searching by author name, filter results in memory
   // This is a tradeoff for simpler query structure
   // Story 7.6: Removed eisbn - ISBNs are unified without type distinction
   if (filters?.search) {
     const searchLower = filters.search.toLowerCase();
-    return result.filter(
+    return transformed.filter(
       (title) =>
         title.title.toLowerCase().includes(searchLower) ||
         title.author.name.toLowerCase().includes(searchLower) ||
@@ -74,7 +87,7 @@ export async function getTitles(
     );
   }
 
-  return result;
+  return transformed;
 }
 
 /**
@@ -88,12 +101,27 @@ export async function getTitleById(
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
 
+  // Story 7.3: Use contact relation instead of deprecated author relation
   const title = await db.query.titles.findFirst({
     where: and(eq(titles.id, id), eq(titles.tenant_id, tenantId)),
     with: {
-      author: true,
+      contact: true,
     },
   });
 
-  return title || null;
+  if (!title) {
+    return null;
+  }
+
+  // Transform contact to author shape for backward compatibility
+  return {
+    ...title,
+    author: title.contact
+      ? {
+          id: title.contact.id,
+          name: `${title.contact.first_name || ""} ${title.contact.last_name || ""}`.trim(),
+          email: title.contact.email,
+        }
+      : { id: "", name: "Unknown Author", email: null },
+  };
 }

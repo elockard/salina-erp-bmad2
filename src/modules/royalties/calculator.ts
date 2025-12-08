@@ -22,8 +22,11 @@ import type { ContractFormat, ContractTier } from "@/db/schema/contracts";
 import {
   type FormatSalesData,
   getApprovedReturnsByFormatForPeriod,
+  getApprovedReturnsByFormatForPeriodAdmin,
   getContractByAuthorAndTenant,
+  getContractByAuthorAndTenantAdmin,
   getSalesByFormatForPeriod,
+  getSalesByFormatForPeriodAdmin,
 } from "./queries";
 import type {
   ContractWithRelations,
@@ -336,5 +339,113 @@ function calculateAdvanceRecoupment(
   return {
     advanceRecoupment: recoupment,
     netPayable,
+  };
+}
+
+// ============================================================================
+// Admin Version for Background Jobs (Inngest)
+// ============================================================================
+
+/**
+ * Calculate royalty for a specific author and period (admin mode)
+ *
+ * Same as calculateRoyaltyForPeriod but uses adminDb queries.
+ * Use this for background jobs (Inngest) that don't have auth context.
+ *
+ * @param authorId - Author UUID (or contact ID for new contracts)
+ * @param tenantId - Tenant UUID
+ * @param startDate - Period start date (inclusive)
+ * @param endDate - Period end date (inclusive)
+ * @returns RoyaltyCalculationResult with success/failure and calculation details
+ */
+export async function calculateRoyaltyForPeriodAdmin(
+  authorId: string,
+  tenantId: string,
+  startDate: Date,
+  endDate: Date,
+): Promise<RoyaltyCalculationResult> {
+  // Step 1: Load contract with all tiered rates (AC 2)
+  const contract = await getContractByAuthorAndTenantAdmin(authorId, tenantId);
+
+  if (!contract) {
+    return {
+      success: false,
+      error: `No active contract found for author ${authorId} in tenant ${tenantId}`,
+    };
+  }
+
+  // Step 2: Calculate net sales per format (AC 3)
+  const [salesByFormat, returnsByFormat] = await Promise.all([
+    getSalesByFormatForPeriodAdmin(tenantId, contract.title_id, startDate, endDate),
+    getApprovedReturnsByFormatForPeriodAdmin(
+      tenantId,
+      contract.title_id,
+      startDate,
+      endDate,
+    ),
+  ]);
+
+  // Group tiers by format for efficient lookup
+  const tiersByFormat = groupTiersByFormat(contract.tiers);
+
+  // Calculate for each format
+  const formatCalculations: FormatCalculation[] = [];
+  let totalRoyaltyEarned = new Decimal(0);
+
+  // Get all unique formats from sales, returns, and tiers
+  const allFormats = new Set<ContractFormat>([
+    ...salesByFormat.map((s) => s.format),
+    ...returnsByFormat.map((r) => r.format),
+    ...(Object.keys(tiersByFormat) as ContractFormat[]),
+  ]);
+
+  for (const format of allFormats) {
+    const salesData = salesByFormat.find((s) => s.format === format);
+    const returnsData = returnsByFormat.find((r) => r.format === format);
+    const formatTiers = tiersByFormat[format] || [];
+
+    // Calculate net sales for this format (AC 3, 6)
+    const netSales = calculateNetSales(salesData, returnsData);
+
+    // Apply tiered rates (AC 4, 8)
+    const { tierBreakdowns, formatRoyalty } = applyTieredRates(
+      netSales,
+      formatTiers,
+    );
+
+    formatCalculations.push({
+      format,
+      netSales,
+      tierBreakdowns,
+      formatRoyalty: formatRoyalty.toNumber(),
+    });
+
+    totalRoyaltyEarned = totalRoyaltyEarned.plus(formatRoyalty);
+  }
+
+  // Step 4: Calculate advance recoupment (AC 5)
+  const { advanceRecoupment, netPayable } = calculateAdvanceRecoupment(
+    contract,
+    totalRoyaltyEarned,
+  );
+
+  // Step 6: Return detailed breakdown (AC 7)
+  const calculation: RoyaltyCalculation = {
+    period: {
+      startDate,
+      endDate,
+    },
+    authorId,
+    contractId: contract.id,
+    titleId: contract.title_id,
+    formatCalculations,
+    totalRoyaltyEarned: totalRoyaltyEarned.toNumber(),
+    advanceRecoupment: advanceRecoupment.toNumber(),
+    netPayable: netPayable.toNumber(),
+  };
+
+  return {
+    success: true,
+    calculation,
   };
 }

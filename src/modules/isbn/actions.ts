@@ -232,7 +232,7 @@ export async function assignISBNToTitle(
     // Validate input schema
     // Story 7.6: Removed format - ISBNs are unified without type distinction
     const validated = assignISBNInputSchema.parse(input);
-    const { titleId } = validated;
+    const { titleId, prefixId, isbnId } = validated;
 
     // Get tenant and user context
     const tenantId = await getCurrentTenantId();
@@ -267,7 +267,8 @@ export async function assignISBNToTitle(
       };
     }
 
-    // AC 4: Retry logic for race condition handling
+    // AC 4: Retry logic for race condition handling with optimistic concurrency
+    // Note: Using optimistic concurrency instead of transactions due to Neon HTTP driver limitations
     let attempts = 0;
     let lastError: string | null = null;
 
@@ -275,78 +276,125 @@ export async function assignISBNToTitle(
       attempts++;
 
       try {
-        // AC 2, 3: Transaction with row-level locking
-        const result = await db.transaction(async (tx) => {
-          // Step 1: Find and lock available ISBN (AC 2 - FOR UPDATE row lock)
-          // Story 7.6: Removed type filter - ISBNs are unified
-          const availableISBNs = await tx
+        let selectedISBN;
+
+        if (isbnId) {
+          // Manual entry mode: Find the specific ISBN
+          const [specificISBN] = await db
             .select()
             .from(isbns)
             .where(
-              and(eq(isbns.tenant_id, tenantId), eq(isbns.status, "available")),
-            )
-            .limit(1)
-            .for("update", { skipLocked: true }); // Skip locked rows to avoid waiting
+              and(
+                eq(isbns.id, isbnId),
+                eq(isbns.tenant_id, tenantId),
+                eq(isbns.status, "available"),
+              ),
+            );
+
+          if (!specificISBN) {
+            return {
+              success: false,
+              error:
+                "This ISBN is not available. It may have already been assigned.",
+            };
+          }
+
+          selectedISBN = specificISBN;
+        } else {
+          // Auto mode: Find next available ISBN
+          // Story 7.6: Removed type filter - ISBNs are unified
+          const isbnConditions = [
+            eq(isbns.tenant_id, tenantId),
+            eq(isbns.status, "available"),
+          ];
+          if (prefixId) {
+            isbnConditions.push(eq(isbns.prefix_id, prefixId));
+          }
+
+          const availableISBNs = await db
+            .select()
+            .from(isbns)
+            .where(and(...isbnConditions))
+            .orderBy(isbns.created_at)
+            .limit(1);
 
           if (availableISBNs.length === 0) {
-            // AC 5: Clear error message when no ISBNs available
-            throw new Error("No ISBNs available. Import an ISBN block first.");
+            return {
+              success: false,
+              error: "No ISBNs available. Import an ISBN block first.",
+            };
           }
 
-          const selectedISBN = availableISBNs[0];
-          const now = new Date();
+          selectedISBN = availableISBNs[0];
+        }
 
-          // Step 2: Update ISBN status (AC 3)
-          await tx
-            .update(isbns)
-            .set({
-              status: "assigned",
-              assigned_to_title_id: titleId,
-              assigned_at: now,
-              assigned_by_user_id: user.id,
-              updated_at: now,
-            })
-            .where(eq(isbns.id, selectedISBN.id));
+        const now = new Date();
 
-          // Step 2b: Update prefix counts if ISBN has a prefix (Story 7.4)
-          if (selectedISBN.prefix_id) {
-            await tx
-              .update(isbnPrefixes)
-              .set({
-                available_count: sql`${isbnPrefixes.available_count} - 1`,
-                assigned_count: sql`${isbnPrefixes.assigned_count} + 1`,
-                updated_at: now,
-              })
-              .where(eq(isbnPrefixes.id, selectedISBN.prefix_id));
+        // Optimistic update: Only update if still available (CAS pattern)
+        const updateResult = await db
+          .update(isbns)
+          .set({
+            status: "assigned",
+            assigned_to_title_id: titleId,
+            assigned_at: now,
+            assigned_by_user_id: user.id,
+            updated_at: now,
+          })
+          .where(
+            and(
+              eq(isbns.id, selectedISBN.id),
+              eq(isbns.status, "available"), // Only update if still available
+            ),
+          )
+          .returning({ id: isbns.id });
+
+        // Check if update succeeded (ISBN wasn't taken by another request)
+        if (updateResult.length === 0) {
+          // ISBN was assigned by another request, retry
+          lastError = "ISBN was assigned by another user, retrying...";
+          console.warn(`ISBN assignment attempt ${attempts} - ISBN taken`, {
+            titleId,
+            isbnId: selectedISBN.id,
+          });
+
+          if (attempts < MAX_RETRY_ATTEMPTS) {
+            await new Promise((resolve) => setTimeout(resolve, 100 * attempts));
           }
+          continue;
+        }
 
-          // Step 3: Update title with ISBN (AC 3)
-          // Story 7.6: Unified ISBN assignment - always use isbn field
-          await tx
-            .update(titles)
+        // Update prefix counts if ISBN has a prefix (Story 7.4)
+        if (selectedISBN.prefix_id) {
+          await db
+            .update(isbnPrefixes)
             .set({
-              isbn: selectedISBN.isbn_13,
+              available_count: sql`${isbnPrefixes.available_count} - 1`,
+              assigned_count: sql`${isbnPrefixes.assigned_count} + 1`,
               updated_at: now,
             })
-            .where(and(eq(titles.id, titleId), eq(titles.tenant_id, tenantId)));
+            .where(eq(isbnPrefixes.id, selectedISBN.prefix_id));
+        }
 
-          return {
-            isbn: selectedISBN,
-            assignedAt: now,
-          };
-        });
+        // Update title with ISBN
+        // Story 7.6: Unified ISBN assignment - always use isbn field
+        await db
+          .update(titles)
+          .set({
+            isbn: selectedISBN.isbn_13,
+            updated_at: now,
+          })
+          .where(and(eq(titles.id, titleId), eq(titles.tenant_id, tenantId)));
 
         // AC 6: Audit trail logging
-        // Story 7.6: Removed format field - ISBNs are unified
         console.info("ISBN assigned to title", {
-          isbn_id: result.isbn.id,
-          isbn_13: result.isbn.isbn_13,
+          isbn_id: selectedISBN.id,
+          isbn_13: selectedISBN.isbn_13,
           title_id: titleId,
           title_name: title.title,
           assigned_by: user.id,
           assigned_by_email: user.email,
           tenant_id: tenantId,
-          timestamp: result.assignedAt.toISOString(),
+          timestamp: now.toISOString(),
           attempts,
         });
 
@@ -356,39 +404,24 @@ export async function assignISBNToTitle(
         revalidatePath(`/titles/${titleId}`);
         revalidatePath("/settings/isbn-prefixes"); // Story 7.4: Refresh prefix counts
 
-        // Story 7.6: Removed type field - ISBNs are unified without type distinction
         return {
           success: true,
           data: {
-            id: result.isbn.id,
-            isbn_13: result.isbn.isbn_13,
+            id: selectedISBN.id,
+            isbn_13: selectedISBN.isbn_13,
             titleId,
             titleName: title.title,
-            assignedAt: result.assignedAt,
+            assignedAt: now,
             assignedByUserId: user.id,
           },
         };
-      } catch (txError) {
-        // Check if this is a "no available ISBNs" error (not retryable)
-        if (
-          txError instanceof Error &&
-          txError.message.includes("ISBNs available")
-        ) {
-          return { success: false, error: txError.message };
-        }
+      } catch (opError) {
+        lastError = opError instanceof Error ? opError.message : "Update failed";
+        console.warn(`ISBN assignment attempt ${attempts} failed`, {
+          titleId,
+          error: lastError,
+        });
 
-        // AC 4: If row was taken by concurrent request, retry
-        lastError =
-          txError instanceof Error ? txError.message : "Transaction failed";
-        console.warn(
-          `ISBN assignment attempt ${attempts} failed, retrying...`,
-          {
-            titleId,
-            error: lastError,
-          },
-        );
-
-        // Small delay before retry to reduce contention
         if (attempts < MAX_RETRY_ATTEMPTS) {
           await new Promise((resolve) => setTimeout(resolve, 100 * attempts));
         }

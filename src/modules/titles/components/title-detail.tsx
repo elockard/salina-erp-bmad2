@@ -74,18 +74,26 @@ const GENRE_OPTIONS = [
 ];
 
 /**
- * Format ISBN for display (978-X-XXXX-XXXX-X)
+ * Format ISBN-13 for display with proper hyphenation
+ *
+ * For US publishers (978-0 or 978-1), assumes 6-digit registrant (100 ISBN block)
+ * which gives format: 978-X-XXXXXX-XX-X
+ *
+ * @param isbn - The ISBN-13 (with or without hyphens)
  */
 function formatIsbn(isbn: string | null): string {
   if (!isbn) return "";
-  // Remove any existing formatting
   const digits = isbn.replace(/[-\s]/g, "");
   if (digits.length !== 13) return isbn;
-  // Format as 978-X-XXXX-XXXX-X
-  return `${digits.slice(0, 3)}-${digits.slice(3, 4)}-${digits.slice(
-    4,
-    8,
-  )}-${digits.slice(8, 12)}-${digits.slice(12)}`;
+
+  // Assume 6-digit registrant (100 ISBN block) - common for small publishers
+  const gs1 = digits.slice(0, 3);
+  const registrationGroup = digits.slice(3, 4);
+  const registrant = digits.slice(4, 10);
+  const publication = digits.slice(10, 12);
+  const checkDigit = digits.slice(12);
+
+  return `${gs1}-${registrationGroup}-${registrant}-${publication}-${checkDigit}`;
 }
 
 /**

@@ -67,7 +67,7 @@ export function ContractDetail({ contract, canEdit }: ContractDetailProps) {
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <CardTitle className="text-2xl">
-                  {contract.author.name} - {contract.title.title}
+                  {contract.author?.name ?? "Author"} - {contract.title.title}
                 </CardTitle>
                 <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
               </div>

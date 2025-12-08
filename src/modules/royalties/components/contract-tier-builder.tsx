@@ -269,33 +269,30 @@ export function ContractTierBuilder({
                   />
 
                   {/* Max Quantity (AC 3 - Infinity option) */}
-                  <FormItem>
-                    <FormLabel>To (units)</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          min={tier?.min_quantity ? tier.min_quantity + 1 : 1}
-                          placeholder={isLastTier ? "∞" : ""}
-                          value={tier?.max_quantity ?? ""}
-                          onChange={(e) =>
-                            handleMaxQuantityChange(index, e.target.value)
-                          }
-                        />
-                        {isLastTier && tier?.max_quantity === null && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                            ∞
-                          </span>
-                        )}
-                      </div>
-                    </FormControl>
+                  <div className="space-y-2">
+                    <Label>To (units)</Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={tier?.min_quantity ? tier.min_quantity + 1 : 1}
+                        placeholder={isLastTier ? "∞" : ""}
+                        value={tier?.max_quantity ?? ""}
+                        onChange={(e) =>
+                          handleMaxQuantityChange(index, e.target.value)
+                        }
+                      />
+                      {isLastTier && tier?.max_quantity === null && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                          ∞
+                        </span>
+                      )}
+                    </div>
                     {isLastTier && (
-                      <FormDescription className="text-xs">
+                      <p className="text-xs text-muted-foreground">
                         Leave empty for unlimited
-                      </FormDescription>
+                      </p>
                     )}
-                    <FormMessage />
-                  </FormItem>
+                  </div>
 
                   {/* Rate (AC 4 - 0-100%) */}
                   <FormField

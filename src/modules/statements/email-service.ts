@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { adminDb } from "@/db";
 import { authors } from "@/db/schema/authors";
+import { contacts } from "@/db/schema/contacts";
 import { statements } from "@/db/schema/statements";
 import { tenants } from "@/db/schema/tenants";
 import { getDefaultFromEmail, sendEmail } from "@/lib/email";
@@ -141,22 +142,54 @@ export async function sendStatementEmail(
       };
     }
 
-    // Step 2: Fetch author details
-    const author = await adminDb.query.authors.findFirst({
-      where: eq(authors.id, statement.author_id),
-    });
+    // Step 2: Fetch author/contact details
+    // Story 7.3: Check contact_id (new) first, then author_id (legacy)
+    let authorName: string;
+    let authorEmail: string | null;
 
-    if (!author) {
+    if (statement.contact_id) {
+      // New statement with contact relation
+      const contact = await adminDb.query.contacts.findFirst({
+        where: eq(contacts.id, statement.contact_id),
+      });
+
+      if (!contact) {
+        return {
+          success: false,
+          error: `Contact not found: ${statement.contact_id}`,
+        };
+      }
+
+      authorName =
+        `${contact.first_name || ""} ${contact.last_name || ""}`.trim() ||
+        "Unknown";
+      authorEmail = contact.email;
+    } else if (statement.author_id) {
+      // Legacy statement with author relation
+      const author = await adminDb.query.authors.findFirst({
+        where: eq(authors.id, statement.author_id),
+      });
+
+      if (!author) {
+        return {
+          success: false,
+          error: `Author not found: ${statement.author_id}`,
+        };
+      }
+
+      authorName = author.name;
+      authorEmail = author.email;
+    } else {
       return {
         success: false,
-        error: `Author not found: ${statement.author_id}`,
+        error: "Statement has no author or contact associated",
       };
     }
 
-    if (!author.email) {
+    if (!authorEmail) {
       return {
         success: false,
-        error: `Author ${author.name} has no email address`,
+        error: `Author ${authorName} has no email address`,
       };
     }
 
@@ -197,7 +230,7 @@ export async function sendStatementEmail(
       `https://${tenant.subdomain}.salina.media`;
 
     const templateProps: StatementEmailProps = {
-      authorName: author.name,
+      authorName,
       publisherName: tenant.name,
       periodLabel,
       grossRoyalties: calculations.grossRoyalty,
@@ -214,12 +247,12 @@ export async function sendStatementEmail(
     // Step 7: Send via Resend with PDF attachment
     const emailResult = await sendEmail({
       from: getDefaultFromEmail(),
-      to: author.email,
+      to: authorEmail,
       subject,
       html,
       attachments: [
         {
-          filename: generatePDFFilename(periodLabel, author.name),
+          filename: generatePDFFilename(periodLabel, authorName),
           content: pdfBuffer,
           contentType: "application/pdf",
         },
@@ -243,7 +276,7 @@ export async function sendStatementEmail(
     }
 
     console.log(
-      `[EmailService] Sent statement ${statementId} to ${author.email}: ${emailResult.messageId}`,
+      `[EmailService] Sent statement ${statementId} to ${authorEmail}: ${emailResult.messageId}`,
     );
 
     return {
@@ -270,7 +303,9 @@ export async function sendStatementEmail(
  * Checks:
  * - Statement exists
  * - PDF is generated
- * - Author has email address
+ * - Author/contact has email address
+ *
+ * Story 7.3: Check both contact_id (new) and author_id (legacy)
  *
  * @param statementId - Statement to validate
  * @param tenantId - Expected tenant
@@ -296,16 +331,33 @@ export async function validateStatementForEmail(
     return { valid: false, error: "PDF not generated" };
   }
 
-  const author = await adminDb.query.authors.findFirst({
-    where: eq(authors.id, statement.author_id),
-  });
+  // Story 7.3: Check contact_id (new) first, then author_id (legacy)
+  if (statement.contact_id) {
+    const contact = await adminDb.query.contacts.findFirst({
+      where: eq(contacts.id, statement.contact_id),
+    });
 
-  if (!author) {
-    return { valid: false, error: "Author not found" };
-  }
+    if (!contact) {
+      return { valid: false, error: "Contact not found" };
+    }
 
-  if (!author.email) {
-    return { valid: false, error: "Author has no email address" };
+    if (!contact.email) {
+      return { valid: false, error: "Contact has no email address" };
+    }
+  } else if (statement.author_id) {
+    const author = await adminDb.query.authors.findFirst({
+      where: eq(authors.id, statement.author_id),
+    });
+
+    if (!author) {
+      return { valid: false, error: "Author not found" };
+    }
+
+    if (!author.email) {
+      return { valid: false, error: "Author has no email address" };
+    }
+  } else {
+    return { valid: false, error: "Statement has no author or contact" };
   }
 
   return { valid: true };

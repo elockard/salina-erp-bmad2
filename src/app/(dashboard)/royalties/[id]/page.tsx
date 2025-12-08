@@ -75,7 +75,7 @@ export default async function ContractDetailPage({
         </Link>
         <ChevronRight className="mx-2 h-4 w-4" />
         <span className="text-foreground font-medium">
-          {contract.author.name} - {contract.title.title}
+          {contract.author?.name ?? "Author"} - {contract.title.title}
         </span>
       </nav>
 

@@ -191,7 +191,7 @@ export function ContractEditModal({
         <DialogHeader>
           <DialogTitle>Edit Contract</DialogTitle>
           <DialogDescription>
-            {contract.author.name} - {contract.title.title}
+            {contract.author?.name ?? "Author"} - {contract.title.title}
           </DialogDescription>
         </DialogHeader>
 

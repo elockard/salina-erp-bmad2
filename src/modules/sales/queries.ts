@@ -27,7 +27,7 @@ import {
   or,
   sum,
 } from "drizzle-orm";
-import { authors } from "@/db/schema/authors";
+import { contacts } from "@/db/schema/contacts";
 import { sales } from "@/db/schema/sales";
 import { tenants } from "@/db/schema/tenants";
 import { titles } from "@/db/schema/titles";
@@ -73,16 +73,17 @@ export async function searchTitlesForSales(
   const searchPattern = `%${search}%`;
 
   // Query titles with at least one ISBN assigned
-  // Join with authors for author_name
+  // Story 7.3: Join with contacts (not authors) for author_name
   const results = await db
     .select({
       id: titles.id,
       title: titles.title,
-      author_name: authors.name,
+      first_name: contacts.first_name,
+      last_name: contacts.last_name,
       isbn: titles.isbn,
     })
     .from(titles)
-    .innerJoin(authors, eq(titles.author_id, authors.id))
+    .leftJoin(contacts, eq(titles.contact_id, contacts.id))
     .where(
       and(
         // Tenant isolation
@@ -92,7 +93,8 @@ export async function searchTitlesForSales(
         // Search in title or author name
         or(
           ilike(titles.title, searchPattern),
-          ilike(authors.name, searchPattern),
+          ilike(contacts.first_name, searchPattern),
+          ilike(contacts.last_name, searchPattern),
         ),
       ),
     )
@@ -103,7 +105,9 @@ export async function searchTitlesForSales(
   return results.map((row) => ({
     id: row.id,
     title: row.title,
-    author_name: row.author_name,
+    author_name: row.first_name && row.last_name
+      ? `${row.first_name} ${row.last_name}`.trim()
+      : row.first_name || row.last_name || "Unknown Author",
     has_isbn: row.isbn !== null,
   }));
 }
@@ -122,15 +126,17 @@ export async function getTitleForSale(
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
 
+  // Story 7.3: Use contacts (not authors) for author info
   const results = await db
     .select({
       id: titles.id,
       title: titles.title,
-      author_name: authors.name,
+      first_name: contacts.first_name,
+      last_name: contacts.last_name,
       isbn: titles.isbn,
     })
     .from(titles)
-    .innerJoin(authors, eq(titles.author_id, authors.id))
+    .leftJoin(contacts, eq(titles.contact_id, contacts.id))
     .where(
       and(
         eq(titles.tenant_id, tenantId),
@@ -150,7 +156,9 @@ export async function getTitleForSale(
   return {
     id: row.id,
     title: row.title,
-    author_name: row.author_name,
+    author_name: row.first_name && row.last_name
+      ? `${row.first_name} ${row.last_name}`.trim()
+      : row.first_name || row.last_name || "Unknown Author",
     has_isbn: row.isbn !== null,
   };
 }
@@ -224,6 +232,7 @@ export async function getSalesWithFilters(
   const total = countResult?.count ?? 0;
 
   // Get paginated results with joins
+  // Story 7.3: Use contacts (not authors) for author info
   const offset = (page - 1) * pageSize;
   const results = await db
     .select({
@@ -237,12 +246,13 @@ export async function getSalesWithFilters(
       created_at: sales.created_at,
       title_id: titles.id,
       title_name: titles.title,
-      author_name: authors.name,
+      author_first_name: contacts.first_name,
+      author_last_name: contacts.last_name,
       created_by_email: users.email,
     })
     .from(sales)
     .innerJoin(titles, eq(sales.title_id, titles.id))
-    .innerJoin(authors, eq(titles.author_id, authors.id))
+    .leftJoin(contacts, eq(titles.contact_id, contacts.id))
     .innerJoin(users, eq(sales.created_by_user_id, users.id))
     .where(whereClause)
     .orderBy(desc(sales.sale_date), desc(sales.created_at))
@@ -262,7 +272,9 @@ export async function getSalesWithFilters(
     title: {
       id: row.title_id,
       title: row.title_name,
-      author_name: row.author_name,
+      author_name: row.author_first_name && row.author_last_name
+        ? `${row.author_first_name} ${row.author_last_name}`.trim()
+        : row.author_first_name || row.author_last_name || "Unknown Author",
     },
     createdBy: {
       name: row.created_by_email.split("@")[0], // Use email prefix as name
@@ -372,6 +384,7 @@ export async function getSaleById(
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
 
+  // Story 7.3: Use contacts (not authors) for author info
   const results = await db
     .select({
       id: sales.id,
@@ -384,12 +397,13 @@ export async function getSaleById(
       created_at: sales.created_at,
       title_id: titles.id,
       title_name: titles.title,
-      author_name: authors.name,
+      author_first_name: contacts.first_name,
+      author_last_name: contacts.last_name,
       created_by_email: users.email,
     })
     .from(sales)
     .innerJoin(titles, eq(sales.title_id, titles.id))
-    .innerJoin(authors, eq(titles.author_id, authors.id))
+    .leftJoin(contacts, eq(titles.contact_id, contacts.id))
     .innerJoin(users, eq(sales.created_by_user_id, users.id))
     .where(and(eq(sales.tenant_id, tenantId), eq(sales.id, saleId)))
     .limit(1);
@@ -411,7 +425,9 @@ export async function getSaleById(
     title: {
       id: row.title_id,
       title: row.title_name,
-      author_name: row.author_name,
+      author_name: row.author_first_name && row.author_last_name
+        ? `${row.author_first_name} ${row.author_last_name}`.trim()
+        : row.author_first_name || row.author_last_name || "Unknown Author",
     },
     createdBy: {
       name: row.created_by_email.split("@")[0], // Use email prefix as name

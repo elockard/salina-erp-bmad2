@@ -110,7 +110,7 @@ export default function RoyaltiesPage() {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (
-      contract.author.name.toLowerCase().includes(term) ||
+      (contract.author?.name ?? "").toLowerCase().includes(term) ||
       contract.title.title.toLowerCase().includes(term)
     );
   });
@@ -258,7 +258,7 @@ export default function RoyaltiesPage() {
                       }}
                     >
                       <TableCell className="font-medium">
-                        {contract.author.name}
+                        {contract.author?.name ?? "Author"}
                       </TableCell>
                       <TableCell>{contract.title.title}</TableCell>
                       <TableCell>

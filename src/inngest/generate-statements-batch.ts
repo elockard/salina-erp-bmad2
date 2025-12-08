@@ -29,13 +29,13 @@
  */
 
 import Decimal from "decimal.js";
-import { eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { adminDb } from "@/db";
-import { authors } from "@/db/schema/authors";
+import { contacts, contactRoles } from "@/db/schema/contacts";
 import { contracts } from "@/db/schema/contracts";
 import { statements } from "@/db/schema/statements";
 import { titles } from "@/db/schema/titles";
-import { calculateRoyaltyForPeriod } from "@/modules/royalties/calculator";
+import { calculateRoyaltyForPeriodAdmin } from "@/modules/royalties/calculator";
 import { sendStatementEmail } from "@/modules/statements/email-service";
 import { generateStatementPDF } from "@/modules/statements/pdf-generator";
 import type {
@@ -108,28 +108,55 @@ export const generateStatementsBatch = inngest.createFunction(
     for (const authorId of authorIds) {
       const result = await step.run(`process-author-${authorId}`, async () => {
         try {
-          // Step 1: Get author and contract details
-          const author = await adminDb.query.authors.findFirst({
-            where: eq(authors.id, authorId),
+          // Step 1: Get contact (author) and contract details
+          // Story 7.3: authorId is now a contact ID from the contacts table
+          const contact = await adminDb.query.contacts.findFirst({
+            where: and(eq(contacts.id, authorId), eq(contacts.tenant_id, tenantId)),
+            with: { roles: true },
           });
 
-          if (!author) {
+          if (!contact) {
             return {
               authorId,
               authorName: "Unknown",
               success: false,
-              error: "Author not found",
+              error: "Author (contact) not found",
             };
           }
 
+          // Verify contact has author role
+          const hasAuthorRole = contact.roles.some((r) => r.role === "author");
+          if (!hasAuthorRole) {
+            return {
+              authorId,
+              authorName: `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "Unknown",
+              success: false,
+              error: "Contact does not have author role",
+            };
+          }
+
+          // Build author name from contact fields
+          const authorName =
+            `${contact.first_name || ""} ${contact.last_name || ""}`.trim() ||
+            "Unknown";
+
+          // Story 7.3: Check both contact_id (new) and author_id (legacy) for contracts
+          // Must also filter by tenant_id and active status
           const contract = await adminDb.query.contracts.findFirst({
-            where: eq(contracts.author_id, authorId),
+            where: and(
+              or(
+                eq(contracts.contact_id, authorId),
+                eq(contracts.author_id, authorId),
+              ),
+              eq(contracts.tenant_id, tenantId),
+              eq(contracts.status, "active"),
+            ),
           });
 
           if (!contract) {
             return {
               authorId,
-              authorName: author.name,
+              authorName,
               success: false,
               error: "No active contract found",
             };
@@ -139,8 +166,8 @@ export const generateStatementsBatch = inngest.createFunction(
             where: eq(titles.id, contract.title_id),
           });
 
-          // Step 2: Calculate royalties
-          const calcResult = await calculateRoyaltyForPeriod(
+          // Step 2: Calculate royalties (use admin version for background job)
+          const calcResult = await calculateRoyaltyForPeriodAdmin(
             authorId,
             tenantId,
             periodStart,
@@ -150,7 +177,7 @@ export const generateStatementsBatch = inngest.createFunction(
           if (!calcResult.success) {
             return {
               authorId,
-              authorName: author.name,
+              authorName,
               success: false,
               error: calcResult.error,
             };
@@ -197,11 +224,12 @@ export const generateStatementsBatch = inngest.createFunction(
           };
 
           // Step 4: Create statement record with draft status
+          // Story 7.3: Use contact_id instead of deprecated author_id
           const [newStatement] = await adminDb
             .insert(statements)
             .values({
               tenant_id: tenantId,
-              author_id: authorId,
+              contact_id: authorId, // Story 7.3: authorId is now a contact ID
               contract_id: contract.id,
               period_start: periodStart,
               period_end: periodEnd,
@@ -219,17 +247,30 @@ export const generateStatementsBatch = inngest.createFunction(
             .returning();
 
           console.log(
-            `[Inngest] Created statement ${newStatement.id} for author ${author.name}`,
+            `[Inngest] Created statement ${newStatement.id} for author ${authorName}`,
           );
 
           // Step 5: Generate PDF and upload to S3
+          // Story 7.3: Build author details from contact data
+          // Build address from contact address fields
+          const contactAddress = [
+            contact.address_line1,
+            contact.address_line2,
+            [contact.city, contact.state, contact.postal_code]
+              .filter(Boolean)
+              .join(" "),
+            contact.country,
+          ]
+            .filter(Boolean)
+            .join(", ");
+
           const statementWithDetails: StatementWithDetails = {
             ...newStatement,
             author: {
-              id: author.id,
-              name: author.name,
-              address: author.address,
-              email: author.email,
+              id: contact.id,
+              name: authorName,
+              address: contactAddress || null,
+              email: contact.email,
             },
             contract: {
               id: contract.id,
@@ -251,7 +292,7 @@ export const generateStatementsBatch = inngest.createFunction(
             // Statement created but PDF failed - don't fail the whole process
             return {
               authorId,
-              authorName: author.name,
+              authorName,
               success: true,
               statementId: newStatement.id,
               error: `Statement created but PDF generation failed: ${pdfResult.error}`,
@@ -299,7 +340,7 @@ export const generateStatementsBatch = inngest.createFunction(
 
           return {
             authorId,
-            authorName: author.name,
+            authorName,
             success: true,
             statementId: newStatement.id,
           };

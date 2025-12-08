@@ -81,18 +81,17 @@ export const titles = pgTable(
       .references(() => tenants.id, { onDelete: "cascade" }),
 
     /**
-     * Foreign key to authors table - every title must have an author
-     * No cascade delete - titles preserve when author is soft-deleted
-     * @deprecated Use contact_id instead. Kept for migration rollback capability.
+     * Foreign key to authors table (DEPRECATED)
+     * @deprecated Use contact_id instead. Made nullable for Story 7.3 migration.
+     * Kept for migration rollback capability. New titles should use contact_id only.
      */
-    author_id: uuid("author_id")
-      .notNull()
-      .references(() => authors.id),
+    author_id: uuid("author_id").references(() => authors.id),
 
     /**
      * Foreign key to contacts table - links title to contact with author role
      * Added in Story 7.3: Migrate Authors to Contacts
-     * Nullable initially for migration, then NOT NULL after population
+     * This is now the primary author reference (replaces deprecated author_id)
+     * Nullable for backward compatibility with existing data
      */
     contact_id: uuid("contact_id").references(() => contacts.id),
 

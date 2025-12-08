@@ -359,7 +359,11 @@ export default function StatementsPage() {
             <AlertDialogDescription>
               This will send the royalty statement email to{" "}
               <strong>
-                {resendConfirmStatement?.author?.name || "the author"}
+                {/* Story 7.3: Get name from contact or legacy author */}
+                {resendConfirmStatement?.contact
+                  ? `${resendConfirmStatement.contact.first_name || ""} ${resendConfirmStatement.contact.last_name || ""}`.trim() ||
+                    "the author"
+                  : resendConfirmStatement?.author?.name || "the author"}
               </strong>
               . Are you sure you want to resend this email?
             </AlertDialogDescription>
