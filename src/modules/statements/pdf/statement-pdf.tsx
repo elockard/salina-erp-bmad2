@@ -213,6 +213,73 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
+  // Co-Author section styles (Story 10.3: AC-10.3.4)
+  coAuthorSection: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: "#dbeafe",
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#93c5fd",
+  },
+  coAuthorText: {
+    fontSize: 11,
+    color: "#1e40af",
+    fontWeight: "bold",
+  },
+  // Lifetime sales section styles (Story 10.4: AC-10.4.6)
+  lifetimeSection: {
+    marginBottom: 15,
+    padding: 12,
+    backgroundColor: "#f0fdf4",
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#86efac",
+  },
+  lifetimeTitle: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#166534",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  lifetimeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  lifetimeLabel: {
+    fontSize: 9,
+    color: "#166534",
+  },
+  lifetimeValue: {
+    fontSize: 9,
+    color: "#166534",
+    fontWeight: "bold",
+  },
+  lifetimeProgressContainer: {
+    marginTop: 8,
+    backgroundColor: "#dcfce7",
+    borderRadius: 4,
+    padding: 8,
+  },
+  lifetimeProgressLabel: {
+    fontSize: 8,
+    color: "#14532d",
+    marginBottom: 4,
+  },
+  lifetimeProgressBar: {
+    height: 8,
+    backgroundColor: "#bbf7d0",
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  lifetimeProgressFill: {
+    height: "100%",
+    backgroundColor: "#22c55e",
+    borderRadius: 4,
+  },
   // Footer styles
   footer: {
     position: "absolute",
@@ -280,6 +347,111 @@ function Header({ data }: { data: StatementPDFData }) {
           </Text>
         </View>
       </View>
+    </View>
+  );
+}
+
+/**
+ * Co-Author Section
+ * Story 10.3: AC-10.3.4 - Shows ownership percentage for co-authored titles
+ *
+ * Renders "Your share: X% of [Title Name]" when splitCalculation is present.
+ * Uses light blue background styling to highlight co-author context.
+ */
+function CoAuthorSection({ data }: { data: StatementPDFData }) {
+  const splitCalc = data.calculations.splitCalculation;
+
+  // Only render for split statements
+  if (!splitCalc?.isSplitCalculation) {
+    return null;
+  }
+
+  return (
+    <View style={styles.coAuthorSection}>
+      <Text style={styles.coAuthorText}>
+        Your share: {splitCalc.ownershipPercentage}% of {data.titleName}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * Lifetime Sales Section
+ * Story 10.4: AC-10.4.6 - Shows lifetime sales context for escalating royalty rates
+ *
+ * Displays lifetime sales before/after, current tier rate, and progress to next tier.
+ * Only rendered when lifetimeContext is present (contract uses lifetime mode).
+ */
+function LifetimeSection({ data }: { data: StatementPDFData }) {
+  const lifetimeCtx = data.calculations.lifetimeContext;
+
+  // Only render for lifetime mode contracts
+  if (!lifetimeCtx || lifetimeCtx.tierCalculationMode !== "lifetime") {
+    return null;
+  }
+
+  // Calculate progress percentage to next tier
+  const hasNextTier = lifetimeCtx.nextTierThreshold !== null;
+  let progressPercent = 100;
+  if (hasNextTier && lifetimeCtx.nextTierThreshold) {
+    // Find the previous tier threshold (approximated from current position)
+    // Progress = (current position - previous threshold) / (next threshold - previous threshold)
+    // For simplicity, show as % toward next tier threshold
+    progressPercent = Math.min(
+      100,
+      (lifetimeCtx.lifetimeSalesAfter / lifetimeCtx.nextTierThreshold) * 100,
+    );
+  }
+
+  return (
+    <View style={styles.lifetimeSection}>
+      <Text style={styles.lifetimeTitle}>Lifetime Sales Progress</Text>
+
+      <View style={styles.lifetimeRow}>
+        <Text style={styles.lifetimeLabel}>Lifetime Sales Before Period</Text>
+        <Text style={styles.lifetimeValue}>
+          {lifetimeCtx.lifetimeSalesBefore.toLocaleString()} units
+        </Text>
+      </View>
+
+      <View style={styles.lifetimeRow}>
+        <Text style={styles.lifetimeLabel}>Lifetime Sales After Period</Text>
+        <Text style={styles.lifetimeValue}>
+          {lifetimeCtx.lifetimeSalesAfter.toLocaleString()} units
+        </Text>
+      </View>
+
+      <View style={styles.lifetimeRow}>
+        <Text style={styles.lifetimeLabel}>Current Tier Rate</Text>
+        <Text style={styles.lifetimeValue}>
+          {formatPercent(lifetimeCtx.currentTierRate)}
+        </Text>
+      </View>
+
+      {hasNextTier && lifetimeCtx.unitsToNextTier !== null && (
+        <View style={styles.lifetimeProgressContainer}>
+          <Text style={styles.lifetimeProgressLabel}>
+            {lifetimeCtx.unitsToNextTier.toLocaleString()} units to next tier (
+            {lifetimeCtx.nextTierThreshold?.toLocaleString()} threshold)
+          </Text>
+          <View style={styles.lifetimeProgressBar}>
+            <View
+              style={[
+                styles.lifetimeProgressFill,
+                { width: `${progressPercent}%` },
+              ]}
+            />
+          </View>
+        </View>
+      )}
+
+      {!hasNextTier && (
+        <View style={styles.lifetimeProgressContainer}>
+          <Text style={styles.lifetimeProgressLabel}>
+            Highest tier reached - earning maximum rate
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -497,6 +669,8 @@ export function StatementPDF({ data }: { data: StatementPDFData }) {
     <Document>
       <Page size="A4" style={styles.page}>
         <Header data={data} />
+        <CoAuthorSection data={data} />
+        <LifetimeSection data={data} />
         <AuthorInfo data={data} />
         <SummarySection data={data} />
         <SalesBreakdown data={data} />

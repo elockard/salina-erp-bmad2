@@ -4,7 +4,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isbnPrefixes } from "@/db/schema/isbn-prefixes";
-import { isbns, type NewISBN } from "@/db/schema/isbns";
+import { type ISBN, isbns, type NewISBN } from "@/db/schema/isbns";
 import { titles } from "@/db/schema/titles";
 import {
   getCurrentTenantId,
@@ -276,7 +276,7 @@ export async function assignISBNToTitle(
       attempts++;
 
       try {
-        let selectedISBN;
+        let selectedISBN: ISBN;
 
         if (isbnId) {
           // Manual entry mode: Find the specific ISBN
@@ -416,7 +416,8 @@ export async function assignISBNToTitle(
           },
         };
       } catch (opError) {
-        lastError = opError instanceof Error ? opError.message : "Update failed";
+        lastError =
+          opError instanceof Error ? opError.message : "Update failed";
         console.warn(`ISBN assignment attempt ${attempts} failed`, {
           titleId,
           error: lastError,

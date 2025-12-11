@@ -32,7 +32,7 @@ describe("ContactForm", () => {
   it("renders submit button", () => {
     render(<ContactForm />);
     expect(
-      screen.getByRole("button", { name: /send message/i })
+      screen.getByRole("button", { name: /send message/i }),
     ).toBeInTheDocument();
   });
 
@@ -79,7 +79,7 @@ describe("ContactForm success state", () => {
     render(<ContactForm />);
 
     expect(
-      screen.getByText(/thank you! we'll be in touch soon/i)
+      screen.getByText(/thank you! we'll be in touch soon/i),
     ).toBeInTheDocument();
     expect(screen.getByRole("status")).toBeInTheDocument();
   });
@@ -94,7 +94,7 @@ describe("ContactForm loading state", () => {
     render(<ContactForm />);
 
     expect(
-      screen.getByRole("button", { name: /sending.../i })
+      screen.getByRole("button", { name: /sending.../i }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button")).toBeDisabled();
   });

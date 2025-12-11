@@ -17,6 +17,7 @@ import { z } from "zod";
 import {
   contractFormatValues,
   contractStatusValues,
+  tierCalculationModeValues,
 } from "@/db/schema/contracts";
 
 /**
@@ -33,6 +34,15 @@ export const contractStatusSchema = z.enum(contractStatusValues, {
  */
 export const contractFormatSchema = z.enum(contractFormatValues, {
   message: "Invalid contract format",
+});
+
+/**
+ * Zod schema for tier calculation mode validation
+ * Valid values: period, lifetime
+ * Story 10.4: Escalating Lifetime Royalty Rates
+ */
+export const tierCalculationModeSchema = z.enum(tierCalculationModeValues, {
+  message: "Invalid tier calculation mode",
 });
 
 /**
@@ -151,6 +161,7 @@ export const createContractSchema = z
     status: contractStatusSchema.default("active"),
     advance_amount: currencySchema.default("0"),
     advance_paid: currencySchema.default("0"),
+    tier_calculation_mode: tierCalculationModeSchema.default("period"),
     tiers: z.array(tierInputSchema).min(1, "At least one tier is required"),
   })
   .refine(

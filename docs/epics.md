@@ -135,7 +135,7 @@ This document provides the complete epic and story breakdown for Salina ERP, dec
 ### Tax & Compliance (FR119-124)
 - FR119: System collects and validates tax identification (TIN/SSN) for US-based authors
 - FR120: System tracks annual earnings per author for 1099 threshold determination
-- FR121: System generates 1099-MISC forms for authors earning $600+ annually
+- FR121: System generates 1099-MISC forms for authors earning $10+ in royalties annually
 - FR122: System provides batch 1099 generation for all qualifying authors
 - FR123: Users can download individual or bulk 1099 PDFs
 - FR124: System maintains 1099 generation audit trail for IRS compliance
@@ -3355,7 +3355,7 @@ async function calculateRoyaltyForPeriod(
 
 ## Epic 11: Tax & Compliance
 
-**Epic Goal:** Generate IRS 1099-MISC forms for authors earning $600+ annually, ensuring regulatory compliance for US-based publishers
+**Epic Goal:** Generate IRS 1099-MISC forms for authors earning $10+ in royalties annually, ensuring regulatory compliance for US-based publishers (Note: $10 is the IRS threshold for royalties in Box 2, different from $600 for non-employee compensation)
 
 **FRs Covered:** FR119-124
 
@@ -3418,7 +3418,7 @@ async function calculateRoyaltyForPeriod(
 
 **And** earnings are calculated from all paid royalty statements in the calendar year
 
-**And** authors earning $600+ are flagged as requiring 1099
+**And** authors earning $10+ in royalties are flagged as requiring 1099
 
 **And** the report shows:
 - Author name
@@ -3440,7 +3440,7 @@ async function calculateRoyaltyForPeriod(
 - Create 1099 preparation report/dashboard
 - Query paid statements by calendar year
 - Sum royalties per author
-- $600 threshold is IRS requirement for 1099-MISC
+- $10 threshold is IRS requirement for 1099-MISC royalties (Box 2)
 - Consider that some authors may have multiple payment types
 
 ---
@@ -3457,7 +3457,7 @@ async function calculateRoyaltyForPeriod(
 **When** I access the 1099 generation feature
 **Then** I can select the tax year to generate forms for
 
-**And** the system shows list of authors requiring 1099 (earnings >= $600)
+**And** the system shows list of authors requiring 1099 (earnings >= $10 in royalties)
 
 **And** I can generate individual 1099 PDFs
 

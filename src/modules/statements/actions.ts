@@ -28,9 +28,11 @@
 import { and, eq, or } from "drizzle-orm";
 import { adminDb } from "@/db";
 import { authors } from "@/db/schema/authors";
-import { contacts, contactRoles } from "@/db/schema/contacts";
+import { contacts } from "@/db/schema/contacts";
 import { contracts } from "@/db/schema/contracts";
 import { statements } from "@/db/schema/statements";
+import { titleAuthors } from "@/db/schema/title-authors";
+import { titles } from "@/db/schema/titles";
 import { inngest } from "@/inngest/client";
 import { logAuditEvent } from "@/lib/audit";
 import {
@@ -40,7 +42,11 @@ import {
   requirePermission,
 } from "@/lib/auth";
 import type { ActionResult } from "@/lib/types";
-import { calculateRoyaltyForPeriod } from "@/modules/royalties/calculator";
+import {
+  calculateRoyaltyForPeriod,
+  calculateSplitRoyaltyForTitle,
+} from "@/modules/royalties/calculator";
+import type { RoyaltyCalculation } from "@/modules/royalties/types";
 import { sendStatementEmail } from "./email-service";
 import { getStatementDownloadUrl } from "./storage";
 import type {
@@ -295,7 +301,8 @@ export async function getAuthorsWithPendingRoyalties(params: {
       }
 
       // Map contact fields to author format
-      const name = `${contact.first_name || ""} ${contact.last_name || ""}`.trim();
+      const name =
+        `${contact.first_name || ""} ${contact.last_name || ""}`.trim();
       authorsWithRoyalties.push({
         id: contact.id,
         name: name || "Unknown",
@@ -370,10 +377,7 @@ export async function previewStatementCalculations(params: {
     for (const authorId of params.authorIds) {
       // Get contact with author role details
       const contact = await db.query.contacts.findFirst({
-        where: and(
-          eq(contacts.id, authorId),
-          eq(contacts.tenant_id, tenantId),
-        ),
+        where: and(eq(contacts.id, authorId), eq(contacts.tenant_id, tenantId)),
         with: { roles: true },
       });
 
@@ -381,37 +385,151 @@ export async function previewStatementCalculations(params: {
       if (!contact || !contact.roles.some((r) => r.role === "author")) continue;
 
       // Map contact to author name
-      const authorName = `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "Unknown";
+      const authorName =
+        `${contact.first_name || ""} ${contact.last_name || ""}`.trim() ||
+        "Unknown";
 
-      // Calculate royalties
-      const result = await calculateRoyaltyForPeriod(
-        authorId,
-        tenantId,
-        periodStart,
-        periodEnd,
-      );
+      // Story 10.3: AC-10.3.7 - Check if author is on a multi-author title
+      // Get contract for this author to find their title
+      const contract = await db.query.contracts.findFirst({
+        where: and(
+          or(
+            eq(contracts.contact_id, authorId),
+            eq(contracts.author_id, authorId),
+          ),
+          eq(contracts.tenant_id, tenantId),
+          eq(contracts.status, "active"),
+        ),
+      });
 
-      if (!result.success) {
-        // Include with zeros and a warning
-        previews.push({
-          authorId,
-          authorName,
-          totalSales: 0,
-          totalReturns: 0,
-          royaltyEarned: 0,
-          advanceRecouped: 0,
-          netPayable: 0,
-          warnings: [
-            {
-              type: "no_sales",
-              message: result.error || "Could not calculate royalties",
-            },
-          ],
+      let coAuthorInfo:
+        | { ownershipPercentage: number; titleName: string }
+        | undefined;
+      let isMultiAuthorTitle = false;
+
+      if (contract?.title_id) {
+        // Check if title has multiple authors
+        const titleAuthorRecords = await db.query.titleAuthors.findMany({
+          where: eq(titleAuthors.title_id, contract.title_id),
         });
-        continue;
+        isMultiAuthorTitle = titleAuthorRecords.length > 1;
+
+        // Get title name for co-author display
+        if (isMultiAuthorTitle) {
+          const title = await db.query.titles.findFirst({
+            where: eq(titles.id, contract.title_id),
+          });
+          const thisAuthorRecord = titleAuthorRecords.find(
+            (ta) => ta.contact_id === authorId,
+          );
+          if (thisAuthorRecord && title) {
+            coAuthorInfo = {
+              ownershipPercentage: parseFloat(
+                thisAuthorRecord.ownership_percentage,
+              ),
+              titleName: title.title,
+            };
+          }
+        }
       }
 
-      const calc = result.calculation;
+      // Calculate royalties (Story 10.3: Use split calculation for multi-author)
+      let calc: RoyaltyCalculation | undefined;
+      let authorRoyaltyEarned: number;
+      let authorAdvanceRecouped: number;
+      let authorNetPayable: number;
+
+      if (isMultiAuthorTitle && contract?.title_id) {
+        // Use split calculation for co-authored titles
+        const splitResult = await calculateSplitRoyaltyForTitle(
+          contract.title_id,
+          tenantId,
+          periodStart,
+          periodEnd,
+        );
+
+        if (!splitResult.success) {
+          previews.push({
+            authorId,
+            authorName,
+            totalSales: 0,
+            totalReturns: 0,
+            royaltyEarned: 0,
+            advanceRecouped: 0,
+            netPayable: 0,
+            warnings: [
+              {
+                type: "no_sales",
+                message:
+                  splitResult.error || "Could not calculate split royalties",
+              },
+            ],
+            coAuthorInfo,
+          });
+          continue;
+        }
+
+        calc = splitResult.calculation;
+        const thisAuthorSplit = calc.authorSplits.find(
+          (s) => s.contactId === authorId,
+        );
+
+        if (!thisAuthorSplit) {
+          previews.push({
+            authorId,
+            authorName,
+            totalSales: 0,
+            totalReturns: 0,
+            royaltyEarned: 0,
+            advanceRecouped: 0,
+            netPayable: 0,
+            warnings: [
+              {
+                type: "no_sales",
+                message: "Author not found in split calculation",
+              },
+            ],
+            coAuthorInfo,
+          });
+          continue;
+        }
+
+        authorRoyaltyEarned = thisAuthorSplit.splitAmount;
+        authorAdvanceRecouped = thisAuthorSplit.recoupment;
+        authorNetPayable = thisAuthorSplit.netPayable;
+      } else {
+        // Standard single-author calculation
+        const result = await calculateRoyaltyForPeriod(
+          authorId,
+          tenantId,
+          periodStart,
+          periodEnd,
+        );
+
+        if (!result.success) {
+          previews.push({
+            authorId,
+            authorName,
+            totalSales: 0,
+            totalReturns: 0,
+            royaltyEarned: 0,
+            advanceRecouped: 0,
+            netPayable: 0,
+            warnings: [
+              {
+                type: "no_sales",
+                message: result.error || "Could not calculate royalties",
+              },
+            ],
+          });
+          continue;
+        }
+
+        calc = result.calculation;
+        authorRoyaltyEarned = calc.totalRoyaltyEarned;
+        authorAdvanceRecouped = calc.advanceRecoupment;
+        authorNetPayable = calc.netPayable;
+      }
 
       // Calculate totals from format breakdowns
       const totalSales = calc.formatCalculations.reduce(
@@ -426,12 +544,12 @@ export async function previewStatementCalculations(params: {
       // Build warnings (AC-5.3.4)
       const warnings: PreviewWarning[] = [];
 
-      if (calc.netPayable <= 0 && totalReturns > totalSales) {
+      if (authorNetPayable <= 0 && totalReturns > totalSales) {
         warnings.push({
           type: "negative_net",
           message: "Returns exceed royalties - net payable is negative or zero",
         });
-      } else if (calc.netPayable === 0 && calc.advanceRecoupment > 0) {
+      } else if (authorNetPayable === 0 && authorAdvanceRecouped > 0) {
         warnings.push({
           type: "zero_net",
           message: "Advance fully recouped - net payable is $0",
@@ -448,10 +566,11 @@ export async function previewStatementCalculations(params: {
         authorName,
         totalSales,
         totalReturns,
-        royaltyEarned: calc.totalRoyaltyEarned,
-        advanceRecouped: calc.advanceRecoupment,
-        netPayable: calc.netPayable,
+        royaltyEarned: authorRoyaltyEarned,
+        advanceRecouped: authorAdvanceRecouped,
+        netPayable: authorNetPayable,
         warnings,
+        coAuthorInfo,
       });
     }
 

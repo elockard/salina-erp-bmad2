@@ -66,7 +66,10 @@ export interface InvoiceFiltersProps {
  *
  * AC-8.3.2: Status dropdown with all status options
  */
-const STATUS_OPTIONS: Array<{ value: InvoiceStatusType | "all"; label: string }> = [
+const STATUS_OPTIONS: Array<{
+  value: InvoiceStatusType | "all";
+  label: string;
+}> = [
   { value: "all", label: "All Status" },
   { value: "draft", label: "Draft" },
   { value: "sent", label: "Sent" },
@@ -90,7 +93,8 @@ export function InvoiceFilters({
   loading = false,
 }: InvoiceFiltersProps) {
   // Local state for customer selector
-  const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<SelectedCustomer | null>(null);
 
   // Local state for date range
   const [dateRange, setDateRange] = useState<{
@@ -109,7 +113,7 @@ export function InvoiceFilters({
         status: value === "all" ? undefined : (value as InvoiceStatusType),
       });
     },
-    [filters, onFiltersChange]
+    [filters, onFiltersChange],
   );
 
   // Handle customer selection
@@ -121,7 +125,7 @@ export function InvoiceFilters({
         customerId: customer?.id || undefined,
       });
     },
-    [filters, onFiltersChange]
+    [filters, onFiltersChange],
   );
 
   // Handle date range change
@@ -134,7 +138,7 @@ export function InvoiceFilters({
         endDate: range.to,
       });
     },
-    [filters, onFiltersChange]
+    [filters, onFiltersChange],
   );
 
   // Clear all filters
@@ -188,7 +192,7 @@ export function InvoiceFilters({
             variant="outline"
             className={cn(
               "w-[260px] justify-start text-left font-normal",
-              !dateRange.from && "text-muted-foreground"
+              !dateRange.from && "text-muted-foreground",
             )}
             disabled={loading}
           >

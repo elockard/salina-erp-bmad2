@@ -69,6 +69,7 @@ interface WizardFormData {
   status: "active" | "suspended" | "terminated";
   advance_amount: string;
   advance_paid: string;
+  tier_calculation_mode: "period" | "lifetime";
   physical_tiers: {
     min_quantity: number;
     max_quantity: number | null;
@@ -102,6 +103,7 @@ const wizardFormSchema = z.object({
   status: z.enum(["active", "suspended", "terminated"]),
   advance_amount: z.string(),
   advance_paid: z.string(),
+  tier_calculation_mode: z.enum(["period", "lifetime"]),
   // Steps 2-4: Tiers by format
   physical_tiers: z.array(tierSchema),
   ebook_tiers: z.array(tierSchema),
@@ -146,6 +148,7 @@ export function ContractWizardModal({
       status: "active",
       advance_amount: "0",
       advance_paid: "0",
+      tier_calculation_mode: "period",
       physical_tiers: [{ min_quantity: 0, max_quantity: null, rate: 0.1 }],
       ebook_tiers: [],
       audiobook_tiers: [],
@@ -170,6 +173,7 @@ export function ContractWizardModal({
         status: "active",
         advance_amount: "0",
         advance_paid: "0",
+        tier_calculation_mode: "period",
         physical_tiers: [{ min_quantity: 0, max_quantity: null, rate: 0.1 }],
         ebook_tiers: [],
         audiobook_tiers: [],
@@ -278,6 +282,7 @@ export function ContractWizardModal({
         status: data.status,
         advance_amount: data.advance_amount || "0",
         advance_paid: data.advance_paid || "0",
+        tier_calculation_mode: data.tier_calculation_mode,
         tiers,
       });
 

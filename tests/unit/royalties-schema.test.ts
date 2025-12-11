@@ -5,6 +5,7 @@ import {
   createContractSchema,
   currencySchema,
   rateSchema,
+  tierCalculationModeSchema,
   tierInputSchema,
 } from "@/modules/royalties/schema";
 
@@ -81,6 +82,48 @@ describe("contractFormatSchema", () => {
   it("rejects invalid format", () => {
     const result = contractFormatSchema.safeParse("hardcover");
     expect(result.success).toBe(false);
+  });
+});
+
+/**
+ * Story 10.4: Escalating Lifetime Royalty Rates
+ * AC-10.4.1: Tier calculation mode validation
+ */
+describe("tierCalculationModeSchema (Story 10.4: Lifetime Royalty Rates)", () => {
+  it("accepts valid mode 'period' (default)", () => {
+    const result = tierCalculationModeSchema.safeParse("period");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toBe("period");
+    }
+  });
+
+  it("accepts valid mode 'lifetime'", () => {
+    const result = tierCalculationModeSchema.safeParse("lifetime");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toBe("lifetime");
+    }
+  });
+
+  it("rejects invalid mode", () => {
+    const result = tierCalculationModeSchema.safeParse("annual");
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty string", () => {
+    const result = tierCalculationModeSchema.safeParse("");
+    expect(result.success).toBe(false);
+  });
+
+  it("provides meaningful error message", () => {
+    const result = tierCalculationModeSchema.safeParse("invalid");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toContain(
+        "Invalid tier calculation mode",
+      );
+    }
   });
 });
 
@@ -395,6 +438,45 @@ describe("createContractSchema", () => {
       if (result.success) {
         expect(result.data.advance_amount).toBe("0");
         expect(result.data.advance_paid).toBe("0");
+      }
+    });
+
+    it("applies default tier_calculation_mode of 'period' (Story 10.4)", () => {
+      const result = createContractSchema.safeParse({
+        author_id: validUUID,
+        title_id: validUUID,
+        tiers: [
+          {
+            format: "physical",
+            min_quantity: 0,
+            max_quantity: null,
+            rate: 0.1,
+          },
+        ],
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.tier_calculation_mode).toBe("period");
+      }
+    });
+
+    it("accepts explicit tier_calculation_mode 'lifetime' (Story 10.4)", () => {
+      const result = createContractSchema.safeParse({
+        author_id: validUUID,
+        title_id: validUUID,
+        tier_calculation_mode: "lifetime",
+        tiers: [
+          {
+            format: "physical",
+            min_quantity: 0,
+            max_quantity: null,
+            rate: 0.1,
+          },
+        ],
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.tier_calculation_mode).toBe("lifetime");
       }
     });
 

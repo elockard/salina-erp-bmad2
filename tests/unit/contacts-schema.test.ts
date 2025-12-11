@@ -2,39 +2,37 @@ import { describe, expect, it } from "vitest";
 import {
   type Contact,
   type ContactRole,
-  contactRoleValues,
-  contacts,
-  contactRoles,
-  contactStatusValues,
-  type ContactStatus,
   type ContactRoleType,
+  type ContactStatus,
+  contactRoles,
+  contactRoleValues,
+  contactStatusValues,
+  contacts,
   type InsertContact,
   type InsertContactRole,
+  type TinType,
+  tinTypeValues,
 } from "@/db/schema/contacts";
 import {
-  createContactSchema,
-  updateContactSchema,
-  assignContactRoleSchema,
-  paymentInfoSchema,
-  authorRoleDataSchema,
-  customerRoleDataSchema,
-  vendorRoleDataSchema,
-  distributorRoleDataSchema,
-  contactStatusEnum,
-  contactRoleEnum,
   addressSchema,
+  assignContactRoleSchema,
+  contactRoleEnum,
+  contactStatusEnum,
+  createContactSchema,
+  paymentInfoSchema,
+  updateContactSchema,
 } from "@/modules/contacts/schema";
 import {
-  isAuthorRoleData,
-  isCustomerRoleData,
-  isVendorRoleData,
-  isDistributorRoleData,
-  isPaymentInfo,
-  type PaymentInfo,
   type AuthorRoleData,
   type CustomerRoleData,
-  type VendorRoleData,
   type DistributorRoleData,
+  isAuthorRoleData,
+  isCustomerRoleData,
+  isDistributorRoleData,
+  isPaymentInfo,
+  isVendorRoleData,
+  type PaymentInfo,
+  type VendorRoleData,
 } from "@/modules/contacts/types";
 
 /**
@@ -107,6 +105,44 @@ describe("contactRoleValues (AC-7.1.2)", () => {
       const values: readonly string[] = contactRoleValues;
       expect(values).toEqual(["author", "customer", "vendor", "distributor"]);
     });
+  });
+});
+
+describe("tinTypeValues (AC-11.1.2)", () => {
+  describe("valid values", () => {
+    it("has exactly 2 values", () => {
+      expect(tinTypeValues).toHaveLength(2);
+    });
+
+    it("contains 'ssn'", () => {
+      expect(tinTypeValues).toContain("ssn");
+    });
+
+    it("contains 'ein'", () => {
+      expect(tinTypeValues).toContain("ein");
+    });
+
+    it("has expected values in order", () => {
+      expect(tinTypeValues[0]).toBe("ssn");
+      expect(tinTypeValues[1]).toBe("ein");
+    });
+  });
+
+  describe("type safety", () => {
+    it("is readonly tuple", () => {
+      const values: readonly string[] = tinTypeValues;
+      expect(values).toEqual(["ssn", "ein"]);
+    });
+  });
+});
+
+describe("TinType type (AC-11.1.6)", () => {
+  it("accepts valid TIN type values", () => {
+    const ssn: TinType = "ssn";
+    const ein: TinType = "ein";
+
+    expect(ssn).toBe("ssn");
+    expect(ein).toBe("ein");
   });
 });
 
@@ -211,10 +247,46 @@ describe("contacts table schema structure (AC-7.1.1)", () => {
     expect(contacts.country.notNull).toBe(false);
   });
 
-  it("has tax_id column (nullable)", () => {
+  it("has tax_id column (nullable, deprecated)", () => {
     expect(contacts.tax_id).toBeDefined();
     expect(contacts.tax_id.name).toBe("tax_id");
     expect(contacts.tax_id.notNull).toBe(false);
+  });
+
+  it("has tin_encrypted column (nullable) (AC-11.1.4)", () => {
+    expect(contacts.tin_encrypted).toBeDefined();
+    expect(contacts.tin_encrypted.name).toBe("tin_encrypted");
+    expect(contacts.tin_encrypted.notNull).toBe(false);
+  });
+
+  it("has tin_type column (nullable) (AC-11.1.2)", () => {
+    expect(contacts.tin_type).toBeDefined();
+    expect(contacts.tin_type.name).toBe("tin_type");
+    expect(contacts.tin_type.notNull).toBe(false);
+  });
+
+  it("has tin_last_four column (nullable) (AC-11.1.5)", () => {
+    expect(contacts.tin_last_four).toBeDefined();
+    expect(contacts.tin_last_four.name).toBe("tin_last_four");
+    expect(contacts.tin_last_four.notNull).toBe(false);
+  });
+
+  it("has is_us_based column (nullable, default true) (AC-11.1.6)", () => {
+    expect(contacts.is_us_based).toBeDefined();
+    expect(contacts.is_us_based.name).toBe("is_us_based");
+    expect(contacts.is_us_based.notNull).toBe(false);
+  });
+
+  it("has w9_received column (nullable, default false) (AC-11.1.7)", () => {
+    expect(contacts.w9_received).toBeDefined();
+    expect(contacts.w9_received.name).toBe("w9_received");
+    expect(contacts.w9_received.notNull).toBe(false);
+  });
+
+  it("has w9_received_date column (nullable) (AC-11.1.7)", () => {
+    expect(contacts.w9_received_date).toBeDefined();
+    expect(contacts.w9_received_date.name).toBe("w9_received_date");
+    expect(contacts.w9_received_date.notNull).toBe(false);
   });
 
   it("has payment_info column (JSONB, nullable)", () => {
@@ -259,7 +331,7 @@ describe("contacts table schema structure (AC-7.1.1)", () => {
     expect(contacts.created_by.notNull).toBe(false);
   });
 
-  it("has exactly 20 columns", () => {
+  it("has exactly 26 columns", () => {
     const columnNames = [
       "id",
       "tenant_id",
@@ -274,6 +346,12 @@ describe("contacts table schema structure (AC-7.1.1)", () => {
       "postal_code",
       "country",
       "tax_id",
+      "tin_encrypted",
+      "tin_type",
+      "tin_last_four",
+      "is_us_based",
+      "w9_received",
+      "w9_received_date",
       "payment_info",
       "notes",
       "status",
@@ -288,7 +366,7 @@ describe("contacts table schema structure (AC-7.1.1)", () => {
         (contacts as unknown as Record<string, unknown>)[name],
       ).toBeDefined();
     }
-    expect(columnNames.length).toBe(20);
+    expect(columnNames.length).toBe(26);
   });
 });
 
@@ -368,6 +446,12 @@ describe("Contact type (AC-7.1.6)", () => {
       postal_code: "12345",
       country: "USA",
       tax_id: "123-45-6789",
+      tin_encrypted: "encryptedValue123",
+      tin_type: "ssn",
+      tin_last_four: "6789",
+      is_us_based: true,
+      w9_received: true,
+      w9_received_date: new Date("2024-01-15"),
       payment_info: { method: "check" },
       notes: "Test contact",
       status: "active",
@@ -381,6 +465,9 @@ describe("Contact type (AC-7.1.6)", () => {
     expect(mockContact.first_name).toBe("John");
     expect(mockContact.last_name).toBe("Doe");
     expect(mockContact.status).toBe("active");
+    expect(mockContact.tin_type).toBe("ssn");
+    expect(mockContact.is_us_based).toBe(true);
+    expect(mockContact.w9_received).toBe(true);
   });
 
   it("supports null nullable fields", () => {
@@ -398,6 +485,12 @@ describe("Contact type (AC-7.1.6)", () => {
       postal_code: null,
       country: null,
       tax_id: null,
+      tin_encrypted: null,
+      tin_type: null,
+      tin_last_four: null,
+      is_us_based: null,
+      w9_received: null,
+      w9_received_date: null,
       payment_info: null,
       notes: null,
       status: "inactive",
@@ -410,6 +503,9 @@ describe("Contact type (AC-7.1.6)", () => {
     expect(contact.email).toBeNull();
     expect(contact.phone).toBeNull();
     expect(contact.payment_info).toBeNull();
+    expect(contact.tin_encrypted).toBeNull();
+    expect(contact.tin_type).toBeNull();
+    expect(contact.is_us_based).toBeNull();
   });
 });
 

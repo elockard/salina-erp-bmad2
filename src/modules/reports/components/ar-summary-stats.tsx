@@ -36,7 +36,8 @@ export function ARSummaryStats({ summary }: ARSummaryStatsProps) {
   // Parse string amounts to numbers for calculations
   const totalNum = Number.parseFloat(totalReceivables) || 0;
   const overdueNum = Number.parseFloat(overdueAmount) || 0;
-  const overduePercent = totalNum > 0 ? Math.round((overdueNum / totalNum) * 100) : 0;
+  const overduePercent =
+    totalNum > 0 ? Math.round((overdueNum / totalNum) * 100) : 0;
 
   // Format currency
   const formatCurrency = (value: string) => {
@@ -48,15 +49,22 @@ export function ARSummaryStats({ summary }: ARSummaryStatsProps) {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" data-testid="ar-summary-stats">
+    <div
+      className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+      data-testid="ar-summary-stats"
+    >
       {/* Total Receivables Card */}
       <Card data-testid="total-receivables-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Receivables</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Total Receivables
+          </CardTitle>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(totalReceivables)}</div>
+          <div className="text-2xl font-bold">
+            {formatCurrency(totalReceivables)}
+          </div>
           <CardDescription className="mt-2">
             <span className="text-xs text-muted-foreground">
               {openInvoiceCount} open invoice{openInvoiceCount !== 1 ? "s" : ""}
@@ -94,7 +102,9 @@ export function ARSummaryStats({ summary }: ARSummaryStatsProps) {
           <CardDescription className="mt-2 space-y-1">
             <div className="flex justify-between text-xs">
               <span>% of Total</span>
-              <span className="font-medium text-destructive">{overduePercent}%</span>
+              <span className="font-medium text-destructive">
+                {overduePercent}%
+              </span>
             </div>
           </CardDescription>
           <Progress

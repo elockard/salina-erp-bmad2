@@ -10,7 +10,7 @@
  * AC 2: Author (searchable), Title (searchable), Status, Advance Amount, Advance Paid
  */
 
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, HelpCircle, Loader2 } from "lucide-react";
 import { useCallback, useState, useTransition } from "react";
 import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -31,11 +31,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -43,6 +45,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { searchAuthorsAction, searchTitlesAction } from "../actions";
 import type { AuthorOption, TitleOption } from "../types";
@@ -328,6 +336,71 @@ export function ContractStepBasicInfo() {
             <FormDescription>
               Active contracts are used for royalty calculations
             </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Tier Calculation Mode (Story 10.4: Escalating Lifetime Royalty Rates) */}
+      <FormField
+        control={control}
+        name="tier_calculation_mode"
+        render={({ field }) => (
+          <FormItem className="space-y-3">
+            <div className="flex items-center gap-2">
+              <FormLabel>Tier Calculation Mode</FormLabel>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-xs">
+                    <p className="font-semibold">Period Mode (Default)</p>
+                    <p className="text-sm mb-2">
+                      Tiers reset each royalty period. Author starts at lowest
+                      tier every period.
+                    </p>
+                    <p className="font-semibold">Lifetime Mode</p>
+                    <p className="text-sm">
+                      Tiers based on cumulative sales. As lifetime sales grow,
+                      author earns higher rates on new sales.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="flex flex-col space-y-1"
+              >
+                <div className="flex items-center space-x-3 space-y-0">
+                  <RadioGroupItem value="period" id="period" />
+                  <Label
+                    htmlFor="period"
+                    className="font-normal cursor-pointer"
+                  >
+                    <span className="font-medium">Period</span>
+                    <span className="text-muted-foreground ml-2">
+                      — Tiers reset each royalty period
+                    </span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 space-y-0">
+                  <RadioGroupItem value="lifetime" id="lifetime" />
+                  <Label
+                    htmlFor="lifetime"
+                    className="font-normal cursor-pointer"
+                  >
+                    <span className="font-medium">Lifetime</span>
+                    <span className="text-muted-foreground ml-2">
+                      — Tiers based on cumulative sales
+                    </span>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}

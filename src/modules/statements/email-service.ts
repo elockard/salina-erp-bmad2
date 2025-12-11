@@ -22,8 +22,10 @@ import { eq } from "drizzle-orm";
 import { adminDb } from "@/db";
 import { authors } from "@/db/schema/authors";
 import { contacts } from "@/db/schema/contacts";
+import { contracts } from "@/db/schema/contracts";
 import { statements } from "@/db/schema/statements";
 import { tenants } from "@/db/schema/tenants";
+import { titles } from "@/db/schema/titles";
 import { getDefaultFromEmail, sendEmail } from "@/lib/email";
 import {
   generateSubject,
@@ -229,6 +231,23 @@ export async function sendStatementEmail(
       process.env.PORTAL_URL ||
       `https://${tenant.subdomain}.salina.media`;
 
+    // Story 10.3: Fetch title name for co-author email context
+    let titleName: string | undefined;
+    if (
+      statement.contract_id &&
+      calculations.splitCalculation?.isSplitCalculation
+    ) {
+      const contract = await adminDb.query.contracts.findFirst({
+        where: eq(contracts.id, statement.contract_id),
+      });
+      if (contract?.title_id) {
+        const title = await adminDb.query.titles.findFirst({
+          where: eq(titles.id, contract.title_id),
+        });
+        titleName = title?.title;
+      }
+    }
+
     const templateProps: StatementEmailProps = {
       authorName,
       publisherName: tenant.name,
@@ -238,6 +257,16 @@ export async function sendStatementEmail(
       netPayable: calculations.netPayable,
       portalUrl: basePortalUrl,
       statementId,
+      // Story 10.3: AC-10.3.5 - Pass split context for co-author emails
+      splitCalculation: calculations.splitCalculation
+        ? {
+            ownershipPercentage:
+              calculations.splitCalculation.ownershipPercentage,
+            isSplitCalculation:
+              calculations.splitCalculation.isSplitCalculation,
+          }
+        : undefined,
+      titleName,
     };
 
     // Step 6: Render email HTML

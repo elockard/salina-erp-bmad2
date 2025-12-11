@@ -1,12 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { HeroSection } from "@/components/marketing/hero-section";
 import { FeaturesSection } from "@/components/marketing/features-section";
-import { PublicNav } from "@/components/marketing/public-nav";
-import { PricingSection } from "@/components/marketing/pricing-section";
-import { HowItWorksSection } from "@/components/marketing/how-it-works-section";
-import { TestimonialsSection } from "@/components/marketing/testimonials-section";
 import { Footer } from "@/components/marketing/footer";
+import { HeroSection } from "@/components/marketing/hero-section";
+import { HowItWorksSection } from "@/components/marketing/how-it-works-section";
+import { PricingSection } from "@/components/marketing/pricing-section";
+import { PublicNav } from "@/components/marketing/public-nav";
+import { TestimonialsSection } from "@/components/marketing/testimonials-section";
 
 // Mock next/link
 vi.mock("next/link", () => ({
@@ -23,7 +23,7 @@ describe("HeroSection", () => {
   it("renders headline", () => {
     render(<HeroSection />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      /Publishing ERP Built for/i
+      /Publishing ERP Built for/i,
     );
   });
 
@@ -36,7 +36,7 @@ describe("HeroSection", () => {
   it("renders subheadline with value proposition", () => {
     render(<HeroSection />);
     expect(
-      screen.getByText(/tiered royalty calculations/i)
+      screen.getByText(/tiered royalty calculations/i),
     ).toBeInTheDocument();
   });
 });
@@ -45,7 +45,7 @@ describe("FeaturesSection", () => {
   it("renders 6 feature cards", () => {
     render(<FeaturesSection />);
     expect(
-      screen.getByText(/Tiered Royalty Calculations/i)
+      screen.getByText(/Tiered Royalty Calculations/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/ISBN Pool Management/i)).toBeInTheDocument();
     expect(screen.getByText(/Author Portal/i)).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe("PublicNav", () => {
     render(<PublicNav />);
     expect(screen.getByRole("link", { name: /features/i })).toHaveAttribute(
       "href",
-      "/#features"
+      "/#features",
     );
   });
 
@@ -91,7 +91,7 @@ describe("PublicNav", () => {
     render(<PublicNav />);
     expect(screen.getByRole("link", { name: /pricing/i })).toHaveAttribute(
       "href",
-      "/#pricing"
+      "/#pricing",
     );
   });
 });
@@ -151,7 +151,7 @@ describe("TestimonialsSection", () => {
   it("renders testimonial quotes", () => {
     render(<TestimonialsSection />);
     expect(
-      screen.getByText(/Salina ERP transformed how we manage/i)
+      screen.getByText(/Salina ERP transformed how we manage/i),
     ).toBeInTheDocument();
   });
 

@@ -120,7 +120,11 @@ export function ISBNPoolStats({ stats }: ISBNPoolStatsProps) {
           </div>
           <CardDescription>Total available ISBNs in your pool</CardDescription>
 
-          <UtilizationBar used={totalUsed} total={stats.total} showWarning={isLow} />
+          <UtilizationBar
+            used={totalUsed}
+            total={stats.total}
+            showWarning={isLow}
+          />
 
           <div className="space-y-1 border-t pt-4">
             <StatRow

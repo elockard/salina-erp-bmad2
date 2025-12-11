@@ -43,7 +43,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { authors } from "@/db/schema/authors";
 import { contacts } from "@/db/schema/contacts";
 import { contracts } from "@/db/schema/contracts";
-import { invoices, payments } from "@/db/schema/invoices";
+import { invoices } from "@/db/schema/invoices";
 import { isbnPrefixes } from "@/db/schema/isbn-prefixes";
 import { isbns } from "@/db/schema/isbns";
 import { returns } from "@/db/schema/returns";
@@ -1919,7 +1919,7 @@ export async function getARSummary(): Promise<ARSummary> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const _todayStr = today.toISOString().split("T")[0];
 
   // Get all open invoices (valid statuses with balance > 0)
   const openInvoices = await db.query.invoices.findMany({
@@ -1953,10 +1953,7 @@ export async function getARSummary(): Promise<ARSummary> {
 
   // Calculate average days to pay from paid invoices
   const paidInvoices = await db.query.invoices.findMany({
-    where: and(
-      eq(invoices.tenant_id, tenantId),
-      eq(invoices.status, "paid"),
-    ),
+    where: and(eq(invoices.tenant_id, tenantId), eq(invoices.status, "paid")),
     with: {
       payments: true,
     },
@@ -1988,7 +1985,8 @@ export async function getARSummary(): Promise<ARSummary> {
     }
   }
 
-  const averageDaysToPay = paidCount > 0 ? Math.round(totalDays / paidCount) : 0;
+  const averageDaysToPay =
+    paidCount > 0 ? Math.round(totalDays / paidCount) : 0;
 
   return {
     totalReceivables: totalReceivables.toFixed(2),
@@ -2026,8 +2024,8 @@ export async function getAgingReportByCustomer(): Promise<AgingReportRow[]> {
   });
 
   // Filter to those with balance > 0
-  const invoicesWithBalance = openInvoices.filter(
-    (inv) => new Decimal(inv.balance_due).gt(0),
+  const invoicesWithBalance = openInvoices.filter((inv) =>
+    new Decimal(inv.balance_due).gt(0),
   );
 
   if (invoicesWithBalance.length === 0) {
@@ -2069,18 +2067,18 @@ export async function getAgingReportByCustomer(): Promise<AgingReportRow[]> {
       (today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
     );
 
-    if (!customerBuckets.has(customerId)) {
-      customerBuckets.set(customerId, {
+    let buckets = customerBuckets.get(customerId);
+    if (!buckets) {
+      buckets = {
         current: new Decimal(0),
         days1to30: new Decimal(0),
         days31to60: new Decimal(0),
         days61to90: new Decimal(0),
         days90plus: new Decimal(0),
         total: new Decimal(0),
-      });
+      };
+      customerBuckets.set(customerId, buckets);
     }
-
-    const buckets = customerBuckets.get(customerId)!;
 
     // Assign to appropriate bucket
     if (daysOverdue <= 0) {
@@ -2113,9 +2111,7 @@ export async function getAgingReportByCustomer(): Promise<AgingReportRow[]> {
   );
 
   // Sort by total descending (highest first)
-  rows.sort(
-    (a, b) => Number.parseFloat(b.total) - Number.parseFloat(a.total),
-  );
+  rows.sort((a, b) => Number.parseFloat(b.total) - Number.parseFloat(a.total));
 
   return rows;
 }
@@ -2170,9 +2166,7 @@ export async function getCustomerARDetail(
     const dueDate = inv.due_date ? new Date(inv.due_date) : today;
     const daysOverdue = Math.max(
       0,
-      Math.ceil(
-        (today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
-      ),
+      Math.ceil((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)),
     );
     return {
       id: inv.id,

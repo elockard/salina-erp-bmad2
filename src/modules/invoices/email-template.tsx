@@ -71,10 +71,7 @@ export function generateInvoiceEmailSubject(
 /**
  * Generate email preheader text
  */
-export function generatePreheader(
-  amountDue: string,
-  dueDate: string,
-): string {
+export function generatePreheader(amountDue: string, dueDate: string): string {
   return `Amount Due: ${formatCurrency(amountDue)} | Due: ${dueDate}`;
 }
 

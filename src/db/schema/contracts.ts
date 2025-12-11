@@ -74,6 +74,18 @@ export const contractFormatValues = ["physical", "ebook", "audiobook"] as const;
 export type ContractFormat = (typeof contractFormatValues)[number];
 
 /**
+ * Tier calculation mode values
+ * - period: Tiers reset each royalty period (default, backward compatible)
+ * - lifetime: Tiers based on cumulative lifetime sales
+ *
+ * Story 10.4: Implement Escalating Lifetime Royalty Rates
+ * Related FRs: FR114-FR117 (Advanced Royalty Features)
+ */
+export const tierCalculationModeValues = ["period", "lifetime"] as const;
+
+export type TierCalculationMode = (typeof tierCalculationModeValues)[number];
+
+/**
  * Contracts table - Royalty contracts linking authors to titles
  *
  * Each contract represents a royalty agreement between a publisher (tenant)
@@ -165,6 +177,19 @@ export const contracts = pgTable(
      * Valid values: active, terminated, suspended
      */
     status: text("status").notNull().default("active"),
+
+    /**
+     * Tier calculation mode for royalty rates
+     * - 'period': Tiers apply to each period's sales independently (default)
+     * - 'lifetime': Tiers apply to cumulative lifetime sales
+     *
+     * Story 10.4: Implement Escalating Lifetime Royalty Rates
+     * Related FRs: FR114-FR117 (Advanced Royalty Features)
+     * Default: 'period' (backward compatible with existing contracts)
+     */
+    tier_calculation_mode: text("tier_calculation_mode")
+      .notNull()
+      .default("period"),
 
     /** Record creation timestamp (UTC, auto-generated) */
     created_at: timestamp("created_at", { withTimezone: true })

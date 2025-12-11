@@ -1,6 +1,6 @@
 "use server";
 
-import { and, count, desc, eq, gt, ilike, isNull, sql } from "drizzle-orm";
+import { and, count, eq, gt, ilike, isNull, sql } from "drizzle-orm";
 import { isbnPrefixes } from "@/db/schema/isbn-prefixes";
 import { isbns } from "@/db/schema/isbns";
 import { titles } from "@/db/schema/titles";
@@ -413,7 +413,11 @@ export async function findSpecificISBN(
 
     // Validate publication number is within range
     const pubNumInt = parseInt(publicationNumber, 10);
-    if (isNaN(pubNumInt) || pubNumInt < 0 || pubNumInt >= prefix.block_size) {
+    if (
+      Number.isNaN(pubNumInt) ||
+      pubNumInt < 0 ||
+      pubNumInt >= prefix.block_size
+    ) {
       return {
         success: false,
         error: `Publication number must be between 0 and ${prefix.block_size - 1}`,
@@ -484,7 +488,7 @@ export async function findSpecificISBN(
  * @returns Next available ISBN preview with count, or null if none available
  */
 export async function getNextAvailableISBN(
-  format: ISBNType,
+  _format: ISBNType,
   prefixId?: string,
 ): Promise<ActionResult<NextAvailableISBNPreview | null>> {
   try {

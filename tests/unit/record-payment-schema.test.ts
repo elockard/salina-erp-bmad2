@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   paymentMethodSchema,
-  recordPaymentSchema,
   type RecordPaymentInput,
+  recordPaymentSchema,
 } from "@/modules/invoices/schema";
 
 /**

@@ -42,6 +42,7 @@ import { getTitles } from "@/modules/titles/queries";
 import type { TitleWithAuthor } from "@/modules/titles/types";
 import { assignISBNToTitle } from "../actions";
 import { getISBNById } from "../queries";
+
 interface ISBNDetailModalProps {
   isbnId: string | null;
   open: boolean;

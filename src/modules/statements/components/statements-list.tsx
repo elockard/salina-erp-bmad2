@@ -22,7 +22,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Download, Eye, Mail, MoreHorizontal } from "lucide-react";
+import { Download, Eye, Mail, MoreHorizontal, Users } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,7 +40,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { StatementWithRelations } from "../types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { StatementCalculations, StatementWithRelations } from "../types";
 import { StatementStatusBadge } from "./statement-status-badge";
 
 export interface StatementsListProps {
@@ -101,6 +106,30 @@ function getAuthorName(statement: StatementWithRelations): string {
 }
 
 /**
+ * Check if statement is from a co-authored title
+ * Story 10.3: AC-10.3.9 - List indicates co-authored statements
+ */
+function isCoAuthoredStatement(statement: StatementWithRelations): boolean {
+  const calculations = statement.calculations as
+    | StatementCalculations
+    | undefined;
+  return calculations?.splitCalculation?.isSplitCalculation === true;
+}
+
+/**
+ * Get ownership percentage from statement
+ * Story 10.3: AC-10.3.9 - Display ownership in tooltip
+ */
+function getOwnershipPercentage(
+  statement: StatementWithRelations,
+): number | undefined {
+  const calculations = statement.calculations as
+    | StatementCalculations
+    | undefined;
+  return calculations?.splitCalculation?.ownershipPercentage;
+}
+
+/**
  * Statements data table with TanStack Table
  *
  * AC-5.5.1: Table displays period, author, generated on date, status badge,
@@ -125,7 +154,29 @@ export function StatementsList({
         accessorKey: "author.name",
         header: "Author",
         // Story 7.3: Use helper to get author name from contact or legacy author
-        cell: ({ row }) => getAuthorName(row.original),
+        // Story 10.3: AC-10.3.9 - Show co-author badge with ownership percentage
+        cell: ({ row }) => {
+          const isCoAuthored = isCoAuthoredStatement(row.original);
+          const ownershipPct = getOwnershipPercentage(row.original);
+          return (
+            <div className="flex items-center gap-2">
+              {getAuthorName(row.original)}
+              {isCoAuthored && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
+                      <Users className="h-3 w-3" />
+                      {ownershipPct}%
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Co-authored: {ownershipPct}% ownership</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "created_at",

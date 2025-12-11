@@ -7,16 +7,21 @@ import { adminDb } from "@/db";
 import { tenants } from "@/db/schema/tenants";
 import { users } from "@/db/schema/users";
 import { getCurrentTenantId, getDb, requirePermission } from "@/lib/auth";
+import { encryptTIN } from "@/lib/encryption";
 import { MANAGE_SETTINGS } from "@/lib/permissions";
+import { extractLastFour } from "@/lib/tin-validation";
 import type { ActionResult } from "@/lib/types";
 import {
   type CreateTenantInput,
   checkSubdomainAvailabilitySchema,
   createTenantSchema,
+  type UpdatePayerInfoFormInput,
   type UpdateTenantSettingsFormInput,
+  updatePayerInfoFormSchema,
   updateTenantSettingsFormSchema,
 } from "./schema";
 import type {
+  PayerInfo,
   RegistrationResult,
   SubdomainAvailabilityResult,
   TenantSettings,
@@ -229,9 +234,18 @@ export async function getTenantSettings(): Promise<
       default_currency: tenant.default_currency,
       statement_frequency: tenant.statement_frequency,
       // Royalty period settings (Story 7.5)
-      royalty_period_type: tenant.royalty_period_type as TenantSettings["royalty_period_type"],
+      royalty_period_type:
+        tenant.royalty_period_type as TenantSettings["royalty_period_type"],
       royalty_period_start_month: tenant.royalty_period_start_month,
       royalty_period_start_day: tenant.royalty_period_start_day,
+      // Payer info (Story 11.3)
+      payer_ein_last_four: tenant.payer_ein_last_four,
+      payer_name: tenant.payer_name,
+      payer_address_line1: tenant.payer_address_line1,
+      payer_address_line2: tenant.payer_address_line2,
+      payer_city: tenant.payer_city,
+      payer_state: tenant.payer_state,
+      payer_zip: tenant.payer_zip,
       created_at: tenant.created_at,
       updated_at: tenant.updated_at,
     };
@@ -313,9 +327,18 @@ export async function updateTenantSettings(
       default_currency: updated.default_currency,
       statement_frequency: updated.statement_frequency,
       // Royalty period settings (Story 7.5)
-      royalty_period_type: updated.royalty_period_type as TenantSettings["royalty_period_type"],
+      royalty_period_type:
+        updated.royalty_period_type as TenantSettings["royalty_period_type"],
       royalty_period_start_month: updated.royalty_period_start_month,
       royalty_period_start_day: updated.royalty_period_start_day,
+      // Payer info (Story 11.3)
+      payer_ein_last_four: updated.payer_ein_last_four,
+      payer_name: updated.payer_name,
+      payer_address_line1: updated.payer_address_line1,
+      payer_address_line2: updated.payer_address_line2,
+      payer_city: updated.payer_city,
+      payer_state: updated.payer_state,
+      payer_zip: updated.payer_zip,
       created_at: updated.created_at,
       updated_at: updated.updated_at,
     };
@@ -342,6 +365,150 @@ export async function updateTenantSettings(
     return {
       success: false,
       error: "Failed to save settings. Please try again.",
+    };
+  }
+}
+
+// ============================================
+// Payer Information Server Actions (Story 11.3)
+// ============================================
+
+/**
+ * Get current tenant's payer information for 1099 generation
+ * Permission: MANAGE_SETTINGS (Owner, Admin)
+ *
+ * Story 11.3 - AC-11.3.3: Payer Information for 1099 Generation
+ */
+export async function getPayerInfo(): Promise<ActionResult<PayerInfo>> {
+  try {
+    await requirePermission(MANAGE_SETTINGS);
+
+    const tenantId = await getCurrentTenantId();
+    const db = await getDb();
+
+    const tenant = await db.query.tenants.findFirst({
+      where: eq(tenants.id, tenantId),
+    });
+
+    if (!tenant) {
+      return { success: false, error: "Tenant not found" };
+    }
+
+    // Determine if payer info is complete
+    const hasPayerInfo = !!(
+      tenant.payer_ein_encrypted &&
+      tenant.payer_name &&
+      tenant.payer_address_line1 &&
+      tenant.payer_city &&
+      tenant.payer_state &&
+      tenant.payer_zip
+    );
+
+    const payerInfo: PayerInfo = {
+      payer_ein_last_four: tenant.payer_ein_last_four,
+      payer_name: tenant.payer_name,
+      payer_address_line1: tenant.payer_address_line1,
+      payer_address_line2: tenant.payer_address_line2,
+      payer_city: tenant.payer_city,
+      payer_state: tenant.payer_state,
+      payer_zip: tenant.payer_zip,
+      has_payer_info: hasPayerInfo,
+    };
+
+    return { success: true, data: payerInfo };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to view payer information",
+      };
+    }
+
+    console.error("getPayerInfo error:", error);
+    return {
+      success: false,
+      error: "Failed to load payer information. Please try again.",
+    };
+  }
+}
+
+/**
+ * Update tenant's payer information for 1099 generation
+ * Permission: MANAGE_SETTINGS (Owner, Admin)
+ *
+ * Story 11.3 - AC-11.3.3: Payer Information for 1099 Generation
+ * - Encrypts EIN before storage
+ * - Extracts last 4 digits for display
+ */
+export async function updatePayerInfo(
+  data: UpdatePayerInfoFormInput,
+): Promise<ActionResult<PayerInfo>> {
+  try {
+    await requirePermission(MANAGE_SETTINGS);
+
+    // Validate input
+    const validated = updatePayerInfoFormSchema.parse(data);
+
+    const tenantId = await getCurrentTenantId();
+    const db = await getDb();
+
+    // Encrypt EIN and extract last 4 digits
+    const encryptedEin = encryptTIN(validated.payer_ein);
+    const einLastFour = extractLastFour(validated.payer_ein);
+
+    // Update tenant record
+    const [updated] = await db
+      .update(tenants)
+      .set({
+        payer_ein_encrypted: encryptedEin,
+        payer_ein_last_four: einLastFour,
+        payer_name: validated.payer_name,
+        payer_address_line1: validated.payer_address_line1,
+        payer_address_line2: validated.payer_address_line2 || null,
+        payer_city: validated.payer_city,
+        payer_state: validated.payer_state,
+        payer_zip: validated.payer_zip,
+        updated_at: new Date(),
+      })
+      .where(eq(tenants.id, tenantId))
+      .returning();
+
+    if (!updated) {
+      return { success: false, error: "Tenant not found" };
+    }
+
+    // Return updated payer info (never return encrypted EIN)
+    const payerInfo: PayerInfo = {
+      payer_ein_last_four: updated.payer_ein_last_four,
+      payer_name: updated.payer_name,
+      payer_address_line1: updated.payer_address_line1,
+      payer_address_line2: updated.payer_address_line2,
+      payer_city: updated.payer_city,
+      payer_state: updated.payer_state,
+      payer_zip: updated.payer_zip,
+      has_payer_info: true,
+    };
+
+    return { success: true, data: payerInfo };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to update payer information",
+      };
+    }
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues[0]?.message || "Invalid input",
+      };
+    }
+
+    console.error("updatePayerInfo error:", error);
+    return {
+      success: false,
+      error: "Failed to save payer information. Please try again.",
     };
   }
 }

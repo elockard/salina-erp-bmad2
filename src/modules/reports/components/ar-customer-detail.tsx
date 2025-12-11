@@ -22,7 +22,6 @@ import {
   Clock,
   DollarSign,
   FileText,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -90,12 +89,24 @@ function getStatusBadge(status: string, daysOverdue: number) {
     return <Badge variant="destructive">61-90 Days</Badge>;
   }
   if (daysOverdue > 30) {
-    return <Badge variant="secondary" className="bg-orange-100 text-orange-700">31-60 Days</Badge>;
+    return (
+      <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+        31-60 Days
+      </Badge>
+    );
   }
   if (daysOverdue > 0) {
-    return <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">1-30 Days</Badge>;
+    return (
+      <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+        1-30 Days
+      </Badge>
+    );
   }
-  return <Badge variant="secondary" className="bg-green-100 text-green-700">Current</Badge>;
+  return (
+    <Badge variant="secondary" className="bg-green-100 text-green-700">
+      Current
+    </Badge>
+  );
 }
 
 /**
@@ -144,7 +155,9 @@ function InvoiceRow({ invoice }: { invoice: CustomerInvoiceDetail }) {
       <TableCell className="tabular-nums font-semibold">
         {formatCurrency(invoice.balanceDue)}
       </TableCell>
-      <TableCell>{getStatusBadge(invoice.status, invoice.daysOverdue)}</TableCell>
+      <TableCell>
+        {getStatusBadge(invoice.status, invoice.daysOverdue)}
+      </TableCell>
       <TableCell>
         <Link href={`/invoices/${invoice.id}?action=payment`}>
           <Button variant="outline" size="sm">
@@ -188,7 +201,10 @@ export function ARCustomerDetail({
           {isLoading ? (
             <DetailSkeleton />
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="ar-customer-detail-error">
+            <div
+              className="flex flex-col items-center justify-center py-12 text-center"
+              data-testid="ar-customer-detail-error"
+            >
               <AlertCircle className="h-12 w-12 text-destructive mb-4" />
               <p className="text-destructive font-medium">{error}</p>
             </div>
@@ -287,9 +303,7 @@ export function ARCustomerDetail({
                 <Link href={`/contacts/${data.customerId}`}>
                   <Button variant="outline">View Customer</Button>
                 </Link>
-                <Link
-                  href={`/invoices/new?customerId=${data.customerId}`}
-                >
+                <Link href={`/invoices/new?customerId=${data.customerId}`}>
                   <Button>Create Invoice</Button>
                 </Link>
               </div>

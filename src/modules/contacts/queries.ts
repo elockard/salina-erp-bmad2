@@ -8,10 +8,15 @@
  * AC-7.2.8: Database Queries Implementation
  */
 
-import { and, eq, ilike, or } from "drizzle-orm";
-import { contacts, contactRoles } from "@/db/schema/contacts";
+import { and, eq, ilike, isNull, or } from "drizzle-orm";
+import { contactRoles, contacts } from "@/db/schema/contacts";
 import { getCurrentTenantId, getDb } from "@/lib/auth";
-import type { ContactWithRoles, ContactFilters, ContactRoleType, ContactRole } from "./types";
+import type {
+  ContactFilters,
+  ContactRole,
+  ContactRoleType,
+  ContactWithRoles,
+} from "./types";
 
 // =============================================================================
 // Get Contacts
@@ -274,4 +279,150 @@ export async function getContactByEmail(
   });
 
   return (contact as ContactWithRoles) || null;
+}
+
+// =============================================================================
+// Tax Information Queries (Story 11.1)
+// =============================================================================
+
+/**
+ * Get US-based authors missing TIN information
+ *
+ * Story 11.1 - AC-11.1.10: Missing TIN Warning Indicators
+ * Returns active, US-based contacts with author role who are missing TIN.
+ * Used for 1099 compliance reporting and warning indicators.
+ */
+export async function getAuthorsWithMissingTIN(): Promise<ContactWithRoles[]> {
+  const tenantId = await getCurrentTenantId();
+  const db = await getDb();
+
+  // Query all active, US-based contacts without TIN
+  const results = await db.query.contacts.findMany({
+    where: and(
+      eq(contacts.tenant_id, tenantId),
+      eq(contacts.status, "active"),
+      eq(contacts.is_us_based, true),
+      isNull(contacts.tin_encrypted),
+    ),
+    with: {
+      roles: true,
+    },
+    orderBy: (contacts, { asc }) => [
+      asc(contacts.last_name),
+      asc(contacts.first_name),
+    ],
+  });
+
+  // Filter to only contacts with author role
+  return results.filter((contact) =>
+    contact.roles.some((r) => r.role === "author"),
+  ) as ContactWithRoles[];
+}
+
+/**
+ * Get contacts with missing W-9 information
+ *
+ * Story 11.1 - AC-11.1.7: W-9 Form Tracking
+ * Returns US-based contacts who have TIN but no W-9 on file.
+ */
+export async function getContactsWithMissingW9(): Promise<ContactWithRoles[]> {
+  const tenantId = await getCurrentTenantId();
+  const db = await getDb();
+
+  const results = await db.query.contacts.findMany({
+    where: and(
+      eq(contacts.tenant_id, tenantId),
+      eq(contacts.status, "active"),
+      eq(contacts.is_us_based, true),
+      // Has TIN but no W-9
+      eq(contacts.w9_received, false),
+    ),
+    with: {
+      roles: true,
+    },
+    orderBy: (contacts, { asc }) => [
+      asc(contacts.last_name),
+      asc(contacts.first_name),
+    ],
+  });
+
+  // Filter to only those with TIN (need W-9 for tax reporting)
+  return results.filter(
+    (contact) => contact.tin_encrypted !== null,
+  ) as ContactWithRoles[];
+}
+
+/**
+ * Tax status summary for a contact
+ */
+export interface ContactTaxStatus {
+  contactId: string;
+  hasTIN: boolean;
+  tinType: "ssn" | "ein" | null;
+  tinLastFour: string | null;
+  isUSBased: boolean;
+  hasW9: boolean;
+  w9ReceivedDate: Date | null;
+  isComplete: boolean;
+}
+
+/**
+ * Get tax status for a specific contact
+ *
+ * Story 11.1 - AC-11.1.9: Tax Information Display
+ * Returns summary of tax information completeness.
+ */
+export async function getContactTaxStatus(
+  contactId: string,
+): Promise<ContactTaxStatus | null> {
+  const tenantId = await getCurrentTenantId();
+  const db = await getDb();
+
+  const contact = await db.query.contacts.findFirst({
+    where: and(eq(contacts.id, contactId), eq(contacts.tenant_id, tenantId)),
+  });
+
+  if (!contact) {
+    return null;
+  }
+
+  const hasTIN = contact.tin_encrypted !== null;
+  const isUSBased = contact.is_us_based ?? true;
+  const hasW9 = contact.w9_received ?? false;
+
+  // Tax info is complete if:
+  // - Non-US based (no TIN/W-9 required), OR
+  // - US-based with TIN and W-9
+  const isComplete = !isUSBased || (hasTIN && hasW9);
+
+  return {
+    contactId: contact.id,
+    hasTIN,
+    tinType: (contact.tin_type as "ssn" | "ein") ?? null,
+    tinLastFour: contact.tin_last_four ?? null,
+    isUSBased,
+    hasW9,
+    w9ReceivedDate: contact.w9_received_date ?? null,
+    isComplete,
+  };
+}
+
+/**
+ * Get count of authors needing tax information
+ *
+ * Story 11.1 - AC-11.1.10: Dashboard warning counts
+ */
+export async function getAuthorsMissingTINCount(): Promise<number> {
+  const authors = await getAuthorsWithMissingTIN();
+  return authors.length;
+}
+
+/**
+ * Get count of contacts missing W-9
+ *
+ * Story 11.1 - AC-11.1.10: Dashboard warning counts
+ */
+export async function getContactsMissingW9Count(): Promise<number> {
+  const contacts = await getContactsWithMissingW9();
+  return contacts.length;
 }

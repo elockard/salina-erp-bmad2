@@ -5,8 +5,8 @@
  * Tests for contact CRUD operations, role management, and UI components.
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
@@ -74,10 +74,10 @@ vi.mock("@/lib/audit", () => ({
   logAuditEvent: vi.fn(),
 }));
 
+import { ContactDetail } from "@/modules/contacts/components/contact-detail";
+import { ContactForm } from "@/modules/contacts/components/contact-form";
 // Import after mocks
 import { ContactList } from "@/modules/contacts/components/contact-list";
-import { ContactForm } from "@/modules/contacts/components/contact-form";
-import { ContactDetail } from "@/modules/contacts/components/contact-detail";
 import type { ContactWithRoles } from "@/modules/contacts/types";
 
 // Test data
@@ -95,6 +95,12 @@ const mockContact: ContactWithRoles = {
   postal_code: "10001",
   country: "USA",
   tax_id: null,
+  tin_encrypted: null,
+  tin_type: null,
+  tin_last_four: null,
+  is_us_based: true,
+  w9_received: false,
+  w9_received_date: null,
   payment_info: null,
   notes: "Test contact",
   status: "active",
@@ -176,7 +182,7 @@ describe("ContactList", () => {
     render(<ContactList {...defaultProps} />);
 
     expect(
-      screen.getByPlaceholderText("Search contacts...")
+      screen.getByPlaceholderText("Search contacts..."),
     ).toBeInTheDocument();
   });
 
@@ -205,7 +211,9 @@ describe("ContactList", () => {
     render(<ContactList {...defaultProps} loading={true} contacts={[]} />);
 
     // Skeleton component renders divs with specific structure
-    expect(document.querySelectorAll("[class*='animate-pulse']").length).toBeGreaterThan(0);
+    expect(
+      document.querySelectorAll("[class*='animate-pulse']").length,
+    ).toBeGreaterThan(0);
   });
 
   it("shows empty state when no contacts (AC-7.2.2)", () => {
@@ -217,11 +225,7 @@ describe("ContactList", () => {
 
   it("shows no results state when search has no matches (AC-7.2.2)", () => {
     render(
-      <ContactList
-        {...defaultProps}
-        contacts={[]}
-        searchQuery="nonexistent"
-      />
+      <ContactList {...defaultProps} contacts={[]} searchQuery="nonexistent" />,
     );
 
     expect(screen.getByText(/No contacts found/)).toBeInTheDocument();
@@ -295,7 +299,7 @@ describe("ContactDetail", () => {
     render(<ContactDetail {...defaultProps} />);
 
     expect(
-      screen.getByRole("button", { name: /Deactivate Contact/ })
+      screen.getByRole("button", { name: /Deactivate Contact/ }),
     ).toBeInTheDocument();
   });
 
@@ -304,7 +308,7 @@ describe("ContactDetail", () => {
     render(<ContactDetail {...defaultProps} contact={inactiveContact} />);
 
     expect(
-      screen.getByRole("button", { name: /Reactivate Contact/ })
+      screen.getByRole("button", { name: /Reactivate Contact/ }),
     ).toBeInTheDocument();
   });
 

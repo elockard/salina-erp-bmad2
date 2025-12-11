@@ -60,7 +60,6 @@ describe("ISBN Import Server Action", () => {
 
       const result = await importISBNs({
         isbns: ["9780306406157"],
-        type: "physical",
       });
 
       expect(result.success).toBe(false);
@@ -87,7 +86,6 @@ describe("ISBN Import Server Action", () => {
 
       const result = await importISBNs({
         isbns: ["9780306406157"],
-        type: "physical",
       });
 
       expect(result.success).toBe(true);
@@ -116,7 +114,6 @@ describe("ISBN Import Server Action", () => {
     it("should reject invalid ISBN-13 format", async () => {
       const result = await importISBNs({
         isbns: ["1234567890"], // Too short
-        type: "physical",
       });
 
       expect(result.success).toBe(false);
@@ -130,7 +127,6 @@ describe("ISBN Import Server Action", () => {
     it("should reject invalid ISBN-13 checksum", async () => {
       const result = await importISBNs({
         isbns: ["9780306406158"], // Wrong check digit (should be 7)
-        type: "physical",
       });
 
       expect(result.success).toBe(false);
@@ -143,7 +139,6 @@ describe("ISBN Import Server Action", () => {
     it("should reject invalid prefix (not 978 or 979)", async () => {
       const result = await importISBNs({
         isbns: ["9771234567890"], // 977 prefix
-        type: "ebook",
       });
 
       expect(result.success).toBe(false);
@@ -155,7 +150,6 @@ describe("ISBN Import Server Action", () => {
     it("should accept valid ISBN-13 with correct checksum", async () => {
       const result = await importISBNs({
         isbns: ["9780306406157"],
-        type: "physical",
       });
 
       expect(result.success).toBe(true);
@@ -167,7 +161,6 @@ describe("ISBN Import Server Action", () => {
     it("should accept valid ISBN-13 with 979 prefix", async () => {
       const result = await importISBNs({
         isbns: ["9791234567896"],
-        type: "ebook",
       });
 
       expect(result.success).toBe(true);
@@ -195,7 +188,6 @@ describe("ISBN Import Server Action", () => {
     it("should detect duplicates within the import batch", async () => {
       const result = await importISBNs({
         isbns: ["9780306406157", "9780306406157"], // Same ISBN twice
-        type: "physical",
       });
 
       expect(result.success).toBe(false);
@@ -226,7 +218,6 @@ describe("ISBN Import Server Action", () => {
 
       const result = await importISBNs({
         isbns: ["9780306406157"],
-        type: "physical",
       });
 
       expect(result.success).toBe(false);
@@ -257,7 +248,6 @@ describe("ISBN Import Server Action", () => {
 
       const result = await importISBNs({
         isbns: ["9780306406157", "invalid-isbn"],
-        type: "physical",
       });
 
       expect(result.success).toBe(false);
@@ -286,7 +276,6 @@ describe("ISBN Import Server Action", () => {
 
       const result = await importISBNs({
         isbns: ["9780306406157", "9780140449136", "9780201633610"],
-        type: "physical",
       });
 
       expect(result.success).toBe(true);
@@ -306,7 +295,6 @@ describe("ISBN Import Server Action", () => {
     it("should reject empty ISBN array", async () => {
       const result = await importISBNs({
         isbns: [],
-        type: "physical",
       });
 
       expect(result.success).toBe(false);
@@ -320,7 +308,6 @@ describe("ISBN Import Server Action", () => {
 
       const result = await importISBNs({
         isbns: tooManyIsbns,
-        type: "physical",
       });
 
       expect(result.success).toBe(false);
@@ -345,7 +332,6 @@ describe("ISBN Import Server Action", () => {
 
       const result = await importISBNs({
         isbns: ["9780306406157"],
-        type: "physical",
       });
 
       expect(result.success).toBe(true);
@@ -367,7 +353,6 @@ describe("ISBN Import Server Action", () => {
 
       const result = await importISBNs({
         isbns: ["9780306406157"],
-        type: "ebook",
       });
 
       expect(result.success).toBe(true);

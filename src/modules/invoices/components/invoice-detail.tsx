@@ -98,7 +98,11 @@ function formatAddress(address: InvoiceAddress | null | undefined): string[] {
     .join(", ");
   if (cityStateZip) lines.push(cityStateZip);
 
-  if (address.country && address.country !== "USA" && address.country !== "US") {
+  if (
+    address.country &&
+    address.country !== "USA" &&
+    address.country !== "US"
+  ) {
     lines.push(address.country);
   }
 
@@ -160,7 +164,9 @@ function canSend(status: InvoiceStatusType): boolean {
 
 function canRecordPayment(status: InvoiceStatusType): boolean {
   // AC-8.4.8: Allow payments for sent, partially_paid, and overdue invoices
-  return status === "sent" || status === "partially_paid" || status === "overdue";
+  return (
+    status === "sent" || status === "partially_paid" || status === "overdue"
+  );
 }
 
 function canVoid(status: InvoiceStatusType): boolean {
@@ -222,7 +228,9 @@ export function InvoiceDetail({
         </div>
         <div className="text-right space-y-1">
           <div className="flex items-center justify-end gap-2">
-            <span className="text-xl font-semibold">Invoice #{invoice.invoice_number}</span>
+            <span className="text-xl font-semibold">
+              Invoice #{invoice.invoice_number}
+            </span>
             <InvoiceStatusBadge status={status} />
           </div>
           <div className="text-sm text-muted-foreground space-y-0.5">
@@ -259,8 +267,8 @@ export function InvoiceDetail({
           </CardHeader>
           <CardContent>
             <p className="font-semibold">{customerName}</p>
-            {billToLines.map((line, i) => (
-              <p key={i} className="text-sm">
+            {billToLines.map((line) => (
+              <p key={line} className="text-sm">
                 {line}
               </p>
             ))}
@@ -277,8 +285,8 @@ export function InvoiceDetail({
             {invoice.ship_to_address ? (
               <>
                 <p className="font-semibold">{customerName}</p>
-                {shipToLines.map((line, i) => (
-                  <p key={i} className="text-sm">
+                {shipToLines.map((line) => (
+                  <p key={line} className="text-sm">
                     {line}
                   </p>
                 ))}
@@ -290,7 +298,8 @@ export function InvoiceDetail({
             )}
             {invoice.shipping_method && (
               <p className="text-sm mt-2">
-                <span className="font-medium">Method:</span> {invoice.shipping_method}
+                <span className="font-medium">Method:</span>{" "}
+                {invoice.shipping_method}
               </p>
             )}
           </CardContent>
@@ -311,7 +320,9 @@ export function InvoiceDetail({
                   <TableHead className="w-[120px]">Item Code</TableHead>
                   <TableHead className="min-w-[200px]">Description</TableHead>
                   <TableHead className="w-[80px] text-right">Qty</TableHead>
-                  <TableHead className="w-[120px] text-right">Unit Price</TableHead>
+                  <TableHead className="w-[120px] text-right">
+                    Unit Price
+                  </TableHead>
                   <TableHead className="w-[120px] text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -323,7 +334,9 @@ export function InvoiceDetail({
                       {item.item_code || "-"}
                     </TableCell>
                     <TableCell>{item.description}</TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
+                    <TableCell className="text-right">
+                      {item.quantity}
+                    </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(item.unit_price)}
                     </TableCell>

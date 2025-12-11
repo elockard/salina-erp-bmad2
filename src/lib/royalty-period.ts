@@ -58,7 +58,7 @@ export function getRoyaltyPeriodDates(
     | "royalty_period_start_day"
     | "fiscal_year_start"
   >,
-  year: number
+  year: number,
 ): { start: Date; end: Date } {
   switch (settings.royalty_period_type) {
     case "calendar_year":
@@ -67,7 +67,7 @@ export function getRoyaltyPeriodDates(
         end: new Date(year, 11, 31), // Dec 31
       };
 
-    case "fiscal_year":
+    case "fiscal_year": {
       if (!settings.fiscal_year_start) {
         // Fallback to calendar year when fiscal_year_start not set
         return {
@@ -84,8 +84,9 @@ export function getRoyaltyPeriodDates(
         start: new Date(year, startMonth, fiscalDay),
         end: new Date(year + 1, startMonth, fiscalDay - 1),
       };
+    }
 
-    case "custom":
+    case "custom": {
       if (
         !settings.royalty_period_start_month ||
         !settings.royalty_period_start_day
@@ -102,6 +103,7 @@ export function getRoyaltyPeriodDates(
         start: new Date(year, month, day),
         end: new Date(year + 1, month, day - 1),
       };
+    }
   }
 }
 
@@ -116,7 +118,7 @@ export function getCurrentRoyaltyPeriod(
     | "royalty_period_start_month"
     | "royalty_period_start_day"
     | "fiscal_year_start"
-  >
+  >,
 ): { start: Date; end: Date } {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -148,7 +150,7 @@ export function formatRoyaltyPeriodPreview(
     | "royalty_period_start_month"
     | "royalty_period_start_day"
     | "fiscal_year_start"
-  >
+  >,
 ): string {
   const { start, end } = getCurrentRoyaltyPeriod(settings);
 
@@ -166,7 +168,7 @@ export function formatRoyaltyPeriodPreview(
  * Get the royalty period label for display
  */
 export function getRoyaltyPeriodLabel(
-  settings: Pick<TenantSettings, "royalty_period_type">
+  settings: Pick<TenantSettings, "royalty_period_type">,
 ): string {
   switch (settings.royalty_period_type) {
     case "calendar_year":

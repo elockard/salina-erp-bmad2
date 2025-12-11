@@ -17,7 +17,7 @@ import { addDays, format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { type Resolver, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -49,9 +49,16 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { isCustomerRoleData } from "@/modules/contacts/types";
-import { createInvoice, type CreateInvoiceInput } from "@/modules/invoices/actions";
-import { BillToAddressForm, createEmptyAddress, ShipToAddressForm } from "./address-form";
-import { type SelectedCustomer, CustomerSelector } from "./customer-selector";
+import {
+  type CreateInvoiceInput,
+  createInvoice,
+} from "@/modules/invoices/actions";
+import {
+  BillToAddressForm,
+  createEmptyAddress,
+  ShipToAddressForm,
+} from "./address-form";
+import { CustomerSelector, type SelectedCustomer } from "./customer-selector";
 import { createEmptyLineItem, InvoiceLineItems } from "./invoice-line-items";
 import { InvoiceTotals } from "./invoice-totals";
 
@@ -100,15 +107,19 @@ const invoiceFormSchema = z.object({
   shipping_cost: z.string().default("0.00"),
 
   // Line items
-  line_items: z.array(z.object({
-    line_number: z.number(),
-    item_code: z.string().optional(),
-    description: z.string().min(1, "Description is required"),
-    quantity: z.string(),
-    unit_price: z.string(),
-    tax_rate: z.string(),
-    amount: z.string(),
-  })).min(1, "At least one line item is required"),
+  line_items: z
+    .array(
+      z.object({
+        line_number: z.number(),
+        item_code: z.string().optional(),
+        description: z.string().min(1, "Description is required"),
+        quantity: z.string(),
+        unit_price: z.string(),
+        tax_rate: z.string(),
+        amount: z.string(),
+      }),
+    )
+    .min(1, "At least one line item is required"),
 
   // Notes
   notes: z.string().optional(),
@@ -131,7 +142,11 @@ const PAYMENT_TERMS_OPTIONS = [
 /**
  * Calculate due date based on payment terms (AC-8.2.9)
  */
-function calculateDueDate(invoiceDate: Date, paymentTerms: string, customDays?: number | null): Date {
+function calculateDueDate(
+  invoiceDate: Date,
+  paymentTerms: string,
+  customDays?: number | null,
+): Date {
   switch (paymentTerms) {
     case "net_30":
       return addDays(invoiceDate, 30);
@@ -155,15 +170,17 @@ interface InvoiceFormProps {
   timezone?: string;
 }
 
-export function InvoiceForm({ timezone = "America/New_York" }: InvoiceFormProps) {
+export function InvoiceForm({
+  timezone: _timezone = "America/New_York",
+}: InvoiceFormProps) {
   const router = useRouter();
-  const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<SelectedCustomer | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize form with default values
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const form = useForm<InvoiceFormValues>({
-    resolver: zodResolver(invoiceFormSchema) as any,
+    resolver: zodResolver(invoiceFormSchema) as Resolver<InvoiceFormValues>,
     defaultValues: {
       customer_id: "",
       invoice_date: new Date(),
@@ -184,13 +201,23 @@ export function InvoiceForm({ timezone = "America/New_York" }: InvoiceFormProps)
 
   // Watch payment terms and invoice date for due date calculation
   const invoiceDate = useWatch({ control: form.control, name: "invoice_date" });
-  const paymentTerms = useWatch({ control: form.control, name: "payment_terms" });
-  const customTermsDays = useWatch({ control: form.control, name: "custom_terms_days" });
+  const paymentTerms = useWatch({
+    control: form.control,
+    name: "payment_terms",
+  });
+  const customTermsDays = useWatch({
+    control: form.control,
+    name: "custom_terms_days",
+  });
 
   // Auto-calculate due date when payment terms or invoice date changes (AC-8.2.9)
   useEffect(() => {
     if (invoiceDate && paymentTerms) {
-      const newDueDate = calculateDueDate(invoiceDate, paymentTerms, customTermsDays);
+      const newDueDate = calculateDueDate(
+        invoiceDate,
+        paymentTerms,
+        customTermsDays,
+      );
       form.setValue("due_date", newDueDate, { shouldValidate: true });
     }
   }, [invoiceDate, paymentTerms, customTermsDays, form]);
@@ -203,8 +230,13 @@ export function InvoiceForm({ timezone = "America/New_York" }: InvoiceFormProps)
       form.setValue("customer_id", customer.id, { shouldValidate: true });
 
       // Auto-populate bill-to address from customer's billing_address
-      const customerRole = customer.contact.roles.find((r) => r.role === "customer");
-      if (customerRole?.role_specific_data && isCustomerRoleData(customerRole.role_specific_data)) {
+      const customerRole = customer.contact.roles.find(
+        (r) => r.role === "customer",
+      );
+      if (
+        customerRole?.role_specific_data &&
+        isCustomerRoleData(customerRole.role_specific_data)
+      ) {
         const { billing_address } = customerRole.role_specific_data;
         if (billing_address) {
           form.setValue("bill_to_address", {
@@ -246,9 +278,14 @@ export function InvoiceForm({ timezone = "America/New_York" }: InvoiceFormProps)
         invoiceDate: data.invoice_date,
         dueDate: data.due_date,
         paymentTerms: data.payment_terms,
-        customTermsDays: data.payment_terms === "custom" ? data.custom_terms_days ?? undefined : undefined,
+        customTermsDays:
+          data.payment_terms === "custom"
+            ? (data.custom_terms_days ?? undefined)
+            : undefined,
         billToAddress: data.bill_to_address,
-        shipToAddress: data.same_as_bill_to ? data.bill_to_address : data.ship_to_address,
+        shipToAddress: data.same_as_bill_to
+          ? data.bill_to_address
+          : data.ship_to_address,
         poNumber: data.po_number,
         shippingMethod: data.shipping_method,
         shippingCost: data.shipping_cost,
@@ -263,7 +300,9 @@ export function InvoiceForm({ timezone = "America/New_York" }: InvoiceFormProps)
 
       if (result.success) {
         // Success feedback (AC-8.2.10)
-        toast.success(`Invoice ${result.data.invoice.invoice_number} created successfully`);
+        toast.success(
+          `Invoice ${result.data.invoice.invoice_number} created successfully`,
+        );
         router.push("/invoices");
       } else {
         toast.error(result.error);
@@ -326,7 +365,9 @@ export function InvoiceForm({ timezone = "America/New_York" }: InvoiceFormProps)
                             )}
                             disabled={isSubmitting}
                           >
-                            {field.value ? format(field.value, "PPP") : "Select date"}
+                            {field.value
+                              ? format(field.value, "PPP")
+                              : "Select date"}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -363,7 +404,9 @@ export function InvoiceForm({ timezone = "America/New_York" }: InvoiceFormProps)
                             )}
                             disabled={isSubmitting}
                           >
-                            {field.value ? format(field.value, "PPP") : "Select date"}
+                            {field.value
+                              ? format(field.value, "PPP")
+                              : "Select date"}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -433,7 +476,13 @@ export function InvoiceForm({ timezone = "America/New_York" }: InvoiceFormProps)
                           disabled={isSubmitting}
                           {...field}
                           value={field.value ?? ""}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value, 10) : null)}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value
+                                ? parseInt(e.target.value, 10)
+                                : null,
+                            )
+                          }
                         />
                       </FormControl>
                       <FormMessage />

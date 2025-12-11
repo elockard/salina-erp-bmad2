@@ -25,8 +25,8 @@ import { tenants } from "@/db/schema/tenants";
 import { getDefaultFromEmail, sendEmail } from "@/lib/email";
 import {
   generateInvoiceEmailSubject,
-  renderInvoiceEmail,
   type InvoiceEmailProps,
+  renderInvoiceEmail,
 } from "./email-template";
 import { getInvoicePDFBuffer } from "./storage";
 
@@ -164,7 +164,9 @@ export async function sendInvoiceEmail(
     const basePortalUrl =
       portalUrl ||
       process.env.PORTAL_URL ||
-      (tenant.subdomain ? `https://${tenant.subdomain}.salina.media` : undefined);
+      (tenant.subdomain
+        ? `https://${tenant.subdomain}.salina.media`
+        : undefined);
 
     const templateProps: InvoiceEmailProps = {
       customerName,

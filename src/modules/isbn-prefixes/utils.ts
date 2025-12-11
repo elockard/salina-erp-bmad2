@@ -44,7 +44,7 @@ export function generateIsbn13(prefix: string, titleId: number): string {
     throw new Error("Prefix is too long - no room for title identifier");
   }
 
-  const maxTitleId = Math.pow(10, titleIdentifierLength) - 1;
+  const maxTitleId = 10 ** titleIdentifierLength - 1;
   if (titleId < 0 || titleId > maxTitleId) {
     throw new Error(
       `Title ID ${titleId} out of range (0-${maxTitleId}) for prefix length ${normalizedPrefix.length}`,
@@ -74,7 +74,7 @@ export function getMaxBlockSizeForPrefix(prefix: string): number {
     return 0; // Invalid prefix length
   }
 
-  return Math.pow(10, titleIdDigits);
+  return 10 ** titleIdDigits;
 }
 
 /**
@@ -133,7 +133,7 @@ export function validateIsbnPrefix(prefix: string): PrefixValidationResult {
   }
 
   const titleIdDigits = 12 - normalized.length;
-  const maxBlockSize = Math.pow(10, titleIdDigits);
+  const maxBlockSize = 10 ** titleIdDigits;
 
   return {
     valid: true,

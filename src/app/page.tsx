@@ -1,14 +1,14 @@
-import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
-  PublicNav,
-  HeroSection,
   FeaturesSection,
+  Footer,
+  HeroSection,
   HowItWorksSection,
   PricingSection,
+  PublicNav,
   TestimonialsSection,
-  Footer,
 } from "@/components/marketing";
 
 export const metadata: Metadata = {

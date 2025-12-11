@@ -35,6 +35,12 @@ export const paymentMethodEnum = z.enum([
 /** Account type enum for direct deposit */
 export const accountTypeEnum = z.enum(["checking", "savings"]);
 
+/**
+ * TIN type enum for tax identification
+ * Story 11.1 - AC-11.1.2: Tax Identification Number Entry
+ */
+export const tinTypeEnum = z.enum(["ssn", "ein"]);
+
 // =============================================================================
 // Address Schema
 // =============================================================================
@@ -48,6 +54,121 @@ export const addressSchema = z.object({
   postal_code: z.string().max(20).optional(),
   country: z.string().max(100).optional(),
 });
+
+// =============================================================================
+// Tax Information Schema (Story 11.1)
+// =============================================================================
+
+/** SSN format regex: XXX-XX-XXXX */
+const SSN_PATTERN = /^\d{3}-\d{2}-\d{4}$/;
+
+/** EIN format regex: XX-XXXXXXX */
+const EIN_PATTERN = /^\d{2}-\d{7}$/;
+
+/**
+ * Tax Information Schema
+ *
+ * Story 11.1 - AC-11.1.2, AC-11.1.3: Tax Identification Number Entry and Validation
+ *
+ * For form input - TIN is provided in plain text and will be encrypted before storage.
+ * The validation ensures proper format before encryption.
+ */
+export const taxInfoSchema = z
+  .object({
+    /** TIN type: SSN for individuals, EIN for businesses */
+    tin_type: tinTypeEnum,
+
+    /** Tax Identification Number (plain text, to be encrypted) */
+    tin: z.string().min(1, "Tax ID is required"),
+
+    /** Whether the contact is US-based (required for 1099 reporting) */
+    is_us_based: z.boolean().default(true),
+
+    /** Whether W-9 form has been received */
+    w9_received: z.boolean().default(false),
+
+    /** Date W-9 form was received (required if w9_received is true) */
+    w9_received_date: z.coerce.date().optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      // Validate TIN format based on type
+      if (data.tin_type === "ssn") {
+        return SSN_PATTERN.test(data.tin);
+      }
+      return EIN_PATTERN.test(data.tin);
+    },
+    {
+      message: "Invalid TIN format. SSN: XXX-XX-XXXX, EIN: XX-XXXXXXX",
+      path: ["tin"],
+    },
+  )
+  .refine(
+    (data) => {
+      // If W-9 received, date should be set
+      if (data.w9_received && !data.w9_received_date) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "W-9 received date is required when W-9 is marked as received",
+      path: ["w9_received_date"],
+    },
+  );
+
+/**
+ * Partial Tax Info Schema for updates
+ *
+ * Allows updating individual tax fields without requiring all fields.
+ * When tin is provided, tin_type must also be provided for validation.
+ */
+export const updateTaxInfoSchema = z
+  .object({
+    /** TIN type: SSN for individuals, EIN for businesses */
+    tin_type: tinTypeEnum.optional(),
+
+    /** Tax Identification Number (plain text, to be encrypted) */
+    tin: z.string().optional(),
+
+    /** Whether the contact is US-based (required for 1099 reporting) */
+    is_us_based: z.boolean().optional(),
+
+    /** Whether W-9 form has been received */
+    w9_received: z.boolean().optional(),
+
+    /** Date W-9 form was received */
+    w9_received_date: z.coerce.date().optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      // If tin is provided, tin_type must be provided
+      if (data.tin && !data.tin_type) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "TIN type is required when providing a TIN",
+      path: ["tin_type"],
+    },
+  )
+  .refine(
+    (data) => {
+      // If tin is provided, validate format based on type
+      if (data.tin && data.tin_type) {
+        if (data.tin_type === "ssn") {
+          return SSN_PATTERN.test(data.tin);
+        }
+        return EIN_PATTERN.test(data.tin);
+      }
+      return true;
+    },
+    {
+      message: "Invalid TIN format. SSN: XXX-XX-XXXX, EIN: XX-XXXXXXX",
+      path: ["tin"],
+    },
+  );
 
 // =============================================================================
 // Payment Info Schemas (Discriminated Union)
@@ -161,7 +282,11 @@ export const createContactSchema = z.object({
     .max(255)
     .optional()
     .or(z.literal("")),
-  phone: z.string().max(50, "Phone number is too long").optional().or(z.literal("")),
+  phone: z
+    .string()
+    .max(50, "Phone number is too long")
+    .optional()
+    .or(z.literal("")),
   address_line1: z.string().max(255).optional().or(z.literal("")),
   address_line2: z.string().max(255).optional().or(z.literal("")),
   city: z.string().max(100).optional().or(z.literal("")),
@@ -256,3 +381,12 @@ export type PaymentInfoInput = z.infer<typeof paymentInfoSchema>;
 
 /** Input type inferred from addressSchema */
 export type AddressInput = z.infer<typeof addressSchema>;
+
+/** Input type inferred from taxInfoSchema */
+export type TaxInfoInput = z.infer<typeof taxInfoSchema>;
+
+/** Input type inferred from updateTaxInfoSchema */
+export type UpdateTaxInfoInput = z.infer<typeof updateTaxInfoSchema>;
+
+/** TIN type values: ssn or ein */
+export type TinTypeInput = z.infer<typeof tinTypeEnum>;

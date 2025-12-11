@@ -19,8 +19,8 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hasPermission } from "@/lib/auth";
-import { ARSummaryStats } from "@/modules/reports/components/ar-summary-stats";
 import { ARReportClient } from "@/modules/reports/components/ar-report-client";
+import { ARSummaryStats } from "@/modules/reports/components/ar-summary-stats";
 import {
   getAgingReportByCustomer,
   getARSummary,

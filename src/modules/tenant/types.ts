@@ -1,5 +1,5 @@
-import type { CreateTenantInput } from "./schema";
 import type { RoyaltyPeriodType } from "@/db/schema/tenants";
+import type { CreateTenantInput } from "./schema";
 
 export type { CreateTenantInput };
 export type { RoyaltyPeriodType };
@@ -31,6 +31,29 @@ export interface TenantSettings {
   royalty_period_type: RoyaltyPeriodType;
   royalty_period_start_month: number | null;
   royalty_period_start_day: number | null;
+  // Payer information (Story 11.3)
+  payer_ein_last_four: string | null;
+  payer_name: string | null;
+  payer_address_line1: string | null;
+  payer_address_line2: string | null;
+  payer_city: string | null;
+  payer_state: string | null;
+  payer_zip: string | null;
   created_at: Date;
   updated_at: Date;
+}
+
+/**
+ * Payer information for 1099 generation
+ * Story 11.3 - AC-11.3.3
+ */
+export interface PayerInfo {
+  payer_ein_last_four: string | null;
+  payer_name: string | null;
+  payer_address_line1: string | null;
+  payer_address_line2: string | null;
+  payer_city: string | null;
+  payer_state: string | null;
+  payer_zip: string | null;
+  has_payer_info: boolean;
 }

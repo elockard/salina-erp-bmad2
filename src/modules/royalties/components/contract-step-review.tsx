@@ -46,12 +46,22 @@ const FORMAT_LABELS: Record<string, string> = {
   audiobook: "Audiobook",
 };
 
+const TIER_MODE_LABELS: Record<string, { label: string; description: string }> =
+  {
+    period: { label: "Period", description: "Tiers reset each royalty period" },
+    lifetime: {
+      label: "Lifetime",
+      description: "Tiers based on cumulative sales",
+    },
+  };
+
 export function ContractStepReview() {
   const { watch } = useFormContext();
 
   const authorName = watch("author_name");
   const titleName = watch("title_name");
   const status = watch("status") as string;
+  const tierCalculationMode = watch("tier_calculation_mode") as string;
   const advanceAmount = watch("advance_amount") as string;
   const advancePaid = watch("advance_paid") as string;
 
@@ -237,7 +247,26 @@ export function ContractStepReview() {
           <CardTitle className="text-base flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Royalty Tiers
+            <Badge
+              variant={
+                tierCalculationMode === "lifetime" ? "default" : "secondary"
+              }
+            >
+              {
+                (
+                  TIER_MODE_LABELS[tierCalculationMode] ||
+                  TIER_MODE_LABELS.period
+                ).label
+              }{" "}
+              Mode
+            </Badge>
           </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {
+              (TIER_MODE_LABELS[tierCalculationMode] || TIER_MODE_LABELS.period)
+                .description
+            }
+          </p>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderTierTable("physical", physicalTiers, physicalEnabled)}

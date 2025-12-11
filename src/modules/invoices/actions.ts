@@ -13,8 +13,8 @@
 "use server";
 
 import Decimal from "decimal.js";
-import { revalidatePath } from "next/cache";
 import { and, desc, eq, like } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { adminDb } from "@/db";
 import { invoiceLineItems, invoices, payments } from "@/db/schema/invoices";
 import { logAuditEvent } from "@/lib/audit";
@@ -28,7 +28,7 @@ import type { ActionResult } from "@/lib/types";
 import { searchContacts } from "@/modules/contacts/queries";
 import type { ContactWithRoles } from "@/modules/contacts/types";
 import type { RecordPaymentInput } from "./schema";
-import type { InvoiceAddress, Invoice, InsertInvoice, Payment } from "./types";
+import type { Invoice, InvoiceAddress, Payment } from "./types";
 
 // =============================================================================
 // Customer Search Actions
@@ -60,7 +60,8 @@ export async function searchCustomersAction(
     console.error("searchCustomersAction error:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to search customers",
+      error:
+        error instanceof Error ? error.message : "Failed to search customers",
     };
   }
 }
@@ -127,7 +128,9 @@ export async function generateInvoiceNumber(): Promise<
     };
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Failed to generate invoice number";
+      error instanceof Error
+        ? error.message
+        : "Failed to generate invoice number";
 
     if (message === "UNAUTHORIZED") {
       return {
@@ -385,7 +388,7 @@ export async function createInvoice(
  */
 export async function updateInvoice(
   invoiceId: string,
-  input: CreateInvoiceInput
+  input: CreateInvoiceInput,
 ): Promise<ActionResult<{ invoice: Invoice }>> {
   try {
     await requirePermission(["finance", "admin", "owner"]);
@@ -413,13 +416,16 @@ export async function updateInvoice(
 
     // Validate line items
     if (!input.lineItems || input.lineItems.length === 0) {
-      return { success: false, error: "Invoice must have at least one line item" };
+      return {
+        success: false,
+        error: "Invoice must have at least one line item",
+      };
     }
 
     // Calculate invoice totals using Decimal.js
     const subtotal = input.lineItems.reduce(
       (sum, item) => sum.plus(new Decimal(item.amount || "0")),
-      new Decimal(0)
+      new Decimal(0),
     );
     const taxRate = new Decimal(input.taxRate || "0");
     const taxAmount = subtotal.times(taxRate);
@@ -487,7 +493,10 @@ export async function updateInvoice(
       resourceId: invoiceId,
       changes: {
         before: { total: existing.total, line_items_count: "unknown" },
-        after: { total: result.total, line_items_count: input.lineItems.length },
+        after: {
+          total: result.total,
+          line_items_count: input.lineItems.length,
+        },
       },
       metadata: { source: "invoice_edit_form" },
     });
@@ -502,7 +511,10 @@ export async function updateInvoice(
       error instanceof Error ? error.message : "Failed to update invoice";
 
     if (message === "UNAUTHORIZED") {
-      return { success: false, error: "You do not have permission to edit invoices" };
+      return {
+        success: false,
+        error: "You do not have permission to edit invoices",
+      };
     }
 
     console.error("[Action] updateInvoice failed:", error);
@@ -523,7 +535,7 @@ export async function updateInvoice(
  */
 export async function voidInvoice(
   invoiceId: string,
-  reason?: string
+  reason?: string,
 ): Promise<ActionResult<{ invoice: Invoice }>> {
   try {
     await requirePermission(["finance", "admin", "owner"]);
@@ -582,7 +594,10 @@ export async function voidInvoice(
         before: { status: previousStatus },
         after: { status: "void" },
       },
-      metadata: { reason: reason || "No reason provided", source: "void_invoice_action" },
+      metadata: {
+        reason: reason || "No reason provided",
+        source: "void_invoice_action",
+      },
     });
 
     // Revalidate cache to refresh list and detail views
@@ -595,7 +610,10 @@ export async function voidInvoice(
       error instanceof Error ? error.message : "Failed to void invoice";
 
     if (message === "UNAUTHORIZED") {
-      return { success: false, error: "You do not have permission to void invoices" };
+      return {
+        success: false,
+        error: "You do not have permission to void invoices",
+      };
     }
 
     console.error("[Action] voidInvoice failed:", error);
@@ -644,7 +662,10 @@ export async function recordPayment(
 
     // Verify invoice exists and is in valid state - AC-8.4.8
     const invoice = await db.query.invoices.findFirst({
-      where: and(eq(invoices.id, input.invoice_id), eq(invoices.tenant_id, tenantId)),
+      where: and(
+        eq(invoices.id, input.invoice_id),
+        eq(invoices.tenant_id, tenantId),
+      ),
     });
 
     if (!invoice) {
@@ -804,9 +825,11 @@ export async function generateInvoicePDFAction(
       try {
         const downloadUrl = await getInvoiceDownloadUrl(invoice.pdf_s3_key);
         return { success: true, data: { downloadUrl } };
-      } catch (error) {
+      } catch (_error) {
         // PDF not found in S3, regenerate
-        console.log(`[PDF] Cached PDF not found for ${invoiceId}, regenerating`);
+        console.log(
+          `[PDF] Cached PDF not found for ${invoiceId}, regenerating`,
+        );
       }
     }
 
@@ -905,14 +928,20 @@ export async function sendInvoiceAction(
     if (!invoice.pdf_s3_key) {
       const pdfResult = await generateInvoicePDF(invoiceId, tenantId);
       if (!pdfResult.success || !pdfResult.s3Key) {
-        return { success: false, error: `PDF generation failed: ${pdfResult.error ?? "unknown error"}` };
+        return {
+          success: false,
+          error: `PDF generation failed: ${pdfResult.error ?? "unknown error"}`,
+        };
       }
     }
 
     // Send email
     const emailResult = await sendInvoiceEmail({ invoiceId, tenantId });
     if (!emailResult.success || !emailResult.messageId) {
-      return { success: false, error: emailResult.error ?? "Email delivery failed" };
+      return {
+        success: false,
+        error: emailResult.error ?? "Email delivery failed",
+      };
     }
 
     // Update invoice status and sent_at - AC-8.6.4
@@ -936,14 +965,17 @@ export async function sendInvoiceAction(
         before: { status: invoice.status },
         after: { action: "email_sent", status: newStatus },
       },
-      metadata: { messageId: emailResult.messageId, source: "send_invoice_action" },
+      metadata: {
+        messageId: emailResult.messageId,
+        source: "send_invoice_action",
+      },
     });
 
     // Revalidate paths
     revalidatePath("/invoices");
     revalidatePath(`/invoices/${invoiceId}`);
 
-    return { success: true, data: { messageId: emailResult.messageId! } };
+    return { success: true, data: { messageId: emailResult.messageId } };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to send invoice";
@@ -1015,14 +1047,20 @@ export async function resendInvoiceAction(
     if (regeneratePDF || !invoice.pdf_s3_key) {
       const pdfResult = await generateInvoicePDF(invoiceId, tenantId);
       if (!pdfResult.success || !pdfResult.s3Key) {
-        return { success: false, error: `PDF generation failed: ${pdfResult.error ?? "unknown error"}` };
+        return {
+          success: false,
+          error: `PDF generation failed: ${pdfResult.error ?? "unknown error"}`,
+        };
       }
     }
 
     // Send email
     const emailResult = await sendInvoiceEmail({ invoiceId, tenantId });
     if (!emailResult.success || !emailResult.messageId) {
-      return { success: false, error: emailResult.error ?? "Email delivery failed" };
+      return {
+        success: false,
+        error: emailResult.error ?? "Email delivery failed",
+      };
     }
 
     // Update sent_at timestamp - AC-8.6.5
@@ -1052,7 +1090,7 @@ export async function resendInvoiceAction(
     revalidatePath("/invoices");
     revalidatePath(`/invoices/${invoiceId}`);
 
-    return { success: true, data: { messageId: emailResult.messageId! } };
+    return { success: true, data: { messageId: emailResult.messageId } };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to resend invoice";

@@ -165,6 +165,7 @@ export async function createContract(
         advance_amount: validated.advance_amount || "0",
         advance_paid: validated.advance_paid || "0",
         advance_recouped: "0",
+        tier_calculation_mode: validated.tier_calculation_mode,
       })
       .returning();
 
@@ -206,6 +207,7 @@ export async function createContract(
           title_name: title.title,
           status: validated.status,
           advance_amount: validated.advance_amount,
+          tier_calculation_mode: validated.tier_calculation_mode,
           tiers_count: validated.tiers.length,
         },
       },
@@ -506,12 +508,14 @@ export async function updateAdvancePaid(
 
 /**
  * Update contract schema (for full contract editing)
+ * Story 10.4: Added tier_calculation_mode for lifetime royalty support (AC-10.4.9)
  */
 const updateContractSchema = z.object({
   contractId: z.string().uuid(),
   status: contractStatusSchema,
   advance_amount: currencySchema,
   advance_paid: currencySchema,
+  tier_calculation_mode: z.enum(["period", "lifetime"]).optional(),
   tiers: z.array(
     z.object({
       format: z.enum(["physical", "ebook", "audiobook"]),
@@ -560,15 +564,29 @@ export async function updateContract(
 
     // 5. Update contract and tiers
     // Note: Using sequential operations instead of transaction due to Neon HTTP driver limitations
+    // Story 10.4: Include tier_calculation_mode in updates (AC-10.4.9)
+    const updateData: {
+      status: string;
+      advance_amount: string;
+      advance_paid: string;
+      updated_at: Date;
+      tier_calculation_mode?: string;
+    } = {
+      status: validated.status,
+      advance_amount: validated.advance_amount || "0",
+      advance_paid: validated.advance_paid || "0",
+      updated_at: new Date(),
+    };
+
+    // Only include tier_calculation_mode if provided
+    if (validated.tier_calculation_mode) {
+      updateData.tier_calculation_mode = validated.tier_calculation_mode;
+    }
+
     // Update contract
     const [updated] = await db
       .update(contracts)
-      .set({
-        status: validated.status,
-        advance_amount: validated.advance_amount || "0",
-        advance_paid: validated.advance_paid || "0",
-        updated_at: new Date(),
-      })
+      .set(updateData)
       .where(
         and(
           eq(contracts.id, validated.contractId),
@@ -600,6 +618,7 @@ export async function updateContract(
     const result = updated;
 
     // 6. Log audit event (fire and forget - non-blocking)
+    // Story 10.4: Include tier_calculation_mode in audit trail (AC-10.4.9)
     logAuditEvent({
       tenantId,
       userId: user?.id ?? null,
@@ -611,16 +630,22 @@ export async function updateContract(
           status: current?.status,
           advance_amount: current?.advance_amount,
           advance_paid: current?.advance_paid,
+          tier_calculation_mode: current?.tier_calculation_mode,
         },
         after: {
           status: validated.status,
           advance_amount: validated.advance_amount,
           advance_paid: validated.advance_paid,
+          tier_calculation_mode:
+            validated.tier_calculation_mode ?? current?.tier_calculation_mode,
           tiers_count: validated.tiers.length,
         },
       },
       metadata: {
         operation: "full_update",
+        tier_mode_changed:
+          validated.tier_calculation_mode !== undefined &&
+          validated.tier_calculation_mode !== current?.tier_calculation_mode,
       },
     });
 

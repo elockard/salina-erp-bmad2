@@ -21,7 +21,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { contacts, contactRoles } from "@/db/schema/contacts";
+import { contactRoles, contacts } from "@/db/schema/contacts";
 import { users } from "@/db/schema/users";
 import { getCurrentTenantId, getDb, requirePermission } from "@/lib/auth";
 import { encryptTaxId } from "@/lib/encryption";
@@ -389,7 +389,10 @@ export async function fetchAuthors(options?: {
   const result = await db.query.contacts.findMany({
     where: and(...conditions),
     with: { roles: true },
-    orderBy: (contacts, { asc }) => [asc(contacts.last_name), asc(contacts.first_name)],
+    orderBy: (contacts, { asc }) => [
+      asc(contacts.last_name),
+      asc(contacts.first_name),
+    ],
   });
 
   // Filter to only contacts with author role

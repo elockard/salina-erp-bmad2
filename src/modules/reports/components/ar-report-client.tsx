@@ -15,7 +15,11 @@
 
 import * as React from "react";
 import { getCustomerARDetail as fetchCustomerDetail } from "../actions";
-import type { AgingReportRow, CustomerARDetail, TenantForReport } from "../types";
+import type {
+  AgingReportRow,
+  CustomerARDetail,
+  TenantForReport,
+} from "../types";
 import { ARAgingChart } from "./ar-aging-chart";
 import { ARAgingTable } from "./ar-aging-table";
 import { ARCustomerDetail } from "./ar-customer-detail";
@@ -29,9 +33,9 @@ interface ARReportClientProps {
 }
 
 export function ARReportClient({ agingData, tenant }: ARReportClientProps) {
-  const [selectedCustomerId, setSelectedCustomerId] = React.useState<string | null>(
-    null,
-  );
+  const [selectedCustomerId, setSelectedCustomerId] = React.useState<
+    string | null
+  >(null);
   const [customerDetail, setCustomerDetail] =
     React.useState<CustomerARDetail | null>(null);
   const [isDetailLoading, setIsDetailLoading] = React.useState(false);
@@ -80,11 +84,7 @@ export function ARReportClient({ agingData, tenant }: ARReportClientProps) {
             />
           </div>
           {agingData.length > 5 && (
-            <ARAgingChart
-              data={agingData}
-              variant="byCustomer"
-              height={250}
-            />
+            <ARAgingChart data={agingData} variant="byCustomer" height={250} />
           )}
         </div>
       </div>

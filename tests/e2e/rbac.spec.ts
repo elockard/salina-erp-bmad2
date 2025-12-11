@@ -96,7 +96,9 @@ test.describe("RBAC System - Role-Based Access Control", () => {
       ).toBeVisible();
     });
 
-    test("Editor can access contact management page (authors)", async ({ page }) => {
+    test("Editor can access contact management page (authors)", async ({
+      page,
+    }) => {
       await page.goto("/contacts?role=author");
 
       // Should see contacts page (Story 0.5: Authors consolidated into Contacts)

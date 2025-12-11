@@ -12,11 +12,11 @@
  * - Clear filters functionality
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  InvoiceFilters,
   type InvoiceFilterState,
+  InvoiceFilters,
 } from "@/modules/invoices/components/invoice-filters";
 
 // Mock the CustomerSelector component
@@ -80,7 +80,7 @@ describe("InvoiceFilters", () => {
     it("calls onFiltersChange when status is selected", async () => {
       const onFiltersChange = vi.fn();
       render(
-        <InvoiceFilters {...defaultProps} onFiltersChange={onFiltersChange} />
+        <InvoiceFilters {...defaultProps} onFiltersChange={onFiltersChange} />,
       );
 
       const statusTrigger = screen.getByRole("combobox");
@@ -90,7 +90,7 @@ describe("InvoiceFilters", () => {
       fireEvent.click(draftOption);
 
       expect(onFiltersChange).toHaveBeenCalledWith(
-        expect.objectContaining({ status: "draft" })
+        expect.objectContaining({ status: "draft" }),
       );
     });
 
@@ -101,7 +101,7 @@ describe("InvoiceFilters", () => {
           {...defaultProps}
           filters={{ status: "draft" }}
           onFiltersChange={onFiltersChange}
-        />
+        />,
       );
 
       const statusTrigger = screen.getByRole("combobox");
@@ -111,7 +111,7 @@ describe("InvoiceFilters", () => {
       fireEvent.click(allStatusOption);
 
       expect(onFiltersChange).toHaveBeenCalledWith(
-        expect.objectContaining({ status: undefined })
+        expect.objectContaining({ status: undefined }),
       );
     });
   });
@@ -127,14 +127,14 @@ describe("InvoiceFilters", () => {
     it("calls onFiltersChange when customer is selected", async () => {
       const onFiltersChange = vi.fn();
       render(
-        <InvoiceFilters {...defaultProps} onFiltersChange={onFiltersChange} />
+        <InvoiceFilters {...defaultProps} onFiltersChange={onFiltersChange} />,
       );
 
       const customerSelector = screen.getByTestId("customer-selector");
       fireEvent.change(customerSelector, { target: { value: "cust-123" } });
 
       expect(onFiltersChange).toHaveBeenCalledWith(
-        expect.objectContaining({ customerId: "cust-123" })
+        expect.objectContaining({ customerId: "cust-123" }),
       );
     });
 
@@ -145,7 +145,7 @@ describe("InvoiceFilters", () => {
           {...defaultProps}
           filters={{ customerId: "cust-123" }}
           onFiltersChange={onFiltersChange}
-        />
+        />,
       );
 
       // The customer selector is rendered, verify it exists
@@ -174,10 +174,7 @@ describe("InvoiceFilters", () => {
       const endDate = new Date("2025-01-30");
 
       render(
-        <InvoiceFilters
-          {...defaultProps}
-          filters={{ startDate, endDate }}
-        />
+        <InvoiceFilters {...defaultProps} filters={{ startDate, endDate }} />,
       );
 
       // Should show formatted date range (format: "LLL dd, yyyy" = "Jan 15, 2025")
@@ -197,7 +194,7 @@ describe("InvoiceFilters", () => {
 
     it("shows clear button when filters are active", () => {
       render(
-        <InvoiceFilters {...defaultProps} filters={{ status: "draft" }} />
+        <InvoiceFilters {...defaultProps} filters={{ status: "draft" }} />,
       );
 
       const clearButton = screen.getByRole("button", { name: /clear/i });
@@ -211,7 +208,7 @@ describe("InvoiceFilters", () => {
           {...defaultProps}
           filters={{ status: "draft", customerId: "cust-123" }}
           onFiltersChange={onFiltersChange}
-        />
+        />,
       );
 
       const clearButton = screen.getByRole("button", { name: /clear/i });

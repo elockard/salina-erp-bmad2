@@ -33,6 +33,7 @@ export type Author = LegacyAuthor;
  * Shows how units were allocated and royalty calculated within a tier
  *
  * AC-5.1.2: Part of formatBreakdowns.tierBreakdowns array
+ * Story 10.4: Extended with lifetime position fields for lifetime mode
  */
 export interface StatementTierBreakdown {
   /** Minimum quantity threshold for this tier */
@@ -45,6 +46,16 @@ export interface StatementTierBreakdown {
   quantityInTier: number;
   /** Royalty amount earned in this tier */
   royaltyEarned: number;
+  /**
+   * Lifetime sales position at start of this tier allocation
+   * Story 10.4: Only present for lifetime mode calculations
+   */
+  lifetimePositionStart?: number;
+  /**
+   * Lifetime sales position at end of this tier allocation
+   * Story 10.4: Only present for lifetime mode calculations
+   */
+  lifetimePositionEnd?: number;
 }
 
 /**
@@ -84,6 +95,61 @@ export interface StatementAdvanceRecoupment {
 }
 
 /**
+ * Lifetime sales context for royalty statements
+ * Story 10.4: AC-10.4.6 - Stored in calculations JSONB for display
+ *
+ * Tracks lifetime sales context when contract uses tier_calculation_mode: 'lifetime'
+ */
+export interface LifetimeSalesContext {
+  /** Tier calculation mode: 'period' (default) or 'lifetime' */
+  tierCalculationMode: "period" | "lifetime";
+  /** Total lifetime sales quantity before this period (all formats combined) */
+  lifetimeSalesBefore: number;
+  /** Total lifetime sales quantity after this period (all formats combined) */
+  lifetimeSalesAfter: number;
+  /** Lifetime revenue before this period */
+  lifetimeRevenueBefore: number;
+  /** Lifetime revenue after this period */
+  lifetimeRevenueAfter: number;
+  /** Current tier rate based on lifetime position (highest applicable rate) */
+  currentTierRate: number;
+  /** Next tier threshold in units (null if at highest tier) */
+  nextTierThreshold: number | null;
+  /** Units remaining until next tier (null if at highest tier) */
+  unitsToNextTier: number | null;
+}
+
+/**
+ * Per-format lifetime context for detailed breakdown
+ * Story 10.4: Tracks lifetime position per format
+ */
+export interface FormatLifetimeContext {
+  /** Format this context applies to */
+  format: ContractFormat;
+  /** Lifetime sales for this format before this period */
+  lifetimeSalesBefore: number;
+  /** Lifetime sales for this format after this period */
+  lifetimeSalesAfter: number;
+  /** Current tier based on this format's lifetime position */
+  currentTierRate: number;
+}
+
+/**
+ * Split calculation context for co-authored title statements
+ * Story 10.3: Stored in calculations JSONB for display
+ *
+ * AC-10.3.4: Include splitCalculation object in calculations JSONB field
+ */
+export interface SplitCalculationContext {
+  /** Total royalty for title before split */
+  titleTotalRoyalty: number;
+  /** This author's ownership percentage (e.g., 60 for 60%) */
+  ownershipPercentage: number;
+  /** Indicates split calculation statement - discriminant for type narrowing */
+  isSplitCalculation: true;
+}
+
+/**
  * Complete statement calculations stored in JSONB column
  * Contains full breakdown of royalty calculation for audit and display
  *
@@ -94,6 +160,9 @@ export interface StatementAdvanceRecoupment {
  * - grossRoyalty: Total royalty before recoupment
  * - advanceRecoupment: Advance payback details
  * - netPayable: Final amount payable to author
+ *
+ * Story 10.3: Added splitCalculation for co-authored titles
+ * - splitCalculation: Context about ownership split (optional)
  */
 export interface StatementCalculations {
   /** Statement period dates */
@@ -113,6 +182,18 @@ export interface StatementCalculations {
   advanceRecoupment: StatementAdvanceRecoupment;
   /** Net amount payable to author after recoupment */
   netPayable: number;
+  /**
+   * Split calculation context for co-authored titles
+   * Story 10.3: AC-10.3.4 - Present when this is a split statement
+   * Undefined for single-author titles
+   */
+  splitCalculation?: SplitCalculationContext;
+  /**
+   * Lifetime sales context for escalating royalty rates
+   * Story 10.4: AC-10.4.6 - Present when contract uses tier_calculation_mode: 'lifetime'
+   * Undefined for period-based (default) contracts
+   */
+  lifetimeContext?: LifetimeSalesContext;
 }
 
 /**
@@ -276,6 +357,16 @@ export interface PreviewCalculation {
   netPayable: number;
   /** Warning flags for edge cases */
   warnings: PreviewWarning[];
+  /**
+   * Story 10.3: AC-10.3.7 - Co-author context for preview
+   * Present when this is a co-authored title
+   */
+  coAuthorInfo?: {
+    /** This author's ownership percentage */
+    ownershipPercentage: number;
+    /** Title name for context */
+    titleName: string;
+  };
 }
 
 /**

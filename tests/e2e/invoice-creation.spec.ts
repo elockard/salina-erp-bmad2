@@ -24,11 +24,17 @@ test.describe("Invoice Creation Form", () => {
     await expect(page).toHaveTitle(/New Invoice/);
 
     // Main form heading
-    await expect(page.getByRole("heading", { name: "Invoice Details" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Invoice Details" }),
+    ).toBeVisible();
 
     // Form sections visible
-    await expect(page.getByRole("heading", { name: "Addresses" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Line Items" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Addresses" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Line Items" }),
+    ).toBeVisible();
     await expect(page.getByText("Invoice Totals")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Notes" })).toBeVisible();
   });
@@ -65,23 +71,33 @@ test.describe("Invoice Creation Form", () => {
     // Check options are visible
     await expect(page.getByRole("option", { name: "Net 30" })).toBeVisible();
     await expect(page.getByRole("option", { name: "Net 60" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Due on Receipt" })).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: "Due on Receipt" }),
+    ).toBeVisible();
     await expect(page.getByRole("option", { name: "Custom" })).toBeVisible();
   });
 
   test("AC-8.2.3: Line items grid with add button", async ({ page }) => {
     // Line items section header
-    await expect(page.getByRole("heading", { name: "Line Items" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Line Items" }),
+    ).toBeVisible();
 
     // Add Line Item button
     const addButton = page.getByRole("button", { name: /Add Line Item/i });
     await expect(addButton).toBeVisible();
 
     // Table headers for grid columns
-    await expect(page.getByRole("columnheader", { name: "Description" })).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Description" }),
+    ).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Qty" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Unit Price" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Amount" })).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Unit Price" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Amount" }),
+    ).toBeVisible();
   });
 
   test("AC-8.2.3: Can add multiple line items", async ({ page }) => {
@@ -151,7 +167,9 @@ test.describe("Invoice Creation Form", () => {
 
   test("AC-8.2.8: Bill-to address fields are present", async ({ page }) => {
     // Address section
-    await expect(page.getByRole("heading", { name: "Addresses" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Addresses" }),
+    ).toBeVisible();
 
     // Bill-To Address subsection
     await expect(page.getByText("Bill-To Address")).toBeVisible();
@@ -176,7 +194,10 @@ test.describe("Invoice Creation Form", () => {
     page,
   }) => {
     // Get initial due date
-    const dueDateButton = page.locator('button').filter({ hasText: /Due Date/i }).first();
+    const _dueDateButton = page
+      .locator("button")
+      .filter({ hasText: /Due Date/i })
+      .first();
 
     // Change payment terms to Net 60
     const termsSelect = page.getByLabel("Payment Terms *");

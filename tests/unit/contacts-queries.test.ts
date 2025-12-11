@@ -6,7 +6,7 @@
  * searchContacts, getContactRoles, contactHasRole, getContactsCount, getContactByEmail
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock dependencies before importing queries
 vi.mock("@/lib/auth", () => ({
@@ -14,17 +14,17 @@ vi.mock("@/lib/auth", () => ({
   getDb: vi.fn(),
 }));
 
-import {
-  getContacts,
-  getContactById,
-  getContactsByRole,
-  searchContacts,
-  getContactRoles,
-  contactHasRole,
-  getContactsCount,
-  getContactByEmail,
-} from "@/modules/contacts/queries";
 import { getCurrentTenantId, getDb } from "@/lib/auth";
+import {
+  contactHasRole,
+  getContactByEmail,
+  getContactById,
+  getContactRoles,
+  getContacts,
+  getContactsByRole,
+  getContactsCount,
+  searchContacts,
+} from "@/modules/contacts/queries";
 
 // Type the mocks
 const mockGetCurrentTenantId = getCurrentTenantId as ReturnType<typeof vi.fn>;
@@ -82,7 +82,7 @@ describe("Contact Queries", () => {
   describe("getContacts", () => {
     it("should return active contacts by default", async () => {
       mockDb.query.contacts.findMany.mockResolvedValue(
-        mockContacts.filter((c) => c.status === "active")
+        mockContacts.filter((c) => c.status === "active"),
       );
 
       const result = await getContacts();
@@ -176,7 +176,9 @@ describe("Contact Queries", () => {
     it("should include inactive when requested", async () => {
       mockDb.query.contacts.findMany.mockResolvedValue(mockContacts);
 
-      const result = await getContactsByRole("author", { includeInactive: true });
+      const result = await getContactsByRole("author", {
+        includeInactive: true,
+      });
 
       // Only contact-1 has author role
       expect(result).toHaveLength(1);
@@ -215,7 +217,7 @@ describe("Contact Queries", () => {
 
     it("should filter inactive by default", async () => {
       mockDb.query.contacts.findMany.mockResolvedValue(
-        mockContacts.filter((c) => c.status === "active")
+        mockContacts.filter((c) => c.status === "active"),
       );
 
       const result = await searchContacts("john");
@@ -227,7 +229,9 @@ describe("Contact Queries", () => {
   describe("getContactRoles", () => {
     it("should return roles for existing contact", async () => {
       mockDb.query.contacts.findFirst.mockResolvedValue(mockContacts[0]);
-      mockDb.query.contactRoles.findMany.mockResolvedValue(mockContacts[0].roles);
+      mockDb.query.contactRoles.findMany.mockResolvedValue(
+        mockContacts[0].roles,
+      );
 
       const result = await getContactRoles("contact-1");
 
@@ -256,7 +260,9 @@ describe("Contact Queries", () => {
   describe("contactHasRole", () => {
     it("should return true if contact has role", async () => {
       mockDb.query.contacts.findFirst.mockResolvedValue(mockContacts[0]);
-      mockDb.query.contactRoles.findMany.mockResolvedValue(mockContacts[0].roles);
+      mockDb.query.contactRoles.findMany.mockResolvedValue(
+        mockContacts[0].roles,
+      );
 
       const result = await contactHasRole("contact-1", "author");
 
@@ -265,7 +271,9 @@ describe("Contact Queries", () => {
 
     it("should return false if contact does not have role", async () => {
       mockDb.query.contacts.findFirst.mockResolvedValue(mockContacts[0]);
-      mockDb.query.contactRoles.findMany.mockResolvedValue(mockContacts[0].roles);
+      mockDb.query.contactRoles.findMany.mockResolvedValue(
+        mockContacts[0].roles,
+      );
 
       const result = await contactHasRole("contact-1", "customer");
 
@@ -284,7 +292,7 @@ describe("Contact Queries", () => {
   describe("getContactsCount", () => {
     it("should return count of active contacts", async () => {
       mockDb.query.contacts.findMany.mockResolvedValue(
-        mockContacts.filter((c) => c.status === "active")
+        mockContacts.filter((c) => c.status === "active"),
       );
 
       const result = await getContactsCount();

@@ -224,7 +224,9 @@ test.describe("Title Management - Detail View", () => {
 
     // Author link should be present (Story 0.5: Authors consolidated into Contacts)
     // Link may point to /contacts or /authors (which redirects)
-    const authorLink = page.locator('a[href*="/contacts"], a[href*="/authors"]');
+    const authorLink = page.locator(
+      'a[href*="/contacts"], a[href*="/authors"]',
+    );
     await expect(authorLink.first()).toBeVisible();
   });
 

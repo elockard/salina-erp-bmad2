@@ -22,7 +22,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -64,7 +63,10 @@ interface InvoiceLineItemsProps {
  * Calculate line item amount using Decimal.js for precision
  * Amount = quantity * unit_price
  */
-export function calculateLineAmount(quantity: string, unitPrice: string): string {
+export function calculateLineAmount(
+  quantity: string,
+  unitPrice: string,
+): string {
   try {
     const qty = new Decimal(quantity || "0");
     const price = new Decimal(unitPrice || "0");
@@ -77,7 +79,10 @@ export function calculateLineAmount(quantity: string, unitPrice: string): string
 /**
  * Create an empty line item with given line number
  */
-export function createEmptyLineItem(lineNumber: number, defaultTaxRate: string = "0"): LineItemData {
+export function createEmptyLineItem(
+  lineNumber: number,
+  defaultTaxRate: string = "0",
+): LineItemData {
   return {
     line_number: lineNumber,
     item_code: "",
@@ -105,16 +110,23 @@ export function InvoiceLineItems({
   });
 
   // Watch all line items for recalculation
-  const lineItems = useWatch({ control, name: "line_items" }) as LineItemData[] | undefined;
+  const lineItems = useWatch({ control, name: "line_items" }) as
+    | LineItemData[]
+    | undefined;
 
   // Recalculate amounts when quantity or unit_price changes
   useEffect(() => {
     if (!lineItems) return;
 
     lineItems.forEach((item, index) => {
-      const calculatedAmount = calculateLineAmount(item.quantity, item.unit_price);
+      const calculatedAmount = calculateLineAmount(
+        item.quantity,
+        item.unit_price,
+      );
       if (item.amount !== calculatedAmount) {
-        setValue(`line_items.${index}.amount`, calculatedAmount, { shouldValidate: false });
+        setValue(`line_items.${index}.amount`, calculatedAmount, {
+          shouldValidate: false,
+        });
       }
     });
   }, [lineItems, setValue]);
@@ -142,7 +154,7 @@ export function InvoiceLineItems({
   const formatCurrency = (value: string): string => {
     try {
       const num = parseFloat(value);
-      return isNaN(num) ? "$0.00" : `$${num.toFixed(2)}`;
+      return Number.isNaN(num) ? "$0.00" : `$${num.toFixed(2)}`;
     } catch {
       return "$0.00";
     }
@@ -196,7 +208,9 @@ export function InvoiceLineItems({
             <TableBody>
               {fields.map((field, index) => {
                 const item = lineItems?.[index];
-                const amount = item ? calculateLineAmount(item.quantity, item.unit_price) : "0.00";
+                const amount = item
+                  ? calculateLineAmount(item.quantity, item.unit_price)
+                  : "0.00";
 
                 return (
                   <TableRow key={field.id}>
@@ -361,7 +375,8 @@ export function InvoiceLineItems({
       {/* Summary hint */}
       {fields.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          {fields.length} line item{fields.length !== 1 ? "s" : ""}. Amount is auto-calculated from Qty × Unit Price.
+          {fields.length} line item{fields.length !== 1 ? "s" : ""}. Amount is
+          auto-calculated from Qty × Unit Price.
         </p>
       )}
     </div>

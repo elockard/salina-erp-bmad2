@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { createInvoice, generateInvoiceNumber, searchCustomersAction } from "@/modules/invoices/actions";
+import {
+  createInvoice,
+  generateInvoiceNumber,
+  searchCustomersAction,
+} from "@/modules/invoices/actions";
 
 /**
  * Integration tests for Invoice Creation
@@ -19,7 +23,9 @@ const mockWhereResult = vi.hoisted(() => vi.fn());
 const mockOrderByResult = vi.hoisted(() => vi.fn());
 const mockLimitResult = vi.hoisted(() => vi.fn());
 const mockReturning = vi.hoisted(() => vi.fn());
-const mockValues = vi.hoisted(() => vi.fn(() => ({ returning: mockReturning })));
+const mockValues = vi.hoisted(() =>
+  vi.fn(() => ({ returning: mockReturning })),
+);
 const mockInsert = vi.hoisted(() => vi.fn(() => ({ values: mockValues })));
 const mockRequirePermission = vi.hoisted(() => vi.fn());
 const mockGetCurrentTenantId = vi.hoisted(() =>
@@ -81,7 +87,11 @@ const mockTx = vi.hoisted(() => ({
   })),
 }));
 
-const mockTransaction = vi.hoisted(() => vi.fn((callback: (tx: typeof mockTx) => Promise<unknown>) => callback(mockTx)));
+const mockTransaction = vi.hoisted(() =>
+  vi.fn((callback: (tx: typeof mockTx) => Promise<unknown>) =>
+    callback(mockTx),
+  ),
+);
 const mockAdminDb = vi.hoisted(() => ({
   transaction: mockTransaction,
 }));
@@ -179,7 +189,9 @@ describe("generateInvoiceNumber", () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error).toBe("You do not have permission to create invoices");
+      expect(result.error).toBe(
+        "You do not have permission to create invoices",
+      );
     }
   });
 
@@ -272,7 +284,9 @@ describe("createInvoice", () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error).toBe("You do not have permission to create invoices");
+      expect(result.error).toBe(
+        "You do not have permission to create invoices",
+      );
     }
   });
 

@@ -1,9 +1,8 @@
 "use client";
 
-import { BookOpen, DollarSign, FileText, Pencil, User } from "lucide-react";
-import Link from "next/link";
+import { BookOpen, DollarSign, FileText, Pencil, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,15 @@ import { useHasPermission } from "@/lib/hooks/useHasPermission";
 import { CREATE_AUTHORS_TITLES, MANAGE_CONTRACTS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
+import {
+  type AuthorContact,
+  getContactsWithAuthorRole,
+  getTitleAuthors,
+  type TitleAuthorInput,
+  TitleAuthorsEditor,
+  type TitleAuthorWithContact,
+  updateTitleAuthors,
+} from "@/modules/title-authors";
 import { updateTitle } from "../actions";
 import type { PublicationStatus, TitleWithAuthor } from "../types";
 import { ISBNAssignmentModal } from "./isbn-assignment-modal";
@@ -232,6 +240,82 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
   // Story 4.2: Contract creation modal state
   const [showContractWizard, setShowContractWizard] = useState(false);
 
+  // Story 10.1: Multiple authors state
+  const [titleAuthors, setTitleAuthors] = useState<TitleAuthorWithContact[]>(
+    [],
+  );
+  const [availableAuthors, setAvailableAuthors] = useState<AuthorContact[]>([]);
+  const [authorsLoading, setAuthorsLoading] = useState(true);
+  const [authorsSaving, setAuthorsSaving] = useState(false);
+  const [pendingAuthorChanges, setPendingAuthorChanges] = useState<
+    TitleAuthorInput[] | null
+  >(null);
+
+  // Load title authors and available authors
+  useEffect(() => {
+    async function loadAuthorsData() {
+      setAuthorsLoading(true);
+      try {
+        const [authors, contacts] = await Promise.all([
+          getTitleAuthors(title.id),
+          getContactsWithAuthorRole(),
+        ]);
+        setTitleAuthors(authors);
+        setAvailableAuthors(contacts);
+      } catch (error) {
+        console.error("Failed to load authors:", error);
+        toast.error("Failed to load authors data");
+      } finally {
+        setAuthorsLoading(false);
+      }
+    }
+    loadAuthorsData();
+  }, [title.id]);
+
+  // Handle authors change from editor
+  const handleAuthorsChange = (authors: TitleAuthorInput[]) => {
+    setPendingAuthorChanges(authors);
+  };
+
+  // Save authors changes
+  const handleSaveAuthors = async () => {
+    if (!pendingAuthorChanges) return;
+
+    setAuthorsSaving(true);
+    try {
+      const result = await updateTitleAuthors(title.id, pendingAuthorChanges);
+      if (result.success) {
+        setTitleAuthors(result.data);
+        setPendingAuthorChanges(null);
+        toast.success("Authors updated successfully");
+        // Update parent with new primary author info if available
+        const primaryAuthor = result.data.find((a) => a.is_primary);
+        if (primaryAuthor?.contact) {
+          const authorName =
+            `${primaryAuthor.contact.first_name || ""} ${primaryAuthor.contact.last_name || ""}`.trim();
+          onTitleUpdated({
+            ...title,
+            author: {
+              id: primaryAuthor.contact_id,
+              name: authorName || primaryAuthor.contact.email || "Unknown",
+              email: primaryAuthor.contact.email,
+            },
+          });
+        }
+      } else {
+        toast.error(result.error || "Failed to update authors");
+      }
+    } catch (error) {
+      console.error("Failed to save authors:", error);
+      toast.error("Failed to save authors");
+    } finally {
+      setAuthorsSaving(false);
+    }
+  };
+
+  // Check if there are unsaved author changes
+  const hasUnsavedAuthorChanges = pendingAuthorChanges !== null;
+
   const handleSaveField = async (
     field: string,
     value: string | number | null,
@@ -305,25 +389,46 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
         />
       </div>
 
-      {/* Author Link */}
+      {/* Authors Section - Story 10.1: Multi-author support */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Author
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Authors
+            </CardTitle>
+            {hasUnsavedAuthorChanges && (
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className="text-amber-600 border-amber-300 bg-amber-50"
+                >
+                  Unsaved changes
+                </Badge>
+                <Button
+                  size="sm"
+                  onClick={handleSaveAuthors}
+                  disabled={authorsSaving}
+                >
+                  {authorsSaving ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <Link
-            href={`/dashboard/authors?selected=${title.author_id}`}
-            className="text-primary hover:underline"
-          >
-            {title.author.name}
-          </Link>
-          {title.author.email && (
-            <p className="text-sm text-muted-foreground">
-              {title.author.email}
-            </p>
+          {authorsLoading ? (
+            <div className="text-center py-4 text-muted-foreground">
+              Loading authors...
+            </div>
+          ) : (
+            <TitleAuthorsEditor
+              authors={titleAuthors}
+              availableAuthors={availableAuthors}
+              onAuthorsChange={handleAuthorsChange}
+              readonly={!canEdit}
+              isLoading={authorsSaving}
+            />
           )}
         </CardContent>
       </Card>

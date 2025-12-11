@@ -1,10 +1,10 @@
 import {
-  Calculator,
-  BookOpen,
-  Users,
   BarChart3,
+  BookOpen,
   Building2,
+  Calculator,
   RotateCcw,
+  Users,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 

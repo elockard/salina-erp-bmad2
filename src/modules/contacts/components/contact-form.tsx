@@ -37,10 +37,19 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
-import { VIEW_TAX_ID, ASSIGN_CUSTOMER_ROLE } from "@/lib/permissions";
+import { ASSIGN_CUSTOMER_ROLE, VIEW_TAX_ID } from "@/lib/permissions";
 import { createContact } from "../actions";
-import { createContactFormSchema, type CreateContactFormInput, type CreateContactInput } from "../schema";
-import type { ContactWithRoles, ContactRoleType } from "../types";
+import {
+  type CreateContactFormInput,
+  type CreateContactInput,
+  createContactFormSchema,
+} from "../schema";
+import type { ContactRoleType, ContactWithRoles } from "../types";
+import {
+  defaultTaxInfoFormData,
+  TaxInfoForm,
+  type TaxInfoFormData,
+} from "./tax-info-form";
 
 /**
  * Role configuration for the form
@@ -52,7 +61,12 @@ const ROLE_OPTIONS: Array<{
   requiresPermission?: string[];
 }> = [
   { value: "author", icon: "🖊️", label: "Author" },
-  { value: "customer", icon: "🛒", label: "Customer", requiresPermission: ["owner", "admin", "finance"] },
+  {
+    value: "customer",
+    icon: "🛒",
+    label: "Customer",
+    requiresPermission: ["owner", "admin", "finance"],
+  },
   { value: "vendor", icon: "🏭", label: "Vendor" },
   { value: "distributor", icon: "📦", label: "Distributor" },
 ];
@@ -93,12 +107,20 @@ const initialRoleData: RoleSpecificState = {
   distributor: { territory: "", commission: "", terms: "" },
 };
 
-export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps) {
+export function ContactForm({
+  open,
+  onOpenChange,
+  onSuccess,
+}: ContactFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [taxInfoOpen, setTaxInfoOpen] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<ContactRoleType[]>([]);
   const [roleData, setRoleData] = useState<RoleSpecificState>(initialRoleData);
+  const [taxInfo, setTaxInfo] = useState<TaxInfoFormData>(
+    defaultTaxInfoFormData,
+  );
 
   const canViewTaxId = useHasPermission(VIEW_TAX_ID);
   const canAssignCustomerRole = useHasPermission(ASSIGN_CUSTOMER_ROLE);
@@ -127,7 +149,7 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
 
   const handleRoleToggle = (role: ContactRoleType) => {
     setSelectedRoles((prev) =>
-      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
     );
   };
 
@@ -138,27 +160,53 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
     const roles = selectedRoles.map((role) => {
       let role_specific_data: Record<string, unknown> | undefined;
 
-      if (role === "author" && (roleData.author.pen_name || roleData.author.bio || roleData.author.website)) {
+      if (
+        role === "author" &&
+        (roleData.author.pen_name ||
+          roleData.author.bio ||
+          roleData.author.website)
+      ) {
         role_specific_data = {
           pen_name: roleData.author.pen_name || undefined,
           bio: roleData.author.bio || undefined,
           website: roleData.author.website || undefined,
         };
-      } else if (role === "customer" && (roleData.customer.credit_limit || roleData.customer.payment_terms)) {
+      } else if (
+        role === "customer" &&
+        (roleData.customer.credit_limit || roleData.customer.payment_terms)
+      ) {
         role_specific_data = {
-          credit_limit: roleData.customer.credit_limit ? Number(roleData.customer.credit_limit) : undefined,
+          credit_limit: roleData.customer.credit_limit
+            ? Number(roleData.customer.credit_limit)
+            : undefined,
           payment_terms: roleData.customer.payment_terms || undefined,
         };
-      } else if (role === "vendor" && (roleData.vendor.vendor_code || roleData.vendor.lead_time || roleData.vendor.min_order)) {
+      } else if (
+        role === "vendor" &&
+        (roleData.vendor.vendor_code ||
+          roleData.vendor.lead_time ||
+          roleData.vendor.min_order)
+      ) {
         role_specific_data = {
           vendor_code: roleData.vendor.vendor_code || undefined,
-          lead_time_days: roleData.vendor.lead_time ? Number(roleData.vendor.lead_time) : undefined,
-          min_order_amount: roleData.vendor.min_order ? Number(roleData.vendor.min_order) : undefined,
+          lead_time_days: roleData.vendor.lead_time
+            ? Number(roleData.vendor.lead_time)
+            : undefined,
+          min_order_amount: roleData.vendor.min_order
+            ? Number(roleData.vendor.min_order)
+            : undefined,
         };
-      } else if (role === "distributor" && (roleData.distributor.territory || roleData.distributor.commission || roleData.distributor.terms)) {
+      } else if (
+        role === "distributor" &&
+        (roleData.distributor.territory ||
+          roleData.distributor.commission ||
+          roleData.distributor.terms)
+      ) {
         role_specific_data = {
           territory: roleData.distributor.territory || undefined,
-          commission_rate: roleData.distributor.commission ? Number(roleData.distributor.commission) / 100 : undefined,
+          commission_rate: roleData.distributor.commission
+            ? Number(roleData.distributor.commission) / 100
+            : undefined,
           contract_terms: roleData.distributor.terms || undefined,
         };
       }
@@ -178,6 +226,8 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
       setRoleData(initialRoleData);
       setAddressOpen(false);
       setPaymentOpen(false);
+      setTaxInfoOpen(false);
+      setTaxInfo(defaultTaxInfoFormData);
       onSuccess(result.data);
     } else {
       form.setError("root", { message: result.error });
@@ -191,6 +241,8 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
       setRoleData(initialRoleData);
       setAddressOpen(false);
       setPaymentOpen(false);
+      setTaxInfoOpen(false);
+      setTaxInfo(defaultTaxInfoFormData);
     }
     onOpenChange(newOpen);
   };
@@ -199,7 +251,7 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
   const updateRoleData = <T extends keyof RoleSpecificState>(
     role: T,
     field: keyof RoleSpecificState[T],
-    value: string
+    value: string,
   ) => {
     setRoleData((prev) => ({
       ...prev,
@@ -213,7 +265,8 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
         <DialogHeader>
           <DialogTitle>Create Contact</DialogTitle>
           <DialogDescription>
-            Add a new contact to your database. First and last name are required.
+            Add a new contact to your database. First and last name are
+            required.
           </DialogDescription>
         </DialogHeader>
 
@@ -286,7 +339,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value ?? ""} placeholder="(555) 123-4567" />
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="(555) 123-4567"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -342,28 +399,37 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-4 pt-4 pl-4 border-l-2 border-purple-200">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Pen Name</label>
+                    <Label htmlFor="author-pen-name">Pen Name</Label>
                     <Input
+                      id="author-pen-name"
                       value={roleData.author.pen_name}
-                      onChange={(e) => updateRoleData("author", "pen_name", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData("author", "pen_name", e.target.value)
+                      }
                       placeholder="Pen name (if different)"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Bio</label>
+                    <Label htmlFor="author-bio">Bio</Label>
                     <Textarea
+                      id="author-bio"
                       value={roleData.author.bio}
-                      onChange={(e) => updateRoleData("author", "bio", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData("author", "bio", e.target.value)
+                      }
                       placeholder="Author biography"
                       rows={3}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Website</label>
+                    <Label htmlFor="author-website">Website</Label>
                     <Input
+                      id="author-website"
                       type="url"
                       value={roleData.author.website}
-                      onChange={(e) => updateRoleData("author", "website", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData("author", "website", e.target.value)
+                      }
                       placeholder="https://author-website.com"
                     />
                   </div>
@@ -379,25 +445,40 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                     type="button"
                     className="flex items-center gap-2 p-0 h-auto font-medium text-blue-700"
                   >
-                    <ChevronDown className="h-4 w-4" />
-                    🛒 Customer Details
+                    <ChevronDown className="h-4 w-4" />🛒 Customer Details
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-4 pt-4 pl-4 border-l-2 border-blue-200">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Credit Limit</label>
+                    <Label htmlFor="customer-credit-limit">Credit Limit</Label>
                     <Input
+                      id="customer-credit-limit"
                       type="number"
                       value={roleData.customer.credit_limit}
-                      onChange={(e) => updateRoleData("customer", "credit_limit", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData(
+                          "customer",
+                          "credit_limit",
+                          e.target.value,
+                        )
+                      }
                       placeholder="0.00"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Payment Terms</label>
+                    <Label htmlFor="customer-payment-terms">
+                      Payment Terms
+                    </Label>
                     <Input
+                      id="customer-payment-terms"
                       value={roleData.customer.payment_terms}
-                      onChange={(e) => updateRoleData("customer", "payment_terms", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData(
+                          "customer",
+                          "payment_terms",
+                          e.target.value,
+                        )
+                      }
                       placeholder="Net 30, Net 60, etc."
                     />
                   </div>
@@ -413,34 +494,42 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                     type="button"
                     className="flex items-center gap-2 p-0 h-auto font-medium text-orange-700"
                   >
-                    <ChevronDown className="h-4 w-4" />
-                    🏭 Vendor Details
+                    <ChevronDown className="h-4 w-4" />🏭 Vendor Details
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-4 pt-4 pl-4 border-l-2 border-orange-200">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Vendor Code</label>
+                    <Label htmlFor="vendor-code">Vendor Code</Label>
                     <Input
+                      id="vendor-code"
                       value={roleData.vendor.vendor_code}
-                      onChange={(e) => updateRoleData("vendor", "vendor_code", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData("vendor", "vendor_code", e.target.value)
+                      }
                       placeholder="VND-001"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Lead Time (Days)</label>
+                    <Label htmlFor="vendor-lead-time">Lead Time (Days)</Label>
                     <Input
+                      id="vendor-lead-time"
                       type="number"
                       value={roleData.vendor.lead_time}
-                      onChange={(e) => updateRoleData("vendor", "lead_time", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData("vendor", "lead_time", e.target.value)
+                      }
                       placeholder="0"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Min Order Amount</label>
+                    <Label htmlFor="vendor-min-order">Min Order Amount</Label>
                     <Input
+                      id="vendor-min-order"
                       type="number"
                       value={roleData.vendor.min_order}
-                      onChange={(e) => updateRoleData("vendor", "min_order", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData("vendor", "min_order", e.target.value)
+                      }
                       placeholder="0.00"
                     />
                   </div>
@@ -456,35 +545,53 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                     type="button"
                     className="flex items-center gap-2 p-0 h-auto font-medium text-green-700"
                   >
-                    <ChevronDown className="h-4 w-4" />
-                    📦 Distributor Details
+                    <ChevronDown className="h-4 w-4" />📦 Distributor Details
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-4 pt-4 pl-4 border-l-2 border-green-200">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Territory</label>
+                    <Label htmlFor="distributor-territory">Territory</Label>
                     <Input
+                      id="distributor-territory"
                       value={roleData.distributor.territory}
-                      onChange={(e) => updateRoleData("distributor", "territory", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData(
+                          "distributor",
+                          "territory",
+                          e.target.value,
+                        )
+                      }
                       placeholder="Region or territory"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Commission Rate (%)</label>
+                    <Label htmlFor="distributor-commission">
+                      Commission Rate (%)
+                    </Label>
                     <Input
+                      id="distributor-commission"
                       type="number"
                       value={roleData.distributor.commission}
-                      onChange={(e) => updateRoleData("distributor", "commission", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData(
+                          "distributor",
+                          "commission",
+                          e.target.value,
+                        )
+                      }
                       placeholder="0"
                       min="0"
                       max="100"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Contract Terms</label>
+                    <Label htmlFor="distributor-terms">Contract Terms</Label>
                     <Textarea
+                      id="distributor-terms"
                       value={roleData.distributor.terms}
-                      onChange={(e) => updateRoleData("distributor", "terms", e.target.value)}
+                      onChange={(e) =>
+                        updateRoleData("distributor", "terms", e.target.value)
+                      }
                       placeholder="Distribution agreement terms"
                       rows={2}
                     />
@@ -517,7 +624,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                     <FormItem>
                       <FormLabel>Address Line 1</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value ?? ""} placeholder="123 Main St" />
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder="123 Main St"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -531,7 +642,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                     <FormItem>
                       <FormLabel>Address Line 2</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value ?? ""} placeholder="Apt, suite, etc." />
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder="Apt, suite, etc."
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -546,7 +661,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                       <FormItem>
                         <FormLabel>City</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value ?? ""} placeholder="City" />
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            placeholder="City"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -560,7 +679,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                       <FormItem>
                         <FormLabel>State</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value ?? ""} placeholder="State" />
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            placeholder="State"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -576,7 +699,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                       <FormItem>
                         <FormLabel>Postal Code</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value ?? ""} placeholder="12345" />
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            placeholder="12345"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -590,7 +717,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                       <FormItem>
                         <FormLabel>Country</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value ?? ""} placeholder="USA" />
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            placeholder="USA"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -600,27 +731,31 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Tax ID (only visible to authorized users) */}
-            {canViewTaxId && (
-              <FormField
-                control={form.control}
-                name="tax_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax ID</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder="Tax ID (will be stored securely)"
-                        autoComplete="off"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            {/* Tax Information Section (Story 11.1) */}
+            <Collapsible open={taxInfoOpen} onOpenChange={setTaxInfoOpen}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  className="flex items-center gap-2 p-0 h-auto font-medium"
+                >
+                  {taxInfoOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                  Tax Information (1099 Reporting)
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                <TaxInfoForm
+                  value={taxInfo}
+                  onChange={setTaxInfo}
+                  canViewTIN={canViewTaxId}
+                  disabled={isLoading}
+                />
+              </CollapsibleContent>
+            </Collapsible>
 
             {/* Payment Info Section (Collapsible) */}
             <Collapsible open={paymentOpen} onOpenChange={setPaymentOpen}>
@@ -679,7 +814,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                         <FormItem>
                           <FormLabel>Bank Name</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value ?? ""} placeholder="Bank name" />
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="Bank name"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -702,7 +841,9 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="checking">Checking</SelectItem>
+                                <SelectItem value="checking">
+                                  Checking
+                                </SelectItem>
                                 <SelectItem value="savings">Savings</SelectItem>
                               </SelectContent>
                             </Select>
@@ -759,7 +900,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                       <FormItem>
                         <FormLabel>Payee Name</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value ?? ""} placeholder="Name on check" />
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            placeholder="Name on check"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -777,7 +922,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                         <FormItem>
                           <FormLabel>Bank Name</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value ?? ""} placeholder="Bank name" />
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="Bank name"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -791,7 +940,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                           <FormItem>
                             <FormLabel>SWIFT Code</FormLabel>
                             <FormControl>
-                              <Input {...field} value={field.value ?? ""} placeholder="SWIFT/BIC" />
+                              <Input
+                                {...field}
+                                value={field.value ?? ""}
+                                placeholder="SWIFT/BIC"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -804,7 +957,11 @@ export function ContactForm({ open, onOpenChange, onSuccess }: ContactFormProps)
                           <FormItem>
                             <FormLabel>IBAN (Optional)</FormLabel>
                             <FormControl>
-                              <Input {...field} value={field.value ?? ""} placeholder="IBAN" />
+                              <Input
+                                {...field}
+                                value={field.value ?? ""}
+                                placeholder="IBAN"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

@@ -19,13 +19,7 @@
  * - Footer: Thank you message
  */
 
-import {
-  Document,
-  Page,
-  StyleSheet,
-  Text,
-  View,
-} from "@react-pdf/renderer";
+import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import type { InvoiceAddress, InvoicePDFData } from "./types";
 
@@ -252,16 +246,16 @@ function formatAddress(address: InvoiceAddress | null): string {
   if (address.line1) lines.push(address.line1);
   if (address.line2) lines.push(address.line2);
 
-  const cityStateZip = [
-    address.city,
-    address.state,
-    address.postal_code,
-  ]
+  const cityStateZip = [address.city, address.state, address.postal_code]
     .filter(Boolean)
     .join(", ");
   if (cityStateZip) lines.push(cityStateZip);
 
-  if (address.country && address.country !== "USA" && address.country !== "US") {
+  if (
+    address.country &&
+    address.country !== "USA" &&
+    address.country !== "US"
+  ) {
     lines.push(address.country);
   }
 
@@ -437,7 +431,9 @@ export function InvoicePDFDocument({ data }: { data: InvoicePDFData }) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerThankYou}>Thank you for your business!</Text>
+          <Text style={styles.footerThankYou}>
+            Thank you for your business!
+          </Text>
           <Text style={styles.footerText}>
             Please remit payment by the due date shown above.
           </Text>

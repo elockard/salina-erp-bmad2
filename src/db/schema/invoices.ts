@@ -295,10 +295,9 @@ export const invoices = pgTable(
     ),
 
     /** UNIQUE constraint on (tenant_id, invoice_number) */
-    tenantInvoiceNumberUnique: unique("invoices_tenant_invoice_number_unique").on(
-      table.tenant_id,
-      table.invoice_number,
-    ),
+    tenantInvoiceNumberUnique: unique(
+      "invoices_tenant_invoice_number_unique",
+    ).on(table.tenant_id, table.invoice_number),
 
     /** Composite index for aging reports (FR104) */
     tenantStatusDueDateIdx: index("invoices_tenant_status_due_date_idx").on(

@@ -10,6 +10,8 @@ import {
   contractTiers,
   type InsertContract,
   type InsertContractTier,
+  type TierCalculationMode,
+  tierCalculationModeValues,
 } from "@/db/schema/contracts";
 
 /**
@@ -130,6 +132,56 @@ describe("ContractFormat type", () => {
   });
 });
 
+/**
+ * Story 10.4: Tier Calculation Mode values and type tests
+ * AC-10.4.1: Tier calculation mode toggle
+ * AC-10.4.10: Backward compatibility (default to 'period')
+ */
+describe("tierCalculationModeValues", () => {
+  describe("valid values", () => {
+    it("has exactly 2 values", () => {
+      expect(tierCalculationModeValues).toHaveLength(2);
+    });
+
+    it("contains 'period'", () => {
+      expect(tierCalculationModeValues).toContain("period");
+    });
+
+    it("contains 'lifetime'", () => {
+      expect(tierCalculationModeValues).toContain("lifetime");
+    });
+
+    it("has expected values in order (period first for default)", () => {
+      expect(tierCalculationModeValues[0]).toBe("period");
+      expect(tierCalculationModeValues[1]).toBe("lifetime");
+    });
+  });
+
+  describe("type safety", () => {
+    it("is readonly tuple", () => {
+      const values: readonly string[] = tierCalculationModeValues;
+      expect(values).toEqual(["period", "lifetime"]);
+    });
+  });
+});
+
+describe("TierCalculationMode type", () => {
+  it("accepts valid mode values", () => {
+    const period: TierCalculationMode = "period";
+    const lifetime: TierCalculationMode = "lifetime";
+
+    expect(period).toBe("period");
+    expect(lifetime).toBe("lifetime");
+  });
+
+  it("derives from tierCalculationModeValues", () => {
+    for (const mode of tierCalculationModeValues) {
+      const m: TierCalculationMode = mode;
+      expect(typeof m).toBe("string");
+    }
+  });
+});
+
 describe("contracts table schema structure (AC 1)", () => {
   it("is defined as a pgTable", () => {
     expect(contracts).toBeDefined();
@@ -151,7 +203,8 @@ describe("contracts table schema structure (AC 1)", () => {
   it("has author_id column (FK to authors)", () => {
     expect(contracts.author_id).toBeDefined();
     expect(contracts.author_id.name).toBe("author_id");
-    expect(contracts.author_id.notNull).toBe(true);
+    // Note: author_id is now nullable (Story 7.3 migration to contacts)
+    expect(contracts.author_id.notNull).toBe(false);
   });
 
   it("has title_id column (FK to titles)", () => {
@@ -182,6 +235,16 @@ describe("contracts table schema structure (AC 1)", () => {
     expect(contracts.status).toBeDefined();
     expect(contracts.status.name).toBe("status");
     expect(contracts.status.notNull).toBe(true);
+  });
+
+  /**
+   * Story 10.4: tier_calculation_mode column tests
+   * AC-10.4.2: Add tier_calculation_mode column to contracts table
+   */
+  it("has tier_calculation_mode column with default 'period'", () => {
+    expect(contracts.tier_calculation_mode).toBeDefined();
+    expect(contracts.tier_calculation_mode.name).toBe("tier_calculation_mode");
+    expect(contracts.tier_calculation_mode.notNull).toBe(true);
   });
 
   it("has created_at column", () => {
@@ -259,6 +322,7 @@ describe("Contract type (AC 6)", () => {
       advance_paid: "2500.00",
       advance_recouped: "1000.00",
       status: "active",
+      tier_calculation_mode: "period", // Story 10.4: Default mode
       created_at: new Date(),
       updated_at: new Date(),
     };
@@ -271,6 +335,7 @@ describe("Contract type (AC 6)", () => {
     expect(mockContract.advance_paid).toBe("2500.00");
     expect(mockContract.advance_recouped).toBe("1000.00");
     expect(mockContract.status).toBe("active");
+    expect(mockContract.tier_calculation_mode).toBe("period");
   });
 
   it("supports all valid status values", () => {
@@ -284,6 +349,7 @@ describe("Contract type (AC 6)", () => {
       advance_paid: "0",
       advance_recouped: "0",
       status: "active",
+      tier_calculation_mode: "period",
       created_at: new Date(),
       updated_at: new Date(),
     };
@@ -303,6 +369,36 @@ describe("Contract type (AC 6)", () => {
     expect(activeContract.status).toBe("active");
     expect(terminatedContract.status).toBe("terminated");
     expect(suspendedContract.status).toBe("suspended");
+  });
+
+  /**
+   * Story 10.4: tier_calculation_mode type tests
+   * AC-10.4.1: Tier calculation mode toggle
+   */
+  it("supports all valid tier_calculation_mode values", () => {
+    const periodContract: Contract = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      tenant_id: "550e8400-e29b-41d4-a716-446655440001",
+      author_id: "550e8400-e29b-41d4-a716-446655440002",
+      contact_id: null,
+      title_id: "550e8400-e29b-41d4-a716-446655440003",
+      advance_amount: "0",
+      advance_paid: "0",
+      advance_recouped: "0",
+      status: "active",
+      tier_calculation_mode: "period",
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    const lifetimeContract: Contract = {
+      ...periodContract,
+      id: "550e8400-e29b-41d4-a716-446655440012",
+      tier_calculation_mode: "lifetime",
+    };
+
+    expect(periodContract.tier_calculation_mode).toBe("period");
+    expect(lifetimeContract.tier_calculation_mode).toBe("lifetime");
   });
 });
 
@@ -450,7 +546,8 @@ describe("Schema constraint structure verification (AC 3-5)", () => {
 
     it("has author_id index defined", () => {
       expect(contracts.author_id).toBeDefined();
-      expect(contracts.author_id.notNull).toBe(true);
+      // Note: author_id is now nullable (Story 7.3 migration to contacts)
+      expect(contracts.author_id.notNull).toBe(false);
     });
 
     it("has title_id index defined", () => {

@@ -13,8 +13,8 @@
 import { describe, expect, it } from "vitest";
 import type {
   InvoicePDFData,
-  PDFGenerationResult,
   InvoiceWithPDFDetails,
+  PDFGenerationResult,
 } from "@/modules/invoices/types";
 
 describe("InvoicePDFData type", () => {

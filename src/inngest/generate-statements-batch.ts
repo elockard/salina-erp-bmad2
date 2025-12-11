@@ -31,11 +31,18 @@
 import Decimal from "decimal.js";
 import { and, eq, or } from "drizzle-orm";
 import { adminDb } from "@/db";
-import { contacts, contactRoles } from "@/db/schema/contacts";
+import { contacts } from "@/db/schema/contacts";
 import { contracts } from "@/db/schema/contracts";
 import { statements } from "@/db/schema/statements";
 import { titles } from "@/db/schema/titles";
-import { calculateRoyaltyForPeriodAdmin } from "@/modules/royalties/calculator";
+import {
+  calculateRoyaltyForPeriodAdmin,
+  calculateSplitRoyaltyForTitleAdmin,
+} from "@/modules/royalties/calculator";
+import type {
+  AuthorSplitBreakdown,
+  RoyaltyCalculation,
+} from "@/modules/royalties/types";
 import { sendStatementEmail } from "@/modules/statements/email-service";
 import { generateStatementPDF } from "@/modules/statements/pdf-generator";
 import type {
@@ -111,7 +118,10 @@ export const generateStatementsBatch = inngest.createFunction(
           // Step 1: Get contact (author) and contract details
           // Story 7.3: authorId is now a contact ID from the contacts table
           const contact = await adminDb.query.contacts.findFirst({
-            where: and(eq(contacts.id, authorId), eq(contacts.tenant_id, tenantId)),
+            where: and(
+              eq(contacts.id, authorId),
+              eq(contacts.tenant_id, tenantId),
+            ),
             with: { roles: true },
           });
 
@@ -129,7 +139,9 @@ export const generateStatementsBatch = inngest.createFunction(
           if (!hasAuthorRole) {
             return {
               authorId,
-              authorName: `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "Unknown",
+              authorName:
+                `${contact.first_name || ""} ${contact.last_name || ""}`.trim() ||
+                "Unknown",
               success: false,
               error: "Contact does not have author role",
             };
@@ -166,26 +178,85 @@ export const generateStatementsBatch = inngest.createFunction(
             where: eq(titles.id, contract.title_id),
           });
 
-          // Step 2: Calculate royalties (use admin version for background job)
-          const calcResult = await calculateRoyaltyForPeriodAdmin(
-            authorId,
-            tenantId,
-            periodStart,
-            periodEnd,
-          );
+          // Step 2: Check if title has multiple authors (Story 10.2)
+          const { titleAuthors } = await import("@/db/schema/title-authors");
+          const titleAuthorRecords = await adminDb.query.titleAuthors.findMany({
+            where: eq(titleAuthors.title_id, contract.title_id),
+          });
 
-          if (!calcResult.success) {
-            return {
+          const isMultiAuthorTitle = titleAuthorRecords.length > 1;
+
+          // Step 3: Calculate royalties
+          // Story 10.2: Use split calculation for multi-author titles
+          let calc: RoyaltyCalculation | undefined;
+          let thisAuthorSplit: AuthorSplitBreakdown | undefined;
+
+          if (isMultiAuthorTitle) {
+            // Use split calculation for co-authored titles
+            const splitResult = await calculateSplitRoyaltyForTitleAdmin(
+              contract.title_id,
+              tenantId,
+              periodStart,
+              periodEnd,
+            );
+
+            if (!splitResult.success) {
+              return {
+                authorId,
+                authorName,
+                success: false,
+                error: splitResult.error,
+              };
+            }
+
+            calc = splitResult.calculation;
+
+            // Find this author's split from the calculation
+            thisAuthorSplit = calc.authorSplits.find(
+              (s) => s.contactId === authorId,
+            );
+
+            if (!thisAuthorSplit) {
+              return {
+                authorId,
+                authorName,
+                success: false,
+                error: `Author ${authorId} not found in split calculation for title ${contract.title_id}`,
+              };
+            }
+          } else {
+            // Use standard single-author calculation (backward compatible)
+            const calcResult = await calculateRoyaltyForPeriodAdmin(
               authorId,
-              authorName,
-              success: false,
-              error: calcResult.error,
-            };
+              tenantId,
+              periodStart,
+              periodEnd,
+            );
+
+            if (!calcResult.success) {
+              return {
+                authorId,
+                authorName,
+                success: false,
+                error: calcResult.error,
+              };
+            }
+
+            calc = calcResult.calculation;
           }
 
-          const calc = calcResult.calculation;
+          // Step 4: Build calculations JSONB structure
+          // Story 10.2: Use author's split values for multi-author titles
+          const authorRoyaltyEarned = thisAuthorSplit
+            ? thisAuthorSplit.splitAmount
+            : calc.totalRoyaltyEarned;
+          const authorRecoupment = thisAuthorSplit
+            ? thisAuthorSplit.recoupment
+            : calc.advanceRecoupment;
+          const authorNetPayable = thisAuthorSplit
+            ? thisAuthorSplit.netPayable
+            : calc.netPayable;
 
-          // Step 3: Build calculations JSONB structure
           const calculations: StatementCalculations = {
             period: {
               startDate: periodStart.toISOString(),
@@ -208,38 +279,78 @@ export const generateStatementsBatch = inngest.createFunction(
               (sum, fc) => sum + fc.netSales.returnsAmount,
               0,
             ),
-            grossRoyalty: calc.totalRoyaltyEarned,
-            advanceRecoupment: {
-              originalAdvance: parseFloat(contract.advance_amount || "0"),
-              previouslyRecouped: parseFloat(contract.advance_recouped || "0"),
-              thisPeriodsRecoupment: calc.advanceRecoupment,
-              remainingAdvance: Math.max(
-                0,
-                parseFloat(contract.advance_amount || "0") -
-                  parseFloat(contract.advance_recouped || "0") -
-                  calc.advanceRecoupment,
-              ),
-            },
-            netPayable: calc.netPayable,
+            // Story 10.2: For multi-author, grossRoyalty shows author's split
+            grossRoyalty: authorRoyaltyEarned,
+            advanceRecoupment: thisAuthorSplit
+              ? {
+                  originalAdvance: thisAuthorSplit.advanceStatus.totalAdvance,
+                  previouslyRecouped:
+                    thisAuthorSplit.advanceStatus.previouslyRecouped,
+                  thisPeriodsRecoupment: authorRecoupment,
+                  remainingAdvance:
+                    thisAuthorSplit.advanceStatus.remainingAfterThisPeriod,
+                }
+              : {
+                  originalAdvance: parseFloat(contract.advance_amount || "0"),
+                  previouslyRecouped: parseFloat(
+                    contract.advance_recouped || "0",
+                  ),
+                  thisPeriodsRecoupment: authorRecoupment,
+                  remainingAdvance: Math.max(
+                    0,
+                    parseFloat(contract.advance_amount || "0") -
+                      parseFloat(contract.advance_recouped || "0") -
+                      authorRecoupment,
+                  ),
+                },
+            netPayable: authorNetPayable,
+            // Story 10.2: Include split info for multi-author statements
+            ...(thisAuthorSplit && {
+              splitCalculation: {
+                titleTotalRoyalty: calc.titleTotalRoyalty,
+                ownershipPercentage: thisAuthorSplit.ownershipPercentage,
+                isSplitCalculation: true,
+              },
+            }),
           };
 
-          // Step 4: Create statement record with draft status
+          // Story 10.3: AC-10.3.8 - Check for duplicate statement before insert
+          const existingStatement = await adminDb.query.statements.findFirst({
+            where: and(
+              eq(statements.contact_id, authorId),
+              eq(statements.tenant_id, tenantId),
+              eq(statements.period_start, periodStart),
+              eq(statements.period_end, periodEnd),
+            ),
+          });
+
+          if (existingStatement) {
+            return {
+              authorId,
+              authorName,
+              success: false,
+              error: `Statement already exists for this period: ${existingStatement.id}`,
+            };
+          }
+
+          // Step 5: Create statement record with draft status
           // Story 7.3: Use contact_id instead of deprecated author_id
+          // Story 10.2: Use author's split values for multi-author titles
           const [newStatement] = await adminDb
             .insert(statements)
             .values({
               tenant_id: tenantId,
               contact_id: authorId, // Story 7.3: authorId is now a contact ID
-              contract_id: contract.id,
+              contract_id: thisAuthorSplit
+                ? thisAuthorSplit.contractId
+                : contract.id,
               period_start: periodStart,
               period_end: periodEnd,
-              total_royalty_earned: new Decimal(calc.totalRoyaltyEarned)
+              total_royalty_earned: new Decimal(authorRoyaltyEarned)
                 .toFixed(2)
                 .toString(),
-              recoupment: new Decimal(calc.advanceRecoupment)
-                .toFixed(2)
-                .toString(),
-              net_payable: new Decimal(calc.netPayable).toFixed(2).toString(),
+              recoupment: new Decimal(authorRecoupment).toFixed(2).toString(),
+              net_payable: new Decimal(authorNetPayable).toFixed(2).toString(),
               calculations,
               status: "draft",
               generated_by_user_id: userId,
@@ -308,10 +419,25 @@ export const generateStatementsBatch = inngest.createFunction(
             })
             .where(eq(statements.id, newStatement.id));
 
-          // Step 7: Update contract advance_recouped if applicable
-          if (calc.advanceRecoupment > 0) {
-            const newRecouped = new Decimal(contract.advance_recouped || "0")
-              .plus(calc.advanceRecoupment)
+          // Step 8: Update contract advance_recouped if applicable
+          // Story 10.2: Use author's recoupment for multi-author titles
+          if (authorRecoupment > 0) {
+            // Get the correct contract to update (may be different for multi-author)
+            const contractToUpdate = thisAuthorSplit
+              ? thisAuthorSplit.contractId
+              : contract.id;
+
+            // Get current advance_recouped from the correct contract
+            const currentContract = thisAuthorSplit
+              ? await adminDb.query.contracts.findFirst({
+                  where: eq(contracts.id, thisAuthorSplit.contractId),
+                })
+              : contract;
+
+            const newRecouped = new Decimal(
+              currentContract?.advance_recouped || "0",
+            )
+              .plus(authorRecoupment)
               .toFixed(2);
 
             await adminDb
@@ -320,10 +446,10 @@ export const generateStatementsBatch = inngest.createFunction(
                 advance_recouped: newRecouped,
                 updated_at: new Date(),
               })
-              .where(eq(contracts.id, contract.id));
+              .where(eq(contracts.id, contractToUpdate));
 
             console.log(
-              `[Inngest] Updated contract ${contract.id} advance_recouped to ${newRecouped}`,
+              `[Inngest] Updated contract ${contractToUpdate} advance_recouped to ${newRecouped}`,
             );
           }
 

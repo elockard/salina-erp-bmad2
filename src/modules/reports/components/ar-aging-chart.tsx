@@ -97,15 +97,15 @@ function prepareSummaryData(data: AgingReportRow[]) {
 function prepareCustomerData(data: AgingReportRow[]) {
   // Take top 10 customers by total
   const sorted = [...data].sort(
-    (a, b) =>
-      Number.parseFloat(b.total) - Number.parseFloat(a.total),
+    (a, b) => Number.parseFloat(b.total) - Number.parseFloat(a.total),
   );
   const top10 = sorted.slice(0, 10);
 
   return top10.map((row) => ({
-    name: row.customerName.length > 15
-      ? `${row.customerName.substring(0, 15)}...`
-      : row.customerName,
+    name:
+      row.customerName.length > 15
+        ? `${row.customerName.substring(0, 15)}...`
+        : row.customerName,
     current: Number.parseFloat(row.current) || 0,
     days1to30: Number.parseFloat(row.days1to30) || 0,
     days31to60: Number.parseFloat(row.days31to60) || 0,
@@ -147,7 +147,9 @@ export function ARAgingChart({
   }
 
   const chartData =
-    variant === "summary" ? prepareSummaryData(data) : prepareCustomerData(data);
+    variant === "summary"
+      ? prepareSummaryData(data)
+      : prepareCustomerData(data);
 
   // Indicate when chart is limited to top 10
   const customerCountNote =
@@ -159,7 +161,9 @@ export function ARAgingChart({
     <Card data-testid="ar-aging-chart">
       <CardHeader>
         <CardTitle className="text-lg">
-          {variant === "summary" ? "Aging Distribution" : "Top 10 Customers by AR"}
+          {variant === "summary"
+            ? "Aging Distribution"
+            : "Top 10 Customers by AR"}
         </CardTitle>
         <CardDescription>
           {variant === "summary"
@@ -172,7 +176,12 @@ export function ARAgingChart({
           <RechartsBarChart
             data={chartData}
             layout={variant === "summary" ? "vertical" : "horizontal"}
-            margin={{ top: 5, right: 30, left: variant === "byCustomer" ? 100 : 20, bottom: 5 }}
+            margin={{
+              top: 5,
+              right: 30,
+              left: variant === "byCustomer" ? 100 : 20,
+              bottom: 5,
+            }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             {variant === "summary" ? (

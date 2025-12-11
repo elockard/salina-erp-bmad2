@@ -159,7 +159,8 @@ export function StatementStepAuthors({
       <div>
         <h3 className="text-lg font-medium">Select Authors</h3>
         <p className="text-sm text-muted-foreground">
-          Choose which contacts with author role to include in statement generation
+          Choose which contacts with author role to include in statement
+          generation
         </p>
       </div>
 

@@ -85,7 +85,12 @@ function createColumns(
       accessorKey: "current",
       header: ({ column }) => {
         const sorted = column.getIsSorted();
-        const sortLabel = sorted === "asc" ? "sorted ascending" : sorted === "desc" ? "sorted descending" : "click to sort";
+        const sortLabel =
+          sorted === "asc"
+            ? "sorted ascending"
+            : sorted === "desc"
+              ? "sorted descending"
+              : "click to sort";
         return (
           <Button
             variant="ghost"
@@ -111,7 +116,12 @@ function createColumns(
       accessorKey: "days1to30",
       header: ({ column }) => {
         const sorted = column.getIsSorted();
-        const sortLabel = sorted === "asc" ? "sorted ascending" : sorted === "desc" ? "sorted descending" : "click to sort";
+        const sortLabel =
+          sorted === "asc"
+            ? "sorted ascending"
+            : sorted === "desc"
+              ? "sorted descending"
+              : "click to sort";
         return (
           <Button
             variant="ghost"
@@ -137,7 +147,12 @@ function createColumns(
       accessorKey: "days31to60",
       header: ({ column }) => {
         const sorted = column.getIsSorted();
-        const sortLabel = sorted === "asc" ? "sorted ascending" : sorted === "desc" ? "sorted descending" : "click to sort";
+        const sortLabel =
+          sorted === "asc"
+            ? "sorted ascending"
+            : sorted === "desc"
+              ? "sorted descending"
+              : "click to sort";
         return (
           <Button
             variant="ghost"
@@ -163,7 +178,12 @@ function createColumns(
       accessorKey: "days61to90",
       header: ({ column }) => {
         const sorted = column.getIsSorted();
-        const sortLabel = sorted === "asc" ? "sorted ascending" : sorted === "desc" ? "sorted descending" : "click to sort";
+        const sortLabel =
+          sorted === "asc"
+            ? "sorted ascending"
+            : sorted === "desc"
+              ? "sorted descending"
+              : "click to sort";
         return (
           <Button
             variant="ghost"
@@ -189,7 +209,12 @@ function createColumns(
       accessorKey: "days90plus",
       header: ({ column }) => {
         const sorted = column.getIsSorted();
-        const sortLabel = sorted === "asc" ? "sorted ascending" : sorted === "desc" ? "sorted descending" : "click to sort";
+        const sortLabel =
+          sorted === "asc"
+            ? "sorted ascending"
+            : sorted === "desc"
+              ? "sorted descending"
+              : "click to sort";
         return (
           <Button
             variant="ghost"
@@ -215,7 +240,12 @@ function createColumns(
       accessorKey: "total",
       header: ({ column }) => {
         const sorted = column.getIsSorted();
-        const sortLabel = sorted === "asc" ? "sorted ascending" : sorted === "desc" ? "sorted descending" : "click to sort";
+        const sortLabel =
+          sorted === "asc"
+            ? "sorted ascending"
+            : sorted === "desc"
+              ? "sorted descending"
+              : "click to sort";
         return (
           <Button
             variant="ghost"

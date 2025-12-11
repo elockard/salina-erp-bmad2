@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,7 +41,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { z } from "zod";
 import { createIsbnPrefix } from "../actions";
 import { formatPrefix, validateIsbnPrefix } from "../utils";
 
@@ -135,7 +135,13 @@ export function IsbnPrefixForm({ trigger, onSuccess }: IsbnPrefixFormProps) {
     try {
       const result = await createIsbnPrefix({
         ...data,
-        block_size: data.block_size as 10 | 100 | 1000 | 10000 | 100000 | 1000000,
+        block_size: data.block_size as
+          | 10
+          | 100
+          | 1000
+          | 10000
+          | 100000
+          | 1000000,
       });
 
       if (result.success) {

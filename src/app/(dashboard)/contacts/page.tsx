@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
-import { hasPermission } from "@/lib/auth";
+import { getCurrentUser, hasPermission } from "@/lib/auth";
 import { VIEW_CONTACTS } from "@/lib/permissions";
 import { ContactsSplitView } from "@/modules/contacts/components/contacts-split-view";
 import { getContacts } from "@/modules/contacts/queries";
@@ -26,7 +25,9 @@ interface ContactsPageProps {
   searchParams: Promise<{ role?: string }>;
 }
 
-export default async function ContactsPage({ searchParams }: ContactsPageProps) {
+export default async function ContactsPage({
+  searchParams,
+}: ContactsPageProps) {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -49,14 +50,23 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
 
   // Extract role filter from URL param (Story 0.5: AC-0.5.3)
   const params = await searchParams;
-  const validRoles: ContactRoleType[] = ["author", "customer", "vendor", "distributor"];
-  const initialRoleFilter = params.role && validRoles.includes(params.role as ContactRoleType)
-    ? (params.role as ContactRoleType)
-    : undefined;
+  const validRoles: ContactRoleType[] = [
+    "author",
+    "customer",
+    "vendor",
+    "distributor",
+  ];
+  const initialRoleFilter =
+    params.role && validRoles.includes(params.role as ContactRoleType)
+      ? (params.role as ContactRoleType)
+      : undefined;
 
   return (
     <div className="h-full">
-      <ContactsSplitView initialContacts={contacts} initialRoleFilter={initialRoleFilter} />
+      <ContactsSplitView
+        initialContacts={contacts}
+        initialRoleFilter={initialRoleFilter}
+      />
     </div>
   );
 }

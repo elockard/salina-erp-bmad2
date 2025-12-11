@@ -40,7 +40,10 @@ interface SetupAuthMocksOptions {
  * Helper to setup auth mocks for a given user
  * Reduces repetitive mock setup across tests
  */
-function setupAuthMocks(user: User | null, options: SetupAuthMocksOptions = {}) {
+function setupAuthMocks(
+  user: User | null,
+  options: SetupAuthMocksOptions = {},
+) {
   if (user) {
     (mockCurrentUser as Mock).mockResolvedValue({
       id: user.clerk_user_id,

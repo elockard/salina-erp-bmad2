@@ -11,9 +11,7 @@
  * - Status transition validation
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import type { ActionResult } from "@/lib/types";
-import type { Invoice } from "@/modules/invoices/types";
+import { describe, expect, it, vi } from "vitest";
 
 // Mock the auth module
 vi.mock("@/lib/auth", () => ({
@@ -60,7 +58,7 @@ vi.mock("@/db", () => ({
         insert: vi.fn().mockReturnValue({
           values: vi.fn(),
         }),
-      })
+      }),
     ),
   },
 }));
@@ -69,7 +67,7 @@ describe("Invoice Actions Integration Tests", () => {
   describe("updateInvoice", () => {
     it("should reject update for non-draft invoices", async () => {
       // Import after mocks are set up
-      const { getDb, requirePermission } = await import("@/lib/auth");
+      const { getDb } = await import("@/lib/auth");
       const { updateInvoice } = await import("@/modules/invoices/actions");
 
       // Mock the database to return a sent invoice
@@ -107,7 +105,9 @@ describe("Invoice Actions Integration Tests", () => {
       const result = await updateInvoice("test-invoice-id", input);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Only draft invoices can be edited");
+      if (!result.success) {
+        expect(result.error).toBe("Only draft invoices can be edited");
+      }
     });
 
     it("should reject update with empty line items", async () => {
@@ -141,7 +141,9 @@ describe("Invoice Actions Integration Tests", () => {
       const result = await updateInvoice("test-invoice-id", input);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Invoice must have at least one line item");
+      if (!result.success) {
+        expect(result.error).toBe("Invoice must have at least one line item");
+      }
     });
   });
 
@@ -166,7 +168,9 @@ describe("Invoice Actions Integration Tests", () => {
       const result = await voidInvoice("test-invoice-id", "Test reason");
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Cannot void a paid invoice");
+      if (!result.success) {
+        expect(result.error).toBe("Cannot void a paid invoice");
+      }
     });
 
     it("should reject voiding an already void invoice", async () => {
@@ -189,7 +193,9 @@ describe("Invoice Actions Integration Tests", () => {
       const result = await voidInvoice("test-invoice-id", "Test reason");
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Invoice is already void");
+      if (!result.success) {
+        expect(result.error).toBe("Invoice is already void");
+      }
     });
 
     it("should return error for non-existent invoice", async () => {
@@ -208,7 +214,9 @@ describe("Invoice Actions Integration Tests", () => {
       const result = await voidInvoice("non-existent-id", "Test reason");
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Invoice not found");
+      if (!result.success) {
+        expect(result.error).toBe("Invoice not found");
+      }
     });
   });
 
@@ -242,7 +250,11 @@ describe("Invoice Actions Integration Tests", () => {
       const result = await updateInvoice("test-id", input);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("You do not have permission to edit invoices");
+      if (!result.success) {
+        expect(result.error).toBe(
+          "You do not have permission to edit invoices",
+        );
+      }
     });
 
     it("should reject unauthorized users for voidInvoice", async () => {
@@ -255,7 +267,11 @@ describe("Invoice Actions Integration Tests", () => {
       const result = await voidInvoice("test-id", "reason");
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("You do not have permission to void invoices");
+      if (!result.success) {
+        expect(result.error).toBe(
+          "You do not have permission to void invoices",
+        );
+      }
     });
   });
 });

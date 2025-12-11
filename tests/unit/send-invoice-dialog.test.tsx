@@ -12,8 +12,8 @@
  * - Regenerate PDF checkbox in resend mode
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SendInvoiceDialog } from "@/modules/invoices/components/send-invoice-dialog";
 
 describe("SendInvoiceDialog", () => {
@@ -68,7 +68,9 @@ describe("SendInvoiceDialog", () => {
       render(<SendInvoiceDialog {...defaultProps} isResend={false} />);
 
       // Use heading role to find the dialog title specifically
-      expect(screen.getByRole("heading", { name: /send invoice/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /send invoice/i }),
+      ).toBeInTheDocument();
     });
 
     it("shows 'Send Invoice' button", () => {
@@ -88,9 +90,7 @@ describe("SendInvoiceDialog", () => {
     it("shows description about marking as sent", () => {
       render(<SendInvoiceDialog {...defaultProps} isResend={false} />);
 
-      expect(
-        screen.getByText(/mark it as sent/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/mark it as sent/i)).toBeInTheDocument();
     });
   });
 
@@ -99,7 +99,9 @@ describe("SendInvoiceDialog", () => {
       render(<SendInvoiceDialog {...defaultProps} isResend={true} />);
 
       // Use heading role to find the dialog title specifically
-      expect(screen.getByRole("heading", { name: /resend invoice/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /resend invoice/i }),
+      ).toBeInTheDocument();
     });
 
     it("shows 'Resend Invoice' button", () => {
@@ -226,7 +228,7 @@ describe("SendInvoiceDialog", () => {
   describe("loading state", () => {
     it("disables buttons during sending", async () => {
       // Create a promise that we can control
-      let resolvePromise: () => void;
+      let resolvePromise!: () => void;
       const promise = new Promise<void>((resolve) => {
         resolvePromise = resolve;
       });
@@ -243,11 +245,11 @@ describe("SendInvoiceDialog", () => {
       });
 
       // Resolve the promise to clean up
-      resolvePromise!();
+      resolvePromise?.();
     });
 
     it("disables checkbox during resend", async () => {
-      let resolvePromise: () => void;
+      let resolvePromise!: () => void;
       const promise = new Promise<void>((resolve) => {
         resolvePromise = resolve;
       });
@@ -267,11 +269,11 @@ describe("SendInvoiceDialog", () => {
         expect(screen.getByRole("checkbox")).toBeDisabled();
       });
 
-      resolvePromise!();
+      resolvePromise?.();
     });
 
     it("shows Resending... text in resend mode", async () => {
-      let resolvePromise: () => void;
+      let resolvePromise!: () => void;
       const promise = new Promise<void>((resolve) => {
         resolvePromise = resolve;
       });
@@ -291,7 +293,7 @@ describe("SendInvoiceDialog", () => {
         expect(screen.getByText(/Resending\.\.\./)).toBeInTheDocument();
       });
 
-      resolvePromise!();
+      resolvePromise?.();
     });
   });
 

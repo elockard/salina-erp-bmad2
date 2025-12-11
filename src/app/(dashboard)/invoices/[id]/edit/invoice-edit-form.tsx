@@ -20,9 +20,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { updateInvoice, type CreateInvoiceInput } from "@/modules/invoices/actions";
-import type { InvoiceWithLineItems } from "@/modules/invoices/types";
-import type { InvoiceAddress } from "@/modules/invoices/types";
+import {
+  type CreateInvoiceInput,
+  updateInvoice,
+} from "@/modules/invoices/actions";
+import type {
+  InvoiceAddress,
+  InvoiceWithLineItems,
+} from "@/modules/invoices/types";
 
 interface InvoiceEditFormProps {
   invoice: InvoiceWithLineItems;
@@ -32,7 +37,9 @@ export function InvoiceEditForm({ invoice }: InvoiceEditFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [notes, setNotes] = useState(invoice.notes || "");
-  const [internalNotes, setInternalNotes] = useState(invoice.internal_notes || "");
+  const [internalNotes, setInternalNotes] = useState(
+    invoice.internal_notes || "",
+  );
   const [shippingCost, setShippingCost] = useState(invoice.shipping_cost);
 
   const handleSubmit = () => {
@@ -42,7 +49,8 @@ export function InvoiceEditForm({ invoice }: InvoiceEditFormProps) {
         customerId: invoice.customer_id,
         invoiceDate: new Date(invoice.invoice_date),
         dueDate: new Date(invoice.due_date),
-        paymentTerms: invoice.payment_terms as CreateInvoiceInput["paymentTerms"],
+        paymentTerms:
+          invoice.payment_terms as CreateInvoiceInput["paymentTerms"],
         customTermsDays: invoice.custom_terms_days || undefined,
         billToAddress: invoice.bill_to_address as InvoiceAddress,
         shipToAddress: invoice.ship_to_address as InvoiceAddress | null,
@@ -96,7 +104,9 @@ export function InvoiceEditForm({ invoice }: InvoiceEditFormProps) {
           <p className="font-medium">${invoice.subtotal}</p>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">Tax ({Number(invoice.tax_rate) * 100}%)</p>
+          <p className="text-sm text-muted-foreground">
+            Tax ({Number(invoice.tax_rate) * 100}%)
+          </p>
           <p className="font-medium">${invoice.tax_amount}</p>
         </div>
       </div>
@@ -151,7 +161,8 @@ export function InvoiceEditForm({ invoice }: InvoiceEditFormProps) {
       <div className="rounded-lg border p-4">
         <h4 className="font-medium mb-2">Line Items</h4>
         <p className="text-sm text-muted-foreground mb-4">
-          {invoice.lineItems.length} line item(s). To modify line items, void this invoice and create a new one.
+          {invoice.lineItems.length} line item(s). To modify line items, void
+          this invoice and create a new one.
         </p>
         <ul className="space-y-2">
           {invoice.lineItems.map((item) => (

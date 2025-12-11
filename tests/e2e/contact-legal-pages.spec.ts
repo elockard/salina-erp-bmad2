@@ -6,10 +6,13 @@ test.describe("Contact Page", () => {
   test("navigates to contact page from footer", async ({ page }) => {
     await page.goto("/");
     // Use the footer link specifically (has href="/contact")
-    await page.locator('footer').getByRole("link", { name: /contact/i }).click();
+    await page
+      .locator("footer")
+      .getByRole("link", { name: /contact/i })
+      .click();
     await expect(page).toHaveURL(/\/contact/);
     await expect(
-      page.getByRole("heading", { name: /contact us/i, level: 1 })
+      page.getByRole("heading", { name: /contact us/i, level: 1 }),
     ).toBeVisible();
   });
 
@@ -22,7 +25,7 @@ test.describe("Contact Page", () => {
     await expect(page.getByLabel(/company/i)).toBeVisible();
     await expect(page.getByLabel(/message/i)).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /send message/i })
+      page.getByRole("button", { name: /send message/i }),
     ).toBeVisible();
   });
 
@@ -30,8 +33,18 @@ test.describe("Contact Page", () => {
     await page.goto("/contact");
 
     // Use first() since email may appear multiple times in main section
-    await expect(page.getByRole('main').getByText(/hello@salina.media/i).first()).toBeVisible();
-    await expect(page.getByRole('main').getByText(/support@salina.media/i).first()).toBeVisible();
+    await expect(
+      page
+        .getByRole("main")
+        .getByText(/hello@salina.media/i)
+        .first(),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByRole("main")
+        .getByText(/support@salina.media/i)
+        .first(),
+    ).toBeVisible();
   });
 
   test("contact form shows success on valid submission", async ({ page }) => {
@@ -40,7 +53,11 @@ test.describe("Contact Page", () => {
     // Fill in form
     await page.getByLabel(/name/i).fill("Test User");
     await page.getByLabel(/email/i).fill("test@example.com");
-    await page.getByLabel(/message/i).fill("This is a test message for the contact form with enough characters.");
+    await page
+      .getByLabel(/message/i)
+      .fill(
+        "This is a test message for the contact form with enough characters.",
+      );
 
     // Submit form
     await page.getByRole("button", { name: /send message/i }).click();
@@ -66,7 +83,7 @@ test.describe("Contact Page", () => {
     await page.goto("/contact");
     await expect(page).toHaveURL(/\/contact/);
     await expect(
-      page.getByRole("heading", { name: /contact us/i })
+      page.getByRole("heading", { name: /contact us/i }),
     ).toBeVisible();
   });
 });
@@ -77,7 +94,7 @@ test.describe("Privacy Policy Page", () => {
     await page.getByRole("link", { name: /privacy policy/i }).click();
     await expect(page).toHaveURL(/\/privacy/);
     await expect(
-      page.getByRole("heading", { name: /privacy policy/i, level: 1 })
+      page.getByRole("heading", { name: /privacy policy/i, level: 1 }),
     ).toBeVisible();
   });
 
@@ -86,19 +103,19 @@ test.describe("Privacy Policy Page", () => {
 
     // Check required sections
     await expect(
-      page.getByRole("heading", { name: /information we collect/i })
+      page.getByRole("heading", { name: /information we collect/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /how we use your information/i })
+      page.getByRole("heading", { name: /how we use your information/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /cookies and tracking/i })
+      page.getByRole("heading", { name: /cookies and tracking/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /data security/i })
+      page.getByRole("heading", { name: /data security/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /your rights/i })
+      page.getByRole("heading", { name: /your rights/i }),
     ).toBeVisible();
   });
 
@@ -120,7 +137,7 @@ test.describe("Terms of Service Page", () => {
     await page.getByRole("link", { name: /terms of service/i }).click();
     await expect(page).toHaveURL(/\/terms/);
     await expect(
-      page.getByRole("heading", { name: /terms of service/i, level: 1 })
+      page.getByRole("heading", { name: /terms of service/i, level: 1 }),
     ).toBeVisible();
   });
 
@@ -129,19 +146,19 @@ test.describe("Terms of Service Page", () => {
 
     // Check required sections
     await expect(
-      page.getByRole("heading", { name: /agreement to terms/i })
+      page.getByRole("heading", { name: /agreement to terms/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /use of service/i })
+      page.getByRole("heading", { name: /use of service/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /subscription terms/i })
+      page.getByRole("heading", { name: /subscription terms/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /acceptable use policy/i })
+      page.getByRole("heading", { name: /acceptable use policy/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /limitation of liability/i })
+      page.getByRole("heading", { name: /limitation of liability/i }),
     ).toBeVisible();
   });
 
@@ -163,21 +180,25 @@ test.describe("Navigation and Layout", () => {
     // Check contact page - use navigation element to scope
     await page.goto("/contact");
     await expect(
-      page.getByRole("link", { name: /salina erp/i }).first()
+      page.getByRole("link", { name: /salina erp/i }).first(),
     ).toBeVisible();
-    await expect(page.getByRole("navigation").getByRole("link", { name: /features/i })).toBeVisible();
-    await expect(page.getByRole("navigation").getByRole("link", { name: /pricing/i })).toBeVisible();
+    await expect(
+      page.getByRole("navigation").getByRole("link", { name: /features/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("navigation").getByRole("link", { name: /pricing/i }),
+    ).toBeVisible();
 
     // Check privacy page
     await page.goto("/privacy");
     await expect(
-      page.getByRole("link", { name: /salina erp/i }).first()
+      page.getByRole("link", { name: /salina erp/i }).first(),
     ).toBeVisible();
 
     // Check terms page
     await page.goto("/terms");
     await expect(
-      page.getByRole("link", { name: /salina erp/i }).first()
+      page.getByRole("link", { name: /salina erp/i }).first(),
     ).toBeVisible();
   });
 
@@ -185,28 +206,31 @@ test.describe("Navigation and Layout", () => {
     // Check contact page footer
     await page.goto("/contact");
     await expect(
-      page.getByRole("link", { name: /privacy policy/i })
+      page.getByRole("link", { name: /privacy policy/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /terms of service/i })
+      page.getByRole("link", { name: /terms of service/i }),
     ).toBeVisible();
 
     // Check privacy page footer
     await page.goto("/privacy");
     await expect(
-      page.getByRole("link", { name: /privacy policy/i })
+      page.getByRole("link", { name: /privacy policy/i }),
     ).toBeVisible();
 
     // Check terms page footer
     await page.goto("/terms");
     await expect(
-      page.getByRole("link", { name: /terms of service/i })
+      page.getByRole("link", { name: /terms of service/i }),
     ).toBeVisible();
   });
 
   test("can navigate back to home via logo", async ({ page }) => {
     await page.goto("/contact");
-    await page.getByRole("link", { name: /salina erp/i }).first().click();
+    await page
+      .getByRole("link", { name: /salina erp/i })
+      .first()
+      .click();
     await expect(page).toHaveURL("/");
   });
 });
@@ -221,7 +245,7 @@ test.describe("Responsive Design", () => {
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/message/i)).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /send message/i })
+      page.getByRole("button", { name: /send message/i }),
     ).toBeVisible();
   });
 
@@ -230,7 +254,7 @@ test.describe("Responsive Design", () => {
     await page.goto("/privacy");
 
     await expect(
-      page.getByRole("heading", { name: /privacy policy/i })
+      page.getByRole("heading", { name: /privacy policy/i }),
     ).toBeVisible();
   });
 
@@ -239,7 +263,7 @@ test.describe("Responsive Design", () => {
     await page.goto("/terms");
 
     await expect(
-      page.getByRole("heading", { name: /terms of service/i })
+      page.getByRole("heading", { name: /terms of service/i }),
     ).toBeVisible();
   });
 });

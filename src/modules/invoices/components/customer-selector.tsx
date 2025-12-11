@@ -168,9 +168,11 @@ export function CustomerSelector({
             )}
 
             {/* Empty state */}
-            {!isPending && searchQuery.length >= 2 && customers.length === 0 && (
-              <CommandEmpty>No customers found.</CommandEmpty>
-            )}
+            {!isPending &&
+              searchQuery.length >= 2 &&
+              customers.length === 0 && (
+                <CommandEmpty>No customers found.</CommandEmpty>
+              )}
 
             {/* Prompt to type more */}
             {!isPending && searchQuery.length < 2 && searchQuery.length > 0 && (

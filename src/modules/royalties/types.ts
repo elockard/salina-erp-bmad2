@@ -164,6 +164,7 @@ export interface FormatCalculation {
  * Returned by calculateRoyaltyForPeriod function
  *
  * Story 4.4 AC 7: Return detailed breakdown
+ * Story 10.2: Extended with split calculation support
  * Related FRs: FR52 (Detailed calculation breakdown)
  */
 export interface RoyaltyCalculation {
@@ -172,7 +173,7 @@ export interface RoyaltyCalculation {
     startDate: Date;
     endDate: Date;
   };
-  /** Author receiving royalties */
+  /** Author receiving royalties (primary author for split calculations) */
   authorId: string;
   /** Contract ID used for calculation */
   contractId: string;
@@ -188,6 +189,37 @@ export interface RoyaltyCalculation {
   netPayable: number;
   /** Error message if calculation failed */
   error?: string;
+
+  // =========================================================================
+  // Story 10.2: Split Calculation Fields
+  // =========================================================================
+
+  /**
+   * Title-level total royalty before split
+   * For single author: equals totalRoyaltyEarned
+   * For split calculation: the total that gets divided among co-authors
+   *
+   * Story 10.2 AC-10.2.7
+   */
+  titleTotalRoyalty: number;
+
+  /**
+   * Whether this is a split calculation (multiple authors)
+   * - false: Single author with 100% ownership (backward compatible)
+   * - true: Multiple authors with ownership percentages
+   *
+   * Story 10.2 AC-10.2.8
+   */
+  isSplitCalculation: boolean;
+
+  /**
+   * Per-author breakdown for split calculations
+   * - Empty array for single author (isSplitCalculation = false)
+   * - Contains breakdown for each co-author when isSplitCalculation = true
+   *
+   * Story 10.2 AC-10.2.7
+   */
+  authorSplits: AuthorSplitBreakdown[];
 }
 
 /**
@@ -199,3 +231,134 @@ export interface RoyaltyCalculation {
 export type RoyaltyCalculationResult =
   | { success: true; calculation: RoyaltyCalculation }
   | { success: false; error: string };
+
+// ============================================================================
+// Split Royalty Types (Story 10.2)
+// ============================================================================
+
+/**
+ * Per-author split breakdown for co-authored titles
+ *
+ * Story 10.2: Implement Split Royalty Calculation Engine
+ * AC-10.2.7: Calculation Detail Per-Author Breakdown
+ *
+ * Each author's split includes their share of the title royalty,
+ * individual advance recoupment, and net payable amount.
+ */
+export interface AuthorSplitBreakdown {
+  /** Author's contact ID */
+  contactId: string;
+  /** Author's contract ID for this title */
+  contractId: string;
+  /** Ownership percentage (e.g., 60 for 60%) */
+  ownershipPercentage: number;
+  /** Author's share of title royalty before recoupment */
+  splitAmount: number;
+  /** Amount recouped from this author's advance */
+  recoupment: number;
+  /** Net payable to this author */
+  netPayable: number;
+  /** Author's advance status for context */
+  advanceStatus: {
+    /** Total advance amount from contract */
+    totalAdvance: number;
+    /** Amount already recouped before this period */
+    previouslyRecouped: number;
+    /** Remaining advance after this period's recoupment */
+    remainingAfterThisPeriod: number;
+  };
+}
+
+// ============================================================================
+// Royalty Projection Types (Story 10.4)
+// ============================================================================
+
+/**
+ * Sales velocity data for a contract
+ * Used to calculate sales trajectory for projections
+ *
+ * Story 10.4 AC-10.4.7: Royalty Projection
+ */
+export interface SalesVelocity {
+  /** Average units sold per month */
+  unitsPerMonth: number;
+  /** Average revenue per month */
+  revenuePerMonth: number;
+  /** Number of months used in calculation */
+  monthsAnalyzed: number;
+  /** Start date of analysis period */
+  analysisStartDate: Date;
+  /** End date of analysis period */
+  analysisEndDate: Date;
+}
+
+/**
+ * Tier crossover projection
+ * Estimates when an author will reach the next tier
+ *
+ * Story 10.4 AC-10.4.7: Project tier crossover dates
+ */
+export interface TierCrossoverProjection {
+  /** Current tier position */
+  currentTier: {
+    minQuantity: number;
+    maxQuantity: number | null;
+    rate: number;
+  };
+  /** Next tier threshold (null if at highest tier) */
+  nextTierThreshold: number | null;
+  /** Current lifetime sales */
+  currentLifetimeSales: number;
+  /** Units needed to reach next tier (null if at highest) */
+  unitsToNextTier: number | null;
+  /** Estimated date to reach next tier (null if at highest or velocity is 0) */
+  estimatedCrossoverDate: Date | null;
+  /** Months to reach next tier (null if at highest or velocity is 0) */
+  monthsToNextTier: number | null;
+}
+
+/**
+ * Annual royalty projection comparison
+ * Compares projected earnings at current tier vs escalated rates
+ *
+ * Story 10.4 AC-10.4.7: Display projected annual royalty at current rate vs escalated rate
+ */
+export interface AnnualRoyaltyProjection {
+  /** Projected annual sales quantity based on velocity */
+  projectedAnnualUnits: number;
+  /** Projected annual revenue based on velocity */
+  projectedAnnualRevenue: number;
+  /** Royalty at current fixed rate (if stayed at current tier) */
+  royaltyAtCurrentRate: number;
+  /** Royalty with escalation (applying tier transitions) */
+  royaltyWithEscalation: number;
+  /** Difference (benefit from escalation) */
+  escalationBenefit: number;
+  /** Current rate being used */
+  currentRate: number;
+  /** Whether any tier transitions would occur in projection period */
+  wouldCrossoverInYear: boolean;
+}
+
+/**
+ * Complete royalty projection for a contract
+ * Combines velocity analysis, tier crossover, and annual comparison
+ *
+ * Story 10.4 AC-10.4.7: Finance users can view royalty projection
+ */
+export interface RoyaltyProjection {
+  /** Contract ID */
+  contractId: string;
+  /** Title ID */
+  titleId: string;
+  /** Sales velocity analysis */
+  velocity: SalesVelocity;
+  /** Per-format tier crossover projections */
+  tierCrossovers: Map<ContractFormat, TierCrossoverProjection>;
+  /** Annual royalty projection comparison */
+  annualProjection: AnnualRoyaltyProjection;
+  /** Projection generated timestamp */
+  generatedAt: Date;
+  /** Warning messages (e.g., insufficient data) */
+  warnings: string[];
+}

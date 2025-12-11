@@ -70,7 +70,9 @@ test.describe("Contact Management - Split View Layout", () => {
     await expect(page.getByRole("option", { name: /Author/i })).toBeVisible();
     await expect(page.getByRole("option", { name: /Customer/i })).toBeVisible();
     await expect(page.getByRole("option", { name: /Vendor/i })).toBeVisible();
-    await expect(page.getByRole("option", { name: /Distributor/i })).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: /Distributor/i }),
+    ).toBeVisible();
   });
 
   test("AC-7.2.2: Show inactive toggle filters inactive contacts", async ({
@@ -85,20 +87,22 @@ test.describe("Contact Management - Split View Layout", () => {
     // Should trigger reload with inactive contacts
   });
 
-  test("AC-7.2.3: Create Contact button opens modal dialog", async ({ page }) => {
+  test("AC-7.2.3: Create Contact button opens modal dialog", async ({
+    page,
+  }) => {
     // Click create button
     await page.getByRole("button", { name: /Create Contact/i }).click();
 
     // Modal should open
-    await expect(
-      page.getByRole("dialog"),
-    ).toBeVisible();
+    await expect(page.getByRole("dialog")).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Create Contact" }),
     ).toBeVisible();
   });
 
-  test("AC-7.2.3: Create Contact form has required fields", async ({ page }) => {
+  test("AC-7.2.3: Create Contact form has required fields", async ({
+    page,
+  }) => {
     await page.getByRole("button", { name: /Create Contact/i }).click();
 
     // Form fields
@@ -175,12 +179,12 @@ test.describe("Contact Management - Split View Layout", () => {
     await expect(page.getByText(/Contact created/i)).toBeVisible();
 
     // Modal should close
-    await expect(
-      page.getByRole("dialog"),
-    ).not.toBeVisible();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
   });
 
-  test("AC-7.2.2: Empty state shows when no contacts exist", async ({ page }) => {
+  test("AC-7.2.2: Empty state shows when no contacts exist", async ({
+    page,
+  }) => {
     // This test depends on having a clean tenant with no contacts
     const _emptyState = page.getByText("No contacts yet");
     // await expect(emptyState).toBeVisible();

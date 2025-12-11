@@ -1,4 +1,4 @@
-import { addDays, subDays, format } from "date-fns";
+import { addDays, subDays } from "date-fns";
 import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
 
@@ -387,9 +387,7 @@ describe("Customer Aging Grouping (AC-8.5.3)", () => {
   /**
    * Groups invoices by customer and calculates aging buckets
    */
-  const groupByCustomer = (
-    invoices: Invoice[],
-  ): Map<string, AgingBuckets> => {
+  const groupByCustomer = (invoices: Invoice[]): Map<string, AgingBuckets> => {
     const customerBuckets = new Map<string, AgingBuckets>();
 
     for (const invoice of invoices) {
@@ -400,18 +398,18 @@ describe("Customer Aging Grouping (AC-8.5.3)", () => {
         (today.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24),
       );
 
-      if (!customerBuckets.has(invoice.customerId)) {
-        customerBuckets.set(invoice.customerId, {
+      let buckets = customerBuckets.get(invoice.customerId);
+      if (!buckets) {
+        buckets = {
           current: new Decimal(0),
           days1to30: new Decimal(0),
           days31to60: new Decimal(0),
           days61to90: new Decimal(0),
           days90plus: new Decimal(0),
           total: new Decimal(0),
-        });
+        };
+        customerBuckets.set(invoice.customerId, buckets);
       }
-
-      const buckets = customerBuckets.get(invoice.customerId)!;
 
       if (daysOverdue <= 0) {
         buckets.current = buckets.current.plus(balance);
@@ -457,9 +455,9 @@ describe("Customer Aging Grouping (AC-8.5.3)", () => {
     const c1Buckets = result.get("c1");
 
     expect(c1Buckets).toBeDefined();
-    expect(c1Buckets!.current.toFixed(2)).toBe("500.00");
-    expect(c1Buckets!.days1to30.toFixed(2)).toBe("300.00");
-    expect(c1Buckets!.total.toFixed(2)).toBe("800.00");
+    expect(c1Buckets?.current.toFixed(2)).toBe("500.00");
+    expect(c1Buckets?.days1to30.toFixed(2)).toBe("300.00");
+    expect(c1Buckets?.total.toFixed(2)).toBe("800.00");
   });
 
   it("separates different customers", () => {
@@ -487,8 +485,8 @@ describe("Customer Aging Grouping (AC-8.5.3)", () => {
     const result = groupByCustomer(invoices);
 
     expect(result.size).toBe(2);
-    expect(result.get("c1")!.total.toFixed(2)).toBe("1000.00");
-    expect(result.get("c2")!.total.toFixed(2)).toBe("500.00");
+    expect(result.get("c1")?.total.toFixed(2)).toBe("1000.00");
+    expect(result.get("c2")?.total.toFixed(2)).toBe("500.00");
   });
 
   it("excludes zero balance invoices", () => {
@@ -514,7 +512,15 @@ describe("AR Export Data Generation (AC-8.5.6)", () => {
    * Simulates CSV generation logic
    */
   const generateCSVContent = (
-    rows: { customerName: string; current: string; days1to30: string; days31to60: string; days61to90: string; days90plus: string; total: string }[],
+    rows: {
+      customerName: string;
+      current: string;
+      days1to30: string;
+      days31to60: string;
+      days61to90: string;
+      days90plus: string;
+      total: string;
+    }[],
   ): string => {
     const headers = [
       "Customer",
@@ -536,7 +542,9 @@ describe("AR Export Data Generation (AC-8.5.6)", () => {
       row.total,
     ]);
 
-    return [headers.join(","), ...csvRows.map((row) => row.join(","))].join("\n");
+    return [headers.join(","), ...csvRows.map((row) => row.join(","))].join(
+      "\n",
+    );
   };
 
   it("generates valid CSV with headers", () => {
@@ -555,7 +563,9 @@ describe("AR Export Data Generation (AC-8.5.6)", () => {
     const csv = generateCSVContent(rows);
     const lines = csv.split("\n");
 
-    expect(lines[0]).toBe("Customer,Current,1-30 Days,31-60 Days,61-90 Days,90+ Days,Total");
+    expect(lines[0]).toBe(
+      "Customer,Current,1-30 Days,31-60 Days,61-90 Days,90+ Days,Total",
+    );
     expect(lines[1]).toContain("Acme Corp");
     expect(lines[1]).toContain("1500.00");
   });

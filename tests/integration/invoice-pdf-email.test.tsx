@@ -14,13 +14,20 @@
  * with actual credentials. These tests verify the logic without network calls.
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import type { InvoicePDFData, PDFGenerationResult, InvoiceWithPDFDetails } from "@/modules/invoices/types";
+import { describe, expect, it } from "vitest";
+import type {
+  InvoicePDFData,
+  InvoiceWithPDFDetails,
+  PDFGenerationResult,
+} from "@/modules/invoices/types";
 
 describe("Invoice PDF/Email Integration", () => {
   describe("S3 Key Generation Pattern", () => {
     // Test the key generation logic without importing the S3 module
-    const generateInvoiceS3Key = (tenantId: string, invoiceId: string): string => {
+    const generateInvoiceS3Key = (
+      tenantId: string,
+      invoiceId: string,
+    ): string => {
       return `invoices/${tenantId}/${invoiceId}.pdf`;
     };
 
@@ -228,8 +235,7 @@ describe("Invoice PDF/Email Integration", () => {
     });
 
     it("rejects voided invoices from sending", () => {
-      const canSendOrResend = (status: string) =>
-        status !== "void";
+      const canSendOrResend = (status: string) => status !== "void";
 
       expect(canSendOrResend("draft")).toBe(true);
       expect(canSendOrResend("sent")).toBe(true);
@@ -312,7 +318,10 @@ describe("Invoice PDF/Email Integration", () => {
   });
 
   describe("Multi-tenant Isolation", () => {
-    const generateInvoiceS3Key = (tenantId: string, invoiceId: string): string => {
+    const generateInvoiceS3Key = (
+      tenantId: string,
+      invoiceId: string,
+    ): string => {
       return `invoices/${tenantId}/${invoiceId}.pdf`;
     };
 
@@ -336,7 +345,7 @@ describe("Invoice PDF/Email Integration", () => {
         getDownloadUrl: ["invoiceId", "tenantId"],
       };
 
-      for (const [operation, params] of Object.entries(requiredParams)) {
+      for (const [_operation, params] of Object.entries(requiredParams)) {
         expect(params).toContain("tenantId");
       }
     });
@@ -405,7 +414,10 @@ describe("Invoice PDF Content Formatting", () => {
   });
 
   it("formats payment terms correctly", () => {
-    const formatPaymentTerms = (terms: string, customDays: number | null): string => {
+    const formatPaymentTerms = (
+      terms: string,
+      customDays: number | null,
+    ): string => {
       switch (terms) {
         case "net_30":
           return "Net 30";

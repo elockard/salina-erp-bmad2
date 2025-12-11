@@ -1,5 +1,5 @@
-import { PublicNav } from "@/components/marketing/public-nav";
 import { Footer } from "@/components/marketing/footer";
+import { PublicNav } from "@/components/marketing/public-nav";
 
 export default function PublicLayout({
   children,

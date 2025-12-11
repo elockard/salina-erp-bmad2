@@ -10,7 +10,16 @@
  * Permission: owner, admin, editor, finance (NOT author)
  */
 
-import { BarChart3, CreditCard, DollarSign, Hash, Shield, TrendingUp } from "lucide-react";
+import {
+  BarChart3,
+  CreditCard,
+  DollarSign,
+  FileCheck,
+  FileText,
+  Hash,
+  Shield,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -29,6 +38,8 @@ interface ReportCard {
   href: string;
   icon: React.ReactNode;
   available: boolean;
+  /** Roles that can see this report card. If undefined, all non-author roles can see it. */
+  restrictedToRoles?: ("owner" | "admin" | "finance")[];
 }
 
 const reportCards: ReportCard[] = [
@@ -73,6 +84,24 @@ const reportCards: ReportCard[] = [
     available: true,
   },
   {
+    title: "1099 Tax Preparation",
+    description:
+      "Track annual author earnings for IRS 1099-MISC filing requirements.",
+    href: "/reports/tax-preparation",
+    icon: <FileText className="h-8 w-8 text-[#1e3a5f]" />,
+    available: true,
+    restrictedToRoles: ["owner", "admin", "finance"],
+  },
+  {
+    title: "1099-MISC Generation",
+    description:
+      "Generate IRS 1099-MISC forms for eligible authors meeting the $600 threshold.",
+    href: "/reports/tax-preparation/1099-generation",
+    icon: <FileCheck className="h-8 w-8 text-[#1e3a5f]" />,
+    available: true,
+    restrictedToRoles: ["owner", "admin", "finance"],
+  },
+  {
     title: "Revenue Trends",
     description:
       "Monitor revenue performance over time with period comparisons.",
@@ -94,6 +123,17 @@ export default async function ReportsPage() {
     redirect("/dashboard");
   }
 
+  // Check if user has finance-level permissions for restricted reports
+  const hasFinanceAccess = await hasPermission(["owner", "admin", "finance"]);
+
+  // Filter cards based on role restrictions
+  const visibleCards = reportCards.filter((card) => {
+    // If no restriction, show to all
+    if (!card.restrictedToRoles) return true;
+    // If restricted, only show to users with finance access
+    return hasFinanceAccess;
+  });
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
@@ -104,7 +144,7 @@ export default async function ReportsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {reportCards.map((card) => (
+        {visibleCards.map((card) => (
           <Card
             key={card.href}
             className={

@@ -8,7 +8,7 @@
  * Related FRs: FR82-FR87 (Contact Management)
  */
 
-import type { contacts, contactRoles } from "@/db/schema/contacts";
+import type { contactRoles, contacts } from "@/db/schema/contacts";
 
 // =============================================================================
 // Base Types (from Drizzle schema)
@@ -219,9 +219,7 @@ export interface ContactFilters {
 /**
  * Type guard for AuthorRoleData
  */
-export function isAuthorRoleData(
-  data: unknown,
-): data is AuthorRoleData {
+export function isAuthorRoleData(data: unknown): data is AuthorRoleData {
   if (!data || typeof data !== "object") return false;
   const d = data as Record<string, unknown>;
   // AuthorRoleData fields are all optional, but check for expected shape
@@ -234,9 +232,7 @@ export function isAuthorRoleData(
 /**
  * Type guard for CustomerRoleData
  */
-export function isCustomerRoleData(
-  data: unknown,
-): data is CustomerRoleData {
+export function isCustomerRoleData(data: unknown): data is CustomerRoleData {
   if (!data || typeof data !== "object") return false;
   const d = data as Record<string, unknown>;
   if (d.credit_limit !== undefined && typeof d.credit_limit !== "number")
@@ -249,16 +245,17 @@ export function isCustomerRoleData(
 /**
  * Type guard for VendorRoleData
  */
-export function isVendorRoleData(
-  data: unknown,
-): data is VendorRoleData {
+export function isVendorRoleData(data: unknown): data is VendorRoleData {
   if (!data || typeof data !== "object") return false;
   const d = data as Record<string, unknown>;
   if (d.vendor_code !== undefined && typeof d.vendor_code !== "string")
     return false;
   if (d.lead_time_days !== undefined && typeof d.lead_time_days !== "number")
     return false;
-  if (d.min_order_amount !== undefined && typeof d.min_order_amount !== "number")
+  if (
+    d.min_order_amount !== undefined &&
+    typeof d.min_order_amount !== "number"
+  )
     return false;
   return true;
 }
@@ -271,7 +268,8 @@ export function isDistributorRoleData(
 ): data is DistributorRoleData {
   if (!data || typeof data !== "object") return false;
   const d = data as Record<string, unknown>;
-  if (d.territory !== undefined && typeof d.territory !== "string") return false;
+  if (d.territory !== undefined && typeof d.territory !== "string")
+    return false;
   if (d.commission_rate !== undefined && typeof d.commission_rate !== "number")
     return false;
   if (d.contract_terms !== undefined && typeof d.contract_terms !== "string")

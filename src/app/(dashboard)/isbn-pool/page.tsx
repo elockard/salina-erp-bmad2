@@ -122,7 +122,9 @@ export default async function ISBNPoolPage({
         currentStatus={status}
         currentSearch={search}
         currentPrefix={prefix}
-        prefixOptions={prefixOptionsResult.success ? prefixOptionsResult.data : []}
+        prefixOptions={
+          prefixOptionsResult.success ? prefixOptionsResult.data : []
+        }
       />
 
       {/* Data Table */}

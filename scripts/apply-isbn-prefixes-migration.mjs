@@ -2,9 +2,10 @@
  * One-time migration script to apply isbn_prefixes table
  * Run with: node scripts/apply-isbn-prefixes-migration.mjs
  */
-import { neon } from '@neondatabase/serverless';
-import { readFileSync } from 'fs';
-import { config } from 'dotenv';
+
+import { readFileSync } from "node:fs";
+import { neon } from "@neondatabase/serverless";
+import { config } from "dotenv";
 
 // Load environment variables
 config();
@@ -23,29 +24,32 @@ async function applyMigration() {
     `;
 
     if (tableCheck[0].exists) {
-      console.log('✅ Table isbn_prefixes already exists');
+      console.log("✅ Table isbn_prefixes already exists");
       return;
     }
 
-    console.log('⚠️  Table isbn_prefixes does NOT exist. Applying migration...');
+    console.log("⚠️  Table isbn_prefixes does NOT exist. Applying migration...");
 
     // Read and execute the migration
-    const migrationSQL = readFileSync('./drizzle/migrations/0011_woozy_mesmero.sql', 'utf8');
+    const migrationSQL = readFileSync(
+      "./drizzle/migrations/0011_woozy_mesmero.sql",
+      "utf8",
+    );
 
     // Split by statement-breakpoint and execute each
-    const statements = migrationSQL.split('--> statement-breakpoint');
+    const statements = migrationSQL.split("--> statement-breakpoint");
 
     for (const stmt of statements) {
       const cleaned = stmt.trim();
-      if (cleaned && !cleaned.startsWith('--')) {
-        console.log('Executing:', cleaned.substring(0, 80) + '...');
+      if (cleaned && !cleaned.startsWith("--")) {
+        console.log("Executing:", `${cleaned.substring(0, 80)}...`);
         try {
           await sql.unsafe(cleaned);
-          console.log('  ✓ Success');
+          console.log("  ✓ Success");
         } catch (err) {
           // Skip "already exists" errors
-          if (err.message.includes('already exists')) {
-            console.log('  ⚠️ Already exists, skipping');
+          if (err.message.includes("already exists")) {
+            console.log("  ⚠️ Already exists, skipping");
           } else {
             throw err;
           }
@@ -53,9 +57,9 @@ async function applyMigration() {
       }
     }
 
-    console.log('\n✅ Migration applied successfully!');
+    console.log("\n✅ Migration applied successfully!");
   } catch (error) {
-    console.error('❌ Migration failed:', error.message);
+    console.error("❌ Migration failed:", error.message);
     process.exit(1);
   }
 }

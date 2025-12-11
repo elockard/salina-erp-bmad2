@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function PublicNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -68,27 +68,27 @@ export function PublicNav() {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <div className="flex flex-col space-y-4">
-              <a
+              <Link
                 href="/#features"
                 className="text-muted-foreground hover:text-foreground transition-colors px-2 py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Features
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/#pricing"
                 className="text-muted-foreground hover:text-foreground transition-colors px-2 py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Pricing
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/contact"
                 className="text-muted-foreground hover:text-foreground transition-colors px-2 py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Contact
-              </a>
+              </Link>
               <div className="flex flex-col space-y-2 pt-4 border-t">
                 <Button variant="ghost" asChild className="justify-start">
                   <Link href="/sign-in">Login</Link>

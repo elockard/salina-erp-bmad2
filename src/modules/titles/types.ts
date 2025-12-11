@@ -34,13 +34,32 @@ export type PublicationStatus =
 /**
  * Title with related author information
  * Used for list views and detail pages
+ *
+ * Backward compatible: provides single `author` for existing code
+ * Story 10.1: Also includes optional `authors` array for multi-author support
  */
 export interface TitleWithAuthor extends Title {
+  /** Primary author (backward compatible) */
   author: {
     id: string;
     name: string;
     email: string | null;
   };
+  /** All authors with ownership info (Story 10.1) */
+  authors?: TitleAuthorInfo[];
+  /** Whether this title has multiple authors */
+  isCoAuthored?: boolean;
+}
+
+/**
+ * Author info for title display (Story 10.1)
+ */
+export interface TitleAuthorInfo {
+  contactId: string;
+  name: string;
+  email: string | null;
+  ownershipPercentage: string;
+  isPrimary: boolean;
 }
 
 /**

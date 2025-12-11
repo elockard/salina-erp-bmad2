@@ -17,7 +17,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -48,7 +47,9 @@ interface InvoiceTotalsProps {
  * Calculate invoice subtotal from line items
  * Subtotal = sum of all (quantity * unit_price)
  */
-export function calculateSubtotal(lineItems: LineItemData[] | undefined): string {
+export function calculateSubtotal(
+  lineItems: LineItemData[] | undefined,
+): string {
   if (!lineItems || lineItems.length === 0) {
     return "0.00";
   }
@@ -138,19 +139,27 @@ export function InvoiceTotals({ disabled = false }: InvoiceTotalsProps) {
   const { control } = useFormContext();
 
   // Watch line items and shipping cost for real-time updates
-  const lineItems = useWatch({ control, name: "line_items" }) as LineItemData[] | undefined;
-  const shippingCost = useWatch({ control, name: "shipping_cost" }) as string | undefined;
+  const lineItems = useWatch({ control, name: "line_items" }) as
+    | LineItemData[]
+    | undefined;
+  const shippingCost = useWatch({ control, name: "shipping_cost" }) as
+    | string
+    | undefined;
 
   // Calculate totals
   const subtotal = calculateSubtotal(lineItems);
   const taxAmount = calculateTax(lineItems);
-  const grandTotal = calculateGrandTotal(subtotal, taxAmount, shippingCost || "0");
+  const grandTotal = calculateGrandTotal(
+    subtotal,
+    taxAmount,
+    shippingCost || "0",
+  );
 
   // Format currency for display
   const formatCurrency = (value: string): string => {
     try {
       const num = parseFloat(value);
-      return isNaN(num) ? "$0.00" : `$${num.toFixed(2)}`;
+      return Number.isNaN(num) ? "$0.00" : `$${num.toFixed(2)}`;
     } catch {
       return "$0.00";
     }
@@ -210,7 +219,9 @@ export function InvoiceTotals({ disabled = false }: InvoiceTotalsProps) {
           {/* Grand Total Row */}
           <div className="flex items-center justify-between">
             <span className="text-lg font-semibold">Grand Total</span>
-            <span className="text-lg font-bold">{formatCurrency(grandTotal)}</span>
+            <span className="text-lg font-bold">
+              {formatCurrency(grandTotal)}
+            </span>
           </div>
         </div>
       </div>
@@ -218,8 +229,9 @@ export function InvoiceTotals({ disabled = false }: InvoiceTotalsProps) {
       {/* Summary breakdown */}
       {lineItems && lineItems.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Calculated from {lineItems.length} line item{lineItems.length !== 1 ? "s" : ""}.
-          Tax is computed per line using individual tax rates.
+          Calculated from {lineItems.length} line item
+          {lineItems.length !== 1 ? "s" : ""}. Tax is computed per line using
+          individual tax rates.
         </p>
       )}
     </div>

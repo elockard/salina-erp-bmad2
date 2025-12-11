@@ -8,115 +8,130 @@
  */
 
 // =============================================================================
-// Types
-// =============================================================================
-export type {
-  Contact,
-  InsertContact,
-  ContactRole,
-  InsertContactRole,
-  Address,
-  PaymentInfo,
-  DirectDepositPaymentInfo,
-  CheckPaymentInfo,
-  WireTransferPaymentInfo,
-  SocialLinks,
-  AuthorRoleData,
-  CustomerRoleData,
-  VendorRoleData,
-  DistributorRoleData,
-  RoleSpecificData,
-  ContactWithRoles,
-  ContactWithPortalStatus,
-  ContactRoleType,
-  ContactStatusType,
-  ContactFilters,
-} from "./types";
-
-// Type guards
-export {
-  isAuthorRoleData,
-  isCustomerRoleData,
-  isVendorRoleData,
-  isDistributorRoleData,
-  isPaymentInfo,
-} from "./types";
-
-// =============================================================================
-// Validation Schemas
-// =============================================================================
-export {
-  // Enums
-  contactStatusEnum,
-  contactRoleEnum,
-  paymentMethodEnum,
-  accountTypeEnum,
-  // Address
-  addressSchema,
-  // Payment info
-  directDepositPaymentSchema,
-  checkPaymentSchema,
-  wireTransferPaymentSchema,
-  paymentInfoSchema,
-  // Role-specific data
-  socialLinksSchema,
-  authorRoleDataSchema,
-  customerRoleDataSchema,
-  vendorRoleDataSchema,
-  distributorRoleDataSchema,
-  // Contact schemas
-  createContactSchema,
-  updateContactSchema,
-  // Role schemas
-  assignContactRoleSchema,
-  contactRoleSchema,
-} from "./schema";
-
-// Schema input types
-export type {
-  CreateContactInput,
-  UpdateContactInput,
-  AssignContactRoleInput,
-  ContactRoleInput,
-  PaymentInfoInput,
-  AddressInput,
-} from "./schema";
-
-// =============================================================================
 // Actions (Story 7.2)
 // =============================================================================
 export {
-  createContact,
-  updateContact,
-  deactivateContact,
-  reactivateContact,
   assignContactRole,
-  removeContactRole,
-  updateContactRoleData,
+  clearContactTaxInfo,
+  createContact,
+  deactivateContact,
   fetchContacts,
   getContactWithRoles,
+  reactivateContact,
+  removeContactRole,
+  updateContact,
+  updateContactRoleData,
+  // Tax info actions (Story 11.1)
+  updateContactTaxInfo,
+  updateContactTaxInfoPartial,
 } from "./actions";
-
-// =============================================================================
-// Queries (Story 7.2)
-// =============================================================================
-export {
-  getContacts,
-  getContactById,
-  getContactsByRole,
-  searchContacts,
-  getContactRoles,
-  contactHasRole,
-  getContactsCount,
-  getContactByEmail,
-} from "./queries";
-
 // =============================================================================
 // Components (Story 7.2)
 // =============================================================================
 export {
-  ContactList,
-  ContactForm,
   ContactDetail,
+  ContactForm,
+  ContactList,
   ContactsSplitView,
 } from "./components";
+// Tax status type (Story 11.1)
+export type { ContactTaxStatus } from "./queries";
+// =============================================================================
+// Queries (Story 7.2)
+// =============================================================================
+export {
+  contactHasRole,
+  getAuthorsMissingTINCount,
+  // Tax queries (Story 11.1)
+  getAuthorsWithMissingTIN,
+  getContactByEmail,
+  getContactById,
+  getContactRoles,
+  getContacts,
+  getContactsByRole,
+  getContactsCount,
+  getContactsMissingW9Count,
+  getContactsWithMissingW9,
+  getContactTaxStatus,
+  searchContacts,
+} from "./queries";
+
+// Schema input types
+export type {
+  AddressInput,
+  AssignContactRoleInput,
+  ContactRoleInput,
+  CreateContactInput,
+  PaymentInfoInput,
+  // Tax info types (Story 11.1)
+  TaxInfoInput,
+  TinTypeInput,
+  UpdateContactInput,
+  UpdateTaxInfoInput,
+} from "./schema";
+// =============================================================================
+// Validation Schemas
+// =============================================================================
+export {
+  accountTypeEnum,
+  // Address
+  addressSchema,
+  // Role schemas
+  assignContactRoleSchema,
+  authorRoleDataSchema,
+  checkPaymentSchema,
+  contactRoleEnum,
+  contactRoleSchema,
+  // Enums
+  contactStatusEnum,
+  // Contact schemas
+  createContactSchema,
+  customerRoleDataSchema,
+  // Payment info
+  directDepositPaymentSchema,
+  distributorRoleDataSchema,
+  paymentInfoSchema,
+  paymentMethodEnum,
+  // Role-specific data
+  socialLinksSchema,
+  taxInfoSchema,
+  // Tax info schemas (Story 11.1)
+  tinTypeEnum,
+  updateContactSchema,
+  updateTaxInfoSchema,
+  vendorRoleDataSchema,
+  wireTransferPaymentSchema,
+} from "./schema";
+// =============================================================================
+// Types
+// =============================================================================
+export type {
+  Address,
+  AuthorRoleData,
+  CheckPaymentInfo,
+  Contact,
+  ContactFilters,
+  ContactRole,
+  ContactRoleType,
+  ContactStatusType,
+  ContactWithPortalStatus,
+  ContactWithRoles,
+  CustomerRoleData,
+  DirectDepositPaymentInfo,
+  DistributorRoleData,
+  InsertContact,
+  InsertContactRole,
+  PaymentInfo,
+  RoleSpecificData,
+  SocialLinks,
+  VendorRoleData,
+  WireTransferPaymentInfo,
+} from "./types";
+// Type guards
+export {
+  isAuthorRoleData,
+  isCustomerRoleData,
+  isDistributorRoleData,
+  isPaymentInfo,
+  isVendorRoleData,
+} from "./types";

@@ -177,7 +177,9 @@ describe("InvoiceListTable", () => {
       },
     ];
 
-    render(<InvoiceListTable {...defaultProps} invoices={invoicesWithoutCustomer} />);
+    render(
+      <InvoiceListTable {...defaultProps} invoices={invoicesWithoutCustomer} />,
+    );
 
     expect(screen.getByText("Unknown Customer")).toBeInTheDocument();
   });

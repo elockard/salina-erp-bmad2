@@ -67,7 +67,9 @@ test.describe("ISBN Prefix Settings Page - Registration Form (AC-7.4.3)", () => 
     await expect(page.getByLabel(/prefix/i)).toBeVisible();
 
     // Block size selection
-    await expect(page.getByLabel(/block/i).or(page.getByText(/block size/i))).toBeVisible();
+    await expect(
+      page.getByLabel(/block/i).or(page.getByText(/block size/i)),
+    ).toBeVisible();
 
     // Type selection
     await expect(page.getByText(/physical/i)).toBeVisible();
@@ -83,13 +85,13 @@ test.describe("ISBN Prefix Settings Page - Registration Form (AC-7.4.3)", () => 
     await prefixInput.fill("123");
 
     // Try to submit
-    const submitButton = page.getByRole("button", { name: /register|create|submit/i });
+    const submitButton = page.getByRole("button", {
+      name: /register|create|submit/i,
+    });
     await submitButton.click();
 
     // Should show validation error
-    await expect(
-      page.getByText(/978|979|must start/i),
-    ).toBeVisible();
+    await expect(page.getByText(/978|979|must start/i)).toBeVisible();
   });
 });
 
@@ -100,7 +102,9 @@ test.describe("ISBN Prefix Settings Page - Table (AC-7.4.4)", () => {
 
   test("AC-7.4.4: Empty state shown when no prefixes", async ({ page }) => {
     // Should show empty state message
-    const emptyState = page.getByText(/no isbn prefixes|get started|add prefix/i);
+    const _emptyState = page.getByText(
+      /no isbn prefixes|get started|add prefix/i,
+    );
     // May or may not be visible depending on data state
     // Just check page loads without errors
     await expect(page).toHaveURL(/\/settings\/isbn-prefixes/);
@@ -113,11 +117,21 @@ test.describe("ISBN Prefix Settings Page - Table (AC-7.4.4)", () => {
     // If table exists, check headers
     const tableExists = await table.isVisible().catch(() => false);
     if (tableExists) {
-      await expect(page.getByRole("columnheader", { name: /prefix/i })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: /block/i })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: /type/i })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: /utilization/i })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: /status/i })).toBeVisible();
+      await expect(
+        page.getByRole("columnheader", { name: /prefix/i }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("columnheader", { name: /block/i }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("columnheader", { name: /type/i }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("columnheader", { name: /utilization/i }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("columnheader", { name: /status/i }),
+      ).toBeVisible();
     }
   });
 
@@ -136,13 +150,19 @@ test.describe("ISBN Pool Page - Prefix Filter (AC-7.4.7)", () => {
 
   test("AC-7.4.7: Prefix filter dropdown is visible", async ({ page }) => {
     // Prefix filter should be in the filters section
-    const prefixFilter = page.getByRole("combobox").filter({ hasText: /prefix|all prefixes/i });
-    await expect(prefixFilter.or(page.getByText(/all prefixes/i))).toBeVisible();
+    const prefixFilter = page
+      .getByRole("combobox")
+      .filter({ hasText: /prefix|all prefixes/i });
+    await expect(
+      prefixFilter.or(page.getByText(/all prefixes/i)),
+    ).toBeVisible();
   });
 
   test("AC-7.4.7: Prefix filter has Legacy option", async ({ page }) => {
     // Find and click prefix filter
-    const filters = page.locator('[data-testid="filters"]').or(page.locator("form"));
+    const filters = page
+      .locator('[data-testid="filters"]')
+      .or(page.locator("form"));
     const prefixTrigger = filters.getByRole("combobox").nth(2);
 
     const triggerVisible = await prefixTrigger.isVisible().catch(() => false);
@@ -159,7 +179,9 @@ test.describe("ISBN Pool Page - Prefix Filter (AC-7.4.7)", () => {
     const tableExists = await table.isVisible().catch(() => false);
 
     if (tableExists) {
-      await expect(page.getByRole("columnheader", { name: /prefix/i })).toBeVisible();
+      await expect(
+        page.getByRole("columnheader", { name: /prefix/i }),
+      ).toBeVisible();
     }
   });
 });
@@ -174,12 +196,14 @@ test.describe("ISBN Pool Report - Prefix Breakdown (AC-7.4.7)", () => {
     await page.waitForTimeout(1000);
 
     // Check for prefix breakdown component
-    const breakdown = page.getByTestId("isbn-prefix-breakdown").or(
-      page.getByText(/isbn pool by prefix/i)
-    );
+    const _breakdown = page
+      .getByTestId("isbn-prefix-breakdown")
+      .or(page.getByText(/isbn pool by prefix/i));
 
     // May not be visible if no data
-    const pageLoaded = await page.getByRole("heading", { name: /isbn pool/i }).isVisible();
+    const pageLoaded = await page
+      .getByRole("heading", { name: /isbn pool/i })
+      .isVisible();
     expect(pageLoaded).toBe(true);
   });
 });

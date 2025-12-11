@@ -37,7 +37,12 @@ vi.mock("@/modules/isbn-prefixes/queries", () => ({
   checkPrefixExists: vi.fn(),
 }));
 
-import { getCurrentTenantId, getCurrentUser, getDb, requirePermission } from "@/lib/auth";
+import {
+  getCurrentTenantId,
+  getCurrentUser,
+  getDb,
+  requirePermission,
+} from "@/lib/auth";
 import { checkPrefixExists } from "@/modules/isbn-prefixes/queries";
 
 // Mock data
@@ -65,7 +70,9 @@ describe("ISBN Prefixes Actions", () => {
 
   describe("createIsbnPrefix", () => {
     test("validates prefix must start with 978 or 979", async () => {
-      const { createIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { createIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
       // Story 7.6: Removed type field - ISBNs are unified
       const result = await createIsbnPrefix({
@@ -80,7 +87,9 @@ describe("ISBN Prefixes Actions", () => {
     });
 
     test("validates prefix length", async () => {
-      const { createIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { createIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
       // Story 7.6: Removed type field - ISBNs are unified
       const result = await createIsbnPrefix({
@@ -95,7 +104,9 @@ describe("ISBN Prefixes Actions", () => {
     });
 
     test("validates prefix contains only digits", async () => {
-      const { createIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { createIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
       // Story 7.6: Removed type field - ISBNs are unified
       const result = await createIsbnPrefix({
@@ -112,7 +123,9 @@ describe("ISBN Prefixes Actions", () => {
     test("returns error when unauthorized", async () => {
       vi.mocked(requirePermission).mockRejectedValue(new Error("UNAUTHORIZED"));
 
-      const { createIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { createIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
       // Story 7.6: Removed type field - ISBNs are unified
       const result = await createIsbnPrefix({
@@ -129,7 +142,9 @@ describe("ISBN Prefixes Actions", () => {
     test("rejects duplicate prefix", async () => {
       vi.mocked(checkPrefixExists).mockResolvedValue(true);
 
-      const { createIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { createIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
       // Story 7.6: Removed type field - ISBNs are unified
       const result = await createIsbnPrefix({
@@ -146,7 +161,9 @@ describe("ISBN Prefixes Actions", () => {
 
   describe("deleteIsbnPrefix", () => {
     test("validates UUID format", async () => {
-      const { deleteIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { deleteIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
       const result = await deleteIsbnPrefix("invalid-uuid");
 
@@ -168,9 +185,13 @@ describe("ISBN Prefixes Actions", () => {
         mockDb as unknown as Awaited<ReturnType<typeof getDb>>,
       );
 
-      const { deleteIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { deleteIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
-      const result = await deleteIsbnPrefix("550e8400-e29b-41d4-a716-446655440000");
+      const result = await deleteIsbnPrefix(
+        "550e8400-e29b-41d4-a716-446655440000",
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -196,9 +217,13 @@ describe("ISBN Prefixes Actions", () => {
         mockDb as unknown as Awaited<ReturnType<typeof getDb>>,
       );
 
-      const { deleteIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { deleteIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
-      const result = await deleteIsbnPrefix("550e8400-e29b-41d4-a716-446655440000");
+      const result = await deleteIsbnPrefix(
+        "550e8400-e29b-41d4-a716-446655440000",
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -224,9 +249,13 @@ describe("ISBN Prefixes Actions", () => {
         mockDb as unknown as Awaited<ReturnType<typeof getDb>>,
       );
 
-      const { deleteIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { deleteIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
-      const result = await deleteIsbnPrefix("550e8400-e29b-41d4-a716-446655440000");
+      const result = await deleteIsbnPrefix(
+        "550e8400-e29b-41d4-a716-446655440000",
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -237,9 +266,13 @@ describe("ISBN Prefixes Actions", () => {
     test("returns error when unauthorized", async () => {
       vi.mocked(requirePermission).mockRejectedValue(new Error("UNAUTHORIZED"));
 
-      const { deleteIsbnPrefix } = await import("@/modules/isbn-prefixes/actions");
+      const { deleteIsbnPrefix } = await import(
+        "@/modules/isbn-prefixes/actions"
+      );
 
-      const result = await deleteIsbnPrefix("550e8400-e29b-41d4-a716-446655440000");
+      const result = await deleteIsbnPrefix(
+        "550e8400-e29b-41d4-a716-446655440000",
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {

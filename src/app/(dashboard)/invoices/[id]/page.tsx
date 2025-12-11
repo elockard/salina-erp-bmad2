@@ -64,7 +64,9 @@ export default async function InvoiceDetailPage({
   }
 
   // Get customer name
-  const customer = invoice.customer as { first_name: string; last_name: string } | undefined;
+  const customer = invoice.customer as
+    | { first_name: string; last_name: string }
+    | undefined;
   const customerName = customer
     ? `${customer.first_name} ${customer.last_name}`.trim()
     : "Unknown Customer";
@@ -82,10 +84,7 @@ export default async function InvoiceDetailPage({
       </div>
 
       {/* Invoice Detail Client */}
-      <InvoiceDetailClient
-        invoice={invoice}
-        customerName={customerName}
-      />
+      <InvoiceDetailClient invoice={invoice} customerName={customerName} />
     </div>
   );
 }

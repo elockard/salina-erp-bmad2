@@ -113,3 +113,121 @@ export function maskTaxId(taxId: string): string {
   const lastFour = taxId.slice(-4);
   return `***-**-${lastFour}`;
 }
+
+// =============================================================================
+// TIN Encryption Functions (Story 11.1)
+// =============================================================================
+// These functions use a separate key (TIN_ENCRYPTION_KEY) and a different format
+// for enhanced security of Tax Identification Numbers for 1099 reporting.
+
+const TIN_IV_LENGTH = 16; // 128-bit IV for TIN encryption
+const TIN_KEY_LENGTH = 32; // 256-bit key
+
+/**
+ * Get the TIN encryption key from environment variable
+ *
+ * The key must be:
+ * - Stored in TIN_ENCRYPTION_KEY environment variable
+ * - A 64-character hex string (32 bytes when decoded)
+ * - Generated securely (e.g., `openssl rand -hex 32`)
+ *
+ * @returns Buffer containing the 32-byte encryption key
+ * @throws Error if key is not set or invalid length
+ */
+function getTINEncryptionKey(): Buffer {
+  const keyHex = process.env.TIN_ENCRYPTION_KEY;
+
+  if (!keyHex) {
+    throw new Error(
+      "TIN_ENCRYPTION_KEY environment variable is not set. " +
+        "Generate a 32-byte hex key: openssl rand -hex 32",
+    );
+  }
+
+  const key = Buffer.from(keyHex, "hex");
+
+  if (key.length !== TIN_KEY_LENGTH) {
+    throw new Error(
+      `TIN_ENCRYPTION_KEY must be ${TIN_KEY_LENGTH * 2} hex characters (${TIN_KEY_LENGTH} bytes). ` +
+        `Got ${keyHex.length} characters. Generate with: openssl rand -hex 32`,
+    );
+  }
+
+  return key;
+}
+
+/**
+ * Encrypt a TIN (Tax Identification Number) using AES-256-GCM
+ *
+ * Story 11.1 - AC-11.1.4: TIN Encryption and Security
+ *
+ * The ciphertext format is: base64(IV + encrypted_data + authTag)
+ * - IV: 16 bytes (randomly generated for each encryption)
+ * - encrypted_data: variable length
+ * - authTag: 16 bytes (authentication tag from GCM)
+ *
+ * @param plaintext - The TIN value to encrypt (SSN or EIN format)
+ * @returns Base64-encoded ciphertext containing IV, encrypted data, and auth tag
+ * @throws Error if TIN_ENCRYPTION_KEY is not set or invalid
+ *
+ * @example
+ * const encrypted = encryptTIN("123-45-6789");
+ * // Returns: "base64EncodedCiphertext..."
+ */
+export function encryptTIN(plaintext: string): string {
+  const key = getTINEncryptionKey();
+  const iv = randomBytes(TIN_IV_LENGTH);
+
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+
+  let encrypted = cipher.update(plaintext, "utf8");
+  encrypted = Buffer.concat([encrypted, cipher.final()]);
+  const authTag = cipher.getAuthTag();
+
+  // Combine IV + encrypted data + authTag into a single buffer
+  const combined = Buffer.concat([iv, encrypted, authTag]);
+
+  return combined.toString("base64");
+}
+
+/**
+ * Decrypt a TIN (Tax Identification Number) using AES-256-GCM
+ *
+ * Story 11.1 - AC-11.1.4: TIN Encryption and Security
+ *
+ * Expects ciphertext in format: base64(IV + encrypted_data + authTag)
+ *
+ * @param ciphertext - Base64-encoded ciphertext from encryptTIN
+ * @returns The original plaintext TIN value
+ * @throws Error if TIN_ENCRYPTION_KEY is not set
+ * @throws Error if ciphertext is tampered or corrupted
+ * @throws Error if ciphertext format is invalid
+ *
+ * @example
+ * const decrypted = decryptTIN(encryptedValue);
+ * // Returns: "123-45-6789"
+ */
+export function decryptTIN(ciphertext: string): string {
+  const key = getTINEncryptionKey();
+
+  // Decode base64 to buffer
+  const combined = Buffer.from(ciphertext, "base64");
+
+  // Validate minimum length: IV (16) + at least 1 byte encrypted + authTag (16)
+  if (combined.length < TIN_IV_LENGTH + 1 + AUTH_TAG_LENGTH) {
+    throw new Error("Invalid ciphertext: too short");
+  }
+
+  // Extract components
+  const iv = combined.subarray(0, TIN_IV_LENGTH);
+  const authTag = combined.subarray(-AUTH_TAG_LENGTH);
+  const encrypted = combined.subarray(TIN_IV_LENGTH, -AUTH_TAG_LENGTH);
+
+  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+
+  let decrypted = decipher.update(encrypted);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+
+  return decrypted.toString("utf8");
+}

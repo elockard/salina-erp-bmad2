@@ -213,7 +213,7 @@ export async function getNextInvoiceNumberPreview(): Promise<string> {
  * @returns List of invoices with customer information
  */
 export async function getInvoicesWithCustomer(
-  options?: InvoiceFilters & { limit?: number; offset?: number }
+  options?: InvoiceFilters & { limit?: number; offset?: number },
 ): Promise<InvoiceWithCustomer[]> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
@@ -249,7 +249,9 @@ export async function getInvoicesWithCustomer(
   }
 
   // Get unique customer IDs
-  const customerIds = [...new Set(invoiceResults.map((inv) => inv.customer_id))];
+  const customerIds = [
+    ...new Set(invoiceResults.map((inv) => inv.customer_id)),
+  ];
 
   // Query contacts separately
   const customerResults = await db.query.contacts.findMany({
@@ -266,7 +268,7 @@ export async function getInvoicesWithCustomer(
         last_name: c.last_name,
         email: c.email,
       },
-    ])
+    ]),
   );
 
   // Map invoices with customer data
@@ -398,7 +400,7 @@ export async function getInvoiceWithDetails(
  * @returns Invoice with line items if draft, null otherwise
  */
 export async function getInvoiceForEdit(
-  id: string
+  id: string,
 ): Promise<InvoiceWithLineItems | null> {
   const tenantId = await getCurrentTenantId();
   const db = await getDb();
@@ -407,7 +409,7 @@ export async function getInvoiceForEdit(
     where: and(
       eq(invoices.id, id),
       eq(invoices.tenant_id, tenantId),
-      eq(invoices.status, "draft")
+      eq(invoices.status, "draft"),
     ),
     with: {
       lineItems: {

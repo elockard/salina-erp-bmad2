@@ -6,7 +6,7 @@
  * reactivateContact, assignContactRole, removeContactRole, updateContactRoleData
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock dependencies before importing actions
 vi.mock("@/lib/auth", () => ({
@@ -24,22 +24,22 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
+import { logAuditEvent } from "@/lib/audit";
 import {
-  createContact,
-  updateContact,
-  deactivateContact,
-  reactivateContact,
-  assignContactRole,
-  removeContactRole,
-  updateContactRoleData,
-} from "@/modules/contacts/actions";
-import {
-  getCurrentUser,
   getCurrentTenantId,
+  getCurrentUser,
   getDb,
   requirePermission,
 } from "@/lib/auth";
-import { logAuditEvent } from "@/lib/audit";
+import {
+  assignContactRole,
+  createContact,
+  deactivateContact,
+  reactivateContact,
+  removeContactRole,
+  updateContact,
+  updateContactRoleData,
+} from "@/modules/contacts/actions";
 
 // Type the mocks
 const mockGetCurrentUser = getCurrentUser as ReturnType<typeof vi.fn>;
@@ -178,7 +178,8 @@ describe("Contact Actions", () => {
 
       mockDb.insert.mockReturnValue({
         values: vi.fn().mockReturnValue({
-          returning: vi.fn()
+          returning: vi
+            .fn()
             .mockResolvedValueOnce([mockContact])
             .mockResolvedValueOnce([mockRole]),
         }),
@@ -186,7 +187,7 @@ describe("Contact Actions", () => {
 
       const result = await createContact(
         { first_name: "John", last_name: "Doe" },
-        [{ role: "author" }]
+        [{ role: "author" }],
       );
 
       expect(result.success).toBe(true);
@@ -229,7 +230,9 @@ describe("Contact Actions", () => {
     it("should return error for non-existent contact", async () => {
       mockDb.query.contacts.findFirst.mockResolvedValue(null);
 
-      const result = await updateContact("non-existent", { first_name: "Jane" });
+      const result = await updateContact("non-existent", {
+        first_name: "Jane",
+      });
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -321,7 +324,9 @@ describe("Contact Actions", () => {
 
       mockDb.insert.mockReturnValue({
         values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([{ id: "role-1", role: "author" }]),
+          returning: vi
+            .fn()
+            .mockResolvedValue([{ id: "role-1", role: "author" }]),
         }),
       });
 
@@ -405,7 +410,13 @@ describe("Contact Actions", () => {
       const mockContact = {
         id: "contact-1",
         tenant_id: "tenant-1",
-        roles: [{ id: "role-1", role: "author", role_specific_data: { pen_name: "Updated" } }],
+        roles: [
+          {
+            id: "role-1",
+            role: "author",
+            role_specific_data: { pen_name: "Updated" },
+          },
+        ],
       };
 
       mockDb.query.contacts.findFirst.mockResolvedValue(mockContact);

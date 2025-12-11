@@ -3,8 +3,8 @@
  * Apply royalty period columns to tenants table
  * Story 7.5 migration
  */
-import { neon } from '@neondatabase/serverless';
-import { config } from 'dotenv';
+import { neon } from "@neondatabase/serverless";
+import { config } from "dotenv";
 
 // Load environment variables
 config();
@@ -12,7 +12,7 @@ config();
 const sql = neon(process.env.DATABASE_URL);
 
 async function applyMigration() {
-  console.log('Applying royalty period columns migration...');
+  console.log("Applying royalty period columns migration...");
 
   try {
     // Check if columns already exist
@@ -24,7 +24,7 @@ async function applyMigration() {
     `;
 
     if (existing.length > 0) {
-      console.log('Columns already exist, skipping...');
+      console.log("Columns already exist, skipping...");
       return;
     }
 
@@ -33,23 +33,23 @@ async function applyMigration() {
       ALTER TABLE "tenants"
       ADD COLUMN IF NOT EXISTS "royalty_period_type" text DEFAULT 'fiscal_year' NOT NULL
     `;
-    console.log('✓ Added royalty_period_type column');
+    console.log("✓ Added royalty_period_type column");
 
     await sql`
       ALTER TABLE "tenants"
       ADD COLUMN IF NOT EXISTS "royalty_period_start_month" integer
     `;
-    console.log('✓ Added royalty_period_start_month column');
+    console.log("✓ Added royalty_period_start_month column");
 
     await sql`
       ALTER TABLE "tenants"
       ADD COLUMN IF NOT EXISTS "royalty_period_start_day" integer
     `;
-    console.log('✓ Added royalty_period_start_day column');
+    console.log("✓ Added royalty_period_start_day column");
 
-    console.log('\n✅ Migration complete');
+    console.log("\n✅ Migration complete");
   } catch (error) {
-    console.error('Migration failed:', error.message);
+    console.error("Migration failed:", error.message);
     process.exit(1);
   }
 }

@@ -37,7 +37,10 @@ import {
   getNextAvailableISBN,
   type PrefixAssignmentOption,
 } from "@/modules/isbn/queries";
-import type { ISBNStatus, NextAvailableISBNPreview } from "@/modules/isbn/types";
+import type {
+  ISBNStatus,
+  NextAvailableISBNPreview,
+} from "@/modules/isbn/types";
 
 interface ISBNAssignmentModalProps {
   titleId: string;
@@ -257,7 +260,7 @@ export function ISBNAssignmentModal({
     // Get the current prefix for display
     const currentPrefix = prefixes.find((p) => p.id === selectedPrefixId);
     const blockSize = currentPrefix
-      ? Math.pow(10, 12 - currentPrefix.prefixLength)
+      ? 10 ** (12 - currentPrefix.prefixLength)
       : 10;
     const pubNumDigits = Math.log10(blockSize);
 
@@ -288,7 +291,9 @@ export function ISBNAssignmentModal({
                 {prefixes.map((prefix) => (
                   <SelectItem key={prefix.id} value={prefix.id}>
                     <div className="flex items-center justify-between gap-4">
-                      <span className="font-mono">{prefix.formattedPrefix}</span>
+                      <span className="font-mono">
+                        {prefix.formattedPrefix}
+                      </span>
                       <span className="text-muted-foreground text-sm">
                         ({prefix.availableCount} available)
                       </span>

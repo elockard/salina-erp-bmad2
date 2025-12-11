@@ -7,7 +7,7 @@
  * Tests for the validation logic used in author-to-contact migration.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // Mock the encryption module
 vi.mock("@/lib/encryption", () => ({
@@ -168,17 +168,19 @@ describe("Author Migration Validation", () => {
 
     function validateTenantCounts(
       preCounts: TenantCount[],
-      postCounts: TenantCount[]
+      postCounts: TenantCount[],
     ): { isValid: boolean; mismatches: string[] } {
       const mismatches: string[] = [];
 
       for (const pre of preCounts) {
         const post = postCounts.find((p) => p.tenant_id === pre.tenant_id);
         if (!post) {
-          mismatches.push(`Tenant ${pre.tenant_id} not found in post-migration`);
+          mismatches.push(
+            `Tenant ${pre.tenant_id} not found in post-migration`,
+          );
         } else if (pre.author_count !== post.author_count) {
           mismatches.push(
-            `Tenant ${pre.tenant_id}: ${pre.author_count} → ${post.author_count}`
+            `Tenant ${pre.tenant_id}: ${pre.author_count} → ${post.author_count}`,
           );
         }
       }

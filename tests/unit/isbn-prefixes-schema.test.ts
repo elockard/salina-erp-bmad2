@@ -6,15 +6,15 @@
  * AC: 7.4.1 - ISBN Prefix Schema
  */
 
+import { getTableColumns, getTableName } from "drizzle-orm";
 import { describe, expect, test } from "vitest";
 import {
-  isbnPrefixes,
-  isbnPrefixBlockSizes,
-  isbnPrefixGenerationStatusValues,
   type IsbnPrefixBlockSize,
   type IsbnPrefixGenerationStatus,
+  isbnPrefixBlockSizes,
+  isbnPrefixes,
+  isbnPrefixGenerationStatusValues,
 } from "@/db/schema/isbn-prefixes";
-import { getTableColumns, getTableName } from "drizzle-orm";
 
 describe("ISBN Prefixes Schema", () => {
   describe("Table Definition", () => {

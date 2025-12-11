@@ -8,26 +8,34 @@ test.describe("Landing Page", () => {
 
   test("loads for unauthenticated users", async ({ page }) => {
     await expect(
-      page.getByRole("heading", { name: /publishing erp/i })
+      page.getByRole("heading", { name: /publishing erp/i }),
     ).toBeVisible();
   });
 
   test("displays hero section with headline", async ({ page }) => {
     await expect(
-      page.getByRole("heading", { name: /Publishing ERP Built for/i })
+      page.getByRole("heading", { name: /Publishing ERP Built for/i }),
     ).toBeVisible();
     // Check hero subheadline - use first() to avoid matching other sections
-    await expect(page.getByText(/streamline your publishing operations/i).first()).toBeVisible();
+    await expect(
+      page.getByText(/streamline your publishing operations/i).first(),
+    ).toBeVisible();
   });
 
   test("CTA navigates to sign-up", async ({ page }) => {
-    await page.getByRole("link", { name: /get started/i }).first().click();
+    await page
+      .getByRole("link", { name: /get started/i })
+      .first()
+      .click();
     await expect(page).toHaveURL(/sign-up/);
   });
 
   test("login button navigates to sign-in", async ({ page }) => {
     // Use nav locator to target the main navigation login button
-    await page.getByRole("navigation").getByRole("link", { name: /login/i }).click();
+    await page
+      .getByRole("navigation")
+      .getByRole("link", { name: /login/i })
+      .click();
     await expect(page).toHaveURL(/sign-in/);
   });
 
@@ -35,13 +43,25 @@ test.describe("Landing Page", () => {
     // Use the features section by id to scope the checks
     const featuresSection = page.locator("#features");
     await expect(
-      featuresSection.getByRole("heading", { name: /Tiered Royalty Calculations/i })
+      featuresSection.getByRole("heading", {
+        name: /Tiered Royalty Calculations/i,
+      }),
     ).toBeVisible();
-    await expect(featuresSection.getByRole("heading", { name: /ISBN Pool Management/i })).toBeVisible();
-    await expect(featuresSection.getByRole("heading", { name: /Author Portal/i })).toBeVisible();
-    await expect(featuresSection.getByRole("heading", { name: /Financial Reporting/i })).toBeVisible();
-    await expect(featuresSection.getByRole("heading", { name: /Multi-tenant SaaS/i })).toBeVisible();
-    await expect(featuresSection.getByRole("heading", { name: /Returns Workflow/i })).toBeVisible();
+    await expect(
+      featuresSection.getByRole("heading", { name: /ISBN Pool Management/i }),
+    ).toBeVisible();
+    await expect(
+      featuresSection.getByRole("heading", { name: /Author Portal/i }),
+    ).toBeVisible();
+    await expect(
+      featuresSection.getByRole("heading", { name: /Financial Reporting/i }),
+    ).toBeVisible();
+    await expect(
+      featuresSection.getByRole("heading", { name: /Multi-tenant SaaS/i }),
+    ).toBeVisible();
+    await expect(
+      featuresSection.getByRole("heading", { name: /Returns Workflow/i }),
+    ).toBeVisible();
   });
 
   test("displays pricing section with three tiers", async ({ page }) => {
@@ -62,14 +82,21 @@ test.describe("Landing Page", () => {
   });
 
   test("displays footer with links", async ({ page }) => {
-    await expect(page.getByRole("link", { name: /privacy policy/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /terms of service/i })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /privacy policy/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /terms of service/i }),
+    ).toBeVisible();
     await expect(page.getByText(/hello@salina.media/i)).toBeVisible();
   });
 
   test("anchor navigation scrolls to sections", async ({ page }) => {
     // Click features link
-    await page.getByRole("link", { name: /features/i }).first().click();
+    await page
+      .getByRole("link", { name: /features/i })
+      .first()
+      .click();
 
     // Wait for scroll
     await page.waitForTimeout(500);
@@ -78,7 +105,10 @@ test.describe("Landing Page", () => {
     await expect(page).toHaveURL(/#features/);
 
     // Click pricing link
-    await page.getByRole("link", { name: /pricing/i }).first().click();
+    await page
+      .getByRole("link", { name: /pricing/i })
+      .first()
+      .click();
 
     // Wait for scroll
     await page.waitForTimeout(500);
@@ -110,7 +140,9 @@ test.describe("Landing Page Mobile Navigation", () => {
     await page.getByLabel(/open menu/i).click();
 
     // Navigation links should be visible
-    await expect(page.getByRole("link", { name: /features/i }).first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /features/i }).first(),
+    ).toBeVisible();
 
     // Close menu
     await page.getByLabel(/close menu/i).click();
@@ -124,7 +156,10 @@ test.describe("Landing Page Mobile Navigation", () => {
     await page.getByLabel(/open menu/i).click();
 
     // Click Get Started
-    await page.getByRole("link", { name: /get started/i }).first().click();
+    await page
+      .getByRole("link", { name: /get started/i })
+      .first()
+      .click();
 
     await expect(page).toHaveURL(/sign-up/);
   });
@@ -136,9 +171,11 @@ test.describe("Landing Page Responsive Design", () => {
     await page.goto("/");
 
     await expect(
-      page.getByRole("heading", { name: /publishing erp/i })
+      page.getByRole("heading", { name: /publishing erp/i }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: /get started/i }).first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /get started/i }).first(),
+    ).toBeVisible();
   });
 
   test("renders correctly on desktop", async ({ page }) => {
@@ -146,11 +183,15 @@ test.describe("Landing Page Responsive Design", () => {
     await page.goto("/");
 
     await expect(
-      page.getByRole("heading", { name: /publishing erp/i })
+      page.getByRole("heading", { name: /publishing erp/i }),
     ).toBeVisible();
 
     // Desktop nav should be visible (not mobile menu)
-    await expect(page.getByRole("link", { name: /features/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /pricing/i }).first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /features/i }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /pricing/i }).first(),
+    ).toBeVisible();
   });
 });

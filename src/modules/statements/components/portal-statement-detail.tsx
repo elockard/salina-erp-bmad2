@@ -19,7 +19,7 @@
  */
 
 import { format } from "date-fns";
-import { ArrowLeft, Download, Printer } from "lucide-react";
+import { ArrowLeft, Download, Printer, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -233,6 +233,88 @@ export function PortalStatementDetail({
           </div>
         </CardContent>
       </Card>
+
+      {/* Co-Author Ownership Section - Story 10.3: AC-10.3.6 */}
+      {calculations?.splitCalculation?.isSplitCalculation && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-full">
+                <Users className="h-5 w-5 text-blue-700" />
+              </div>
+              <div>
+                <p className="font-medium text-blue-900">Co-Authored Title</p>
+                <p className="text-sm text-blue-700">
+                  Your {calculations.splitCalculation.ownershipPercentage}%
+                  ownership share of &quot;{statement.title?.title}&quot;
+                </p>
+                {calculations.splitCalculation.titleTotalRoyalty > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Total title royalty:{" "}
+                    {formatCurrency(
+                      calculations.splitCalculation.titleTotalRoyalty,
+                    )}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Lifetime Sales Progress Section - Story 10.4: AC-10.4.6 */}
+      {calculations?.lifetimeContext?.tierCalculationMode === "lifetime" && (
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-full">
+                <TrendingUp className="h-5 w-5 text-green-700" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-green-900">
+                  Lifetime Sales Progress
+                </p>
+                <p className="text-sm text-green-700">
+                  Your lifetime sales:{" "}
+                  {calculations.lifetimeContext.lifetimeSalesAfter.toLocaleString()}{" "}
+                  units (up from{" "}
+                  {calculations.lifetimeContext.lifetimeSalesBefore.toLocaleString()}
+                  )
+                </p>
+                <p className="text-sm text-green-700 mt-1">
+                  Current tier rate:{" "}
+                  {formatPercent(calculations.lifetimeContext.currentTierRate)}
+                </p>
+                {calculations.lifetimeContext.unitsToNextTier !== null ? (
+                  <div className="mt-2">
+                    <div className="flex justify-between text-xs text-green-600 mb-1">
+                      <span>Progress to next tier</span>
+                      <span>
+                        {calculations.lifetimeContext.unitsToNextTier.toLocaleString()}{" "}
+                        units to go
+                      </span>
+                    </div>
+                    <Progress
+                      value={
+                        (calculations.lifetimeContext.lifetimeSalesAfter /
+                          (calculations.lifetimeContext.nextTierThreshold ||
+                            calculations.lifetimeContext.lifetimeSalesAfter)) *
+                        100
+                      }
+                      className="h-2 bg-green-200"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-xs text-green-600 mt-2 font-medium">
+                    Congratulations! You&apos;ve reached the highest royalty
+                    tier.
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Sales Breakdown - AC-5.6.3 */}
       {calculations?.formatBreakdowns &&

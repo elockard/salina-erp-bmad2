@@ -178,25 +178,25 @@ development_status:
   # ═══════════════════════════════════════════════════════════════════════════
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 10: Advanced Royalty Features
+  # EPIC 10: Advanced Royalty Features (COMPLETE)
   # Goal: Split royalties for co-authors, lifetime escalating rates
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-10: backlog
-  10-1-add-multiple-authors-per-title-with-ownership-percentages: backlog
-  10-2-implement-split-royalty-calculation-engine: backlog
-  10-3-generate-split-royalty-statements-for-co-authors: backlog
-  10-4-implement-escalating-lifetime-royalty-rates: backlog
-  epic-10-retrospective: optional
+  epic-10: done
+  10-1-add-multiple-authors-per-title-with-ownership-percentages: done
+  10-2-implement-split-royalty-calculation-engine: done
+  10-3-generate-split-royalty-statements-for-co-authors: done
+  10-4-implement-escalating-lifetime-royalty-rates: done
+  epic-10-retrospective: done
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 11: Tax & Compliance
+  # EPIC 11: Tax & Compliance (COMPLETE)
   # Goal: 1099-MISC generation for IRS compliance
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-11: backlog
-  11-1-collect-and-validate-tax-identification-information: backlog
-  11-2-track-annual-earnings-for-1099-threshold: backlog
-  11-3-generate-1099-misc-forms: backlog
-  epic-11-retrospective: optional
+  epic-11: done
+  11-1-collect-and-validate-tax-identification-information: done
+  11-2-track-annual-earnings-for-1099-threshold: done
+  11-3-generate-1099-misc-forms: done
+  epic-11-retrospective: completed
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 13: Platform Administration

@@ -14,8 +14,6 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ActionResult } from "@/lib/types";
-import type { Payment } from "@/modules/invoices/types";
 
 // Mock the auth module
 vi.mock("@/lib/auth", () => ({
@@ -73,7 +71,7 @@ vi.mock("@/db", () => ({
             where: vi.fn().mockResolvedValue(undefined),
           }),
         }),
-      })
+      }),
     ),
   },
 }));
@@ -129,7 +127,7 @@ describe("Payment Recording Integration Tests", () => {
             actionType: "CREATE",
             resourceType: "payment",
             resourceId: "payment-123",
-          })
+          }),
         );
       });
 
@@ -345,7 +343,9 @@ describe("Payment Recording Integration Tests", () => {
         const { recordPayment } = await import("@/modules/invoices/actions");
 
         // Mock permission rejection
-        vi.mocked(requirePermission).mockRejectedValue(new Error("UNAUTHORIZED"));
+        vi.mocked(requirePermission).mockRejectedValue(
+          new Error("UNAUTHORIZED"),
+        );
 
         const input = {
           invoice_id: "invoice-123",
@@ -358,7 +358,9 @@ describe("Payment Recording Integration Tests", () => {
 
         expect(result.success).toBe(false);
         if (!result.success) {
-          expect(result.error).toBe("You do not have permission to record payments");
+          expect(result.error).toBe(
+            "You do not have permission to record payments",
+          );
         }
       });
 
@@ -378,7 +380,11 @@ describe("Payment Recording Integration Tests", () => {
         await recordPayment(input);
 
         // Verify requirePermission was called with correct roles
-        expect(requirePermission).toHaveBeenCalledWith(["finance", "admin", "owner"]);
+        expect(requirePermission).toHaveBeenCalledWith([
+          "finance",
+          "admin",
+          "owner",
+        ]);
       });
     });
 
@@ -438,7 +444,9 @@ describe("Payment Recording Integration Tests", () => {
         } as any);
 
         // Mock transaction to throw an error
-        vi.mocked(adminDb.transaction).mockRejectedValue(new Error("Database error"));
+        vi.mocked(adminDb.transaction).mockRejectedValue(
+          new Error("Database error"),
+        );
 
         const input = {
           invoice_id: "invoice-123",
@@ -458,7 +466,9 @@ describe("Payment Recording Integration Tests", () => {
 
     describe("user validation", () => {
       it("should return error when user not found", async () => {
-        const { requirePermission, getCurrentUser } = await import("@/lib/auth");
+        const { requirePermission, getCurrentUser } = await import(
+          "@/lib/auth"
+        );
         const { recordPayment } = await import("@/modules/invoices/actions");
 
         vi.mocked(requirePermission).mockResolvedValue(undefined);
@@ -483,7 +493,9 @@ describe("Payment Recording Integration Tests", () => {
 
   describe("Payment Method Validation", () => {
     it("should accept all valid payment methods", async () => {
-      const { getDb, requirePermission, getCurrentUser } = await import("@/lib/auth");
+      const { getDb, requirePermission, getCurrentUser } = await import(
+        "@/lib/auth"
+      );
       const { adminDb } = await import("@/db");
       const { recordPayment } = await import("@/modules/invoices/actions");
 
@@ -522,10 +534,16 @@ describe("Payment Recording Integration Tests", () => {
               where: vi.fn().mockResolvedValue(undefined),
             }),
           }),
-        })
+        }),
       );
 
-      const validMethods = ["check", "wire", "credit_card", "ach", "other"] as const;
+      const validMethods = [
+        "check",
+        "wire",
+        "credit_card",
+        "ach",
+        "other",
+      ] as const;
 
       for (const method of validMethods) {
         const input = {

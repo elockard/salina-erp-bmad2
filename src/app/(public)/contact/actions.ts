@@ -3,8 +3,8 @@
 import { contactFormSchema } from "./schema";
 
 export async function submitContactForm(
-  prevState: { success: boolean; message: string } | null,
-  formData: FormData
+  _prevState: { success: boolean; message: string } | null,
+  formData: FormData,
 ) {
   // Honeypot check - if filled, silently reject (looks like success to bots)
   const honeypot = formData.get("website");

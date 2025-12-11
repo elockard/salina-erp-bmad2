@@ -15,9 +15,8 @@
  * See queries-legacy.ts for original authors table queries.
  */
 
-import { and, asc, eq, ilike, or, sql } from "drizzle-orm";
-import { contacts, contactRoles } from "@/db/schema/contacts";
-import { titles } from "@/db/schema/titles";
+import { and, asc, eq, ilike, or } from "drizzle-orm";
+import { contactRoles, contacts } from "@/db/schema/contacts";
 import { getCurrentTenantId, getDb } from "@/lib/auth";
 import { decryptTaxId, maskTaxId } from "@/lib/encryption";
 import type { Author, AuthorFilters, AuthorWithTitles } from "./types";
@@ -191,11 +190,16 @@ export function getAuthorDisplayName(author: Author): string {
  * @returns Author-compatible object
  */
 function contactToAuthor(
-  contact: typeof contacts.$inferSelect & { roles?: (typeof contactRoles.$inferSelect)[] },
+  contact: typeof contacts.$inferSelect & {
+    roles?: (typeof contactRoles.$inferSelect)[];
+  },
 ): Author {
   // Extract author role data if present
   const authorRole = contact.roles?.find((r) => r.role === "author");
-  const roleData = authorRole?.role_specific_data as Record<string, unknown> | null;
+  const _roleData = authorRole?.role_specific_data as Record<
+    string,
+    unknown
+  > | null;
 
   // Convert payment_info JSONB to payment_method string
   const paymentInfo = contact.payment_info as { method?: string } | null;

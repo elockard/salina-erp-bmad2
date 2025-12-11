@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { getCurrentUser, hasPermission } from "@/lib/auth";
 import { VIEW_INVOICES } from "@/lib/permissions";
 import { InvoiceListClient } from "@/modules/invoices/components";
-import { countInvoices, getInvoicesWithCustomer } from "@/modules/invoices/queries";
+import {
+  countInvoices,
+  getInvoicesWithCustomer,
+} from "@/modules/invoices/queries";
 import type { InvoiceStatusType } from "@/modules/invoices/types";
 
 /**
@@ -35,7 +38,9 @@ interface InvoicesPageProps {
   }>;
 }
 
-export default async function InvoicesPage({ searchParams }: InvoicesPageProps) {
+export default async function InvoicesPage({
+  searchParams,
+}: InvoicesPageProps) {
   const user = await getCurrentUser();
 
   if (!user) {

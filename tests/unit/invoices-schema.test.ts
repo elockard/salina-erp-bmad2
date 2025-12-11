@@ -6,22 +6,21 @@ import {
   type Invoice,
   type InvoiceLineItem,
   type InvoiceStatus,
-  type Payment,
-  type PaymentMethod,
-  type PaymentTerms,
   invoiceLineItems,
   invoiceStatusValues,
   invoices,
+  type Payment,
+  type PaymentMethod,
+  type PaymentTerms,
   paymentMethodValues,
-  paymentTermsValues,
   payments,
+  paymentTermsValues,
 } from "@/db/schema/invoices";
 import type {
   AgingBucket,
   CustomerAgingSummary,
   InvoiceAddress,
   InvoiceCalculations,
-  InvoiceWithDetails,
   InvoiceWithLineItems,
   InvoiceWithPayments,
   LineItemCalculation,
@@ -959,7 +958,8 @@ describe("InvoiceWithPayments type (AC-8.1.4)", () => {
       created_at: new Date(),
       updated_at: new Date(),
       created_by: null,
-      pdf_s3_key: "invoices/550e8400-e29b-41d4-a716-446655440001/550e8400-e29b-41d4-a716-446655440000.pdf",
+      pdf_s3_key:
+        "invoices/550e8400-e29b-41d4-a716-446655440001/550e8400-e29b-41d4-a716-446655440000.pdf",
       sent_at: new Date("2024-01-15"),
       payments: [
         {

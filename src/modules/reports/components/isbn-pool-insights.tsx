@@ -126,9 +126,7 @@ export function ISBNPoolInsights({ metrics }: ISBNPoolInsightsProps) {
                   ISBNs
                 </span>
               </p>
-              <p className="text-xs text-muted-foreground">
-                Ready to assign
-              </p>
+              <p className="text-xs text-muted-foreground">Ready to assign</p>
             </div>
           </div>
         </div>

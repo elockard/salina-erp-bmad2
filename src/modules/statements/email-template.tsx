@@ -29,7 +29,39 @@ import {
 } from "@react-email/components";
 
 /**
+ * Split calculation context for email template
+ * Story 10.3: AC-10.3.5 - Email includes ownership percentage context
+ */
+export interface EmailSplitContext {
+  /** This author's ownership percentage (e.g., 60 for 60%) */
+  ownershipPercentage: number;
+  /** Indicates split calculation statement */
+  isSplitCalculation: true;
+}
+
+/**
+ * Lifetime sales context for email template
+ * Story 10.4: AC-10.4.6 - Email includes lifetime context for escalating rates
+ */
+export interface EmailLifetimeContext {
+  /** Tier calculation mode: 'lifetime' when this context is present */
+  tierCalculationMode: "lifetime";
+  /** Total lifetime sales before this period */
+  lifetimeSalesBefore: number;
+  /** Total lifetime sales after this period */
+  lifetimeSalesAfter: number;
+  /** Current tier rate based on lifetime position */
+  currentTierRate: number;
+  /** Next tier threshold (null if at highest tier) */
+  nextTierThreshold: number | null;
+  /** Units until next tier (null if at highest tier) */
+  unitsToNextTier: number | null;
+}
+
+/**
  * Props for the statement email template
+ *
+ * Story 10.3: Added splitCalculation and titleName for co-author emails
  */
 export interface StatementEmailProps {
   /** Author's display name */
@@ -48,6 +80,21 @@ export interface StatementEmailProps {
   portalUrl: string;
   /** Statement ID for deep linking */
   statementId: string;
+  /**
+   * Split calculation context for co-authored titles
+   * Story 10.3: AC-10.3.5 - Email body references ownership percentage
+   */
+  splitCalculation?: EmailSplitContext;
+  /**
+   * Title name for co-author context
+   * Story 10.3: AC-10.3.5 - Email body references title name
+   */
+  titleName?: string;
+  /**
+   * Lifetime sales context for escalating royalty rates
+   * Story 10.4: AC-10.4.6 - Email includes lifetime context when applicable
+   */
+  lifetimeContext?: EmailLifetimeContext;
 }
 
 /**
@@ -99,6 +146,9 @@ export function StatementEmailTemplate({
   netPayable,
   portalUrl,
   statementId,
+  splitCalculation,
+  titleName,
+  lifetimeContext,
 }: StatementEmailProps) {
   const preheader = generatePreheader(grossRoyalties, netPayable);
   const statementUrl = `${portalUrl}/portal/statements/${statementId}`;
@@ -123,6 +173,42 @@ export function StatementEmailTemplate({
             Your royalty statement for {periodLabel} is now available. Below is
             a summary of your earnings for this period.
           </Text>
+
+          {/* Co-Author Ownership Context (Story 10.3: AC-10.3.5) */}
+          {splitCalculation?.isSplitCalculation && titleName && (
+            <Text style={paragraph}>
+              This statement reflects your{" "}
+              {splitCalculation.ownershipPercentage}% ownership share of &quot;
+              {titleName}&quot;.
+            </Text>
+          )}
+
+          {/* Lifetime Sales Context (Story 10.4: AC-10.4.6) */}
+          {lifetimeContext?.tierCalculationMode === "lifetime" && (
+            <Section style={lifetimeSection}>
+              <Text style={lifetimeSectionTitle}>Lifetime Sales Progress</Text>
+              <Text style={lifetimeText}>
+                Your lifetime sales:{" "}
+                {lifetimeContext.lifetimeSalesAfter.toLocaleString()} units (up
+                from {lifetimeContext.lifetimeSalesBefore.toLocaleString()})
+              </Text>
+              <Text style={lifetimeText}>
+                Current tier rate:{" "}
+                {(lifetimeContext.currentTierRate * 100).toFixed(1)}%
+              </Text>
+              {lifetimeContext.unitsToNextTier !== null && (
+                <Text style={lifetimeTextHighlight}>
+                  {lifetimeContext.unitsToNextTier.toLocaleString()} units to
+                  reach the next tier!
+                </Text>
+              )}
+              {lifetimeContext.unitsToNextTier === null && (
+                <Text style={lifetimeTextHighlight}>
+                  Congratulations! You&apos;ve reached the highest royalty tier.
+                </Text>
+              )}
+            </Section>
+          )}
 
           {/* Summary Table */}
           <Section style={summarySection}>
@@ -350,4 +436,35 @@ const footerTextSmall = {
   lineHeight: "14px",
   margin: "12px 0 0",
   textAlign: "center" as const,
+};
+
+// Lifetime sales section styles (Story 10.4: AC-10.4.6)
+const lifetimeSection = {
+  margin: "20px 30px",
+  padding: "16px",
+  backgroundColor: "#f0fdf4",
+  borderRadius: "8px",
+  border: "1px solid #86efac",
+};
+
+const lifetimeSectionTitle = {
+  color: "#166534",
+  fontSize: "14px",
+  fontWeight: "bold" as const,
+  margin: "0 0 8px 0",
+};
+
+const lifetimeText = {
+  color: "#166534",
+  fontSize: "14px",
+  lineHeight: "20px",
+  margin: "4px 0",
+};
+
+const lifetimeTextHighlight = {
+  color: "#15803d",
+  fontSize: "14px",
+  fontWeight: "bold" as const,
+  lineHeight: "20px",
+  margin: "8px 0 0 0",
 };

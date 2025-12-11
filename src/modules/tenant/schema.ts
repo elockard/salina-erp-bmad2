@@ -86,7 +86,7 @@ export const updateTenantSettingsFormSchema = z
       .min(1, "Timezone is required")
       .refine(
         isValidTimezone,
-        "Invalid timezone. Please select a valid timezone."
+        "Invalid timezone. Please select a valid timezone.",
       ),
     fiscal_year_start: z.string().nullable().optional(),
     default_currency: z.enum(["USD", "EUR", "GBP", "CAD"], {
@@ -121,7 +121,7 @@ export const updateTenantSettingsFormSchema = z
       if (
         !isValidDayForMonth(
           data.royalty_period_start_month,
-          data.royalty_period_start_day
+          data.royalty_period_start_day,
         )
       ) {
         ctx.addIssue({
@@ -181,7 +181,7 @@ export const updateTenantSettingsSchema = z
       if (
         !isValidDayForMonth(
           data.royalty_period_start_month,
-          data.royalty_period_start_day
+          data.royalty_period_start_day,
         )
       ) {
         ctx.addIssue({
@@ -220,3 +220,82 @@ export type UpdateTenantSettingsFormInput = z.infer<
 export type UpdateTenantSettingsInput = z.infer<
   typeof updateTenantSettingsSchema
 >;
+
+// ============================================
+// Payer Information Schemas (Story 11.3)
+// For 1099-MISC generation - IRS compliance
+// ============================================
+
+/**
+ * EIN format validation: XX-XXXXXXX
+ * Employer Identification Number format required by IRS
+ */
+const EIN_PATTERN = /^\d{2}-\d{7}$/;
+
+/**
+ * US ZIP code validation: 5 digits or 5+4 format
+ * Accepts: 12345 or 12345-1234
+ */
+const ZIP_PATTERN = /^\d{5}(-\d{4})?$/;
+
+/**
+ * US State code validation: 2 uppercase letters
+ */
+const STATE_PATTERN = /^[A-Z]{2}$/;
+
+/**
+ * Form schema for payer information (client-side validation)
+ *
+ * Story 11.3 - AC-11.3.3: Payer Information for 1099 Generation
+ * - Payer EIN (required, XX-XXXXXXX format)
+ * - Payer legal name (required)
+ * - Payer address (required for IRS Box 1)
+ */
+export const updatePayerInfoFormSchema = z.object({
+  payer_ein: z
+    .string()
+    .min(1, "Payer EIN is required")
+    .regex(EIN_PATTERN, "EIN must be in XX-XXXXXXX format"),
+  payer_name: z
+    .string()
+    .min(1, "Payer name is required")
+    .max(100, "Payer name must not exceed 100 characters"),
+  payer_address_line1: z
+    .string()
+    .min(1, "Street address is required")
+    .max(100, "Address must not exceed 100 characters"),
+  payer_address_line2: z
+    .string()
+    .max(100, "Address line 2 must not exceed 100 characters"),
+  payer_city: z
+    .string()
+    .min(1, "City is required")
+    .max(50, "City must not exceed 50 characters"),
+  payer_state: z
+    .string()
+    .min(1, "State is required")
+    .length(2, "State must be 2-letter code")
+    .regex(STATE_PATTERN, "State must be 2 uppercase letters")
+    .transform((val) => val.toUpperCase()),
+  payer_zip: z
+    .string()
+    .min(1, "ZIP code is required")
+    .regex(
+      ZIP_PATTERN,
+      "ZIP must be 5 digits or 5+4 format (e.g., 12345 or 12345-1234)",
+    ),
+});
+
+/**
+ * Server-side schema for payer information
+ * Same validation as form schema - no transformation needed
+ */
+export const updatePayerInfoSchema = updatePayerInfoFormSchema;
+
+/** Form input type for payer information */
+export type UpdatePayerInfoFormInput = z.infer<
+  typeof updatePayerInfoFormSchema
+>;
+
+/** Server action input type for payer information */
+export type UpdatePayerInfoInput = z.infer<typeof updatePayerInfoSchema>;

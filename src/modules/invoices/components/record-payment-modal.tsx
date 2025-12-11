@@ -210,7 +210,10 @@ export function RecordPaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]" data-testid="record-payment-modal">
+      <DialogContent
+        className="sm:max-w-[500px]"
+        data-testid="record-payment-modal"
+      >
         <DialogHeader>
           <DialogTitle>Record Payment</DialogTitle>
           <DialogDescription>
@@ -219,9 +222,15 @@ export function RecordPaymentModal({
         </DialogHeader>
 
         {/* Balance Due Display - AC-8.4.1 */}
-        <div className="rounded-lg bg-muted p-4 text-center" data-testid="balance-due-display">
+        <div
+          className="rounded-lg bg-muted p-4 text-center"
+          data-testid="balance-due-display"
+        >
           <p className="text-sm text-muted-foreground">Balance Due</p>
-          <p className="text-2xl font-bold text-amber-600" data-testid="balance-due-amount">
+          <p
+            className="text-2xl font-bold text-amber-600"
+            data-testid="balance-due-amount"
+          >
             {formatCurrency(balanceDue)}
           </p>
         </div>
@@ -371,7 +380,11 @@ export function RecordPaymentModal({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} data-testid="apply-payment-button">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                data-testid="apply-payment-button"
+              >
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}

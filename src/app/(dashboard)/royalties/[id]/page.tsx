@@ -1,10 +1,14 @@
 import { ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getCurrentUser, hasPermission } from "@/lib/auth";
+import { getCurrentTenantId, getCurrentUser, hasPermission } from "@/lib/auth";
 import { MANAGE_CONTRACTS } from "@/lib/permissions";
 import { ContractDetail } from "@/modules/royalties/components/contract-detail";
-import { getContractById } from "@/modules/royalties/queries";
+import {
+  calculateRoyaltyProjection,
+  getContractById,
+} from "@/modules/royalties/queries";
+import type { RoyaltyProjection } from "@/modules/royalties/types";
 
 /**
  * Contract Detail Page
@@ -55,6 +59,30 @@ export default async function ContractDetailPage({
   // Check if user can edit (for rendering edit actions)
   const canEdit = await hasPermission(MANAGE_CONTRACTS);
 
+  // Fetch projection data for lifetime-mode contracts (AC-10.4.7)
+  let projection: RoyaltyProjection | null = null;
+  if (contract.tier_calculation_mode === "lifetime") {
+    const tenantId = await getCurrentTenantId();
+    if (tenantId) {
+      try {
+        projection = await calculateRoyaltyProjection(tenantId, {
+          id: contract.id,
+          title_id: contract.title_id,
+          tier_calculation_mode: contract.tier_calculation_mode,
+          tiers: contract.tiers.map((t) => ({
+            format: t.format,
+            min_quantity: t.min_quantity,
+            max_quantity: t.max_quantity,
+            rate: t.rate,
+          })),
+        });
+      } catch {
+        // Projection calculation failed - continue without it
+        projection = null;
+      }
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb Navigation - AC 1 */}
@@ -80,7 +108,11 @@ export default async function ContractDetailPage({
       </nav>
 
       {/* Contract Detail View */}
-      <ContractDetail contract={contract} canEdit={canEdit} />
+      <ContractDetail
+        contract={contract}
+        canEdit={canEdit}
+        projection={projection}
+      />
     </div>
   );
 }

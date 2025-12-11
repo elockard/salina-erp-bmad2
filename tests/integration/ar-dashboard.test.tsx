@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 /**
@@ -84,31 +84,64 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
   DropdownMenu: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
-  DropdownMenuTrigger: ({ children, asChild, ...props }: { children: React.ReactNode; asChild?: boolean }) => {
+  DropdownMenuTrigger: ({
+    children,
+    asChild,
+    ...props
+  }: {
+    children: React.ReactNode;
+    asChild?: boolean;
+  }) => {
     if (asChild && React.isValidElement(children)) {
-      return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
-        ...props,
-        onClick: () => { dropdownOpen = !dropdownOpen; },
-      });
+      return React.cloneElement(
+        children as React.ReactElement<Record<string, unknown>>,
+        {
+          ...props,
+          onClick: () => {
+            dropdownOpen = !dropdownOpen;
+          },
+        },
+      );
     }
-    return <button {...props} onClick={() => { dropdownOpen = !dropdownOpen; }}>{children}</button>;
+    return (
+      <button
+        {...props}
+        onClick={() => {
+          dropdownOpen = !dropdownOpen;
+        }}
+      >
+        {children}
+      </button>
+    );
   },
   DropdownMenuContent: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dropdown-content">{children}</div>
   ),
-  DropdownMenuItem: ({ children, onClick, ...props }: { children: React.ReactNode; onClick?: () => void }) => (
-    <button onClick={onClick} {...props}>{children}</button>
+  DropdownMenuItem: ({
+    children,
+    onClick,
+    ...props
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+  }) => (
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
   ),
 }));
 
 import React from "react";
-
+import { ARAgingChart } from "@/modules/reports/components/ar-aging-chart";
+import { ARAgingTable } from "@/modules/reports/components/ar-aging-table";
+import { ARExportButtons } from "@/modules/reports/components/ar-export-buttons";
 // Import components after mocks
 import { ARSummaryStats } from "@/modules/reports/components/ar-summary-stats";
-import { ARAgingTable } from "@/modules/reports/components/ar-aging-table";
-import { ARAgingChart } from "@/modules/reports/components/ar-aging-chart";
-import { ARExportButtons } from "@/modules/reports/components/ar-export-buttons";
-import type { AgingReportRow, ARSummary, TenantForReport } from "@/modules/reports/types";
+import type {
+  AgingReportRow,
+  ARSummary,
+  TenantForReport,
+} from "@/modules/reports/types";
 
 // Test fixtures
 const mockSummaryNormal: ARSummary = {
@@ -204,9 +237,15 @@ describe("AR Summary Stats Component (AC-8.5.2)", () => {
     it("handles zero values gracefully", () => {
       render(<ARSummaryStats summary={mockSummaryEmpty} />);
 
-      expect(screen.getByTestId("total-receivables-card")).toHaveTextContent("$0.00");
-      expect(screen.getByTestId("current-amount-card")).toHaveTextContent("$0.00");
-      expect(screen.getByTestId("overdue-amount-card")).toHaveTextContent("$0.00");
+      expect(screen.getByTestId("total-receivables-card")).toHaveTextContent(
+        "$0.00",
+      );
+      expect(screen.getByTestId("current-amount-card")).toHaveTextContent(
+        "$0.00",
+      );
+      expect(screen.getByTestId("overdue-amount-card")).toHaveTextContent(
+        "$0.00",
+      );
       expect(screen.getByTestId("avg-days-to-pay-card")).toHaveTextContent("0");
     });
 
@@ -218,7 +257,9 @@ describe("AR Summary Stats Component (AC-8.5.2)", () => {
       };
       render(<ARSummaryStats summary={summaryWithOne} />);
 
-      expect(screen.getByTestId("total-receivables-card")).toHaveTextContent("1 open invoice");
+      expect(screen.getByTestId("total-receivables-card")).toHaveTextContent(
+        "1 open invoice",
+      );
     });
   });
 });
@@ -279,7 +320,9 @@ describe("AR Aging Table Component (AC-8.5.3)", () => {
       render(<ARAgingTable data={[]} isLoading={false} />);
 
       expect(screen.getByTestId("ar-aging-table-empty")).toBeInTheDocument();
-      expect(screen.getByText("No outstanding receivables")).toBeInTheDocument();
+      expect(
+        screen.getByText("No outstanding receivables"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -296,7 +339,9 @@ describe("AR Aging Table Component (AC-8.5.3)", () => {
       );
 
       // Click on customer name
-      const customerButton = screen.getByRole("button", { name: /View details for Acme Corporation/i });
+      const customerButton = screen.getByRole("button", {
+        name: /View details for Acme Corporation/i,
+      });
       fireEvent.click(customerButton);
 
       expect(mockClick).toHaveBeenCalledWith("c1");
@@ -394,12 +439,26 @@ describe("Accessibility", () => {
     render(<ARAgingTable data={mockAgingData} isLoading={false} />);
 
     // Sort buttons should have descriptive aria-labels indicating sort state
-    expect(screen.getByRole("button", { name: /Current, sorted descending|Current, click to sort/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /1-30 Days, click to sort/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /31-60 Days, click to sort/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /61-90 Days, click to sort/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /90\+ Days, click to sort/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Total, sorted descending/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /Current, sorted descending|Current, click to sort/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /1-30 Days, click to sort/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /31-60 Days, click to sort/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /61-90 Days, click to sort/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /90\+ Days, click to sort/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Total, sorted descending/i }),
+    ).toBeInTheDocument();
   });
 
   it("customer buttons have descriptive aria-labels", () => {
@@ -412,7 +471,9 @@ describe("Accessibility", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: /View details for Acme Corporation/i }),
+      screen.getByRole("button", {
+        name: /View details for Acme Corporation/i,
+      }),
     ).toBeInTheDocument();
   });
 });

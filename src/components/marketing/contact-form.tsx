@@ -1,22 +1,22 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useActionState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { submitContactForm } from "@/app/(public)/contact/actions";
 import {
-  contactFormSchema,
   type ContactFormData,
+  contactFormSchema,
 } from "@/app/(public)/contact/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export function ContactForm() {
   const [state, formAction, isPending] = useActionState(
     submitContactForm,
-    null
+    null,
   );
 
   const {
@@ -31,12 +31,9 @@ export function ContactForm() {
 
   if (state?.success) {
     return (
-      <div
-        className="p-6 bg-green-50 border border-green-200 rounded-lg"
-        role="status"
-      >
+      <output className="block p-6 bg-green-50 border border-green-200 rounded-lg">
         <p className="text-green-800 font-medium">{state.message}</p>
-      </div>
+      </output>
     );
   }
 

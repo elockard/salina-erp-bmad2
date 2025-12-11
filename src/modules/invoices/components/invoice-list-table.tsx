@@ -18,10 +18,10 @@
 
 import {
   type ColumnDef,
-  type SortingState,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -200,7 +200,9 @@ export function InvoiceListTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="font-medium">{formatCurrency(row.original.total)}</span>
+          <span className="font-medium">
+            {formatCurrency(row.original.total)}
+          </span>
         ),
         sortingFn: (rowA, rowB) => {
           const amountA = Number.parseFloat(rowA.original.total);
@@ -238,7 +240,9 @@ export function InvoiceListTable({
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => (
-          <InvoiceStatusBadge status={row.original.status as InvoiceStatusType} />
+          <InvoiceStatusBadge
+            status={row.original.status as InvoiceStatusType}
+          />
         ),
       },
       {
@@ -301,7 +305,7 @@ export function InvoiceListTable({
         },
       },
     ],
-    [onView, onEdit, onRecordPayment, onSend, onVoid]
+    [onView, onEdit, onRecordPayment, onSend, onVoid],
   );
 
   const table = useReactTable({
@@ -411,7 +415,7 @@ export function InvoiceListTable({
                     ? null
                     : flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                 </TableHead>
               ))}

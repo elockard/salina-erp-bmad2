@@ -46,16 +46,22 @@ export const createIsbnPrefixSchema = z
       ),
     block_size: z
       .number()
-      .refine((val) => validBlockSizes.has(val as 10 | 100 | 1000 | 10000 | 100000 | 1000000), {
-        message: "Block size must be 10, 100, 1K, 10K, 100K, or 1M",
-      }),
+      .refine(
+        (val) =>
+          validBlockSizes.has(
+            val as 10 | 100 | 1000 | 10000 | 100000 | 1000000,
+          ),
+        {
+          message: "Block size must be 10, 100, 1K, 10K, 100K, or 1M",
+        },
+      ),
     description: z.string().max(100).optional(),
   })
   .superRefine((data, ctx) => {
     // Cross-field validation: block size must not exceed prefix capacity
     const normalizedLength = data.prefix.replace(/[-\s]/g, "").length;
     const titleIdDigits = 12 - normalizedLength;
-    const maxBlockSize = Math.pow(10, titleIdDigits);
+    const maxBlockSize = 10 ** titleIdDigits;
 
     if (data.block_size > maxBlockSize) {
       ctx.addIssue({
@@ -82,9 +88,7 @@ export type DeleteIsbnPrefixInput = z.infer<typeof deleteIsbnPrefixSchema>;
  * Story 7.6: Removed type filter - ISBNs are unified without type distinction
  */
 export const queryIsbnPrefixesSchema = z.object({
-  status: z
-    .enum(["pending", "generating", "completed", "failed"])
-    .optional(),
+  status: z.enum(["pending", "generating", "completed", "failed"]).optional(),
   search: z.string().optional(),
 });
 

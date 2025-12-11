@@ -19,6 +19,7 @@ import {
   CircleDollarSign,
   Loader2,
   TrendingDown,
+  Users,
 } from "lucide-react";
 import { useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -243,7 +244,20 @@ export function StatementStepPreview({
                     {row.warnings.length > 0 && (
                       <AlertTriangle className="h-4 w-4 text-yellow-600" />
                     )}
-                    {row.authorName}
+                    {/* Story 10.3: AC-10.3.7 - Show co-author indicator */}
+                    {row.coAuthorInfo && (
+                      <Users className="h-4 w-4 text-blue-500" />
+                    )}
+                    <div>
+                      {row.authorName}
+                      {/* Story 10.3: AC-10.3.7 - Show ownership percentage */}
+                      {row.coAuthorInfo && (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({row.coAuthorInfo.ownershipPercentage}% of{" "}
+                          {row.coAuthorInfo.titleName})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell className="text-right">

@@ -23,6 +23,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
   jsonb,
@@ -43,6 +44,15 @@ import { users } from "./users";
 export const contactStatusValues = ["active", "inactive"] as const;
 
 export type ContactStatus = (typeof contactStatusValues)[number];
+
+/**
+ * TIN (Tax Identification Number) type values
+ * - ssn: Social Security Number for individuals (XXX-XX-XXXX)
+ * - ein: Employer Identification Number for business entities (XX-XXXXXXX)
+ */
+export const tinTypeValues = ["ssn", "ein"] as const;
+
+export type TinType = (typeof tinTypeValues)[number];
 
 /**
  * Contact role type values
@@ -120,8 +130,48 @@ export const contacts = pgTable(
     /**
      * Tax ID for 1099 reporting (optional, nullable)
      * NOTE: Encrypted at application level before storage
+     * DEPRECATED: Use tin_encrypted for new entries. Kept for backward compatibility.
      */
     tax_id: text("tax_id"),
+
+    /**
+     * Encrypted TIN value (SSN or EIN) - AES-256-GCM encrypted
+     * Contains: base64(IV + encrypted_data + authTag)
+     * Story: 11.1 - Tax Information Collection
+     */
+    tin_encrypted: text("tin_encrypted"),
+
+    /**
+     * TIN type: 'ssn' (individual) or 'ein' (business entity)
+     * Story: 11.1 - Tax Information Collection
+     */
+    tin_type: text("tin_type"),
+
+    /**
+     * Last 4 digits of TIN for masked display (e.g., "1234")
+     * Stored separately to avoid decryption for display purposes
+     * Story: 11.1 - Tax Information Collection
+     */
+    tin_last_four: text("tin_last_four"),
+
+    /**
+     * Whether author is US-based (required for 1099 reporting)
+     * Non-US authors are excluded from 1099 requirements
+     * Story: 11.1 - Tax Information Collection
+     */
+    is_us_based: boolean("is_us_based").default(true),
+
+    /**
+     * Whether W-9 form has been received from the author
+     * Story: 11.1 - Tax Information Collection
+     */
+    w9_received: boolean("w9_received").default(false),
+
+    /**
+     * Date W-9 form was received
+     * Story: 11.1 - Tax Information Collection
+     */
+    w9_received_date: timestamp("w9_received_date", { withTimezone: true }),
 
     /**
      * Payment information for royalty disbursement (optional)

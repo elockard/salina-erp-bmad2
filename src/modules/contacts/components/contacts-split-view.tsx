@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { fetchContacts, getContactWithRoles } from "../actions";
-import type { ContactWithRoles, ContactRoleType } from "../types";
+import type { ContactRoleType, ContactWithRoles } from "../types";
 import { ContactDetail } from "./contact-detail";
 import { ContactForm } from "./contact-form";
 import { ContactList } from "./contact-list";
@@ -35,12 +35,20 @@ interface ContactsSplitViewProps {
  */
 type SortOption = "name" | "created";
 
-export function ContactsSplitView({ initialContacts, initialRoleFilter }: ContactsSplitViewProps) {
+export function ContactsSplitView({
+  initialContacts,
+  initialRoleFilter,
+}: ContactsSplitViewProps) {
   const [contacts, setContacts] = useState<ContactWithRoles[]>(initialContacts);
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
-  const [selectedContact, setSelectedContact] = useState<ContactWithRoles | null>(null);
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(
+    null,
+  );
+  const [selectedContact, setSelectedContact] =
+    useState<ContactWithRoles | null>(null);
   const [showInactive, setShowInactive] = useState(false);
-  const [roleFilter, setRoleFilter] = useState<ContactRoleType | "all">(initialRoleFilter ?? "all");
+  const [roleFilter, setRoleFilter] = useState<ContactRoleType | "all">(
+    initialRoleFilter ?? "all",
+  );
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,7 +76,7 @@ export function ContactsSplitView({ initialContacts, initialRoleFilter }: Contac
   // Reload when filters change
   useEffect(() => {
     reloadContacts();
-  }, [showInactive, roleFilter, reloadContacts]);
+  }, [reloadContacts]);
 
   // Debounced search
   useEffect(() => {
@@ -76,7 +84,7 @@ export function ContactsSplitView({ initialContacts, initialRoleFilter }: Contac
       reloadContacts();
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, reloadContacts]);
+  }, [reloadContacts]);
 
   // Load selected contact details
   const loadContactDetails = useCallback(async (contactId: string | null) => {
@@ -108,10 +116,12 @@ export function ContactsSplitView({ initialContacts, initialRoleFilter }: Contac
   const sortContacts = (contactList: ContactWithRoles[]) => {
     return [...contactList].sort((a, b) => {
       if (sortBy === "created") {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       }
       return `${a.last_name} ${a.first_name}`.localeCompare(
-        `${b.last_name} ${b.first_name}`
+        `${b.last_name} ${b.first_name}`,
       );
     });
   };
@@ -129,7 +139,7 @@ export function ContactsSplitView({ initialContacts, initialRoleFilter }: Contac
   // Handle contact updated
   const handleContactUpdated = (contact: ContactWithRoles) => {
     setContacts((prev) =>
-      sortContacts(prev.map((c) => (c.id === contact.id ? contact : c)))
+      sortContacts(prev.map((c) => (c.id === contact.id ? contact : c))),
     );
     setSelectedContact(contact);
   };
@@ -144,7 +154,9 @@ export function ContactsSplitView({ initialContacts, initialRoleFilter }: Contac
         setMobileDetailOpen(false);
       }
     } else {
-      setContacts((prev) => prev.map((c) => (c.id === contact.id ? contact : c)));
+      setContacts((prev) =>
+        prev.map((c) => (c.id === contact.id ? contact : c)),
+      );
       setSelectedContact(contact);
     }
   };
@@ -163,7 +175,7 @@ export function ContactsSplitView({ initialContacts, initialRoleFilter }: Contac
           "flex flex-col border-r bg-background",
           "w-[320px] lg:w-[320px] md:w-[280px]",
           "max-md:w-full max-md:border-r-0",
-          mobileDetailOpen && "max-md:hidden"
+          mobileDetailOpen && "max-md:hidden",
         )}
       >
         {/* Header with Create Button */}
@@ -197,7 +209,7 @@ export function ContactsSplitView({ initialContacts, initialRoleFilter }: Contac
         className={cn(
           "flex-1 overflow-auto bg-muted/30",
           "max-md:fixed max-md:inset-0 max-md:z-50 max-md:bg-background",
-          !mobileDetailOpen && "max-md:hidden"
+          !mobileDetailOpen && "max-md:hidden",
         )}
       >
         {/* Mobile Back Button */}

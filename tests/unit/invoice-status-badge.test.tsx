@@ -56,16 +56,19 @@ describe("InvoiceStatusBadge", () => {
     },
   ];
 
-  it.each(statusTestCases)(
-    "renders $status status with correct label and color",
-    ({ status, expectedLabel, expectedColorClass }) => {
-      render(<InvoiceStatusBadge status={status} />);
+  it.each(
+    statusTestCases,
+  )("renders $status status with correct label and color", ({
+    status,
+    expectedLabel,
+    expectedColorClass,
+  }) => {
+    render(<InvoiceStatusBadge status={status} />);
 
-      const badge = screen.getByText(expectedLabel);
-      expect(badge).toBeInTheDocument();
-      expect(badge).toHaveClass(expectedColorClass);
-    }
-  );
+    const badge = screen.getByText(expectedLabel);
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveClass(expectedColorClass);
+  });
 
   it("applies additional className when provided", () => {
     render(<InvoiceStatusBadge status="draft" className="custom-class" />);

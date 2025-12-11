@@ -16,6 +16,7 @@ import { getMyStatements } from "@/modules/statements/queries";
 import { AuthorAdvanceProgress } from "./components/author-advance-progress";
 import { AuthorBestTitles } from "./components/author-best-titles";
 import { AuthorEarningsTimeline } from "./components/author-earnings-timeline";
+import { AuthorMyTitles } from "./components/author-my-titles";
 import { AuthorNextStatement } from "./components/author-next-statement";
 
 /**
@@ -66,9 +67,12 @@ export default async function PortalPage() {
   // Map contact to author-like object for template compatibility
   const author = {
     id: contact.id,
-    name: `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "Unknown",
+    name:
+      `${contact.first_name || ""} ${contact.last_name || ""}`.trim() ||
+      "Unknown",
     email: contact.email,
-    payment_method: (contact.payment_info as { method?: string } | null)?.method || null,
+    payment_method:
+      (contact.payment_info as { method?: string } | null)?.method || null,
   };
 
   // Fetch author's statements
@@ -108,6 +112,9 @@ export default async function PortalPage() {
           <AuthorNextStatement authorId={author.id} />
         </DashboardChartWrapper>
       </div>
+
+      {/* My Titles - Story 10.1: AC-10.1.7 - Author view of co-authored titles */}
+      <AuthorMyTitles authorId={author.id} />
 
       {/* Statement list - AC-5.6.2 */}
       <PortalStatementList statements={statements} />

@@ -59,9 +59,7 @@ describe("generateInvoiceS3Key", () => {
 
     const key = generateInvoiceS3Key(tenantId, invoiceId);
 
-    expect(key).toBe(
-      `invoices/${tenantId}/${invoiceId}.pdf`,
-    );
+    expect(key).toBe(`invoices/${tenantId}/${invoiceId}.pdf`);
   });
 
   it("handles hyphenated IDs correctly", () => {

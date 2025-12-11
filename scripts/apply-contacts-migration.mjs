@@ -2,8 +2,8 @@
  * Apply contacts schema and contact_id columns migration
  * Run with: node scripts/apply-contacts-migration.mjs
  */
-import { neon } from '@neondatabase/serverless';
-import { config } from 'dotenv';
+import { neon } from "@neondatabase/serverless";
+import { config } from "dotenv";
 
 config();
 
@@ -21,9 +21,9 @@ async function applyMigration() {
     `;
 
     if (contactsCheck[0].exists) {
-      console.log('✅ Table contacts already exists');
+      console.log("✅ Table contacts already exists");
     } else {
-      console.log('⚠️  Table contacts does NOT exist. Creating...');
+      console.log("⚠️  Table contacts does NOT exist. Creating...");
 
       // Create contacts table
       await sql`
@@ -53,7 +53,7 @@ async function applyMigration() {
           CONSTRAINT "contacts_status_valid" CHECK (status IN ('active', 'inactive'))
         )
       `;
-      console.log('  ✓ contacts table created');
+      console.log("  ✓ contacts table created");
 
       // Create contact_roles table
       await sql`
@@ -68,12 +68,12 @@ async function applyMigration() {
           CONSTRAINT "contact_roles_role_valid" CHECK (role IN ('author', 'customer', 'vendor', 'distributor'))
         )
       `;
-      console.log('  ✓ contact_roles table created');
+      console.log("  ✓ contact_roles table created");
 
       // Add foreign keys
       await sql`ALTER TABLE "contacts" ADD CONSTRAINT "contacts_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE cascade ON UPDATE no action`;
       await sql`ALTER TABLE "contact_roles" ADD CONSTRAINT "contact_roles_contact_id_contacts_id_fk" FOREIGN KEY ("contact_id") REFERENCES "public"."contacts"("id") ON DELETE cascade ON UPDATE no action`;
-      console.log('  ✓ Foreign keys added');
+      console.log("  ✓ Foreign keys added");
 
       // Add indexes
       await sql`CREATE INDEX "contacts_tenant_id_idx" ON "contacts" USING btree ("tenant_id")`;
@@ -81,12 +81,12 @@ async function applyMigration() {
       await sql`CREATE INDEX "contacts_status_idx" ON "contacts" USING btree ("status")`;
       await sql`CREATE INDEX "contact_roles_contact_id_idx" ON "contact_roles" USING btree ("contact_id")`;
       await sql`CREATE INDEX "contact_roles_role_idx" ON "contact_roles" USING btree ("role")`;
-      console.log('  ✓ Indexes created');
+      console.log("  ✓ Indexes created");
 
       // Grant permissions to authenticated role
       await sql`GRANT SELECT, INSERT, UPDATE, DELETE ON "contacts" TO authenticated`;
       await sql`GRANT SELECT, INSERT, UPDATE, DELETE ON "contact_roles" TO authenticated`;
-      console.log('  ✓ Permissions granted to authenticated role');
+      console.log("  ✓ Permissions granted to authenticated role");
     }
 
     // Check if contact_id column exists in titles
@@ -98,32 +98,34 @@ async function applyMigration() {
     `;
 
     if (contactIdCheck[0].exists) {
-      console.log('✅ Column titles.contact_id already exists');
+      console.log("✅ Column titles.contact_id already exists");
     } else {
-      console.log('⚠️  Column titles.contact_id does NOT exist. Adding...');
+      console.log("⚠️  Column titles.contact_id does NOT exist. Adding...");
 
       // Add contact_id columns
       await sql`ALTER TABLE "titles" ADD COLUMN "contact_id" uuid`;
       await sql`ALTER TABLE "contracts" ADD COLUMN "contact_id" uuid`;
       await sql`ALTER TABLE "statements" ADD COLUMN "contact_id" uuid`;
-      console.log('  ✓ contact_id columns added to titles, contracts, statements');
+      console.log(
+        "  ✓ contact_id columns added to titles, contracts, statements",
+      );
 
       // Add foreign keys (referencing contacts table)
       await sql`ALTER TABLE "titles" ADD CONSTRAINT "titles_contact_id_contacts_id_fk" FOREIGN KEY ("contact_id") REFERENCES "public"."contacts"("id") ON DELETE no action ON UPDATE no action`;
       await sql`ALTER TABLE "contracts" ADD CONSTRAINT "contracts_contact_id_contacts_id_fk" FOREIGN KEY ("contact_id") REFERENCES "public"."contacts"("id") ON DELETE restrict ON UPDATE no action`;
       await sql`ALTER TABLE "statements" ADD CONSTRAINT "statements_contact_id_contacts_id_fk" FOREIGN KEY ("contact_id") REFERENCES "public"."contacts"("id") ON DELETE restrict ON UPDATE no action`;
-      console.log('  ✓ Foreign keys added');
+      console.log("  ✓ Foreign keys added");
 
       // Add indexes
       await sql`CREATE INDEX "titles_contact_id_idx" ON "titles" USING btree ("contact_id")`;
       await sql`CREATE INDEX "contracts_contact_id_idx" ON "contracts" USING btree ("contact_id")`;
       await sql`CREATE INDEX "statements_contact_id_idx" ON "statements" USING btree ("contact_id")`;
-      console.log('  ✓ Indexes created');
+      console.log("  ✓ Indexes created");
     }
 
-    console.log('\n✅ Migration completed successfully!');
+    console.log("\n✅ Migration completed successfully!");
   } catch (error) {
-    console.error('❌ Migration failed:', error.message);
+    console.error("❌ Migration failed:", error.message);
     process.exit(1);
   }
 }

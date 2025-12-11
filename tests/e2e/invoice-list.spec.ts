@@ -15,7 +15,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Invoice List View", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page: _page }) => {
     // Auth setup: These tests require a user with Finance/Admin/Owner role
     // The test environment should have:
     // 1. Clerk test mode enabled with TEST_USER credentials
@@ -34,15 +34,25 @@ test.describe("Invoice List View", () => {
 
     // Check page header
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-    await expect(page.getByText("Create and manage customer invoices")).toBeVisible();
+    await expect(
+      page.getByText("Create and manage customer invoices"),
+    ).toBeVisible();
 
     // Check for New Invoice button
-    await expect(page.getByRole("link", { name: /new invoice/i })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /new invoice/i }),
+    ).toBeVisible();
 
     // Check for table headers
-    await expect(page.getByRole("columnheader", { name: "Invoice #" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Customer" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Status" })).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Invoice #" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Customer" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Status" }),
+    ).toBeVisible();
   });
 
   test("status filter works", async ({ page }) => {
@@ -97,7 +107,9 @@ test.describe("Invoice List View", () => {
 
   test("empty state shows CTA when no invoices exist", async ({ page }) => {
     // This test requires a known empty state - use a filter combination unlikely to have results
-    await page.goto("/invoices?status=void&startDate=1990-01-01&endDate=1990-01-02");
+    await page.goto(
+      "/invoices?status=void&startDate=1990-01-01&endDate=1990-01-02",
+    );
 
     // Either empty state or results - both are valid
     const tableOrEmpty = page.locator('table, [data-testid="empty-state"]');
@@ -107,19 +119,27 @@ test.describe("Invoice List View", () => {
     const emptyState = page.getByText("No invoices yet");
     const isEmptyVisible = await emptyState.isVisible().catch(() => false);
     if (isEmptyVisible) {
-      await expect(page.getByRole("link", { name: /create your first invoice/i })).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: /create your first invoice/i }),
+      ).toBeVisible();
     }
   });
 
-  test("pagination controls are present when invoices exist", async ({ page }) => {
+  test("pagination controls are present when invoices exist", async ({
+    page,
+  }) => {
     await page.goto("/invoices");
 
     // Wait for page to load
     await page.waitForSelector("table");
 
     // Page size selector should always be visible when there are results
-    const pageSizeSelector = page.getByRole("combobox").filter({ hasText: /10|25|50/ });
-    await expect(pageSizeSelector.or(page.getByText("No invoices yet"))).toBeVisible();
+    const pageSizeSelector = page
+      .getByRole("combobox")
+      .filter({ hasText: /10|25|50/ });
+    await expect(
+      pageSizeSelector.or(page.getByText("No invoices yet")),
+    ).toBeVisible();
   });
 });
 
@@ -293,7 +313,11 @@ test.describe("Edit Invoice Flow", () => {
 
     // Check edit page elements - these must always be present
     await expect(page.getByText(/edit invoice/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /save changes/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /back to invoice/i })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /save changes/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /back to invoice/i }),
+    ).toBeVisible();
   });
 });

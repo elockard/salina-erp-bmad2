@@ -15,7 +15,7 @@
  * is mocked at the API level in development/test environments.
  */
 
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 // Test user credentials
 const testUser = {
@@ -43,7 +43,9 @@ test.describe("Invoice PDF/Email E2E", () => {
       await page.goto("/invoices");
 
       // Verify page loaded
-      await expect(page.getByRole("heading", { name: /invoices/i })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: /invoices/i }),
+      ).toBeVisible();
     });
 
     test("shows action menu on invoice row", async ({ page }) => {
@@ -60,7 +62,9 @@ test.describe("Invoice PDF/Email E2E", () => {
         await actionButtons.first().click();
 
         // Verify menu options appear
-        await expect(page.getByRole("menuitem", { name: /view/i })).toBeVisible();
+        await expect(
+          page.getByRole("menuitem", { name: /view/i }),
+        ).toBeVisible();
       }
     });
   });
@@ -78,7 +82,9 @@ test.describe("Invoice PDF/Email E2E", () => {
 
       if (rowCount > 0) {
         // Click on first invoice's view action
-        const firstRowActions = invoiceRows.first().locator('button[aria-label="Open menu"]');
+        const firstRowActions = invoiceRows
+          .first()
+          .locator('button[aria-label="Open menu"]');
         if ((await firstRowActions.count()) > 0) {
           await firstRowActions.click();
           await page.getByRole("menuitem", { name: /view/i }).click();
@@ -97,13 +103,17 @@ test.describe("Invoice PDF/Email E2E", () => {
       const rowCount = await invoiceRows.count();
 
       if (rowCount > 0) {
-        const firstRowActions = invoiceRows.first().locator('button[aria-label="Open menu"]');
+        const firstRowActions = invoiceRows
+          .first()
+          .locator('button[aria-label="Open menu"]');
         if ((await firstRowActions.count()) > 0) {
           await firstRowActions.click();
           await page.getByRole("menuitem", { name: /view/i }).click();
 
           // Verify Print button is visible
-          await expect(page.getByRole("button", { name: /print/i })).toBeVisible();
+          await expect(
+            page.getByRole("button", { name: /print/i }),
+          ).toBeVisible();
         }
       }
     });
@@ -116,13 +126,17 @@ test.describe("Invoice PDF/Email E2E", () => {
       const rowCount = await invoiceRows.count();
 
       if (rowCount > 0) {
-        const firstRowActions = invoiceRows.first().locator('button[aria-label="Open menu"]');
+        const firstRowActions = invoiceRows
+          .first()
+          .locator('button[aria-label="Open menu"]');
         if ((await firstRowActions.count()) > 0) {
           await firstRowActions.click();
           await page.getByRole("menuitem", { name: /view/i }).click();
 
           // Verify Download PDF button is visible
-          await expect(page.getByRole("button", { name: /download pdf/i })).toBeVisible();
+          await expect(
+            page.getByRole("button", { name: /download pdf/i }),
+          ).toBeVisible();
         }
       }
     });
@@ -143,13 +157,17 @@ test.describe("Invoice PDF/Email E2E", () => {
           has: page.locator('td:has-text("Draft")'),
         });
 
-        const actionButton = draftRow.first().locator('button[aria-label="Open menu"]');
+        const actionButton = draftRow
+          .first()
+          .locator('button[aria-label="Open menu"]');
         if ((await actionButton.count()) > 0) {
           await actionButton.click();
           await page.getByRole("menuitem", { name: /view/i }).click();
 
           // Verify Send button is visible for draft invoice
-          await expect(page.getByRole("button", { name: /send/i })).toBeVisible();
+          await expect(
+            page.getByRole("button", { name: /send/i }),
+          ).toBeVisible();
         }
       }
     });
@@ -167,7 +185,9 @@ test.describe("Invoice PDF/Email E2E", () => {
           has: page.locator('td:has-text("Draft")'),
         });
 
-        const actionButton = draftRow.first().locator('button[aria-label="Open menu"]');
+        const actionButton = draftRow
+          .first()
+          .locator('button[aria-label="Open menu"]');
         if ((await actionButton.count()) > 0) {
           await actionButton.click();
           await page.getByRole("menuitem", { name: /view/i }).click();
@@ -205,13 +225,17 @@ test.describe("Invoice PDF/Email E2E", () => {
           has: page.locator('td:has-text("Sent")'),
         });
 
-        const actionButton = sentRow.first().locator('button[aria-label="Open menu"]');
+        const actionButton = sentRow
+          .first()
+          .locator('button[aria-label="Open menu"]');
         if ((await actionButton.count()) > 0) {
           await actionButton.click();
           await page.getByRole("menuitem", { name: /view/i }).click();
 
           // Verify Resend button is visible for sent invoice
-          await expect(page.getByRole("button", { name: /resend/i })).toBeVisible();
+          await expect(
+            page.getByRole("button", { name: /resend/i }),
+          ).toBeVisible();
         }
       }
     });
@@ -228,7 +252,9 @@ test.describe("Invoice PDF/Email E2E", () => {
           has: page.locator('td:has-text("Sent")'),
         });
 
-        const actionButton = sentRow.first().locator('button[aria-label="Open menu"]');
+        const actionButton = sentRow
+          .first()
+          .locator('button[aria-label="Open menu"]');
         if ((await actionButton.count()) > 0) {
           await actionButton.click();
           await page.getByRole("menuitem", { name: /view/i }).click();
@@ -258,13 +284,17 @@ test.describe("Invoice PDF/Email E2E", () => {
       const rowCount = await invoiceRows.count();
 
       if (rowCount > 0) {
-        const firstRowActions = invoiceRows.first().locator('button[aria-label="Open menu"]');
+        const firstRowActions = invoiceRows
+          .first()
+          .locator('button[aria-label="Open menu"]');
         if ((await firstRowActions.count()) > 0) {
           await firstRowActions.click();
           await page.getByRole("menuitem", { name: /view/i }).click();
 
           // Verify Download PDF button exists and is clickable
-          const downloadButton = page.getByRole("button", { name: /download pdf/i });
+          const downloadButton = page.getByRole("button", {
+            name: /download pdf/i,
+          });
           await expect(downloadButton).toBeVisible();
           await expect(downloadButton).toBeEnabled();
 
@@ -319,7 +349,9 @@ test.describe("Invoice PDF/Email E2E", () => {
       const rowCount = await invoiceRows.count();
 
       if (rowCount > 0) {
-        const firstRowActions = invoiceRows.first().locator('button[aria-label="Open menu"]');
+        const firstRowActions = invoiceRows
+          .first()
+          .locator('button[aria-label="Open menu"]');
         if ((await firstRowActions.count()) > 0) {
           await firstRowActions.click();
           await page.getByRole("menuitem", { name: /view/i }).click();

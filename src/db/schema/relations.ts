@@ -25,6 +25,7 @@ import { returns } from "./returns";
 import { sales } from "./sales";
 import { statements } from "./statements";
 import { tenants } from "./tenants";
+import { titleAuthors } from "./title-authors";
 import { titles } from "./titles";
 import { users } from "./users";
 
@@ -99,6 +100,7 @@ export const authorsRelations = relations(authors, ({ one, many }) => ({
  * Story 3.4: Added returns relation for returns tracking
  * Story 4.1: Added contracts relation for royalty contracts
  * Story 7.3: Added contact relation for unified contact system
+ * Story 10.1: Added titleAuthors relation for multiple authors per title
  */
 export const titlesRelations = relations(titles, ({ one, many }) => ({
   tenant: one(tenants, {
@@ -110,10 +112,16 @@ export const titlesRelations = relations(titles, ({ one, many }) => ({
     fields: [titles.author_id],
     references: [authors.id],
   }),
+  /** @deprecated Use titleAuthors relation for multi-author support (Story 10.1) */
   contact: one(contacts, {
     fields: [titles.contact_id],
     references: [contacts.id],
   }),
+  /**
+   * Title authors - supports multiple authors per title with ownership percentages
+   * Story 10.1: Add Multiple Authors Per Title with Ownership Percentages
+   */
+  titleAuthors: many(titleAuthors),
   assignedIsbns: many(isbns),
   sales: many(sales),
   returns: many(returns),
@@ -323,6 +331,7 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
  * Each contact can have multiple roles
  * Story 7.1: Unified contact management with multi-role support
  * Story 7.3: Added titles, contracts, statements relations
+ * Story 10.1: Added titleAuthors relation for co-authored titles
  */
 export const contactsRelations = relations(contacts, ({ one, many }) => ({
   tenant: one(tenants, {
@@ -340,7 +349,13 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
     relationName: "contactCreatedBy",
   }),
   roles: many(contactRoles),
+  /** @deprecated Use titleAuthors for multi-author support (Story 10.1) */
   titles: many(titles),
+  /**
+   * Title authors - titles where this contact is an author
+   * Story 10.1: Add Multiple Authors Per Title with Ownership Percentages
+   */
+  titleAuthors: many(titleAuthors),
   contracts: many(contracts),
   statements: many(statements),
 }));
@@ -429,6 +444,33 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   }),
   createdByUser: one(users, {
     fields: [payments.created_by],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * Title Authors relations
+ * Each title-author entry belongs to one title and one contact
+ * Each entry may have been created by one user (for audit trail)
+ * Story 10.1: Add Multiple Authors Per Title with Ownership Percentages
+ *
+ * Business Rules:
+ * - Junction table for many-to-many relationship between titles and contacts
+ * - Tenant isolation inherited via FK to titles (which has RLS)
+ * - Each entry tracks ownership_percentage for royalty splitting
+ * - is_primary flag designates primary author for display purposes
+ */
+export const titleAuthorsRelations = relations(titleAuthors, ({ one }) => ({
+  title: one(titles, {
+    fields: [titleAuthors.title_id],
+    references: [titles.id],
+  }),
+  contact: one(contacts, {
+    fields: [titleAuthors.contact_id],
+    references: [contacts.id],
+  }),
+  createdByUser: one(users, {
+    fields: [titleAuthors.created_by],
     references: [users.id],
   }),
 }));

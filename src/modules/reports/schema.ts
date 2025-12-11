@@ -100,3 +100,26 @@ export const salesReportFilterSchema = z.object({
 });
 
 export type SalesReportFilterInput = z.infer<typeof salesReportFilterSchema>;
+
+/**
+ * Tax preparation filter schema
+ *
+ * Story 11.2: Track Annual Earnings for 1099 Threshold
+ * AC-11.2.5: Filtering Capabilities
+ *
+ * Filters for the 1099 tax preparation report.
+ */
+export const taxPreparationFilterSchema = z.object({
+  /** Calendar year to report on (2020-2100) */
+  year: z.number().int().min(2020).max(2100),
+  /** Filter by 1099 requirement status */
+  requires1099: z.enum(["all", "required", "not-required"]).default("all"),
+  /** Filter by TIN status */
+  tinStatus: z.enum(["all", "provided", "missing"]).default("all"),
+  /** Filter by W-9 status */
+  w9Status: z.enum(["all", "received", "missing"]).default("all"),
+});
+
+export type TaxPreparationFilterInput = z.infer<
+  typeof taxPreparationFilterSchema
+>;

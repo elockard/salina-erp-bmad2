@@ -16,10 +16,11 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import type { ContractWithRelations } from "../types";
+import type { ContractWithRelations, RoyaltyProjection } from "../types";
 import { ContractAdvanceModal } from "./contract-advance-modal";
 import { ContractAdvanceSection } from "./contract-advance-section";
 import { ContractEditModal } from "./contract-edit-modal";
+import { ContractProjectionSection } from "./contract-projection-section";
 import { ContractStatsSection } from "./contract-stats-section";
 import { ContractStatusDropdown } from "./contract-status-dropdown";
 import { ContractTiersSection } from "./contract-tiers-section";
@@ -40,9 +41,15 @@ const STATUS_BADGES: Record<
 interface ContractDetailProps {
   contract: ContractWithRelations;
   canEdit: boolean;
+  /** Royalty projection data for lifetime-mode contracts (AC-10.4.7) */
+  projection?: RoyaltyProjection | null;
 }
 
-export function ContractDetail({ contract, canEdit }: ContractDetailProps) {
+export function ContractDetail({
+  contract,
+  canEdit,
+  projection,
+}: ContractDetailProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
 
@@ -131,8 +138,23 @@ export function ContractDetail({ contract, canEdit }: ContractDetailProps) {
         <ContractStatsSection contractId={contract.id} />
       </div>
 
-      {/* Royalty Rate Tables - AC 4 */}
-      <ContractTiersSection tiers={contract.tiers} />
+      {/* Royalty Rate Tables - AC 4, Story 10.4 */}
+      <ContractTiersSection
+        tiers={contract.tiers}
+        tierCalculationMode={
+          contract.tier_calculation_mode as "period" | "lifetime"
+        }
+      />
+
+      {/* Royalty Projection - AC 10.4.7 (lifetime contracts only) */}
+      {projection && (
+        <ContractProjectionSection
+          velocity={projection.velocity}
+          tierCrossovers={projection.tierCrossovers}
+          annualProjection={projection.annualProjection}
+          warnings={projection.warnings}
+        />
+      )}
 
       {/* Edit Contract Modal - AC 7 */}
       {canEdit && (

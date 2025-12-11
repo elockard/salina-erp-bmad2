@@ -1,8 +1,14 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { getCurrentUser, hasPermission } from "@/lib/auth";
 import { VIEW_INVOICES } from "@/lib/permissions";
 import { getInvoiceForEdit } from "@/modules/invoices/queries";

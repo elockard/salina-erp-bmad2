@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   type InsertTenant,
-  royaltyPeriodTypeValues,
   type RoyaltyPeriodType,
-  tenants,
+  royaltyPeriodTypeValues,
   type Tenant,
+  tenants,
 } from "@/db/schema/tenants";
 
 /**
@@ -124,7 +124,7 @@ describe("tenants table schema structure", () => {
   it("has royalty_period_start_month column (AC 9)", () => {
     expect(tenants.royalty_period_start_month).toBeDefined();
     expect(tenants.royalty_period_start_month.name).toBe(
-      "royalty_period_start_month"
+      "royalty_period_start_month",
     );
     // Nullable - only required when type is 'custom'
     expect(tenants.royalty_period_start_month.notNull).toBe(false);
@@ -133,7 +133,7 @@ describe("tenants table schema structure", () => {
   it("has royalty_period_start_day column (AC 9)", () => {
     expect(tenants.royalty_period_start_day).toBeDefined();
     expect(tenants.royalty_period_start_day.name).toBe(
-      "royalty_period_start_day"
+      "royalty_period_start_day",
     );
     // Nullable - only required when type is 'custom'
     expect(tenants.royalty_period_start_day.notNull).toBe(false);
@@ -165,6 +165,15 @@ describe("Tenant type", () => {
       royalty_period_type: "fiscal_year",
       royalty_period_start_month: null,
       royalty_period_start_day: null,
+      // Payer info (Story 11.3)
+      payer_ein_encrypted: null,
+      payer_ein_last_four: null,
+      payer_name: null,
+      payer_address_line1: null,
+      payer_address_line2: null,
+      payer_city: null,
+      payer_state: null,
+      payer_zip: null,
       created_at: new Date(),
       updated_at: new Date(),
     };
@@ -186,6 +195,15 @@ describe("Tenant type", () => {
       royalty_period_type: "calendar_year",
       royalty_period_start_month: null,
       royalty_period_start_day: null,
+      // Payer info (Story 11.3)
+      payer_ein_encrypted: null,
+      payer_ein_last_four: null,
+      payer_name: null,
+      payer_address_line1: null,
+      payer_address_line2: null,
+      payer_city: null,
+      payer_state: null,
+      payer_zip: null,
       created_at: new Date(),
       updated_at: new Date(),
     };
@@ -250,5 +268,120 @@ describe("Default value verification (AC 10)", () => {
     // The migration should default existing rows to 'fiscal_year'
     // This test verifies the schema default is correct
     expect(tenants.royalty_period_type.default).toBe("fiscal_year");
+  });
+});
+
+/**
+ * Story 11.3 - AC-11.3.3: Payer Information for 1099 Generation
+ * Tests for payer EIN and address fields on tenants table
+ */
+describe("tenants payer information columns (AC-11.3.3)", () => {
+  it("has payer_ein_encrypted column (nullable)", () => {
+    expect(tenants.payer_ein_encrypted).toBeDefined();
+    expect(tenants.payer_ein_encrypted.name).toBe("payer_ein_encrypted");
+    expect(tenants.payer_ein_encrypted.notNull).toBe(false);
+  });
+
+  it("has payer_ein_last_four column (nullable)", () => {
+    expect(tenants.payer_ein_last_four).toBeDefined();
+    expect(tenants.payer_ein_last_four.name).toBe("payer_ein_last_four");
+    expect(tenants.payer_ein_last_four.notNull).toBe(false);
+  });
+
+  it("has payer_name column (nullable)", () => {
+    expect(tenants.payer_name).toBeDefined();
+    expect(tenants.payer_name.name).toBe("payer_name");
+    expect(tenants.payer_name.notNull).toBe(false);
+  });
+
+  it("has payer_address_line1 column (nullable)", () => {
+    expect(tenants.payer_address_line1).toBeDefined();
+    expect(tenants.payer_address_line1.name).toBe("payer_address_line1");
+    expect(tenants.payer_address_line1.notNull).toBe(false);
+  });
+
+  it("has payer_address_line2 column (nullable)", () => {
+    expect(tenants.payer_address_line2).toBeDefined();
+    expect(tenants.payer_address_line2.name).toBe("payer_address_line2");
+    expect(tenants.payer_address_line2.notNull).toBe(false);
+  });
+
+  it("has payer_city column (nullable)", () => {
+    expect(tenants.payer_city).toBeDefined();
+    expect(tenants.payer_city.name).toBe("payer_city");
+    expect(tenants.payer_city.notNull).toBe(false);
+  });
+
+  it("has payer_state column (nullable)", () => {
+    expect(tenants.payer_state).toBeDefined();
+    expect(tenants.payer_state.name).toBe("payer_state");
+    expect(tenants.payer_state.notNull).toBe(false);
+  });
+
+  it("has payer_zip column (nullable)", () => {
+    expect(tenants.payer_zip).toBeDefined();
+    expect(tenants.payer_zip.name).toBe("payer_zip");
+    expect(tenants.payer_zip.notNull).toBe(false);
+  });
+});
+
+describe("Tenant type with payer info", () => {
+  it("supports payer information fields", () => {
+    const tenantWithPayer: Tenant = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      subdomain: "test-pub",
+      name: "Test Publisher",
+      timezone: "America/New_York",
+      fiscal_year_start: "2024-01-01",
+      default_currency: "USD",
+      statement_frequency: "quarterly",
+      royalty_period_type: "fiscal_year",
+      royalty_period_start_month: null,
+      royalty_period_start_day: null,
+      // Payer info (Story 11.3)
+      payer_ein_encrypted: "encryptedEINvalue",
+      payer_ein_last_four: "6789",
+      payer_name: "Acme Publishing LLC",
+      payer_address_line1: "123 Main Street",
+      payer_address_line2: "Suite 100",
+      payer_city: "New York",
+      payer_state: "NY",
+      payer_zip: "10001",
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    expect(tenantWithPayer.payer_name).toBe("Acme Publishing LLC");
+    expect(tenantWithPayer.payer_ein_last_four).toBe("6789");
+    expect(tenantWithPayer.payer_city).toBe("New York");
+  });
+
+  it("allows null payer information (before configured)", () => {
+    const tenantWithoutPayer: Tenant = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      subdomain: "test-pub",
+      name: "Test Publisher",
+      timezone: "America/New_York",
+      fiscal_year_start: null,
+      default_currency: "USD",
+      statement_frequency: "quarterly",
+      royalty_period_type: "fiscal_year",
+      royalty_period_start_month: null,
+      royalty_period_start_day: null,
+      // Payer info all null
+      payer_ein_encrypted: null,
+      payer_ein_last_four: null,
+      payer_name: null,
+      payer_address_line1: null,
+      payer_address_line2: null,
+      payer_city: null,
+      payer_state: null,
+      payer_zip: null,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    expect(tenantWithoutPayer.payer_ein_encrypted).toBeNull();
+    expect(tenantWithoutPayer.payer_name).toBeNull();
   });
 });

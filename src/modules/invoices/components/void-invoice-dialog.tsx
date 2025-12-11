@@ -109,7 +109,9 @@ export function VoidInvoiceDialog({
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Amount</span>
-              <span className="font-medium">{formatCurrency(invoiceAmount)}</span>
+              <span className="font-medium">
+                {formatCurrency(invoiceAmount)}
+              </span>
             </div>
           </div>
 

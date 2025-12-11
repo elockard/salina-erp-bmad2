@@ -34,8 +34,7 @@ import {
   sql,
   sum,
 } from "drizzle-orm";
-import { authors } from "@/db/schema/authors";
-import { contacts, contactRoles } from "@/db/schema/contacts";
+import { contacts } from "@/db/schema/contacts";
 import { statements } from "@/db/schema/statements";
 import { getCurrentUser, getDb, requirePermission } from "@/lib/auth";
 import type {
@@ -757,7 +756,9 @@ export async function getMyStatementById(
   const contactAddress = [
     contact.address_line1,
     contact.address_line2,
-    [contact.city, contact.state, contact.postal_code].filter(Boolean).join(" "),
+    [contact.city, contact.state, contact.postal_code]
+      .filter(Boolean)
+      .join(" "),
     contact.country,
   ]
     .filter(Boolean)
@@ -765,7 +766,9 @@ export async function getMyStatementById(
 
   const authorInfo = {
     id: contact.id,
-    name: `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "Unknown",
+    name:
+      `${contact.first_name || ""} ${contact.last_name || ""}`.trim() ||
+      "Unknown",
     address: contactAddress || null,
     email: contact.email,
   };

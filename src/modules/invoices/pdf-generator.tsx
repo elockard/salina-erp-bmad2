@@ -19,9 +19,13 @@ import { adminDb } from "@/db";
 import { contacts } from "@/db/schema/contacts";
 import { invoiceLineItems, invoices } from "@/db/schema/invoices";
 import { tenants } from "@/db/schema/tenants";
-import type { InvoiceAddress, InvoicePDFData, PDFGenerationResult } from "./types";
 import { renderInvoicePDF } from "./pdf-template";
 import { uploadInvoicePDF } from "./storage";
+import type {
+  InvoiceAddress,
+  InvoicePDFData,
+  PDFGenerationResult,
+} from "./types";
 
 /**
  * Format decimal string with 2 decimal places
@@ -191,7 +195,9 @@ export async function generateInvoicePDF(
       .where(eq(invoices.id, invoiceId));
 
     const totalTime = Date.now() - startTime;
-    console.log(`[PDF] Completed invoice PDF for ${invoiceId} (total: ${totalTime}ms)`);
+    console.log(
+      `[PDF] Completed invoice PDF for ${invoiceId} (total: ${totalTime}ms)`,
+    );
 
     return {
       success: true,

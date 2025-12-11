@@ -15,7 +15,9 @@ const mockSelectResult = vi.hoisted(() => vi.fn());
 const mockFromResult = vi.hoisted(() => vi.fn());
 const mockWhereResult = vi.hoisted(() => vi.fn());
 const mockReturning = vi.hoisted(() => vi.fn());
-const mockValues = vi.hoisted(() => vi.fn(() => ({ returning: mockReturning })));
+const mockValues = vi.hoisted(() =>
+  vi.fn(() => ({ returning: mockReturning })),
+);
 const mockInsert = vi.hoisted(() => vi.fn(() => ({ values: mockValues })));
 const mockSetResult = vi.hoisted(() => vi.fn());
 const mockUpdateWhere = vi.hoisted(() => vi.fn());

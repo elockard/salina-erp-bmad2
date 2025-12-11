@@ -124,7 +124,9 @@ test.describe("Accounts Receivable - Customer Detail (AC-8.5.4)", () => {
     }
 
     // Find first customer button and click
-    const customerButton = page.getByRole("button", { name: /View details for/i }).first();
+    const customerButton = page
+      .getByRole("button", { name: /View details for/i })
+      .first();
     const buttonExists = await customerButton.isVisible().catch(() => false);
 
     if (buttonExists) {

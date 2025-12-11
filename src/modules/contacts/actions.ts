@@ -13,24 +13,36 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { contacts, contactRoles } from "@/db/schema/contacts";
-import { getCurrentTenantId, getCurrentUser, getDb, requirePermission } from "@/lib/auth";
+import { contactRoles, contacts } from "@/db/schema/contacts";
 import { logAuditEvent } from "@/lib/audit";
 import {
-  MANAGE_CONTACTS,
+  getCurrentTenantId,
+  getCurrentUser,
+  getDb,
+  requirePermission,
+} from "@/lib/auth";
+import { encryptTIN } from "@/lib/encryption";
+import {
   ASSIGN_CUSTOMER_ROLE,
+  MANAGE_CONTACTS,
   MANAGE_USERS,
+  VIEW_TAX_ID,
 } from "@/lib/permissions";
+import { extractLastFour } from "@/lib/tin-validation";
 import type { ActionResult } from "@/lib/types";
 import {
-  createContactSchema,
-  updateContactSchema,
+  type AssignContactRoleInput,
   assignContactRoleSchema,
   type CreateContactInput,
+  createContactSchema,
+  type TaxInfoInput,
+  taxInfoSchema,
   type UpdateContactInput,
-  type AssignContactRoleInput,
+  type UpdateTaxInfoInput,
+  updateContactSchema,
+  updateTaxInfoSchema,
 } from "./schema";
-import type { ContactWithRoles, ContactRoleType } from "./types";
+import type { ContactRoleType, ContactWithRoles } from "./types";
 
 // =============================================================================
 // SECURITY WARNING: Payment Info Handling
@@ -740,7 +752,10 @@ export async function fetchContacts(options?: {
   const results = await db.query.contacts.findMany({
     where: and(...conditions),
     with: { roles: true },
-    orderBy: (contacts, { asc }) => [asc(contacts.last_name), asc(contacts.first_name)],
+    orderBy: (contacts, { asc }) => [
+      asc(contacts.last_name),
+      asc(contacts.first_name),
+    ],
   });
 
   // Filter by role if specified
@@ -780,4 +795,354 @@ export async function getContactWithRoles(
   });
 
   return (contact as ContactWithRoles) || null;
+}
+
+// =============================================================================
+// Tax Information Management (Story 11.1)
+// =============================================================================
+
+/**
+ * Update tax information for a contact
+ * Permission: VIEW_TAX_ID (owner, admin, finance)
+ *
+ * Story 11.1 - AC-11.1.1, AC-11.1.4: Tax section restricted to Finance/Admin roles
+ * - Encrypts TIN using AES-256-GCM before storage
+ * - Stores last 4 digits separately for masked display
+ * - Creates audit log for tax info changes
+ *
+ * @param contactId - The contact ID to update
+ * @param taxInfo - Tax information to update (TIN will be encrypted)
+ */
+export async function updateContactTaxInfo(
+  contactId: string,
+  taxInfo: TaxInfoInput,
+): Promise<ActionResult<ContactWithRoles>> {
+  try {
+    // Check permission - AC-11.1.1: Only Finance/Admin can modify tax info
+    await requirePermission(VIEW_TAX_ID);
+
+    // Validate input
+    const validated = taxInfoSchema.parse(taxInfo);
+
+    // Get tenant context
+    const tenantId = await getCurrentTenantId();
+    const user = await getCurrentUser();
+    const db = await getDb();
+
+    // Verify contact exists and belongs to tenant
+    const existing = await db.query.contacts.findFirst({
+      where: and(eq(contacts.id, contactId), eq(contacts.tenant_id, tenantId)),
+      with: { roles: true },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Contact not found" };
+    }
+
+    // Encrypt TIN
+    const encryptedTIN = encryptTIN(validated.tin);
+    const lastFour = extractLastFour(validated.tin);
+
+    // Update contact with encrypted tax info
+    await db
+      .update(contacts)
+      .set({
+        tin_encrypted: encryptedTIN,
+        tin_type: validated.tin_type,
+        tin_last_four: lastFour,
+        is_us_based: validated.is_us_based,
+        w9_received: validated.w9_received,
+        w9_received_date: validated.w9_received_date,
+        updated_at: new Date(),
+      })
+      .where(and(eq(contacts.id, contactId), eq(contacts.tenant_id, tenantId)));
+
+    // Get updated contact with roles
+    const contactWithRoles = await db.query.contacts.findFirst({
+      where: eq(contacts.id, contactId),
+      with: { roles: true },
+    });
+
+    // Fire and forget audit log with sensitive data masked
+    logAuditEvent({
+      tenantId,
+      userId: user?.id || null,
+      actionType: "UPDATE",
+      resourceType: "contact",
+      resourceId: contactId,
+      changes: {
+        after: {
+          tin_type: validated.tin_type,
+          tin_last_four: lastFour,
+          is_us_based: validated.is_us_based,
+          w9_received: validated.w9_received,
+          w9_received_date: validated.w9_received_date,
+          // NOTE: Full TIN is NOT logged for security
+        },
+      },
+      metadata: { action: "tax_info_updated" },
+    });
+
+    // Revalidate cache
+    revalidatePath("/contacts");
+
+    return {
+      success: true,
+      data: contactWithRoles as ContactWithRoles,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to update tax information",
+      };
+    }
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues[0]?.message || "Invalid tax information",
+      };
+    }
+
+    if (
+      error instanceof Error &&
+      error.message.includes("TIN_ENCRYPTION_KEY")
+    ) {
+      console.error("TIN encryption key not configured:", error);
+      return {
+        success: false,
+        error:
+          "Tax information encryption is not configured. Contact administrator.",
+      };
+    }
+
+    console.error("updateContactTaxInfo error:", error);
+    return {
+      success: false,
+      error: "Failed to update tax information. Please try again.",
+    };
+  }
+}
+
+/**
+ * Partial update of tax information for a contact
+ * Permission: VIEW_TAX_ID (owner, admin, finance)
+ *
+ * Story 11.1 - AC-11.1.1, AC-11.1.4: Tax section restricted to Finance/Admin roles
+ * Allows updating individual tax fields without requiring all fields.
+ *
+ * @param contactId - The contact ID to update
+ * @param taxInfo - Partial tax information to update
+ */
+export async function updateContactTaxInfoPartial(
+  contactId: string,
+  taxInfo: UpdateTaxInfoInput,
+): Promise<ActionResult<ContactWithRoles>> {
+  try {
+    // Check permission - AC-11.1.1: Only Finance/Admin can modify tax info
+    await requirePermission(VIEW_TAX_ID);
+
+    // Validate input
+    const validated = updateTaxInfoSchema.parse(taxInfo);
+
+    // Get tenant context
+    const tenantId = await getCurrentTenantId();
+    const user = await getCurrentUser();
+    const db = await getDb();
+
+    // Verify contact exists and belongs to tenant
+    const existing = await db.query.contacts.findFirst({
+      where: and(eq(contacts.id, contactId), eq(contacts.tenant_id, tenantId)),
+      with: { roles: true },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Contact not found" };
+    }
+
+    // Build update object
+    const updateValues: Record<string, unknown> = {
+      updated_at: new Date(),
+    };
+
+    // Handle TIN update (requires encryption)
+    if (validated.tin && validated.tin_type) {
+      updateValues.tin_encrypted = encryptTIN(validated.tin);
+      updateValues.tin_type = validated.tin_type;
+      updateValues.tin_last_four = extractLastFour(validated.tin);
+    }
+
+    // Handle other fields
+    if (validated.is_us_based !== undefined) {
+      updateValues.is_us_based = validated.is_us_based;
+    }
+    if (validated.w9_received !== undefined) {
+      updateValues.w9_received = validated.w9_received;
+    }
+    if (validated.w9_received_date !== undefined) {
+      updateValues.w9_received_date = validated.w9_received_date;
+    }
+
+    // Update contact
+    await db
+      .update(contacts)
+      .set(updateValues)
+      .where(and(eq(contacts.id, contactId), eq(contacts.tenant_id, tenantId)));
+
+    // Get updated contact with roles
+    const contactWithRoles = await db.query.contacts.findFirst({
+      where: eq(contacts.id, contactId),
+      with: { roles: true },
+    });
+
+    // Fire and forget audit log
+    logAuditEvent({
+      tenantId,
+      userId: user?.id || null,
+      actionType: "UPDATE",
+      resourceType: "contact",
+      resourceId: contactId,
+      changes: {
+        after: {
+          fields_updated: Object.keys(updateValues).filter(
+            (k) => k !== "updated_at",
+          ),
+          // NOTE: TIN value is NOT logged for security
+        },
+      },
+      metadata: { action: "tax_info_partial_update" },
+    });
+
+    // Revalidate cache
+    revalidatePath("/contacts");
+
+    return {
+      success: true,
+      data: contactWithRoles as ContactWithRoles,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to update tax information",
+      };
+    }
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues[0]?.message || "Invalid tax information",
+      };
+    }
+
+    if (
+      error instanceof Error &&
+      error.message.includes("TIN_ENCRYPTION_KEY")
+    ) {
+      console.error("TIN encryption key not configured:", error);
+      return {
+        success: false,
+        error:
+          "Tax information encryption is not configured. Contact administrator.",
+      };
+    }
+
+    console.error("updateContactTaxInfoPartial error:", error);
+    return {
+      success: false,
+      error: "Failed to update tax information. Please try again.",
+    };
+  }
+}
+
+/**
+ * Clear tax information from a contact
+ * Permission: VIEW_TAX_ID (owner, admin, finance)
+ *
+ * Story 11.1 - AC-11.1.1: Tax section restricted to Finance/Admin roles
+ * Removes all TIN data for a contact.
+ * Used when an author is no longer subject to 1099 reporting (e.g., non-US)
+ *
+ * @param contactId - The contact ID to clear tax info from
+ */
+export async function clearContactTaxInfo(
+  contactId: string,
+): Promise<ActionResult<ContactWithRoles>> {
+  try {
+    // Check permission - AC-11.1.1: Only Finance/Admin can modify tax info
+    await requirePermission(VIEW_TAX_ID);
+
+    // Get tenant context
+    const tenantId = await getCurrentTenantId();
+    const user = await getCurrentUser();
+    const db = await getDb();
+
+    // Verify contact exists and belongs to tenant
+    const existing = await db.query.contacts.findFirst({
+      where: and(eq(contacts.id, contactId), eq(contacts.tenant_id, tenantId)),
+      with: { roles: true },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Contact not found" };
+    }
+
+    // Clear tax information
+    await db
+      .update(contacts)
+      .set({
+        tin_encrypted: null,
+        tin_type: null,
+        tin_last_four: null,
+        w9_received: false,
+        w9_received_date: null,
+        updated_at: new Date(),
+      })
+      .where(and(eq(contacts.id, contactId), eq(contacts.tenant_id, tenantId)));
+
+    // Get updated contact with roles
+    const contactWithRoles = await db.query.contacts.findFirst({
+      where: eq(contacts.id, contactId),
+      with: { roles: true },
+    });
+
+    // Fire and forget audit log
+    logAuditEvent({
+      tenantId,
+      userId: user?.id || null,
+      actionType: "UPDATE",
+      resourceType: "contact",
+      resourceId: contactId,
+      changes: {
+        after: {
+          tin_encrypted: null,
+          tin_type: null,
+          tin_last_four: null,
+        },
+      },
+      metadata: { action: "tax_info_cleared" },
+    });
+
+    // Revalidate cache
+    revalidatePath("/contacts");
+
+    return {
+      success: true,
+      data: contactWithRoles as ContactWithRoles,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to clear tax information",
+      };
+    }
+
+    console.error("clearContactTaxInfo error:", error);
+    return {
+      success: false,
+      error: "Failed to clear tax information. Please try again.",
+    };
+  }
 }

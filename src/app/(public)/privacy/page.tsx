@@ -36,18 +36,15 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc pl-6 text-muted-foreground mt-4 space-y-2">
               <li>
-                Account information (name, email address, company name, password)
+                Account information (name, email address, company name,
+                password)
               </li>
-              <li>
-                Billing information (payment method, billing address)
-              </li>
+              <li>Billing information (payment method, billing address)</li>
               <li>
                 Business data you input into the platform (authors, titles,
                 contracts, sales data)
               </li>
-              <li>
-                Communications with our support team
-              </li>
+              <li>Communications with our support team</li>
             </ul>
           </section>
 

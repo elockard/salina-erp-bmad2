@@ -66,10 +66,7 @@ export const invoiceLineItemSchema = z.object({
     .refine((val) => Number.parseFloat(val) > 0, "Quantity must be positive"),
   unit_price: z
     .string()
-    .refine(
-      (val) => Number.parseFloat(val) > 0,
-      "Unit price must be positive",
-    ),
+    .refine((val) => Number.parseFloat(val) > 0, "Unit price must be positive"),
   tax_rate: z
     .string()
     .refine(
@@ -136,7 +133,9 @@ export const createInvoiceSchema = z
     currency: z.string().default("USD"),
     notes: z.string().optional().nullable(),
     internal_notes: z.string().optional().nullable(),
-    line_items: z.array(invoiceLineItemSchema).min(1, "At least one line item is required"),
+    line_items: z
+      .array(invoiceLineItemSchema)
+      .min(1, "At least one line item is required"),
   })
   .refine(
     (data) => {

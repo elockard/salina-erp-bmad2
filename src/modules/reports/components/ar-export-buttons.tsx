@@ -76,7 +76,14 @@ function generateCSV(data: AgingReportRow[]): string {
       days90plus: acc.days90plus + (Number.parseFloat(row.days90plus) || 0),
       total: acc.total + (Number.parseFloat(row.total) || 0),
     }),
-    { current: 0, days1to30: 0, days31to60: 0, days61to90: 0, days90plus: 0, total: 0 },
+    {
+      current: 0,
+      days1to30: 0,
+      days31to60: 0,
+      days61to90: 0,
+      days90plus: 0,
+      total: 0,
+    },
   );
 
   rows.push([
@@ -90,7 +97,12 @@ function generateCSV(data: AgingReportRow[]): string {
   ]);
 
   // Include timestamp, then headers, then data rows
-  return [timestampRow, "", headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+  return [
+    timestampRow,
+    "",
+    headers.join(","),
+    ...rows.map((row) => row.join(",")),
+  ].join("\n");
 }
 
 /**
@@ -113,7 +125,14 @@ function generatePDFContent(
       days90plus: acc.days90plus + (Number.parseFloat(row.days90plus) || 0),
       total: acc.total + (Number.parseFloat(row.total) || 0),
     }),
-    { current: 0, days1to30: 0, days31to60: 0, days61to90: 0, days90plus: 0, total: 0 },
+    {
+      current: 0,
+      days1to30: 0,
+      days31to60: 0,
+      days61to90: 0,
+      days90plus: 0,
+      total: 0,
+    },
   );
 
   const formatCurrency = (value: number | string) => {
@@ -200,7 +219,9 @@ export function ARExportButtons({
   disabled = false,
 }: ARExportButtonsProps) {
   const [isExporting, setIsExporting] = React.useState(false);
-  const [exportType, setExportType] = React.useState<"csv" | "pdf" | null>(null);
+  const [exportType, setExportType] = React.useState<"csv" | "pdf" | null>(
+    null,
+  );
 
   const handleExportCSV = async () => {
     if (data.length === 0) return;
@@ -259,7 +280,11 @@ export function ARExportButtons({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" disabled={isDisabled} data-testid="ar-export-button">
+        <Button
+          variant="outline"
+          disabled={isDisabled}
+          data-testid="ar-export-button"
+        >
           {isExporting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

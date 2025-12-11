@@ -1,14 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDown, ChevronRight, Eye, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
@@ -31,32 +37,28 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
 import {
+  ASSIGN_CUSTOMER_ROLE,
   MANAGE_CONTACTS,
   MANAGE_USERS,
   VIEW_TAX_ID,
-  ASSIGN_CUSTOMER_ROLE,
 } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import {
-  updateContact,
+  assignContactRole,
   deactivateContact,
   reactivateContact,
-  assignContactRole,
   removeContactRole,
+  updateContact,
+  updateContactTaxInfoPartial,
 } from "../actions";
-import { updateContactSchema, type UpdateContactInput } from "../schema";
-import type { ContactWithRoles, ContactRoleType, ContactRole } from "../types";
+import { type UpdateContactInput, updateContactSchema } from "../schema";
+import type { ContactRole, ContactRoleType, ContactWithRoles } from "../types";
+import { TaxInfoDisplay } from "./tax-info-display";
+import { TaxInfoForm, type TaxInfoFormData } from "./tax-info-form";
 
 /**
  * Role badge configuration per AC-7.2.2
@@ -87,7 +89,12 @@ const ROLE_BADGES: Record<
   },
 };
 
-const ALL_ROLES: ContactRoleType[] = ["author", "customer", "vendor", "distributor"];
+const ALL_ROLES: ContactRoleType[] = [
+  "author",
+  "customer",
+  "vendor",
+  "distributor",
+];
 
 interface ContactDetailProps {
   contact: ContactWithRoles;
@@ -115,9 +122,21 @@ export function ContactDetail({
   const [isEditing, setIsEditing] = useState(false);
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [showAddRoleDialog, setShowAddRoleDialog] = useState(false);
+  const [showTaxInfoDialog, setShowTaxInfoDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTaxInfoLoading, setIsTaxInfoLoading] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);
-  const [showTaxId, setShowTaxId] = useState(false);
+  const [taxInfoFormData, setTaxInfoFormData] = useState<TaxInfoFormData>(
+    () => ({
+      tin_type: "",
+      tin: "",
+      is_us_based: contact.is_us_based ?? true,
+      w9_received: contact.w9_received ?? false,
+      w9_received_date: contact.w9_received_date
+        ? new Date(contact.w9_received_date).toISOString().split("T")[0]
+        : null,
+    }),
+  );
 
   const canManageContacts = useHasPermission(MANAGE_CONTACTS);
   const canManageUsers = useHasPermission(MANAGE_USERS);
@@ -127,7 +146,8 @@ export function ContactDetail({
   const displayName = `${contact.first_name} ${contact.last_name}`.trim();
   const existingRoles = contact.roles.map((r) => r.role);
   const availableRoles = ALL_ROLES.filter(
-    (r) => !existingRoles.includes(r) && (r !== "customer" || canAssignCustomerRole)
+    (r) =>
+      !existingRoles.includes(r) && (r !== "customer" || canAssignCustomerRole),
   );
 
   const form = useForm<UpdateContactInput>({
@@ -144,6 +164,7 @@ export function ContactDetail({
       postal_code: contact.postal_code || "",
       country: contact.country || "",
       notes: contact.notes || "",
+      tax_id: "",
     },
   });
 
@@ -160,6 +181,7 @@ export function ContactDetail({
       postal_code: contact.postal_code || "",
       country: contact.country || "",
       notes: contact.notes || "",
+      tax_id: "",
     });
     setIsEditing(true);
   };
@@ -237,6 +259,44 @@ export function ContactDetail({
     }
   };
 
+  const handleOpenTaxInfoDialog = () => {
+    // Reset form data to current contact values when opening
+    setTaxInfoFormData({
+      tin_type: "",
+      tin: "",
+      is_us_based: contact.is_us_based ?? true,
+      w9_received: contact.w9_received ?? false,
+      w9_received_date: contact.w9_received_date
+        ? new Date(contact.w9_received_date).toISOString().split("T")[0]
+        : null,
+    });
+    setShowTaxInfoDialog(true);
+  };
+
+  const handleSaveTaxInfo = async () => {
+    setIsTaxInfoLoading(true);
+
+    const result = await updateContactTaxInfoPartial(contact.id, {
+      tin_type: taxInfoFormData.tin_type || undefined,
+      tin: taxInfoFormData.tin || undefined,
+      is_us_based: taxInfoFormData.is_us_based,
+      w9_received: taxInfoFormData.w9_received,
+      w9_received_date: taxInfoFormData.w9_received_date
+        ? new Date(taxInfoFormData.w9_received_date)
+        : null,
+    });
+
+    setIsTaxInfoLoading(false);
+
+    if (result.success) {
+      onContactUpdated(result.data);
+      setShowTaxInfoDialog(false);
+      toast.success("Tax information updated successfully");
+    } else {
+      toast.error(result.error || "Failed to update tax information");
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header Card */}
@@ -300,160 +360,175 @@ export function ContactDetail({
             />
           ) : (
             <>
-            <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="roles">Roles</TabsTrigger>
-                <TabsTrigger value="payment">Payment</TabsTrigger>
-              </TabsList>
+              <Tabs defaultValue="general" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="general">General</TabsTrigger>
+                  <TabsTrigger value="roles">Roles</TabsTrigger>
+                  <TabsTrigger value="payment">Payment</TabsTrigger>
+                </TabsList>
 
-              {/* General Tab */}
-              <TabsContent value="general" className="space-y-4 pt-4">
-                <DetailRow label="Email" value={contact.email} />
-                <DetailRow label="Phone" value={contact.phone} />
+                {/* General Tab */}
+                <TabsContent value="general" className="space-y-4 pt-4">
+                  <DetailRow label="Email" value={contact.email} />
+                  <DetailRow label="Phone" value={contact.phone} />
 
-                {/* Tax ID */}
-                {canViewTaxId && contact.tax_id && (
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm text-muted-foreground w-32">Tax ID</div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono">
-                        {showTaxId ? contact.tax_id : "***-**-****"}
-                      </span>
+                  {/* Tax Information (Story 11.1) */}
+                  <div className="border rounded-lg p-4 bg-slate-50/50">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <TaxInfoDisplay
+                          tinType={(contact.tin_type as "ssn" | "ein") ?? null}
+                          tinLastFour={contact.tin_last_four ?? null}
+                          isUSBased={contact.is_us_based ?? true}
+                          w9Received={contact.w9_received ?? false}
+                          w9ReceivedDate={contact.w9_received_date ?? null}
+                          canViewTIN={canViewTaxId}
+                        />
+                      </div>
+                      {canViewTaxId && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleOpenTaxInfoDialog}
+                          className="ml-4 shrink-0"
+                        >
+                          <Pencil className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Address */}
+                  <Collapsible open={addressOpen} onOpenChange={setAddressOpen}>
+                    <CollapsibleTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => setShowTaxId(!showTaxId)}
+                        type="button"
+                        className="flex items-center gap-2 p-0 h-auto font-medium text-muted-foreground"
                       >
-                        <Eye className="h-4 w-4" />
+                        {addressOpen ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                        Address
                       </Button>
-                    </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-2 pt-2 pl-6">
+                      <DetailRow label="Line 1" value={contact.address_line1} />
+                      <DetailRow label="Line 2" value={contact.address_line2} />
+                      <DetailRow label="City" value={contact.city} />
+                      <DetailRow label="State" value={contact.state} />
+                      <DetailRow
+                        label="Postal Code"
+                        value={contact.postal_code}
+                      />
+                      <DetailRow label="Country" value={contact.country} />
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  <DetailRow label="Notes" value={contact.notes} />
+                </TabsContent>
+
+                {/* Roles Tab */}
+                <TabsContent value="roles" className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium">Assigned Roles</h3>
+                    {canManageContacts && availableRoles.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAddRoleDialog(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Role
+                      </Button>
+                    )}
                   </div>
-                )}
 
-                {/* Address */}
-                <Collapsible open={addressOpen} onOpenChange={setAddressOpen}>
-                  <CollapsibleTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      className="flex items-center gap-2 p-0 h-auto font-medium text-muted-foreground"
-                    >
-                      {addressOpen ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                      Address
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-2 pt-2 pl-6">
-                    <DetailRow label="Line 1" value={contact.address_line1} />
-                    <DetailRow label="Line 2" value={contact.address_line2} />
-                    <DetailRow label="City" value={contact.city} />
-                    <DetailRow label="State" value={contact.state} />
-                    <DetailRow label="Postal Code" value={contact.postal_code} />
-                    <DetailRow label="Country" value={contact.country} />
-                  </CollapsibleContent>
-                </Collapsible>
+                  {contact.roles.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No roles assigned
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {contact.roles.map((role) => (
+                        <RoleCard
+                          key={role.id}
+                          role={role}
+                          canRemove={canManageContacts}
+                          onRemove={() =>
+                            handleRemoveRole(role.role as ContactRoleType)
+                          }
+                          isLoading={isLoading}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
 
-                <DetailRow label="Notes" value={contact.notes} />
-              </TabsContent>
+                {/* Payment Tab */}
+                <TabsContent value="payment" className="space-y-4 pt-4">
+                  {contact.payment_info ? (
+                    <PaymentInfoDisplay
+                      paymentInfo={
+                        contact.payment_info as Record<string, unknown>
+                      }
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No payment information
+                    </p>
+                  )}
+                </TabsContent>
+              </Tabs>
 
-              {/* Roles Tab */}
-              <TabsContent value="roles" className="space-y-4 pt-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium">Assigned Roles</h3>
-                  {canManageContacts && availableRoles.length > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAddRoleDialog(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Role
-                    </Button>
+              {/* Activity History Section (AC-7.2.4 Placeholder) */}
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="text-sm font-medium mb-3">Activity History</h3>
+                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
+                  <p className="italic">Activity tracking coming soon</p>
+                  <ul className="mt-2 space-y-1 text-xs">
+                    <li>• Recent transactions</li>
+                    <li>• Statements</li>
+                    <li>• Invoices</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Related Entities Section (AC-7.2.4) */}
+              <div className="mt-4">
+                <h3 className="text-sm font-medium mb-3">Related Entities</h3>
+                <div className="space-y-2">
+                  {contact.roles.some((r) => r.role === "author") && (
+                    <div className="bg-purple-50 rounded-lg p-3 text-sm">
+                      <div className="font-medium text-purple-700 flex items-center gap-2">
+                        🖊️ Titles by this Author
+                      </div>
+                      <p className="text-xs text-purple-600 mt-1">
+                        View titles filtered by this contact in the Titles
+                        module
+                      </p>
+                    </div>
+                  )}
+                  {contact.roles.some((r) => r.role === "customer") && (
+                    <div className="bg-blue-50 rounded-lg p-3 text-sm">
+                      <div className="font-medium text-blue-700 flex items-center gap-2">
+                        🛒 Invoices
+                      </div>
+                      <p className="text-xs text-blue-600 mt-1">
+                        Invoice management coming in Epic 8
+                      </p>
+                    </div>
+                  )}
+                  {contact.roles.length === 0 && (
+                    <p className="text-sm text-muted-foreground italic">
+                      No related entities - assign a role to see related items
+                    </p>
                   )}
                 </div>
-
-                {contact.roles.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No roles assigned
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {contact.roles.map((role) => (
-                      <RoleCard
-                        key={role.id}
-                        role={role}
-                        canRemove={canManageContacts}
-                        onRemove={() =>
-                          handleRemoveRole(role.role as ContactRoleType)
-                        }
-                        isLoading={isLoading}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* Payment Tab */}
-              <TabsContent value="payment" className="space-y-4 pt-4">
-                {contact.payment_info ? (
-                  <PaymentInfoDisplay paymentInfo={contact.payment_info as Record<string, unknown>} />
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No payment information
-                  </p>
-                )}
-              </TabsContent>
-            </Tabs>
-
-            {/* Activity History Section (AC-7.2.4 Placeholder) */}
-            <div className="mt-6 pt-6 border-t">
-              <h3 className="text-sm font-medium mb-3">Activity History</h3>
-              <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-                <p className="italic">Activity tracking coming soon</p>
-                <ul className="mt-2 space-y-1 text-xs">
-                  <li>• Recent transactions</li>
-                  <li>• Statements</li>
-                  <li>• Invoices</li>
-                </ul>
               </div>
-            </div>
-
-            {/* Related Entities Section (AC-7.2.4) */}
-            <div className="mt-4">
-              <h3 className="text-sm font-medium mb-3">Related Entities</h3>
-              <div className="space-y-2">
-                {contact.roles.some((r) => r.role === "author") && (
-                  <div className="bg-purple-50 rounded-lg p-3 text-sm">
-                    <div className="font-medium text-purple-700 flex items-center gap-2">
-                      🖊️ Titles by this Author
-                    </div>
-                    <p className="text-xs text-purple-600 mt-1">
-                      View titles filtered by this contact in the Titles module
-                    </p>
-                  </div>
-                )}
-                {contact.roles.some((r) => r.role === "customer") && (
-                  <div className="bg-blue-50 rounded-lg p-3 text-sm">
-                    <div className="font-medium text-blue-700 flex items-center gap-2">
-                      🛒 Invoices
-                    </div>
-                    <p className="text-xs text-blue-600 mt-1">
-                      Invoice management coming in Epic 8
-                    </p>
-                  </div>
-                )}
-                {contact.roles.length === 0 && (
-                  <p className="text-sm text-muted-foreground italic">
-                    No related entities - assign a role to see related items
-                  </p>
-                )}
-              </div>
-            </div>
             </>
           )}
         </CardContent>
@@ -540,6 +615,40 @@ export function ContactDetail({
               onClick={() => setShowAddRoleDialog(false)}
             >
               Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tax Info Edit Dialog */}
+      <Dialog open={showTaxInfoDialog} onOpenChange={setShowTaxInfoDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Tax Information</DialogTitle>
+            <DialogDescription>
+              Update tax identification and W-9 information for {displayName}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <TaxInfoForm
+              value={taxInfoFormData}
+              onChange={setTaxInfoFormData}
+              canViewTIN={canViewTaxId}
+              disabled={isTaxInfoLoading}
+              existingTINLastFour={contact.tin_last_four}
+              hasExistingTIN={!!contact.tin_last_four}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowTaxInfoDialog(false)}
+              disabled={isTaxInfoLoading}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTaxInfo} disabled={isTaxInfoLoading}>
+              {isTaxInfoLoading ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -656,8 +765,14 @@ function PaymentInfoDisplay({
       {method === "direct_deposit" && (
         <>
           <DetailRow label="Bank" value={paymentInfo.bank_name as string} />
-          <DetailRow label="Account Type" value={paymentInfo.account_type as string} />
-          <DetailRow label="Last 4" value={paymentInfo.account_number_last4 as string} />
+          <DetailRow
+            label="Account Type"
+            value={paymentInfo.account_type as string}
+          />
+          <DetailRow
+            label="Last 4"
+            value={paymentInfo.account_number_last4 as string}
+          />
         </>
       )}
       {method === "check" && (
@@ -739,7 +854,11 @@ function EditForm({
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input {...field} type="email" placeholder="contact@example.com" />
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="contact@example.com"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

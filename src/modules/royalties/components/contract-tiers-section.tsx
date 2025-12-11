@@ -12,7 +12,8 @@
  * - Format sections only shown if contract has tiers for that format
  */
 
-import { BookOpen, Headphones, Tablet } from "lucide-react";
+import { BookOpen, Headphones, Info, Tablet } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -22,10 +23,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { TierCalculationMode } from "@/db/schema/contracts";
 import type { ContractTier } from "../types";
 
 interface ContractTiersSectionProps {
   tiers: ContractTier[];
+  tierCalculationMode?: TierCalculationMode;
 }
 
 /**
@@ -123,7 +132,32 @@ function TierTable({
   );
 }
 
-export function ContractTiersSection({ tiers }: ContractTiersSectionProps) {
+/**
+ * Configuration for tier calculation modes
+ * Story 10.4: Escalating Lifetime Royalty Rates
+ */
+const MODE_CONFIG: Record<
+  TierCalculationMode,
+  { label: string; description: string; variant: "default" | "secondary" }
+> = {
+  period: {
+    label: "Period Mode",
+    description:
+      "Tiers reset each royalty period. Author starts at lowest tier every period.",
+    variant: "secondary",
+  },
+  lifetime: {
+    label: "Lifetime Mode",
+    description:
+      "Tiers based on cumulative lifetime sales. As sales grow, author earns higher rates on new sales.",
+    variant: "default",
+  },
+};
+
+export function ContractTiersSection({
+  tiers,
+  tierCalculationMode = "period",
+}: ContractTiersSectionProps) {
   // Group tiers by format
   const tiersByFormat = tiers.reduce(
     (acc, tier) => {
@@ -148,6 +182,8 @@ export function ContractTiersSection({ tiers }: ContractTiersSectionProps) {
     (format) => tiersByFormat[format],
   );
 
+  const modeConfig = MODE_CONFIG[tierCalculationMode];
+
   if (availableFormats.length === 0) {
     return (
       <Card>
@@ -160,7 +196,25 @@ export function ContractTiersSection({ tiers }: ContractTiersSectionProps) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Royalty Rate Tables</h2>
+      <div className="flex items-center gap-3">
+        <h2 className="text-lg font-semibold">Royalty Rate Tables</h2>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant={modeConfig.variant}
+                className="cursor-help flex items-center gap-1"
+              >
+                {modeConfig.label}
+                <Info className="h-3 w-3" />
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-xs">
+              <p>{modeConfig.description}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {availableFormats.map((format) => (
           <TierTable

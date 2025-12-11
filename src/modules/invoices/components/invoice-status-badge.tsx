@@ -20,8 +20,8 @@
  */
 
 import { Badge } from "@/components/ui/badge";
-import type { InvoiceStatusType } from "@/modules/invoices/types";
 import { cn } from "@/lib/utils";
+import type { InvoiceStatusType } from "@/modules/invoices/types";
 
 export interface InvoiceStatusBadgeProps {
   /** Invoice status value */

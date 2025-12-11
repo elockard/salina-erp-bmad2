@@ -24,12 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { InvoiceWithCustomer } from "../types";
 import { voidInvoice } from "../actions";
-import {
-  InvoiceFilters,
-  type InvoiceFilterState,
-} from "./invoice-filters";
+import type { InvoiceWithCustomer } from "../types";
+import { type InvoiceFilterState, InvoiceFilters } from "./invoice-filters";
 import { InvoiceListTable } from "./invoice-list-table";
 import { VoidInvoiceDialog } from "./void-invoice-dialog";
 
@@ -61,15 +58,14 @@ export function InvoiceListClient({
   const [isPending, startTransition] = useTransition();
 
   // Parse initial filters from URL
+  const startDateParam = searchParams.get("startDate");
+  const endDateParam = searchParams.get("endDate");
   const initialFilters: InvoiceFilterState = {
-    status: (searchParams.get("status") as InvoiceFilterState["status"]) || undefined,
+    status:
+      (searchParams.get("status") as InvoiceFilterState["status"]) || undefined,
     customerId: searchParams.get("customer") || undefined,
-    startDate: searchParams.get("startDate")
-      ? new Date(searchParams.get("startDate")!)
-      : undefined,
-    endDate: searchParams.get("endDate")
-      ? new Date(searchParams.get("endDate")!)
-      : undefined,
+    startDate: startDateParam ? new Date(startDateParam) : undefined,
+    endDate: endDateParam ? new Date(endDateParam) : undefined,
   };
 
   const [filters, setFilters] = useState<InvoiceFilterState>(initialFilters);
@@ -80,7 +76,8 @@ export function InvoiceListClient({
 
   // Void dialog state
   const [voidDialogOpen, setVoidDialogOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithCustomer | null>(null);
+  const [selectedInvoice, setSelectedInvoice] =
+    useState<InvoiceWithCustomer | null>(null);
 
   // Update URL with filter params
   const updateUrl = useCallback(
@@ -88,15 +85,18 @@ export function InvoiceListClient({
       const params = new URLSearchParams();
       if (newFilters.status) params.set("status", newFilters.status);
       if (newFilters.customerId) params.set("customer", newFilters.customerId);
-      if (newFilters.startDate) params.set("startDate", newFilters.startDate.toISOString());
-      if (newFilters.endDate) params.set("endDate", newFilters.endDate.toISOString());
+      if (newFilters.startDate)
+        params.set("startDate", newFilters.startDate.toISOString());
+      if (newFilters.endDate)
+        params.set("endDate", newFilters.endDate.toISOString());
       if (newPage > 1) params.set("page", String(newPage));
-      if (newPageSize && newPageSize !== 25) params.set("pageSize", String(newPageSize));
+      if (newPageSize && newPageSize !== 25)
+        params.set("pageSize", String(newPageSize));
 
       const queryString = params.toString();
       router.push(queryString ? `/invoices?${queryString}` : "/invoices");
     },
-    [router]
+    [router],
   );
 
   // Handle page size change
@@ -110,7 +110,7 @@ export function InvoiceListClient({
         router.refresh();
       });
     },
-    [filters, updateUrl, router]
+    [filters, updateUrl, router],
   );
 
   // Handle filter change
@@ -124,7 +124,7 @@ export function InvoiceListClient({
         router.refresh();
       });
     },
-    [updateUrl, router]
+    [updateUrl, router],
   );
 
   // Handle view action
@@ -132,7 +132,7 @@ export function InvoiceListClient({
     (invoice: InvoiceWithCustomer) => {
       router.push(`/invoices/${invoice.id}`);
     },
-    [router]
+    [router],
   );
 
   // Handle edit action (draft only)
@@ -140,7 +140,7 @@ export function InvoiceListClient({
     (invoice: InvoiceWithCustomer) => {
       router.push(`/invoices/${invoice.id}/edit`);
     },
-    [router]
+    [router],
   );
 
   // Handle void action
@@ -157,21 +157,23 @@ export function InvoiceListClient({
       const result = await voidInvoice(selectedInvoice.id, reason);
 
       if (result.success) {
-        toast.success(`Invoice ${selectedInvoice.invoice_number} has been voided`);
+        toast.success(
+          `Invoice ${selectedInvoice.invoice_number} has been voided`,
+        );
         router.refresh();
       } else {
         toast.error(result.error || "Failed to void invoice");
       }
     },
-    [selectedInvoice, router]
+    [selectedInvoice, router],
   );
 
   // Record Payment and Send are placeholders for future stories
-  const handleRecordPayment = useCallback((invoice: InvoiceWithCustomer) => {
+  const handleRecordPayment = useCallback((_invoice: InvoiceWithCustomer) => {
     toast.info("Record Payment will be available in Story 8.4");
   }, []);
 
-  const handleSend = useCallback((invoice: InvoiceWithCustomer) => {
+  const handleSend = useCallback((_invoice: InvoiceWithCustomer) => {
     toast.info("Send Invoice will be available in Story 8.6");
   }, []);
 

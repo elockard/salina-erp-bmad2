@@ -4,10 +4,10 @@ import {
   type LineItemData,
 } from "@/modules/invoices/components/invoice-line-items";
 import {
+  calculateGrandTotal,
   calculateInvoiceTotals,
   calculateSubtotal,
   calculateTax,
-  calculateGrandTotal,
 } from "@/modules/invoices/components/invoice-totals";
 
 /**
@@ -62,8 +62,24 @@ describe("Invoice Totals Calculations (AC-8.2.7)", () => {
   describe("calculateSubtotal", () => {
     it("sums all line item amounts", () => {
       const lineItems: LineItemData[] = [
-        { line_number: 1, item_code: "", description: "Item 1", quantity: "2", unit_price: "10.00", tax_rate: "0", amount: "20.00" },
-        { line_number: 2, item_code: "", description: "Item 2", quantity: "3", unit_price: "15.00", tax_rate: "0", amount: "45.00" },
+        {
+          line_number: 1,
+          item_code: "",
+          description: "Item 1",
+          quantity: "2",
+          unit_price: "10.00",
+          tax_rate: "0",
+          amount: "20.00",
+        },
+        {
+          line_number: 2,
+          item_code: "",
+          description: "Item 2",
+          quantity: "3",
+          unit_price: "15.00",
+          tax_rate: "0",
+          amount: "45.00",
+        },
       ];
       const result = calculateSubtotal(lineItems);
       expect(result).toBe("65.00");
@@ -81,7 +97,15 @@ describe("Invoice Totals Calculations (AC-8.2.7)", () => {
 
     it("handles single line item", () => {
       const lineItems: LineItemData[] = [
-        { line_number: 1, item_code: "", description: "Item", quantity: "5", unit_price: "25.00", tax_rate: "0", amount: "125.00" },
+        {
+          line_number: 1,
+          item_code: "",
+          description: "Item",
+          quantity: "5",
+          unit_price: "25.00",
+          tax_rate: "0",
+          amount: "125.00",
+        },
       ];
       const result = calculateSubtotal(lineItems);
       expect(result).toBe("125.00");
@@ -91,7 +115,15 @@ describe("Invoice Totals Calculations (AC-8.2.7)", () => {
   describe("calculateTax", () => {
     it("calculates tax for items with tax rate", () => {
       const lineItems: LineItemData[] = [
-        { line_number: 1, item_code: "", description: "Item", quantity: "1", unit_price: "100.00", tax_rate: "8.25", amount: "100.00" },
+        {
+          line_number: 1,
+          item_code: "",
+          description: "Item",
+          quantity: "1",
+          unit_price: "100.00",
+          tax_rate: "8.25",
+          amount: "100.00",
+        },
       ];
       const result = calculateTax(lineItems);
       expect(result).toBe("8.25");
@@ -99,7 +131,15 @@ describe("Invoice Totals Calculations (AC-8.2.7)", () => {
 
     it("returns 0.00 when no tax rate", () => {
       const lineItems: LineItemData[] = [
-        { line_number: 1, item_code: "", description: "Item", quantity: "1", unit_price: "100.00", tax_rate: "0", amount: "100.00" },
+        {
+          line_number: 1,
+          item_code: "",
+          description: "Item",
+          quantity: "1",
+          unit_price: "100.00",
+          tax_rate: "0",
+          amount: "100.00",
+        },
       ];
       const result = calculateTax(lineItems);
       expect(result).toBe("0.00");
@@ -107,8 +147,24 @@ describe("Invoice Totals Calculations (AC-8.2.7)", () => {
 
     it("sums tax across multiple items", () => {
       const lineItems: LineItemData[] = [
-        { line_number: 1, item_code: "", description: "Item 1", quantity: "1", unit_price: "100.00", tax_rate: "10", amount: "100.00" },
-        { line_number: 2, item_code: "", description: "Item 2", quantity: "1", unit_price: "50.00", tax_rate: "10", amount: "50.00" },
+        {
+          line_number: 1,
+          item_code: "",
+          description: "Item 1",
+          quantity: "1",
+          unit_price: "100.00",
+          tax_rate: "10",
+          amount: "100.00",
+        },
+        {
+          line_number: 2,
+          item_code: "",
+          description: "Item 2",
+          quantity: "1",
+          unit_price: "50.00",
+          tax_rate: "10",
+          amount: "50.00",
+        },
       ];
       const result = calculateTax(lineItems);
       expect(result).toBe("15.00");
@@ -140,7 +196,15 @@ describe("Invoice Totals Calculations (AC-8.2.7)", () => {
   describe("calculateInvoiceTotals", () => {
     it("computes all totals for invoice", () => {
       const lineItems: LineItemData[] = [
-        { line_number: 1, item_code: "", description: "Book", quantity: "10", unit_price: "25.00", tax_rate: "8", amount: "250.00" },
+        {
+          line_number: 1,
+          item_code: "",
+          description: "Book",
+          quantity: "10",
+          unit_price: "25.00",
+          tax_rate: "8",
+          amount: "250.00",
+        },
       ];
       const result = calculateInvoiceTotals(lineItems, "15.00");
 
@@ -221,7 +285,7 @@ describe("Invoice Number Format (AC-8.2.6)", () => {
     for (const num of invoiceNumbers) {
       const match = num.match(/-(\d{4})$/);
       expect(match).toBeTruthy();
-      expect(match![1].length).toBe(4);
+      expect(match?.[1].length).toBe(4);
     }
   });
 
@@ -230,10 +294,11 @@ describe("Invoice Number Format (AC-8.2.6)", () => {
     const dateMatch = invoiceNumber.match(/INV-(\d{4})(\d{2})(\d{2})/);
 
     expect(dateMatch).toBeTruthy();
-    const [, year, month, day] = dateMatch!;
-    expect(parseInt(year)).toBe(2025);
-    expect(parseInt(month)).toBe(12);
-    expect(parseInt(day)).toBe(6);
+    if (!dateMatch) throw new Error("dateMatch should be truthy");
+    const [, year, month, day] = dateMatch;
+    expect(parseInt(year, 10)).toBe(2025);
+    expect(parseInt(month, 10)).toBe(12);
+    expect(parseInt(day, 10)).toBe(6);
   });
 });
 
@@ -246,7 +311,15 @@ describe("Precision Edge Cases (AC-8.2.7)", () => {
 
   it("handles large amounts", () => {
     const lineItems: LineItemData[] = [
-      { line_number: 1, item_code: "", description: "Large order", quantity: "10000", unit_price: "999.99", tax_rate: "0", amount: "9999900.00" },
+      {
+        line_number: 1,
+        item_code: "",
+        description: "Large order",
+        quantity: "10000",
+        unit_price: "999.99",
+        tax_rate: "0",
+        amount: "9999900.00",
+      },
     ];
     const result = calculateSubtotal(lineItems);
     expect(result).toBe("9999900.00");

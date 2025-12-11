@@ -105,9 +105,10 @@ export async function searchTitlesForSales(
   return results.map((row) => ({
     id: row.id,
     title: row.title,
-    author_name: row.first_name && row.last_name
-      ? `${row.first_name} ${row.last_name}`.trim()
-      : row.first_name || row.last_name || "Unknown Author",
+    author_name:
+      row.first_name && row.last_name
+        ? `${row.first_name} ${row.last_name}`.trim()
+        : row.first_name || row.last_name || "Unknown Author",
     has_isbn: row.isbn !== null,
   }));
 }
@@ -156,9 +157,10 @@ export async function getTitleForSale(
   return {
     id: row.id,
     title: row.title,
-    author_name: row.first_name && row.last_name
-      ? `${row.first_name} ${row.last_name}`.trim()
-      : row.first_name || row.last_name || "Unknown Author",
+    author_name:
+      row.first_name && row.last_name
+        ? `${row.first_name} ${row.last_name}`.trim()
+        : row.first_name || row.last_name || "Unknown Author",
     has_isbn: row.isbn !== null,
   };
 }
@@ -272,9 +274,10 @@ export async function getSalesWithFilters(
     title: {
       id: row.title_id,
       title: row.title_name,
-      author_name: row.author_first_name && row.author_last_name
-        ? `${row.author_first_name} ${row.author_last_name}`.trim()
-        : row.author_first_name || row.author_last_name || "Unknown Author",
+      author_name:
+        row.author_first_name && row.author_last_name
+          ? `${row.author_first_name} ${row.author_last_name}`.trim()
+          : row.author_first_name || row.author_last_name || "Unknown Author",
     },
     createdBy: {
       name: row.created_by_email.split("@")[0], // Use email prefix as name
@@ -425,9 +428,10 @@ export async function getSaleById(
     title: {
       id: row.title_id,
       title: row.title_name,
-      author_name: row.author_first_name && row.author_last_name
-        ? `${row.author_first_name} ${row.author_last_name}`.trim()
-        : row.author_first_name || row.author_last_name || "Unknown Author",
+      author_name:
+        row.author_first_name && row.author_last_name
+          ? `${row.author_first_name} ${row.author_last_name}`.trim()
+          : row.author_first_name || row.author_last_name || "Unknown Author",
     },
     createdBy: {
       name: row.created_by_email.split("@")[0], // Use email prefix as name

@@ -328,20 +328,20 @@ describe("formatRoyaltyPeriodPreview", () => {
 
 describe("getRoyaltyPeriodLabel", () => {
   it("returns 'Calendar Year' for calendar_year type", () => {
-    expect(getRoyaltyPeriodLabel({ royalty_period_type: "calendar_year" })).toBe(
-      "Calendar Year"
-    );
+    expect(
+      getRoyaltyPeriodLabel({ royalty_period_type: "calendar_year" }),
+    ).toBe("Calendar Year");
   });
 
   it("returns 'Fiscal Year' for fiscal_year type", () => {
     expect(getRoyaltyPeriodLabel({ royalty_period_type: "fiscal_year" })).toBe(
-      "Fiscal Year"
+      "Fiscal Year",
     );
   });
 
   it("returns 'Custom Period' for custom type", () => {
     expect(getRoyaltyPeriodLabel({ royalty_period_type: "custom" })).toBe(
-      "Custom Period"
+      "Custom Period",
     );
   });
 });

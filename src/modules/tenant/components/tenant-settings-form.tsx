@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -82,7 +82,7 @@ function formatRoyaltyPeriodPreview(
   type: RoyaltyPeriodType,
   startMonth: number | null,
   startDay: number | null,
-  fiscalYearStart: string | null
+  fiscalYearStart: string | null,
 ): string {
   const year = new Date().getFullYear();
 
@@ -90,7 +90,7 @@ function formatRoyaltyPeriodPreview(
     case "calendar_year":
       return `Your royalty year runs from January 1, ${year} to December 31, ${year}`;
 
-    case "fiscal_year":
+    case "fiscal_year": {
       if (!fiscalYearStart) {
         return "Your royalty year follows fiscal year (configure fiscal year start date above)";
       }
@@ -100,6 +100,7 @@ function formatRoyaltyPeriodPreview(
       const startDate = new Date(year, fiscalMonth, fiscalDay);
       const endDate = new Date(year + 1, fiscalMonth, fiscalDay - 1);
       return `Your royalty year runs from ${startDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} to ${endDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+    }
 
     case "custom":
       if (startMonth && startDay) {
@@ -182,7 +183,7 @@ export function TenantSettingsForm() {
 
   // Check if royalty period settings changed
   function hasRoyaltyPeriodChanged(
-    data: UpdateTenantSettingsFormInput
+    data: UpdateTenantSettingsFormInput,
   ): boolean {
     if (!originalValues) return false;
     return (
@@ -293,147 +294,103 @@ export function TenantSettingsForm() {
           onSubmit={form.handleSubmit(handleFormSubmit)}
           className="space-y-8"
         >
-        <p className="text-muted-foreground">
-          Configure your publishing company's operational settings. These
-          settings affect how dates are displayed, when financial periods start,
-          and how royalty statements are generated.
-        </p>
-
-        {/* Timezone Field */}
-        <FormField
-          control={form.control}
-          name="timezone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Timezone</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select timezone" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {COMMON_TIMEZONES.map((tz) => (
-                    <SelectItem key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Used for displaying dates/times and scheduling royalty
-                statements
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Fiscal Year Start Field */}
-        <FormField
-          control={form.control}
-          name="fiscal_year_start"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Fiscal Year Start Date</FormLabel>
-              <FormControl>
-                <Input
-                  type="date"
-                  value={field.value || ""}
-                  onChange={(e) => {
-                    field.onChange(e.target.value || null);
-                  }}
-                />
-              </FormControl>
-              <FormDescription>
-                Your company's fiscal year start date for financial reporting
-                (e.g., July 1 for July-June fiscal year)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Default Currency Field */}
-        <FormField
-          control={form.control}
-          name="default_currency"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Default Currency</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="USD">USD - US Dollar</SelectItem>
-                  <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                  <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Default currency for displaying financial data. Multi-currency
-                support coming soon.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Statement Frequency Field */}
-        <FormField
-          control={form.control}
-          name="statement_frequency"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <FormLabel>Statement Frequency</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  value={field.value}
-                  className="flex flex-col space-y-1"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="quarterly" id="quarterly" />
-                    <Label htmlFor="quarterly" className="font-normal">
-                      Quarterly (4x per year)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="annual" id="annual" />
-                    <Label htmlFor="annual" className="font-normal">
-                      Annual (1x per year)
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </FormControl>
-              <FormDescription>
-                How often royalty statements are generated (Quarterly = 4x/year,
-                Annual = 1x/year)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Royalty Period Settings Section (Story 7.5) */}
-        <div className="space-y-4 rounded-lg border p-4">
-          <h3 className="text-lg font-medium">Royalty Period Settings</h3>
-          <p className="text-sm text-muted-foreground">
-            Configure when your royalty calculation periods begin and end,
-            independent of your fiscal year.
+          <p className="text-muted-foreground">
+            Configure your publishing company's operational settings. These
+            settings affect how dates are displayed, when financial periods
+            start, and how royalty statements are generated.
           </p>
 
-          {/* Period Type Selection - AC-2 */}
+          {/* Timezone Field */}
           <FormField
             control={form.control}
-            name="royalty_period_type"
+            name="timezone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Timezone</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {COMMON_TIMEZONES.map((tz) => (
+                      <SelectItem key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Used for displaying dates/times and scheduling royalty
+                  statements
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Fiscal Year Start Field */}
+          <FormField
+            control={form.control}
+            name="fiscal_year_start"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fiscal Year Start Date</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    value={field.value || ""}
+                    onChange={(e) => {
+                      field.onChange(e.target.value || null);
+                    }}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Your company's fiscal year start date for financial reporting
+                  (e.g., July 1 for July-June fiscal year)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Default Currency Field */}
+          <FormField
+            control={form.control}
+            name="default_currency"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Default Currency</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="USD">USD - US Dollar</SelectItem>
+                    <SelectItem value="EUR">EUR - Euro</SelectItem>
+                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                    <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Default currency for displaying financial data. Multi-currency
+                  support coming soon.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Statement Frequency Field */}
+          <FormField
+            control={form.control}
+            name="statement_frequency"
             render={({ field }) => (
               <FormItem className="space-y-3">
-                <FormLabel>Period Type</FormLabel>
+                <FormLabel>Statement Frequency</FormLabel>
                 <FormControl>
                   <RadioGroup
                     onValueChange={field.onChange}
@@ -441,144 +398,191 @@ export function TenantSettingsForm() {
                     className="flex flex-col space-y-1"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem
-                        value="calendar_year"
-                        id="calendar_year"
-                      />
-                      <Label htmlFor="calendar_year" className="font-normal">
-                        Calendar Year (Jan 1 - Dec 31)
+                      <RadioGroupItem value="quarterly" id="quarterly" />
+                      <Label htmlFor="quarterly" className="font-normal">
+                        Quarterly (4x per year)
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="fiscal_year" id="fiscal_year" />
-                      <Label htmlFor="fiscal_year" className="font-normal">
-                        Fiscal Year (uses fiscal year start setting above)
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="custom" id="custom" />
-                      <Label htmlFor="custom" className="font-normal">
-                        Custom
+                      <RadioGroupItem value="annual" id="annual" />
+                      <Label htmlFor="annual" className="font-normal">
+                        Annual (1x per year)
                       </Label>
                     </div>
                   </RadioGroup>
                 </FormControl>
+                <FormDescription>
+                  How often royalty statements are generated (Quarterly =
+                  4x/year, Annual = 1x/year)
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Custom Period Configuration - AC-3 */}
-          {royaltyPeriodType === "custom" && (
-            <div className="grid grid-cols-2 gap-4 pl-6">
-              <FormField
-                control={form.control}
-                name="royalty_period_start_month"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Month</FormLabel>
-                    <Select
-                      onValueChange={(value) =>
-                        field.onChange(value ? Number(value) : null)
-                      }
-                      value={field.value?.toString() || ""}
+          {/* Royalty Period Settings Section (Story 7.5) */}
+          <div className="space-y-4 rounded-lg border p-4">
+            <h3 className="text-lg font-medium">Royalty Period Settings</h3>
+            <p className="text-sm text-muted-foreground">
+              Configure when your royalty calculation periods begin and end,
+              independent of your fiscal year.
+            </p>
+
+            {/* Period Type Selection - AC-2 */}
+            <FormField
+              control={form.control}
+              name="royalty_period_type"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Period Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-col space-y-1"
                     >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select month" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {MONTHS.map((month) => (
-                          <SelectItem
-                            key={month.value}
-                            value={month.value.toString()}
-                          >
-                            {month.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value="calendar_year"
+                          id="calendar_year"
+                        />
+                        <Label htmlFor="calendar_year" className="font-normal">
+                          Calendar Year (Jan 1 - Dec 31)
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="fiscal_year" id="fiscal_year" />
+                        <Label htmlFor="fiscal_year" className="font-normal">
+                          Fiscal Year (uses fiscal year start setting above)
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="custom" id="custom" />
+                        <Label htmlFor="custom" className="font-normal">
+                          Custom
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="royalty_period_start_day"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Day</FormLabel>
-                    <Select
-                      onValueChange={(value) =>
-                        field.onChange(value ? Number(value) : null)
-                      }
-                      value={field.value?.toString() || ""}
-                      disabled={!royaltyPeriodStartMonth}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select day" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Array.from(
-                          {
-                            length: royaltyPeriodStartMonth
-                              ? getDaysInMonth(royaltyPeriodStartMonth)
-                              : 31,
-                          },
-                          (_, i) => i + 1
-                        ).map((day) => (
-                          <SelectItem key={day} value={day.toString()}>
-                            {day}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
+            {/* Custom Period Configuration - AC-3 */}
+            {royaltyPeriodType === "custom" && (
+              <div className="grid grid-cols-2 gap-4 pl-6">
+                <FormField
+                  control={form.control}
+                  name="royalty_period_start_month"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Month</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(value ? Number(value) : null)
+                        }
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select month" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {MONTHS.map((month) => (
+                            <SelectItem
+                              key={month.value}
+                              value={month.value.toString()}
+                            >
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          {/* Fiscal year info message */}
-          {royaltyPeriodType === "fiscal_year" && !fiscalYearStart && (
-            <Alert>
-              <AlertDescription>
-                Configure fiscal year start date above for accurate period
-                calculation
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Period Preview - AC-4 */}
-          <div className="rounded-md bg-muted p-3 text-sm">
-            {formatRoyaltyPeriodPreview(
-              royaltyPeriodType,
-              royaltyPeriodStartMonth,
-              royaltyPeriodStartDay,
-              fiscalYearStart || null
+                <FormField
+                  control={form.control}
+                  name="royalty_period_start_day"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Day</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(value ? Number(value) : null)
+                        }
+                        value={field.value?.toString() || ""}
+                        disabled={!royaltyPeriodStartMonth}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select day" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Array.from(
+                            {
+                              length: royaltyPeriodStartMonth
+                                ? getDaysInMonth(royaltyPeriodStartMonth)
+                                : 31,
+                            },
+                            (_, i) => i + 1,
+                          ).map((day) => (
+                            <SelectItem key={day} value={day.toString()}>
+                              {day}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
-          </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCancel}
-            disabled={!isDirty || isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={!isDirty || !isValid || isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
+            {/* Fiscal year info message */}
+            {royaltyPeriodType === "fiscal_year" && !fiscalYearStart && (
+              <Alert>
+                <AlertDescription>
+                  Configure fiscal year start date above for accurate period
+                  calculation
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Period Preview - AC-4 */}
+            <div className="rounded-md bg-muted p-3 text-sm">
+              {formatRoyaltyPeriodPreview(
+                royaltyPeriodType,
+                royaltyPeriodStartMonth,
+                royaltyPeriodStartDay,
+                fiscalYearStart || null,
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={!isDirty || isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={!isDirty || !isValid || isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </form>
       </Form>
     </>

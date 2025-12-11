@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { AlertTriangle, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,8 +14,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { ContactWithRoles, ContactRoleType } from "../types";
+import type { ContactRoleType, ContactWithRoles } from "../types";
+
+/**
+ * Check if an author contact needs TIN
+ * Story 11.1 - AC-11.1.10: Missing TIN Warning Indicators
+ *
+ * Returns true if:
+ * - Contact has author role
+ * - Contact is US-based
+ * - Contact does not have TIN on file
+ */
+function authorNeedsTIN(contact: ContactWithRoles): boolean {
+  const hasAuthorRole = contact.roles.some((r) => r.role === "author");
+  if (!hasAuthorRole) return false;
+
+  // Default to US-based if not specified
+  const isUSBased = contact.is_us_based ?? true;
+  if (!isUSBased) return false;
+
+  // Check if TIN is missing
+  return !contact.tin_encrypted;
+}
 
 /**
  * Role badge configuration per AC-7.2.2
@@ -101,7 +128,12 @@ export function ContactList({
   onCreateClick,
 }: ContactListProps) {
   // Empty state - no contacts and no search
-  if (!loading && contacts.length === 0 && !searchQuery && roleFilter === "all") {
+  if (
+    !loading &&
+    contacts.length === 0 &&
+    !searchQuery &&
+    roleFilter === "all"
+  ) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
         <div className="text-6xl mb-4">👥</div>
@@ -212,30 +244,24 @@ export function ContactList({
       )}
 
       {/* No Results State */}
-      {!loading && contacts.length === 0 && (searchQuery || roleFilter !== "all") && (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <p className="text-sm text-muted-foreground text-center">
-            No contacts found
-            {searchQuery && (
-              <>
-                {" "}
-                matching &quot;{searchQuery}&quot;
-              </>
-            )}
-            {roleFilter !== "all" && (
-              <>
-                {" "}
-                with role &quot;{ROLE_BADGES[roleFilter].label}&quot;
-              </>
-            )}
-          </p>
-        </div>
-      )}
+      {!loading &&
+        contacts.length === 0 &&
+        (searchQuery || roleFilter !== "all") && (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <p className="text-sm text-muted-foreground text-center">
+              No contacts found
+              {searchQuery && <> matching &quot;{searchQuery}&quot;</>}
+              {roleFilter !== "all" && (
+                <> with role &quot;{ROLE_BADGES[roleFilter].label}&quot;</>
+              )}
+            </p>
+          </div>
+        )}
 
       {/* Contact List */}
       {!loading && contacts.length > 0 && (
         <div className="flex-1 overflow-y-auto">
-          <ul role="listbox" aria-label="Contacts">
+          <ul aria-label="Contacts">
             {contacts.map((contact) => (
               <li key={contact.id}>
                 <button
@@ -266,25 +292,44 @@ export function ContactList({
                       )}
                     </div>
 
-                    {/* Status badge */}
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "shrink-0 text-xs",
-                        contact.status === "active"
-                          ? "bg-green-50 text-green-700 border-green-200"
-                          : "bg-gray-50 text-gray-500 border-gray-200",
+                    <div className="flex items-center gap-1">
+                      {/* Missing TIN Warning (Story 11.1 - AC-11.1.10) */}
+                      {authorNeedsTIN(contact) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                              <p className="text-xs">
+                                Missing TIN for 1099 reporting
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
-                    >
-                      {contact.status === "active" ? "Active" : "Inactive"}
-                    </Badge>
+
+                      {/* Status badge */}
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "shrink-0 text-xs",
+                          contact.status === "active"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : "bg-gray-50 text-gray-500 border-gray-200",
+                        )}
+                      >
+                        {contact.status === "active" ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
                   </div>
 
                   {/* Role badges */}
                   {contact.roles.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {contact.roles.map((role) => {
-                        const badgeConfig = ROLE_BADGES[role.role as ContactRoleType];
+                        const badgeConfig =
+                          ROLE_BADGES[role.role as ContactRoleType];
                         if (!badgeConfig) return null;
                         return (
                           <Badge

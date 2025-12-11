@@ -222,7 +222,7 @@ export function ShipToAddressForm({
   disabled,
   showSameAs = true,
 }: AddressFormWithSameAsProps) {
-  const { control, setValue, getValues, watch } = useFormContext();
+  const { control, setValue } = useFormContext();
 
   // Watch the "same as bill-to" checkbox
   const sameAsBillTo = useWatch({ control, name: "same_as_bill_to" });
@@ -295,5 +295,12 @@ export function createEmptyAddress(): Address {
  */
 export function isAddressEmpty(address: Address | undefined | null): boolean {
   if (!address) return true;
-  return !address.line1 && !address.line2 && !address.city && !address.state && !address.postal_code && !address.country;
+  return (
+    !address.line1 &&
+    !address.line2 &&
+    !address.city &&
+    !address.state &&
+    !address.postal_code &&
+    !address.country
+  );
 }

@@ -85,7 +85,7 @@ export function StatementStepPeriod() {
 
   // Tenant settings for royalty period (Story 7.5 AC-5)
   const [tenantSettings, setTenantSettings] = useState<TenantSettings | null>(
-    null
+    null,
   );
   const [loadingSettings, setLoadingSettings] = useState(false);
   const [royaltyPeriodDates, setRoyaltyPeriodDates] = useState<{
