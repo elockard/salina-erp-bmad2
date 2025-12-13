@@ -49,3 +49,6 @@ next-env.d.ts
 
 # Drizzle
 drizzle/
+
+#Claude
+.claude/audio/
