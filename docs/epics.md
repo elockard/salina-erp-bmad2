@@ -154,6 +154,78 @@ This document provides the complete epic and story breakdown for Salina ERP, dec
 
 ---
 
+## Phase 3 Functional Requirements (FR135-FR186)
+
+### ONIX 3.1 Core (FR135-FR142)
+- FR135: Publisher can generate ONIX 3.1 messages for individual titles or batch catalog exports
+- FR136: Publisher can validate ONIX messages against EDItEUR schema and business rules before export
+- FR137: System generates ONIX 3.1 accessibility metadata (Codelist 196) for EAA compliance
+- FR138: Publisher can manage EDItEUR codelists with automatic update detection
+- FR139: Publisher can import existing catalog from ONIX 2.1, 3.0, or 3.1 files
+- FR140: System can parse and validate incoming ONIX files with error reporting
+- FR141: Publisher can export ONIX 3.0 format for legacy channel compatibility
+- FR142: Publisher can preview ONIX output before export with field mapping validation
+
+### REST API & Webhooks (FR143-FR150)
+- FR143: Developer can authenticate API requests using OAuth2 with tenant-scoped API keys
+- FR144: Developer can perform CRUD operations on titles, contacts, and sales via REST endpoints
+- FR145: Developer can export ONIX feeds programmatically via API
+- FR146: System enforces rate limiting per API key with configurable thresholds
+- FR147: Developer can register webhook endpoints for event subscriptions
+- FR148: System delivers webhook events with HMAC-SHA256 signatures for verification
+- FR149: Developer can view webhook delivery history with retry status
+- FR150: Developer can access interactive API documentation with request/response examples
+
+### Ingram Integration (FR151-FR155)
+- FR151: Publisher can configure Ingram Content Group account credentials (FTP)
+- FR152: Publisher can schedule automated ONIX feed delivery to Ingram
+- FR153: System can ingest order data from Ingram and create sales transactions
+- FR154: System can synchronize inventory availability status with Ingram
+- FR155: Publisher can view Ingram feed history with delivery status and error logs
+
+### Amazon Integration (FR156-FR160)
+- FR156: Publisher can configure Amazon KDP/Advantage account settings
+- FR157: Publisher can schedule automated ONIX feed delivery to Amazon
+- FR158: System can import sales data from Amazon and create sales transactions
+- FR159: Publisher can link titles to ASINs for sales tracking
+- FR160: Publisher can view Amazon feed history with delivery status
+
+### Production Pipeline (FR161-FR169)
+- FR161: Publisher can create production projects for titles with manuscript upload
+- FR162: Publisher can assign production tasks to vendors with due dates
+- FR163: Publisher can track production status through workflow stages (manuscript, editing, design, proof, print)
+- FR164: Publisher can upload and manage proof files with version tracking
+- FR165: Publisher can approve or request corrections on proofs
+- FR166: Publisher can view production calendar with milestone dates
+- FR167: Publisher can generate BISG-compliant GS1-128 shipping labels with GTIN-14 ISBN encoding
+- FR168: Publisher can configure carton contents and generate carton labels with Application Identifiers
+- FR169: Publisher can print product labels with barcode and pricing zones per BISG specification
+
+### Data Import/Export (FR170-FR175)
+- FR170: Publisher can import existing catalog via CSV with column mapping
+- FR171: System validates imported data and displays row-level error details
+- FR172: Publisher can download CSV templates for bulk data entry
+- FR173: Publisher can export catalog data to CSV for external analysis
+- FR174: Publisher can bulk update title metadata via CSV upload
+- FR175: System suggests BISAC codes based on title descriptions during import
+
+### UX Enhancements (FR176-FR181)
+- FR176: New tenant can complete guided onboarding wizard with essential setup steps
+- FR177: User can view notifications center with distribution status, system alerts, and action items
+- FR178: User can configure notification preferences by channel and event type
+- FR179: User can access all core functionality on mobile devices with responsive layout
+- FR180: User can access contextual help tooltips and documentation links throughout interface
+- FR181: System displays onboarding progress indicator until essential setup is complete
+
+### Author Portal Expansion (FR182-FR186)
+- FR182: Author can view real-time production status for their titles with visual timeline
+- FR183: Author can access marketing asset library with downloadable cover images and promotional materials
+- FR184: Author can upload manuscript files directly through the portal
+- FR185: Author can receive notifications when production milestones are reached
+- FR186: Author can view scheduled publication dates and estimated delivery timelines
+
+---
+
 ## FR Coverage Map
 
 | Epic | Epic Title | FRs Covered | FR Count |
@@ -170,7 +242,19 @@ This document provides the complete epic and story breakdown for Salina ERP, dec
 | Epic 10 | Advanced Royalty Features | FR111-118 | 8 FRs |
 | Epic 11 | Tax & Compliance | FR119-124 | 6 FRs |
 | Epic 13 | Platform Administration | FR125-134 | 10 FRs |
-| **Total** | | **FR1-134** | **134 FRs** |
+| **Phase 2 Total** | | **FR1-134** | **134 FRs** |
+| | | | |
+| **Phase 3 - Distribution & Scale** | | | |
+| Epic 14 | ONIX 3.1 Core | FR135-142 | 8 FRs |
+| Epic 15 | REST API & Webhooks | FR143-150 | 8 FRs |
+| Epic 16 | Ingram Integration | FR151-155 | 5 FRs |
+| Epic 17 | Amazon Integration | FR156-160 | 5 FRs |
+| Epic 18 | Production Pipeline | FR161-169 | 9 FRs |
+| Epic 19 | Data Import/Export | FR170-175 | 6 FRs |
+| Epic 20 | UX Enhancements | FR176-181 | 6 FRs |
+| Epic 21 | Author Portal Expansion | FR182-186 | 5 FRs |
+| **Phase 3 Total** | | **FR135-186** | **52 FRs** |
+| **Grand Total** | | **FR1-186** | **186 FRs** |
 
 ---
 
@@ -3823,6 +3907,1444 @@ async function calculateRoyaltyForPeriod(
 
 ---
 
+# Phase 3: Distribution & Scale (Epics 14-21)
+
+**Added:** 2025-12-12
+**FRs Covered:** FR135-FR186 (52 FRs)
+**Dependencies:** Phase 1-2 complete (Epics 1-13)
+
+---
+
+## Epic 14: ONIX 3.1 Core
+
+**Epic Goal:** Implement ONIX 3.1 metadata generation, validation, and import capabilities for industry-standard book distribution
+
+**FRs Covered:** FR135-FR142
+
+**Business Value:** ONIX is required for distribution to major channels (Ingram, Amazon, Bowker). EAA compliance deadline June 2025 requires accessibility metadata.
+
+**Dependencies:** Epic 14 must complete before Epics 16-17 (channel integrations)
+
+---
+
+### Story 14.1: Create ONIX 3.1 Message Generator
+
+**As a** publisher,
+**I want** to generate ONIX 3.1 messages from my title catalog,
+**So that** I can distribute metadata to retail channels.
+
+**Acceptance Criteria:**
+
+**Given** I have titles with complete metadata
+**When** I select titles for ONIX export
+**Then** system generates valid ONIX 3.1 XML message
+
+**And** message includes Header with sender identification
+
+**And** each Product contains required blocks:
+- DescriptiveDetail (Block 1): ProductForm, TitleDetail, Contributors
+- PublishingDetail (Block 4): Publisher, PublishingStatus, PublishingDate
+- ProductSupply (Block 6): Market, SupplyDetail, Price, Availability
+
+**And** ProductIdentifier uses ISBN-13 (ProductIDType 15)
+
+**And** I can export single title or batch of titles
+
+**And** I can preview generated XML before download
+
+**Prerequisites:** Epic 2 (Title Management)
+
+**Technical Notes:**
+- Implement FR135, FR142
+- Type-safe builder pattern per architecture (Pattern 4)
+- Use XML escaping for all text content
+- Support US market initially, multi-market later
+- Store export history in `onix_exports` table
+
+---
+
+### Story 14.2: Implement ONIX Schema Validation
+
+**As a** publisher,
+**I want** to validate ONIX messages before export,
+**So that** I know my data will be accepted by channels.
+
+**Acceptance Criteria:**
+
+**Given** I generate an ONIX message
+**When** I request validation
+**Then** system validates against ONIX 3.1.2 XSD schema
+
+**And** system validates business rules:
+- Required fields populated
+- Codelist values match EDItEUR codelists
+- Price and currency consistency
+- ISBN format validation
+
+**And** validation errors display field-level details
+
+**And** I can fix errors and re-validate
+
+**And** only validated exports are sent to channels
+
+**Prerequisites:** Story 14.1
+
+**Technical Notes:**
+- Implement FR136
+- Download ONIX_BookProduct_3.1.2.xsd from EDItEUR
+- Two-layer validation: schema then business rules
+- Error messages reference field path and codelist
+
+---
+
+### Story 14.3: Add Accessibility Metadata Support (Codelist 196)
+
+**As a** publisher,
+**I want** to include accessibility metadata in ONIX exports,
+**So that** I comply with European Accessibility Act requirements.
+
+**Acceptance Criteria:**
+
+**Given** I have an ebook title
+**When** I configure accessibility features
+**Then** I can specify EPUB accessibility conformance level
+
+**And** I can specify WCAG conformance level (2.0, 2.1, 2.2)
+
+**And** I can indicate accessibility features:
+- All textual content modifiable
+- Index navigation available
+- No accessibility options disabled
+
+**And** ONIX export includes ProductFormFeature with Codelist 196 values
+
+**And** system tracks which titles have accessibility metadata
+
+**And** titles without accessibility metadata display warning
+
+**Prerequisites:** Story 14.1
+
+**Technical Notes:**
+- Implement FR137
+- Codelist 196 values for accessibility
+- Required for EAA compliance by June 2025
+- UI for configuring accessibility per title format
+
+---
+
+### Story 14.4: Build Codelist Management System
+
+**As a** system administrator,
+**I want** to manage EDItEUR codelists,
+**So that** ONIX exports use current standard values.
+
+**Acceptance Criteria:**
+
+**Given** I am a system administrator
+**When** I access codelist management
+**Then** I can view all loaded codelists with versions
+
+**And** system can detect when new codelist issues are available
+
+**And** I can update codelists from EDItEUR source
+
+**And** validation uses current codelist values
+
+**And** key codelists cached for performance:
+- List 5 (Product Identifier Type)
+- List 15 (Title Type)
+- List 17 (Contributor Role)
+- List 27 (Subject Scheme)
+- List 150 (Product Form)
+- List 196 (Accessibility)
+
+**Prerequisites:** None
+
+**Technical Notes:**
+- Implement FR138
+- EDItEUR publishes codelists as JSON
+- Cache in `codelists` table
+- Update quarterly (EDItEUR schedule)
+
+---
+
+### Story 14.5: Implement ONIX Import Parser
+
+**As a** publisher,
+**I want** to import existing catalog from ONIX files,
+**So that** I can migrate from other systems.
+
+**Acceptance Criteria:**
+
+**Given** I have an ONIX file from another system
+**When** I upload the file
+**Then** system detects ONIX version (2.1, 3.0, 3.1)
+
+**And** system parses Product records
+
+**And** system maps ONIX fields to Salina title fields
+
+**And** I can preview mapped data before import
+
+**And** system shows row-level validation errors
+
+**And** I can resolve conflicts (existing ISBNs)
+
+**And** import creates titles with full metadata
+
+**Prerequisites:** Story 14.1
+
+**Technical Notes:**
+- Implement FR139, FR140
+- Separate parsers per ONIX version
+- ONIX 2.1 is most common legacy format
+- Handle encoding differences (UTF-8, Latin-1)
+
+---
+
+### Story 14.6: Add ONIX 3.0 Export Fallback
+
+**As a** publisher,
+**I want** to export ONIX 3.0 format,
+**So that** I can send to legacy channels that don't support 3.1.
+
+**Acceptance Criteria:**
+
+**Given** I configure channel preferences
+**When** a channel requires ONIX 3.0
+**Then** system generates ONIX 3.0 format for that channel
+
+**And** I can manually select ONIX 3.0 for export
+
+**And** 3.0 export uses appropriate namespace and schema
+
+**And** features not supported in 3.0 are handled gracefully
+
+**Prerequisites:** Story 14.1
+
+**Technical Notes:**
+- Implement FR141
+- ONIX 3.0 and 3.1 differ in pricing structure
+- Channel profiles store preferred ONIX version
+
+---
+
+## Epic 15: REST API & Webhooks
+
+**Epic Goal:** Provide public REST API for third-party integrations and webhook delivery for event-driven automation
+
+**FRs Covered:** FR143-FR150
+
+**Business Value:** Enables publishers to integrate Salina with their existing tools, automate workflows, and receive real-time notifications.
+
+**Dependencies:** Epic 1 (Authentication)
+
+---
+
+### Story 15.1: Implement API Authentication with OAuth2
+
+**As a** developer,
+**I want** to authenticate API requests using API keys,
+**So that** I can integrate my systems with Salina.
+
+**Acceptance Criteria:**
+
+**Given** I am a tenant administrator
+**When** I create an API key
+**Then** system generates client_id and client_secret
+
+**And** I can name the API key for identification
+
+**And** I can set permissions scope for the key
+
+**And** I can view list of active API keys
+
+**And** I can revoke API keys
+
+**And** API requests use OAuth2 client_credentials flow
+
+**And** successful auth returns JWT with tenant_id claim
+
+**Prerequisites:** Epic 1
+
+**Technical Notes:**
+- Implement FR143
+- OAuth2 per RFC 6749
+- JWT tokens per RFC 7519
+- 15-minute access token expiration
+- Store hashed secrets in `api_keys` table
+
+---
+
+### Story 15.2: Build Core REST API Endpoints
+
+**As a** developer,
+**I want** to access titles, contacts, and sales via API,
+**So that** I can sync data with external systems.
+
+**Acceptance Criteria:**
+
+**Given** I have a valid API token
+**When** I call REST endpoints
+**Then** I can perform CRUD on:
+- GET/POST/PUT /api/v1/titles
+- GET/POST/PUT /api/v1/contacts
+- GET/POST /api/v1/sales
+- GET /api/v1/onix/export
+
+**And** responses use JSON format
+
+**And** pagination via cursor-based approach
+
+**And** filtering via query parameters
+
+**And** API respects tenant isolation
+
+**And** rate limits are clearly communicated in headers
+
+**Prerequisites:** Story 15.1
+
+**Technical Notes:**
+- Implement FR144, FR145
+- Next.js API routes at /api/v1/*
+- Standard HTTP status codes
+- Include X-RateLimit-* headers
+
+---
+
+### Story 15.3: Implement Rate Limiting
+
+**As a** platform administrator,
+**I want** to enforce API rate limits,
+**So that** no single tenant can overload the system.
+
+**Acceptance Criteria:**
+
+**Given** a tenant has API access
+**When** API calls exceed rate limit
+**Then** system returns 429 Too Many Requests
+
+**And** response includes Retry-After header
+
+**And** rate limits are per-tenant, per-API-key
+
+**And** default limits: 100 requests/minute, 1000/hour
+
+**And** administrators can adjust limits per tenant
+
+**And** rate limit usage visible in API response headers
+
+**Prerequisites:** Story 15.2
+
+**Technical Notes:**
+- Implement FR146
+- Token bucket algorithm
+- Store counters in Redis or memory
+- Burst allowance for occasional spikes
+
+---
+
+### Story 15.4: Build Webhook Subscription System
+
+**As a** developer,
+**I want** to receive webhook notifications,
+**So that** I can react to events in real-time.
+
+**Acceptance Criteria:**
+
+**Given** I am a tenant administrator
+**When** I create a webhook subscription
+**Then** I specify endpoint URL
+
+**And** I select event types to subscribe to:
+- title.created, title.updated
+- sale.created
+- statement.generated
+- onix.exported
+
+**And** system generates webhook secret for signature verification
+
+**And** I can enable/disable subscriptions
+
+**And** I can test webhook delivery
+
+**Prerequisites:** Story 15.2
+
+**Technical Notes:**
+- Implement FR147
+- Store in `webhook_subscriptions` table
+- Support multiple subscriptions per tenant
+
+---
+
+### Story 15.5: Implement Webhook Delivery with Signatures
+
+**As a** developer,
+**I want** webhook payloads signed,
+**So that** I can verify they came from Salina.
+
+**Acceptance Criteria:**
+
+**Given** an event occurs matching subscription
+**When** webhook is delivered
+**Then** payload includes event type and data
+
+**And** X-Webhook-Signature header contains HMAC-SHA256 signature
+
+**And** X-Webhook-Timestamp header contains delivery timestamp
+
+**And** failed deliveries retry with exponential backoff
+
+**And** delivery history shows status and response codes
+
+**And** 5 retries over 1 hour before marking failed
+
+**Prerequisites:** Story 15.4
+
+**Technical Notes:**
+- Implement FR148, FR149
+- Pattern 6 from architecture (webhook delivery)
+- HMAC-SHA256 with timestamp
+- Inngest for retry queue
+- Log all delivery attempts
+
+---
+
+### Story 15.6: Create API Documentation Portal
+
+**As a** developer,
+**I want** interactive API documentation,
+**So that** I can understand and test the API.
+
+**Acceptance Criteria:**
+
+**Given** I access the API documentation
+**When** I view endpoint documentation
+**Then** I see request/response schemas
+
+**And** I can try endpoints with test data
+
+**And** documentation includes authentication guide
+
+**And** webhook payload schemas are documented
+
+**And** rate limit information is documented
+
+**And** changelog shows API version history
+
+**Prerequisites:** Story 15.2
+
+**Technical Notes:**
+- Implement FR150
+- OpenAPI/Swagger specification
+- Host at /api/docs or separate portal
+- Consider Scalar or Swagger UI
+
+---
+
+## Epic 16: Ingram Integration
+
+**Epic Goal:** Automate ONIX feed delivery to Ingram Content Group and ingest order/inventory data
+
+**FRs Covered:** FR151-FR155
+
+**Business Value:** Ingram is the largest US book distributor. Automated feeds reduce manual work and ensure timely metadata updates.
+
+**Dependencies:** Epic 14 (ONIX Core)
+
+---
+
+### Story 16.1: Configure Ingram Account Connection
+
+**As a** publisher,
+**I want** to connect my Ingram account,
+**So that** I can automate feed delivery.
+
+**Acceptance Criteria:**
+
+**Given** I have an Ingram Content Group account
+**When** I configure Ingram settings
+**Then** I enter FTP credentials (host, username, password)
+
+**And** system tests connection and confirms access
+
+**And** credentials are stored encrypted
+
+**And** I can update or disconnect account
+
+**And** connection status visible on dashboard
+
+**Prerequisites:** Epic 14
+
+**Technical Notes:**
+- Implement FR151
+- FTPS (FTP over TLS) for Ingram
+- Store in `channel_credentials` table (encrypted)
+- Test connection before saving
+
+---
+
+### Story 16.2: Schedule Automated ONIX Feeds to Ingram
+
+**As a** publisher,
+**I want** to schedule automatic ONIX feeds,
+**So that** Ingram always has current metadata.
+
+**Acceptance Criteria:**
+
+**Given** I have Ingram configured
+**When** I set up feed schedule
+**Then** I can choose frequency (daily, weekly)
+
+**And** I can select which titles to include (all, changed only)
+
+**And** system generates ONIX 3.0 format (Ingram preference)
+
+**And** system uploads to Ingram FTP on schedule
+
+**And** I can trigger manual feed at any time
+
+**And** feed history shows delivery status
+
+**Prerequisites:** Story 16.1
+
+**Technical Notes:**
+- Implement FR152
+- Inngest scheduled job
+- Ingram prefers ONIX 3.0 International
+- Upload to /inbound/ directory
+
+---
+
+### Story 16.3: Ingest Ingram Order Data
+
+**As a** publisher,
+**I want** to import orders from Ingram,
+**So that** sales are automatically recorded.
+
+**Acceptance Criteria:**
+
+**Given** I have Ingram configured
+**When** Ingram order files are available
+**Then** system downloads from FTP outbound directory
+
+**And** system parses order file format
+
+**And** orders create sales transactions
+
+**And** orders are matched to titles by ISBN
+
+**And** unmatched ISBNs are flagged for review
+
+**And** duplicate orders are detected and skipped
+
+**Prerequisites:** Story 16.2
+
+**Technical Notes:**
+- Implement FR153
+- Ingram provides EDI or flat file orders
+- Inngest job for periodic polling
+- Parse order date, quantity, price
+
+---
+
+### Story 16.4: Sync Inventory Status with Ingram
+
+**As a** publisher,
+**I want** inventory status synced with Ingram,
+**So that** availability is accurate across channels.
+
+**Acceptance Criteria:**
+
+**Given** I update title availability
+**When** status changes (in stock, out of print)
+**Then** ONIX ProductAvailability updates accordingly
+
+**And** next scheduled feed includes updated status
+
+**And** I can trigger immediate status push
+
+**And** Ingram inventory snapshots can be imported
+
+**Prerequisites:** Story 16.2
+
+**Technical Notes:**
+- Implement FR154
+- ProductAvailability in ONIX Block 6
+- Codelist 65 values (20=available, 40=OOP)
+
+---
+
+### Story 16.5: View Ingram Feed History
+
+**As a** publisher,
+**I want** to see Ingram feed history,
+**So that** I can troubleshoot issues.
+
+**Acceptance Criteria:**
+
+**Given** I access Ingram integration
+**When** I view feed history
+**Then** I see list of all feed deliveries
+
+**And** each entry shows: date, product count, status, errors
+
+**And** I can view feed content (XML preview)
+
+**And** failed feeds show error details
+
+**And** I can retry failed feeds
+
+**Prerequisites:** Story 16.2
+
+**Technical Notes:**
+- Implement FR155
+- Store in `channel_feeds` table
+- Keep last 90 days of history
+
+---
+
+## Epic 17: Amazon Integration
+
+**Epic Goal:** Automate ONIX feed delivery to Amazon KDP/Advantage and import sales data
+
+**FRs Covered:** FR156-FR160
+
+**Business Value:** Amazon is the largest book retailer. Integration enables metadata sync and sales tracking.
+
+**Dependencies:** Epic 14 (ONIX Core)
+
+---
+
+### Story 17.1: Configure Amazon Account Connection
+
+**As a** publisher,
+**I want** to connect my Amazon account,
+**So that** I can automate feed delivery.
+
+**Acceptance Criteria:**
+
+**Given** I have Amazon KDP or Advantage account
+**When** I configure Amazon settings
+**Then** I enter API credentials (access key, secret)
+
+**And** I select marketplace (US, UK, etc.)
+
+**And** system tests connection and confirms access
+
+**And** credentials stored encrypted
+
+**Prerequisites:** Epic 14
+
+**Technical Notes:**
+- Implement FR156
+- Amazon Feeds API for ONIX
+- Different endpoints for KDP vs Advantage
+
+---
+
+### Story 17.2: Schedule Automated ONIX Feeds to Amazon
+
+**As a** publisher,
+**I want** to schedule automatic ONIX feeds to Amazon,
+**So that** Amazon always has current metadata.
+
+**Acceptance Criteria:**
+
+**Given** I have Amazon configured
+**When** I set up feed schedule
+**Then** I can choose frequency
+
+**And** system generates ONIX 3.1 format (Amazon supports)
+
+**And** system submits via Amazon Feeds API
+
+**And** I can trigger manual feed
+
+**And** feed submission status tracked
+
+**Prerequisites:** Story 17.1
+
+**Technical Notes:**
+- Implement FR157
+- Amazon P2K supports ONIX 3.1
+- Feed submission returns processing ID
+- Poll for completion status
+
+---
+
+### Story 17.3: Import Amazon Sales Data
+
+**As a** publisher,
+**I want** to import sales from Amazon,
+**So that** royalties include Amazon sales.
+
+**Acceptance Criteria:**
+
+**Given** I have Amazon configured
+**When** sales reports are available
+**Then** system imports via Amazon Reports API
+
+**And** sales create transactions with Amazon channel
+
+**And** sales matched to titles by ISBN
+
+**And** import runs on schedule
+
+**And** I can trigger manual import
+
+**Prerequisites:** Story 17.2
+
+**Technical Notes:**
+- Implement FR158
+- Amazon Reports API for sales data
+- Parse CSV sales reports
+
+---
+
+### Story 17.4: Link Titles to ASINs
+
+**As a** publisher,
+**I want** to track ASIN mappings,
+**So that** I can verify Amazon listings.
+
+**Acceptance Criteria:**
+
+**Given** I have titles on Amazon
+**When** I view title details
+**Then** I can see linked ASIN
+
+**And** system can lookup ASIN by ISBN
+
+**And** I can manually enter ASIN
+
+**And** ASIN links to Amazon product page
+
+**Prerequisites:** Story 17.1
+
+**Technical Notes:**
+- Implement FR159
+- Store in title metadata or separate table
+- Amazon Product API for ASIN lookup
+
+---
+
+### Story 17.5: View Amazon Feed History
+
+**As a** publisher,
+**I want** to see Amazon feed history,
+**So that** I can track feed status.
+
+**Acceptance Criteria:**
+
+**Given** I access Amazon integration
+**When** I view feed history
+**Then** I see list of feed submissions
+
+**And** each entry shows processing status
+
+**And** failed feeds show Amazon error codes
+
+**And** I can retry failed feeds
+
+**Prerequisites:** Story 17.2
+
+**Technical Notes:**
+- Implement FR160
+- Store in `channel_feeds` table
+
+---
+
+## Epic 18: Production Pipeline
+
+**Epic Goal:** Track manuscript-to-print workflow including vendor management, proof tracking, and label generation
+
+**FRs Covered:** FR161-FR169
+
+**Business Value:** Streamlines production workflow, reduces errors, provides visibility into book production status.
+
+**Dependencies:** Epic 2 (Title Management)
+
+---
+
+### Story 18.1: Create Production Projects
+
+**As a** publisher,
+**I want** to create production projects for titles,
+**So that** I can track the production process.
+
+**Acceptance Criteria:**
+
+**Given** I have a title ready for production
+**When** I create a production project
+**Then** I specify target publication date
+
+**And** I can upload manuscript file
+
+**And** project has status: draft, in-progress, completed
+
+**And** project linked to title
+
+**And** I can view all active production projects
+
+**Prerequisites:** Epic 2
+
+**Technical Notes:**
+- Implement FR161
+- Store in `production_jobs` table
+- File upload to S3
+
+---
+
+### Story 18.2: Assign Production Tasks to Vendors
+
+**As a** publisher,
+**I want** to assign tasks to vendors,
+**So that** work is tracked and organized.
+
+**Acceptance Criteria:**
+
+**Given** I have a production project
+**When** I create a task
+**Then** I specify task type (editing, design, printing)
+
+**And** I assign to vendor (contact with vendor role)
+
+**And** I set due date
+
+**And** task has status: pending, in-progress, completed
+
+**And** vendors can be notified of assignments
+
+**Prerequisites:** Story 18.1, Epic 7 (Contacts)
+
+**Technical Notes:**
+- Implement FR162
+- Task tracking within production project
+- Email notification to vendor contacts
+
+---
+
+### Story 18.3: Track Production Workflow Stages
+
+**As a** publisher,
+**I want** to see production progress,
+**So that** I know where each title stands.
+
+**Acceptance Criteria:**
+
+**Given** I have production projects
+**When** I view production board
+**Then** I see kanban-style view of stages:
+- Manuscript Received
+- Editing
+- Design
+- Proof
+- Print Ready
+- Complete
+
+**And** I can drag projects between stages
+
+**And** stage transitions are logged
+
+**And** I can filter by project, date range
+
+**Prerequisites:** Story 18.1
+
+**Technical Notes:**
+- Implement FR163
+- State machine pattern per architecture
+- Audit trail of transitions
+
+---
+
+### Story 18.4: Upload and Manage Proof Files
+
+**As a** publisher,
+**I want** to manage proof versions,
+**So that** I can track review cycles.
+
+**Acceptance Criteria:**
+
+**Given** I have a production project in proof stage
+**When** I upload a proof file
+**Then** proof is versioned (v1, v2, etc.)
+
+**And** I can view all proof versions
+
+**And** I can download previous versions
+
+**And** I can add notes to each version
+
+**And** proof files stored securely
+
+**Prerequisites:** Story 18.3
+
+**Technical Notes:**
+- Implement FR164
+- S3 storage with versioning
+- PDF viewer for proof preview
+
+---
+
+### Story 18.5: Approve or Request Corrections on Proofs
+
+**As a** publisher,
+**I want** to approve proofs or request corrections,
+**So that** production can proceed or issues are fixed.
+
+**Acceptance Criteria:**
+
+**Given** I am reviewing a proof
+**When** I approve the proof
+**Then** project moves to next stage
+
+**And** approval is logged with timestamp
+
+**When** I request corrections
+**Then** I can add correction notes
+
+**And** vendor is notified
+
+**And** project stays in proof stage
+
+**Prerequisites:** Story 18.4
+
+**Technical Notes:**
+- Implement FR165
+- Workflow transition on approval
+- Email to vendor on corrections
+
+---
+
+### Story 18.6: View Production Calendar
+
+**As a** publisher,
+**I want** to see production milestones on calendar,
+**So that** I can plan capacity and deadlines.
+
+**Acceptance Criteria:**
+
+**Given** I have production projects
+**When** I view production calendar
+**Then** I see milestone dates by project
+
+**And** I can filter by date range
+
+**And** overdue milestones highlighted
+
+**And** I can export calendar
+
+**Prerequisites:** Story 18.1
+
+**Technical Notes:**
+- Implement FR166
+- Calendar view component
+- iCal export option
+
+---
+
+### Story 18.7: Generate BISG-Compliant Shipping Labels
+
+**As a** publisher,
+**I want** to generate BISG shipping labels,
+**So that** I can ship books to distribution.
+
+**Acceptance Criteria:**
+
+**Given** I have a title with ISBN
+**When** I generate shipping label
+**Then** label includes GS1-128 barcode with GTIN-14
+
+**And** ISBN encoded per BISG specification
+
+**And** label includes carton content details
+
+**And** I can print label as PDF
+
+**And** labels meet BISG shipping label standards
+
+**Prerequisites:** Epic 2
+
+**Technical Notes:**
+- Implement FR167, FR168, FR169
+- GS1-128 barcode generation
+- GTIN-14 format for ISBN
+- Application Identifiers per GS1 spec
+- PDF generation with react-pdf
+
+---
+
+## Epic 19: Data Import/Export
+
+**Epic Goal:** Enable bulk data operations for catalog migration and external analysis
+
+**FRs Covered:** FR170-FR175
+
+**Business Value:** Reduces onboarding friction for new customers and enables data portability.
+
+**Dependencies:** Epic 2 (Title Management)
+
+---
+
+### Story 19.1: Import Catalog via CSV
+
+**As a** new publisher,
+**I want** to import my existing catalog from CSV,
+**So that** I don't have to enter titles manually.
+
+**Acceptance Criteria:**
+
+**Given** I have a CSV file with title data
+**When** I upload the file
+**Then** I can map CSV columns to Salina fields
+
+**And** system validates data before import
+
+**And** validation errors shown per row
+
+**And** I can fix errors and re-validate
+
+**And** import creates titles with metadata
+
+**Prerequisites:** Epic 2
+
+**Technical Notes:**
+- Implement FR170, FR171
+- Column mapping UI
+- Batch processing for large files
+- Transaction rollback on errors
+
+---
+
+### Story 19.2: Download CSV Templates
+
+**As a** publisher,
+**I want** CSV templates for data entry,
+**So that** I can prepare data in correct format.
+
+**Acceptance Criteria:**
+
+**Given** I want to import data
+**When** I download template
+**Then** templates available for:
+- Titles
+- Contacts
+- Sales
+
+**And** templates include column headers
+
+**And** templates include example rows
+
+**And** templates include data format notes
+
+**Prerequisites:** None
+
+**Technical Notes:**
+- Implement FR172
+- Static template files
+- Include validation rules in template
+
+---
+
+### Story 19.3: Export Catalog to CSV
+
+**As a** publisher,
+**I want** to export my catalog to CSV,
+**So that** I can analyze data externally.
+
+**Acceptance Criteria:**
+
+**Given** I want to export data
+**When** I request export
+**Then** I can select data type (titles, contacts, sales)
+
+**And** I can filter by date range
+
+**And** export generates CSV file
+
+**And** large exports processed in background
+
+**And** I'm notified when export is ready
+
+**Prerequisites:** Epic 2
+
+**Technical Notes:**
+- Implement FR173
+- Stream large exports
+- Inngest for background processing
+
+---
+
+### Story 19.4: Bulk Update via CSV
+
+**As a** publisher,
+**I want** to update multiple titles via CSV,
+**So that** I can make batch changes efficiently.
+
+**Acceptance Criteria:**
+
+**Given** I have a CSV with updates
+**When** I upload the file
+**Then** system matches records by ISBN
+
+**And** I can preview changes before applying
+
+**And** only changed fields are updated
+
+**And** update history is logged
+
+**And** errors shown for invalid data
+
+**Prerequisites:** Story 19.1
+
+**Technical Notes:**
+- Implement FR174
+- Match on ISBN as unique key
+- Diff preview before commit
+
+---
+
+### Story 19.5: BISAC Code Suggestions
+
+**As a** publisher,
+**I want** BISAC codes suggested during import,
+**So that** I can categorize titles correctly.
+
+**Acceptance Criteria:**
+
+**Given** I am importing titles
+**When** title has description but no BISAC code
+**Then** system suggests relevant BISAC codes
+
+**And** I can accept or override suggestions
+
+**And** suggestions based on title and description
+
+**Prerequisites:** Story 19.1
+
+**Technical Notes:**
+- Implement FR175
+- Basic keyword matching initially
+- Could enhance with ML later
+
+---
+
+## Epic 20: UX Enhancements
+
+**Epic Goal:** Improve user experience with onboarding wizard, notifications, mobile support, and contextual help
+
+**FRs Covered:** FR176-FR181
+
+**Business Value:** Reduces time-to-value for new customers and improves daily user experience.
+
+**Dependencies:** Epic 1 (Foundation)
+
+---
+
+### Story 20.1: Build Onboarding Wizard
+
+**As a** new tenant administrator,
+**I want** a guided onboarding experience,
+**So that** I can set up my account quickly.
+
+**Acceptance Criteria:**
+
+**Given** I am a new tenant
+**When** I first log in
+**Then** I see onboarding wizard
+
+**And** wizard guides through essential steps:
+- Company profile setup
+- First user invitation
+- First author/contact creation
+- First title creation
+- ISBN configuration
+
+**And** I can skip steps and return later
+
+**And** progress indicator shows completion
+
+**And** wizard dismisses after completion
+
+**Prerequisites:** Epic 1
+
+**Technical Notes:**
+- Implement FR176, FR181
+- Store progress in `onboarding_progress` table
+- Persistent state across sessions
+
+---
+
+### Story 20.2: Build Notifications Center
+
+**As a** user,
+**I want** a notifications center,
+**So that** I can see important alerts and actions.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in
+**When** I click notifications icon
+**Then** I see list of notifications:
+- Feed delivery status
+- System alerts
+- Action items (pending returns)
+
+**And** unread notifications highlighted
+
+**And** I can mark as read
+
+**And** I can click to navigate to related item
+
+**Prerequisites:** Epic 1
+
+**Technical Notes:**
+- Implement FR177
+- Store in `notifications` table
+- Real-time updates via polling or websocket
+
+---
+
+### Story 20.3: Configure Notification Preferences
+
+**As a** user,
+**I want** to configure notification preferences,
+**So that** I only receive relevant notifications.
+
+**Acceptance Criteria:**
+
+**Given** I access notification settings
+**When** I configure preferences
+**Then** I can enable/disable by event type
+
+**And** I can choose channel: in-app, email, both
+
+**And** preferences saved per user
+
+**And** default preferences sensible
+
+**Prerequisites:** Story 20.2
+
+**Technical Notes:**
+- Implement FR178
+- Store in user profile
+- Email delivery via Resend
+
+---
+
+### Story 20.4: Mobile-Responsive Layout
+
+**As a** user,
+**I want** to use Salina on mobile devices,
+**So that** I can work from anywhere.
+
+**Acceptance Criteria:**
+
+**Given** I access Salina on mobile
+**When** I navigate the application
+**Then** layout adapts to screen size
+
+**And** navigation works via hamburger menu
+
+**And** forms are usable on mobile
+
+**And** tables scroll horizontally or stack
+
+**And** critical functions accessible on mobile
+
+**Prerequisites:** Epic 1
+
+**Technical Notes:**
+- Implement FR179
+- Tailwind responsive utilities
+- Test on iOS and Android
+- Focus on read operations; complex entry on desktop
+
+---
+
+### Story 20.5: Add Contextual Help System
+
+**As a** user,
+**I want** contextual help throughout the interface,
+**So that** I can learn features as I use them.
+
+**Acceptance Criteria:**
+
+**Given** I am using any feature
+**When** I click help icon
+**Then** I see relevant help content
+
+**And** help includes tooltips on form fields
+
+**And** help links to documentation
+
+**And** first-time users see feature tours
+
+**And** I can dismiss tours permanently
+
+**Prerequisites:** Epic 1
+
+**Technical Notes:**
+- Implement FR180
+- Tooltip component library
+- Link to external docs or inline
+- Feature tour library (e.g., intro.js)
+
+---
+
+## Epic 21: Author Portal Expansion
+
+**Epic Goal:** Enhance author portal with production tracking, asset library, and manuscript upload
+
+**FRs Covered:** FR182-FR186
+
+**Business Value:** Reduces author inquiries, improves author satisfaction, and streamlines manuscript submission.
+
+**Dependencies:** Epic 5 (Author Portal), Epic 18 (Production Pipeline)
+
+---
+
+### Story 21.1: View Production Status in Author Portal
+
+**As an** author,
+**I want** to see production status for my titles,
+**So that** I know when my book will be ready.
+
+**Acceptance Criteria:**
+
+**Given** I am logged into author portal
+**When** I view my titles
+**Then** I see production status for each
+
+**And** status shows current stage with timeline
+
+**And** I can see estimated completion date
+
+**And** stage transitions shown as milestones
+
+**Prerequisites:** Epic 5, Epic 18
+
+**Technical Notes:**
+- Implement FR182
+- Read-only view of production data
+- Timeline visualization component
+
+---
+
+### Story 21.2: Access Marketing Asset Library
+
+**As an** author,
+**I want** to download marketing assets,
+**So that** I can promote my book.
+
+**Acceptance Criteria:**
+
+**Given** I am in author portal
+**When** I access asset library
+**Then** I see available assets for my titles:
+- Cover images (various sizes)
+- Back cover copy
+- Author bio
+- Press releases
+
+**And** I can download assets
+
+**And** assets organized by title
+
+**Prerequisites:** Epic 5
+
+**Technical Notes:**
+- Implement FR183
+- Assets linked to title records
+- S3 storage with presigned URLs
+
+---
+
+### Story 21.3: Upload Manuscript Files
+
+**As an** author,
+**I want** to submit manuscripts through portal,
+**So that** I can start the publication process.
+
+**Acceptance Criteria:**
+
+**Given** I have a new manuscript
+**When** I upload through portal
+**Then** I can select file (Word, PDF)
+
+**And** I can add submission notes
+
+**And** publisher is notified of submission
+
+**And** I can track submission status
+
+**And** file stored securely
+
+**Prerequisites:** Epic 5
+
+**Technical Notes:**
+- Implement FR184
+- File upload to S3
+- Creates production project draft
+- Email notification to editor
+
+---
+
+### Story 21.4: Receive Production Milestone Notifications
+
+**As an** author,
+**I want** notifications when milestones are reached,
+**So that** I stay informed without asking.
+
+**Acceptance Criteria:**
+
+**Given** my title is in production
+**When** a milestone is reached
+**Then** I receive notification:
+- Email notification
+- Portal notification
+
+**And** I can configure which milestones notify
+
+**And** notifications include milestone details
+
+**Prerequisites:** Story 21.1, Story 20.2
+
+**Technical Notes:**
+- Implement FR185
+- Hook into production stage transitions
+- Author notification preferences
+
+---
+
+### Story 21.5: View Publication Schedule
+
+**As an** author,
+**I want** to see scheduled publication dates,
+**So that** I can plan marketing activities.
+
+**Acceptance Criteria:**
+
+**Given** I am in author portal
+**When** I view my titles
+**Then** I see publication dates and deadlines
+
+**And** upcoming milestones highlighted
+
+**And** I can see estimated delivery timeline
+
+**And** dates update as production progresses
+
+**Prerequisites:** Story 21.1
+
+**Technical Notes:**
+- Implement FR186
+- Pull from production project data
+- Calendar export option
+
+---
+
 ## FR Coverage Matrix (Complete)
 
 | FR | Requirement | Epic | Story |
@@ -3961,18 +5483,72 @@ async function calculateRoyaltyForPeriod(
 | FR132 | Broadcast announcements | 13 | 13.8 |
 | FR133 | System health monitoring | 13 | 13.5, 13.7 |
 | FR134 | Platform admin authentication | 13 | 13.1 |
+| | | | |
+| **Phase 3 FRs** | | | |
+| FR135 | Generate ONIX 3.1 messages | 14 | 14.1 |
+| FR136 | Validate ONIX against schema | 14 | 14.2 |
+| FR137 | Accessibility metadata (Codelist 196) | 14 | 14.3 |
+| FR138 | Manage EDItEUR codelists | 14 | 14.4 |
+| FR139 | Import from ONIX 2.1/3.0/3.1 | 14 | 14.5 |
+| FR140 | Parse and validate ONIX imports | 14 | 14.5 |
+| FR141 | Export ONIX 3.0 for legacy channels | 14 | 14.6 |
+| FR142 | Preview ONIX before export | 14 | 14.1 |
+| FR143 | OAuth2 API authentication | 15 | 15.1 |
+| FR144 | REST API CRUD operations | 15 | 15.2 |
+| FR145 | ONIX export via API | 15 | 15.2 |
+| FR146 | API rate limiting | 15 | 15.3 |
+| FR147 | Webhook subscription registration | 15 | 15.4 |
+| FR148 | Webhook HMAC-SHA256 signatures | 15 | 15.5 |
+| FR149 | Webhook delivery history | 15 | 15.5 |
+| FR150 | API documentation portal | 15 | 15.6 |
+| FR151 | Ingram FTP credentials | 16 | 16.1 |
+| FR152 | Scheduled Ingram ONIX feeds | 16 | 16.2 |
+| FR153 | Ingram order ingestion | 16 | 16.3 |
+| FR154 | Ingram inventory sync | 16 | 16.4 |
+| FR155 | Ingram feed history | 16 | 16.5 |
+| FR156 | Amazon account configuration | 17 | 17.1 |
+| FR157 | Scheduled Amazon ONIX feeds | 17 | 17.2 |
+| FR158 | Amazon sales import | 17 | 17.3 |
+| FR159 | ASIN linking | 17 | 17.4 |
+| FR160 | Amazon feed history | 17 | 17.5 |
+| FR161 | Production projects | 18 | 18.1 |
+| FR162 | Vendor task assignment | 18 | 18.2 |
+| FR163 | Production workflow stages | 18 | 18.3 |
+| FR164 | Proof file versioning | 18 | 18.4 |
+| FR165 | Proof approval/corrections | 18 | 18.5 |
+| FR166 | Production calendar | 18 | 18.6 |
+| FR167 | BISG GS1-128 shipping labels | 18 | 18.7 |
+| FR168 | Carton labels with AIs | 18 | 18.7 |
+| FR169 | Product labels with barcode | 18 | 18.7 |
+| FR170 | CSV catalog import | 19 | 19.1 |
+| FR171 | Import validation errors | 19 | 19.1 |
+| FR172 | CSV template downloads | 19 | 19.2 |
+| FR173 | CSV catalog export | 19 | 19.3 |
+| FR174 | Bulk CSV update | 19 | 19.4 |
+| FR175 | BISAC code suggestions | 19 | 19.5 |
+| FR176 | Onboarding wizard | 20 | 20.1 |
+| FR177 | Notifications center | 20 | 20.2 |
+| FR178 | Notification preferences | 20 | 20.3 |
+| FR179 | Mobile-responsive layout | 20 | 20.4 |
+| FR180 | Contextual help system | 20 | 20.5 |
+| FR181 | Onboarding progress indicator | 20 | 20.1 |
+| FR182 | Author production status view | 21 | 21.1 |
+| FR183 | Marketing asset library | 21 | 21.2 |
+| FR184 | Author manuscript upload | 21 | 21.3 |
+| FR185 | Production milestone notifications | 21 | 21.4 |
+| FR186 | Publication schedule view | 21 | 21.5 |
 
-**Validation:** ✅ All 134 FRs mapped to specific stories across all 12 epics
+**Validation:** ✅ All 186 FRs mapped to specific stories across 20 epics
 
 ---
 
 ## Summary
 
-**✅ Epic Breakdown Complete (Updated 2025-12-07)**
+**✅ Epic Breakdown Complete (Updated 2025-12-12)**
 
-**Total Epics:** 12
-**Total Stories:** 73
-**Total FRs Covered:** 134
+**Total Epics:** 20 (Phases 1-3)
+**Total Stories:** 113 (73 Phase 1-2 + 40 Phase 3)
+**Total FRs Covered:** 186
 
 ### Epic Summary
 
@@ -3987,33 +5563,54 @@ async function calculateRoyaltyForPeriod(
 | 7 | Contact & ISBN Foundation | 6 | FR82-95 | Unified contacts with multi-role, enhanced ISBN with prefix system | ✅ COMPLETE |
 | 8 | Invoicing & Accounts Receivable | 6 | FR96-106 | Full invoicing, AR tracking, aging reports | ✅ COMPLETE |
 | 9 | Public Presence | 2 | FR107-110 | Marketing landing page and legal pages | ✅ COMPLETE |
-| 10 | Advanced Royalty Features | 4 | FR111-118 | Split royalties for co-authors, lifetime escalating rates | 🆕 PHASE 2 |
-| 11 | Tax & Compliance | 3 | FR119-124 | 1099-MISC generation for IRS compliance | 🆕 PHASE 2 |
-| 13 | Platform Administration | 8 | FR125-134 | SaaS operator tools for tenant management and monitoring | 🆕 PHASE 2 |
+| 10 | Advanced Royalty Features | 4 | FR111-118 | Split royalties for co-authors, lifetime escalating rates | ✅ COMPLETE |
+| 11 | Tax & Compliance | 3 | FR119-124 | 1099-MISC generation for IRS compliance | ✅ COMPLETE |
+| 13 | Platform Administration | 8 | FR125-134 | SaaS operator tools for tenant management and monitoring | ✅ COMPLETE |
+| | | | | | |
+| **Phase 3 - Distribution & Scale** | | | | | |
+| 14 | ONIX 3.1 Core | 6 | FR135-142 | ONIX metadata generation, validation, accessibility | 🆕 PHASE 3 |
+| 15 | REST API & Webhooks | 6 | FR143-150 | Public API, OAuth2, webhook delivery | 🆕 PHASE 3 |
+| 16 | Ingram Integration | 5 | FR151-155 | Automated ONIX feeds to Ingram, order ingestion | 🆕 PHASE 3 |
+| 17 | Amazon Integration | 5 | FR156-160 | KDP/Advantage ONIX feeds, sales import | 🆕 PHASE 3 |
+| 18 | Production Pipeline | 7 | FR161-169 | Manuscript-to-print workflow, BISG labels | 🆕 PHASE 3 |
+| 19 | Data Import/Export | 5 | FR170-175 | Bulk CSV operations, catalog migration | 🆕 PHASE 3 |
+| 20 | UX Enhancements | 5 | FR176-181 | Onboarding wizard, notifications, mobile | 🆕 PHASE 3 |
+| 21 | Author Portal Expansion | 5 | FR182-186 | Production tracking, asset library, manuscript upload | 🆕 PHASE 3 |
 
 ### Implementation Status
 
-**MVP (Epics 1-6):** ✅ COMPLETE - All 81 FRs implemented
+**MVP (Epics 1-6):** ✅ COMPLETE - 81 FRs implemented
 **Growth Phase 1 (Epics 7-9):** ✅ COMPLETE - 29 FRs implemented
-**Growth Phase 2 (Epics 10, 11, 13):** 🆕 Ready for implementation - 24 FRs, 15 stories
+**Growth Phase 2 (Epics 10, 11, 13):** ✅ COMPLETE - 24 FRs implemented
+**Phase 3 - Distribution & Scale (Epics 14-21):** 🆕 Ready for implementation - 52 FRs, 40 stories
+
+### Phase 3 Execution Tracks
+
+| Track | Focus | Epics | Rationale |
+|-------|-------|-------|-----------|
+| **Track 1** | Metadata/Integration | 14 → 16 → 17 | ONIX foundation enables channel distribution |
+| **Track 2** | Platform/API | 15 → 19 | API enables data operations and third-party integration |
+| **Track 3** | Experience | 20 → 21 | User-facing improvements, independent of backend |
+| **Track 4** | Operations | 18 | Production pipeline, starts after Epic 14 patterns established |
 
 ### Implementation Readiness
 
-**✅ Complete Coverage:** All 134 FRs from PRD mapped to implementable stories
+**✅ Complete Coverage:** All 186 FRs from PRD mapped to implementable stories
 **✅ Full Context Integration:** Every story incorporates PRD + UX patterns + Architecture decisions
 **✅ Detailed Acceptance Criteria:** BDD-style criteria with specific UX/technical requirements
 **✅ Sequential Dependencies:** No forward dependencies, clear prerequisite chains
 **✅ User Value Focus:** Each epic delivers tangible user value
+**✅ ONIX Research Complete:** Mary's domain research provides implementation guidance
 
 ### Next Steps
 
-1. **Sprint Planning**: Run `*sprint-planning` to update sprint-status.yaml with Phase 2 epics
-2. **Story Drafting**: SM to create detailed story files starting with Story 10.1
-3. **Implementation Order**: Recommended sequence: Epic 10 → Epic 11 → Epic 13
-4. **Architecture Review**: Winston to review multi-author schema and platform admin patterns
+1. **Sprint Planning**: Run `*sprint-planning` to update sprint-status.yaml with Phase 3 epics
+2. **Story Drafting**: SM to create detailed story files starting with Story 14.1 (ONIX generator)
+3. **Implementation Order**: Recommended start: Epic 14 (ONIX Core) or Epic 20 (UX - independent)
+4. **Critical Deadline**: EAA compliance (FR137) by June 2025
 
 **Document Location:** `/Users/elockard/office/salina-erp-bmad2/docs/epics.md`
-**Last Updated:** 2025-12-07
+**Last Updated:** 2025-12-12
 
 ---
 

@@ -20,9 +20,20 @@ const isProtectedRoute = createRouteMatcher([
   "/admin(.*)", // Story 6.6: System administration
   "/contacts(.*)", // Story 7.2: Contact management
   "/invoices(.*)", // Story 8.x: Invoice management
+  "/platform-admin(.*)", // Story 13.1: Platform administration
 ]);
 
+// Platform admin routes - separate from tenant routes, no tenant context needed
+const isPlatformAdminRoute = createRouteMatcher(["/platform-admin(.*)"]);
+
 export default clerkMiddleware(async (auth, req) => {
+  // Story 13.1: Handle platform admin routes BEFORE tenant lookup
+  // Platform admin routes have NO tenant context - they operate outside tenant boundaries
+  if (isPlatformAdminRoute(req)) {
+    await auth.protect(); // Require Clerk authentication
+    return NextResponse.next(); // No tenant context needed, no x-tenant-id header
+  }
+
   // Extract subdomain from host header
   const host = req.headers.get("host") || "";
   const hostname = host.split(":")[0]; // Remove port if present (localhost:3000 → localhost)
@@ -80,6 +91,12 @@ export default clerkMiddleware(async (auth, req) => {
           );
 
           if (tenant) {
+            // Story 13.4: Check suspension in fallback path too
+            if (tenant.status === "suspended") {
+              return NextResponse.redirect(
+                new URL("/tenant-suspended", req.url),
+              );
+            }
             subdomain = tenant.subdomain;
             console.log("[Proxy] Fallback: Set subdomain to", subdomain);
           }
@@ -107,6 +124,12 @@ export default clerkMiddleware(async (auth, req) => {
 
       if (!tenant) {
         return NextResponse.redirect(new URL("/tenant-not-found", req.url));
+      }
+
+      // Story 13.4: Check tenant suspension status
+      // Redirect suspended tenant users to suspension notice page
+      if (tenant.status === "suspended") {
+        return NextResponse.redirect(new URL("/tenant-suspended", req.url));
       }
 
       // Get Clerk JWT token using the neon-authorize template

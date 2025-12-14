@@ -117,6 +117,11 @@ const mockTitleWithAuthors: TitleWithAuthors = {
   ],
   primaryAuthor: null,
   isSoleAuthor: true,
+  // Story 14.3: Accessibility metadata
+  epub_accessibility_conformance: null,
+  accessibility_features: null,
+  accessibility_hazards: null,
+  accessibility_summary: null,
 };
 
 // Mock database
@@ -352,6 +357,157 @@ describe("exportBatchTitles", () => {
         error_message: null,
       }),
     );
+  });
+});
+
+// Story 14.6: ONIX 3.0 Export Fallback Tests
+describe("exportSingleTitle - version support (Story 14.6)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDb = createMockDb();
+    vi.mocked(getCurrentTenantId).mockResolvedValue(mockTenant.id);
+    vi.mocked(getDb).mockResolvedValue(
+      mockDb as unknown as Awaited<ReturnType<typeof getDb>>,
+    );
+    vi.mocked(requirePermission).mockResolvedValue(undefined);
+    vi.mocked(getTitleWithAuthors).mockResolvedValue(mockTitleWithAuthors);
+  });
+
+  it("generates ONIX 3.0 when version specified", async () => {
+    const result = await exportSingleTitle(mockTitleWithAuthors.id, {
+      onixVersion: "3.0",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.xml).toContain('release="3.0"');
+      expect(result.data.xml).toContain(
+        'xmlns="http://ns.editeur.org/onix/3.0/reference"',
+      );
+    }
+  });
+
+  it("generates ONIX 3.1 by default (no version option)", async () => {
+    const result = await exportSingleTitle(mockTitleWithAuthors.id);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.xml).toContain('release="3.1"');
+      expect(result.data.xml).toContain(
+        'xmlns="http://ns.editeur.org/onix/3.1/reference"',
+      );
+    }
+  });
+
+  it("includes version in filename for 3.0", async () => {
+    const result = await exportSingleTitle(mockTitleWithAuthors.id, {
+      onixVersion: "3.0",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.filename).toMatch(/salina-onix-30-/);
+    }
+  });
+
+  it("includes version in filename for 3.1", async () => {
+    const result = await exportSingleTitle(mockTitleWithAuthors.id, {
+      onixVersion: "3.1",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.filename).toMatch(/salina-onix-31-/);
+    }
+  });
+
+  it("stores onix_version in export record", async () => {
+    await exportSingleTitle(mockTitleWithAuthors.id, { onixVersion: "3.0" });
+
+    expect(mockDb.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        onix_version: "3.0",
+      }),
+    );
+  });
+
+  it("returns onixVersion in result data", async () => {
+    const result = await exportSingleTitle(mockTitleWithAuthors.id, {
+      onixVersion: "3.0",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.onixVersion).toBe("3.0");
+    }
+  });
+});
+
+describe("exportBatchTitles - version support (Story 14.6)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDb = createMockDb();
+    vi.mocked(getCurrentTenantId).mockResolvedValue(mockTenant.id);
+    vi.mocked(getDb).mockResolvedValue(
+      mockDb as unknown as Awaited<ReturnType<typeof getDb>>,
+    );
+    vi.mocked(requirePermission).mockResolvedValue(undefined);
+    vi.mocked(getTitleWithAuthors).mockResolvedValue(mockTitleWithAuthors);
+  });
+
+  it("generates ONIX 3.0 when version specified", async () => {
+    const result = await exportBatchTitles([mockTitleWithAuthors.id], {
+      onixVersion: "3.0",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.xml).toContain('release="3.0"');
+      expect(result.data.xml).toContain(
+        'xmlns="http://ns.editeur.org/onix/3.0/reference"',
+      );
+    }
+  });
+
+  it("generates ONIX 3.1 by default", async () => {
+    const result = await exportBatchTitles([mockTitleWithAuthors.id]);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.xml).toContain('release="3.1"');
+    }
+  });
+
+  it("includes version in filename", async () => {
+    const result = await exportBatchTitles([mockTitleWithAuthors.id], {
+      onixVersion: "3.0",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.filename).toMatch(/salina-onix-30-/);
+    }
+  });
+
+  it("stores onix_version in export record", async () => {
+    await exportBatchTitles([mockTitleWithAuthors.id], { onixVersion: "3.0" });
+
+    expect(mockDb.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        onix_version: "3.0",
+      }),
+    );
+  });
+
+  it("returns onixVersion in result data", async () => {
+    const result = await exportBatchTitles([mockTitleWithAuthors.id], {
+      onixVersion: "3.0",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.onixVersion).toBe("3.0");
+    }
   });
 });
 

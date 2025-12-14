@@ -4,9 +4,10 @@
  * ONIX Export Server Actions
  *
  * Story: 14.1 - Create ONIX 3.1 Message Generator
+ * Story: 14.6 - Add ONIX 3.0 Export Fallback
  * Task 4: Implement export Server Actions
  *
- * Server Actions for exporting titles to ONIX 3.1 XML format.
+ * Server Actions for exporting titles to ONIX 3.0 and 3.1 XML format.
  * Includes permission checks and export history tracking.
  */
 
@@ -18,24 +19,38 @@ import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
 import { getTitleWithAuthors } from "@/modules/title-authors/queries";
 import { ONIXMessageBuilder } from "./builder/message-builder";
+import type { ONIXVersion } from "./parser/types";
 import type { ExportResultWithValidation, ValidationResult } from "./types";
 import { validateONIXMessage } from "./validator";
 
 /**
- * Export a single title to ONIX 3.1 XML with validation
+ * Export options for ONIX export
+ * Story 14.6: Added onixVersion for 3.0/3.1 selection
+ */
+interface ExportOptions {
+  /** ONIX version to export (default: "3.1") */
+  onixVersion?: ONIXVersion;
+}
+
+/**
+ * Export a single title to ONIX XML with validation
  *
  * Story: 14.2 - Implement ONIX Schema Validation
+ * Story: 14.6 - Add ONIX 3.0 Export Fallback
  * Task 5: Update export actions with validation
  *
  * AC: 5 - Only validated exports are sent to channels
  * AC: 6 - System tracks export errors
  *
  * @param titleId - UUID of the title to export
+ * @param options - Export options including ONIX version
  * @returns ActionResult with XML content, filename, and validation result
  */
 export async function exportSingleTitle(
   titleId: string,
+  options?: ExportOptions,
 ): Promise<ActionResult<ExportResultWithValidation>> {
+  const version = options?.onixVersion ?? "3.1";
   try {
     // Check permission
     await requirePermission(CREATE_AUTHORS_TITLES);
@@ -68,14 +83,18 @@ export async function exportSingleTitle(
       };
     }
 
-    // Build ONIX XML
-    const builder = new ONIXMessageBuilder(tenantId, {
-      id: tenant.id,
-      name: tenant.name,
-      email: null, // Tenant email not available
-      subdomain: tenant.subdomain,
-      default_currency: tenant.default_currency || "USD",
-    });
+    // Build ONIX XML (Story 14.6: Pass version to builder)
+    const builder = new ONIXMessageBuilder(
+      tenantId,
+      {
+        id: tenant.id,
+        name: tenant.name,
+        email: null, // Tenant email not available
+        subdomain: tenant.subdomain,
+        default_currency: tenant.default_currency || "USD",
+      },
+      version,
+    );
 
     builder.addTitle(title);
     const xml = builder.toXML();
@@ -83,8 +102,9 @@ export async function exportSingleTitle(
     // Validate the generated XML
     const validation = await validateONIXMessage(xml);
 
-    // Generate filename
-    const filename = `salina-onix-${tenant.subdomain}-${Date.now()}.xml`;
+    // Generate filename (Story 14.6: Include version in filename)
+    const versionSuffix = version.replace(".", "");
+    const filename = `salina-onix-${versionSuffix}-${tenant.subdomain}-${Date.now()}.xml`;
 
     // Store export record with validation status
     const exportStatus = validation.valid ? "success" : "validation_error";
@@ -92,11 +112,13 @@ export async function exportSingleTitle(
       ? null
       : JSON.stringify(validation.errors);
 
+    // Story 14.6: Store version in export record
     await db.insert(onixExports).values({
       tenant_id: tenantId,
       title_ids: [titleId],
       xml_content: xml,
       product_count: 1,
+      onix_version: version,
       status: exportStatus,
       error_message: errorMessage,
     });
@@ -108,6 +130,7 @@ export async function exportSingleTitle(
         filename,
         productCount: 1,
         validation,
+        onixVersion: version as "3.0" | "3.1",
       },
     };
   } catch (error) {
@@ -120,20 +143,24 @@ export async function exportSingleTitle(
 }
 
 /**
- * Export multiple titles to ONIX 3.1 XML with validation
+ * Export multiple titles to ONIX XML with validation
  *
  * Story: 14.2 - Implement ONIX Schema Validation
+ * Story: 14.6 - Add ONIX 3.0 Export Fallback
  * Task 5: Update export actions with validation
  *
  * AC: 5 - Only validated exports are sent to channels
  * AC: 6 - System tracks export errors
  *
  * @param titleIds - Array of title UUIDs to export
+ * @param options - Export options including ONIX version
  * @returns ActionResult with XML content, filename, product count, and validation result
  */
 export async function exportBatchTitles(
   titleIds: string[],
+  options?: ExportOptions,
 ): Promise<ActionResult<ExportResultWithValidation>> {
+  const version = options?.onixVersion ?? "3.1";
   try {
     // Validate input
     if (!titleIds || titleIds.length === 0) {
@@ -156,14 +183,18 @@ export async function exportBatchTitles(
       return { success: false, error: "Tenant not found" };
     }
 
-    // Build ONIX XML
-    const builder = new ONIXMessageBuilder(tenantId, {
-      id: tenant.id,
-      name: tenant.name,
-      email: null, // Tenant email not available
-      subdomain: tenant.subdomain,
-      default_currency: tenant.default_currency || "USD",
-    });
+    // Build ONIX XML (Story 14.6: Pass version to builder)
+    const builder = new ONIXMessageBuilder(
+      tenantId,
+      {
+        id: tenant.id,
+        name: tenant.name,
+        email: null, // Tenant email not available
+        subdomain: tenant.subdomain,
+        default_currency: tenant.default_currency || "USD",
+      },
+      version,
+    );
 
     // Track exported title IDs and skipped titles
     const exportedTitleIds: string[] = [];
@@ -201,8 +232,9 @@ export async function exportBatchTitles(
     // Validate the generated XML
     const validation = await validateONIXMessage(xml);
 
-    // Generate filename
-    const filename = `salina-onix-${tenant.subdomain}-${Date.now()}.xml`;
+    // Generate filename (Story 14.6: Include version in filename)
+    const versionSuffix = version.replace(".", "");
+    const filename = `salina-onix-${versionSuffix}-${tenant.subdomain}-${Date.now()}.xml`;
 
     // Store export record with validation status
     const exportStatus = validation.valid ? "success" : "validation_error";
@@ -210,11 +242,13 @@ export async function exportBatchTitles(
       ? null
       : JSON.stringify(validation.errors);
 
+    // Story 14.6: Store version in export record
     await db.insert(onixExports).values({
       tenant_id: tenantId,
       title_ids: exportedTitleIds,
       xml_content: xml,
       product_count: productCount,
+      onix_version: version,
       status: exportStatus,
       error_message: errorMessage,
     });
@@ -227,6 +261,7 @@ export async function exportBatchTitles(
         productCount,
         validation,
         skippedTitleIds: skippedTitles.length > 0 ? skippedTitles : undefined,
+        onixVersion: version as "3.0" | "3.1",
       },
     };
   } catch (error) {

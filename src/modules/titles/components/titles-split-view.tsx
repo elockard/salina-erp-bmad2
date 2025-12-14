@@ -1,16 +1,19 @@
 "use client";
 
+import { FileUp } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
 import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+import { ONIXImportModal } from "@/modules/onix/components";
 import { fetchTitles } from "../actions";
 import type { PublicationStatus, TitleWithAuthor } from "../types";
+import { hasMinimumAccessibilityMetadata } from "../utils";
 import { TitleDetail } from "./title-detail";
 import { TitleForm } from "./title-form";
-import { TitleList } from "./title-list";
+import { type AccessibilityFilter, TitleList } from "./title-list";
 
 interface TitlesSplitViewProps {
   initialTitles: TitleWithAuthor[];
@@ -28,9 +31,12 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | "all">(
     "all",
   );
+  const [accessibilityFilter, setAccessibilityFilter] =
+    useState<AccessibilityFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
 
   const canCreateTitles = useHasPermission(CREATE_AUTHORS_TITLES);
@@ -80,16 +86,35 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
     toast.success("Title updated");
   };
 
-  // Filter titles by search query (client-side for instant feedback)
+  // Filter titles by search query and accessibility (client-side for instant feedback)
   // Story 7.6: Removed eisbn - ISBNs are unified without type distinction
+  // Story 14.3 - AC6: Accessibility filter for EAA compliance
   const filteredTitles = titles.filter((title) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      title.title.toLowerCase().includes(query) ||
-      title.author.name.toLowerCase().includes(query) ||
-      title.isbn?.toLowerCase().includes(query)
-    );
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch =
+        title.title.toLowerCase().includes(query) ||
+        title.author.name.toLowerCase().includes(query) ||
+        title.isbn?.toLowerCase().includes(query);
+      if (!matchesSearch) return false;
+    }
+
+    // Accessibility filter (Story 14.3)
+    if (accessibilityFilter !== "all") {
+      const hasA11y = hasMinimumAccessibilityMetadata({
+        epub_accessibility_conformance:
+          title.epub_accessibility_conformance ?? null,
+        accessibility_features: title.accessibility_features ?? null,
+        accessibility_hazards: title.accessibility_hazards ?? null,
+        accessibility_summary: title.accessibility_summary ?? null,
+      });
+
+      if (accessibilityFilter === "needs_setup" && hasA11y) return false;
+      if (accessibilityFilter === "has_metadata" && !hasA11y) return false;
+    }
+
+    return true;
   });
 
   return (
@@ -103,13 +128,23 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
           mobileDetailOpen && "max-md:hidden",
         )}
       >
-        {/* Header with Create Button */}
+        {/* Header with Create and Import Buttons */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Titles</h2>
           {canCreateTitles && (
-            <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-              + Create Title
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setImportDialogOpen(true)}
+              >
+                <FileUp className="h-4 w-4 mr-1" />
+                Import
+              </Button>
+              <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+                + Create Title
+              </Button>
+            </div>
           )}
         </div>
 
@@ -122,6 +157,8 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
           onSearchChange={setSearchQuery}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
+          accessibilityFilter={accessibilityFilter}
+          onAccessibilityFilterChange={setAccessibilityFilter}
           loading={loading}
         />
       </div>
@@ -165,6 +202,17 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}
           onSuccess={handleTitleCreated}
+        />
+      )}
+
+      {/* ONIX Import Dialog */}
+      {canCreateTitles && (
+        <ONIXImportModal
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          onImportComplete={() => {
+            reloadTitles();
+          }}
         />
       )}
     </div>

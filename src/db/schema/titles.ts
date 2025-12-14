@@ -147,6 +147,37 @@ export const titles = pgTable(
     updated_at: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+
+    // ==========================================================================
+    // ACCESSIBILITY METADATA (Story 14.3 - Codelist 196)
+    // ==========================================================================
+
+    /**
+     * EPUB accessibility conformance level (Codelist 196 Type 09: 00-11)
+     * Values encode both EPUB Accessibility version and WCAG conformance level
+     * Story 14.3 - AC1, AC2: Configure EPUB/WCAG conformance
+     */
+    epub_accessibility_conformance: text("epub_accessibility_conformance"),
+
+    /**
+     * Accessibility features array (Codelist 196 Type 09: 10-26)
+     * Each code represents a specific accessibility feature
+     * Story 14.3 - AC3: Configure accessibility features
+     */
+    accessibility_features: text("accessibility_features").array(),
+
+    /**
+     * Accessibility hazards array (Codelist 196 Type 12: 00-07)
+     * Declares presence or absence of specific hazards
+     * Story 14.3 - AC3: Configure hazard declarations
+     */
+    accessibility_hazards: text("accessibility_hazards").array(),
+
+    /**
+     * Free-form accessibility summary for ProductFormFeatureDescription
+     * Story 14.3 - AC4: Include in ONIX export
+     */
+    accessibility_summary: text("accessibility_summary"),
   },
   (table) => ({
     /** Index on tenant_id for RLS filtering and foreign key join performance */

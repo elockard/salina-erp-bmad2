@@ -8,7 +8,11 @@ import { getCurrentTenantId, getDb, requirePermission } from "@/lib/auth";
 import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
 import { getTitleById, getTitles } from "./queries";
-import { createTitleSchema, updateTitleSchema } from "./schema";
+import {
+  accessibilitySchema,
+  createTitleSchema,
+  updateTitleSchema,
+} from "./schema";
 import type { PublicationStatus, TitleWithAuthor } from "./types";
 
 /**
@@ -214,6 +218,84 @@ export async function updateTitle(
     return {
       success: false,
       error: "Failed to update title. Please try again.",
+    };
+  }
+}
+
+/**
+ * Update title accessibility metadata
+ * Permission: CREATE_AUTHORS_TITLES (owner, admin, editor)
+ *
+ * Story 14.3 - AC1, AC2, AC3: Accessibility metadata configuration
+ * Task 7: Server actions for accessibility
+ */
+export async function updateTitleAccessibility(
+  id: string,
+  data: unknown,
+): Promise<ActionResult<TitleWithAuthor>> {
+  try {
+    // Check permission
+    await requirePermission(CREATE_AUTHORS_TITLES);
+
+    // Validate input
+    const validated = accessibilitySchema.parse(data);
+
+    // Get tenant context
+    const tenantId = await getCurrentTenantId();
+    const db = await getDb();
+
+    // Get existing title to verify ownership
+    const existing = await db.query.titles.findFirst({
+      where: and(eq(titles.id, id), eq(titles.tenant_id, tenantId)),
+    });
+
+    if (!existing) {
+      return { success: false, error: "Title not found" };
+    }
+
+    // Update accessibility fields
+    await db
+      .update(titles)
+      .set({
+        epub_accessibility_conformance:
+          validated.epub_accessibility_conformance ?? null,
+        accessibility_features: validated.accessibility_features ?? null,
+        accessibility_hazards: validated.accessibility_hazards ?? null,
+        accessibility_summary: validated.accessibility_summary ?? null,
+        updated_at: new Date(),
+      })
+      .where(and(eq(titles.id, id), eq(titles.tenant_id, tenantId)));
+
+    // Revalidate cache
+    revalidatePath("/dashboard/titles");
+
+    // Fetch updated title with author relation
+    const titleWithAuthor = await getTitleById(id);
+
+    if (!titleWithAuthor) {
+      return { success: false, error: "Failed to fetch updated title" };
+    }
+
+    return { success: true, data: titleWithAuthor };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to update titles",
+      };
+    }
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues[0]?.message || "Invalid accessibility data",
+      };
+    }
+
+    console.error("updateTitleAccessibility error:", error);
+    return {
+      success: false,
+      error: "Failed to update accessibility metadata. Please try again.",
     };
   }
 }

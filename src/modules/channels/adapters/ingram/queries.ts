@@ -176,3 +176,82 @@ export async function getIngramImportHistory(limit = 50) {
     limit,
   });
 }
+
+/**
+ * Get inventory sync history (push to Ingram)
+ *
+ * Story 16.4 - AC5: Inventory Sync History
+ * Returns inventory syncs (feedType='inventory_sync') from the last 90 days.
+ *
+ * @returns Array of inventory sync feeds
+ */
+export async function getIngramInventorySyncHistory(limit = 20) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return [];
+  }
+
+  const user = await adminDb.query.users.findFirst({
+    where: eq(users.clerk_user_id, userId),
+  });
+
+  if (!user?.tenant_id) {
+    return [];
+  }
+
+  // Get syncs from the last 90 days
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+  return adminDb.query.channelFeeds.findMany({
+    where: and(
+      eq(channelFeeds.tenantId, user.tenant_id),
+      eq(channelFeeds.channel, CHANNEL_TYPES.INGRAM),
+      eq(channelFeeds.feedType, FEED_TYPE.INVENTORY_SYNC),
+      gte(channelFeeds.createdAt, ninetyDaysAgo),
+    ),
+    orderBy: (feeds, { desc }) => [desc(feeds.createdAt)],
+    limit,
+  });
+}
+
+/**
+ * Get inventory import history (pull from Ingram)
+ *
+ * Story 16.4 - AC5: Inventory Sync History
+ * Returns inventory imports (feedType='inventory_import') from the last 90 days.
+ * Includes mismatch details in metadata for AC6.
+ *
+ * @returns Array of inventory import feeds with metadata
+ */
+export async function getIngramInventoryImportHistory(limit = 20) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return [];
+  }
+
+  const user = await adminDb.query.users.findFirst({
+    where: eq(users.clerk_user_id, userId),
+  });
+
+  if (!user?.tenant_id) {
+    return [];
+  }
+
+  // Get imports from the last 90 days
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+  return adminDb.query.channelFeeds.findMany({
+    where: and(
+      eq(channelFeeds.tenantId, user.tenant_id),
+      eq(channelFeeds.channel, CHANNEL_TYPES.INGRAM),
+      eq(channelFeeds.feedType, FEED_TYPE.INVENTORY_IMPORT),
+      gte(channelFeeds.createdAt, ninetyDaysAgo),
+    ),
+    orderBy: (feeds, { desc }) => [desc(feeds.createdAt)],
+    limit,
+  });
+}

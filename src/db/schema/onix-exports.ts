@@ -5,8 +5,9 @@
  * Stores export metadata and full XML for audit trail.
  *
  * Story: 14.1 - Create ONIX 3.1 Message Generator
+ * Story: 14.6 - Add ONIX 3.0 Export Fallback (onix_version column)
  * Task 3: Create ONIX export database schema
- * FR: FR135, FR142
+ * FR: FR135, FR141, FR142
  *
  * Multi-Tenant Isolation:
  * - Layer 1: Application queries include WHERE tenant_id filter
@@ -76,6 +77,9 @@ export const onixExports = pgTable(
 
     /** Number of Product elements in the export */
     product_count: integer("product_count").notNull(),
+
+    /** ONIX version used for export (Story 14.6) */
+    onix_version: text("onix_version").notNull().default("3.1"),
 
     /** Export status */
     status: text("status", {

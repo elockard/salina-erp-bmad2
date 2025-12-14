@@ -165,6 +165,11 @@ describe("Tenant type", () => {
       royalty_period_type: "fiscal_year",
       royalty_period_start_month: null,
       royalty_period_start_day: null,
+      // Suspension fields (Story 13.4)
+      status: "active",
+      suspended_at: null,
+      suspended_reason: null,
+      suspended_by_admin_email: null,
       // Payer info (Story 11.3)
       payer_ein_encrypted: null,
       payer_ein_last_four: null,
@@ -195,6 +200,11 @@ describe("Tenant type", () => {
       royalty_period_type: "calendar_year",
       royalty_period_start_month: null,
       royalty_period_start_day: null,
+      // Suspension fields (Story 13.4)
+      status: "active",
+      suspended_at: null,
+      suspended_reason: null,
+      suspended_by_admin_email: null,
       // Payer info (Story 11.3)
       payer_ein_encrypted: null,
       payer_ein_last_four: null,
@@ -338,6 +348,11 @@ describe("Tenant type with payer info", () => {
       royalty_period_type: "fiscal_year",
       royalty_period_start_month: null,
       royalty_period_start_day: null,
+      // Suspension fields (Story 13.4)
+      status: "active",
+      suspended_at: null,
+      suspended_reason: null,
+      suspended_by_admin_email: null,
       // Payer info (Story 11.3)
       payer_ein_encrypted: "encryptedEINvalue",
       payer_ein_last_four: "6789",
@@ -368,6 +383,11 @@ describe("Tenant type with payer info", () => {
       royalty_period_type: "fiscal_year",
       royalty_period_start_month: null,
       royalty_period_start_day: null,
+      // Suspension fields (Story 13.4)
+      status: "active",
+      suspended_at: null,
+      suspended_reason: null,
+      suspended_by_admin_email: null,
       // Payer info all null
       payer_ein_encrypted: null,
       payer_ein_last_four: null,

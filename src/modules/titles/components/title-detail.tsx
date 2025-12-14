@@ -1,6 +1,13 @@
 "use client";
 
-import { BookOpen, DollarSign, FileText, Pencil, Users } from "lucide-react";
+import {
+  BookOpen,
+  DollarSign,
+  FileCode,
+  FileText,
+  Pencil,
+  Users,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -24,6 +31,8 @@ import {
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
 import { CREATE_AUTHORS_TITLES, MANAGE_CONTRACTS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+import { exportSingleTitle, ONIXExportModal } from "@/modules/onix";
+import type { ExportResult } from "@/modules/onix/types";
 import { ContractWizardModal } from "@/modules/royalties/components/contract-wizard-modal";
 import {
   type AuthorContact,
@@ -34,8 +43,12 @@ import {
   type TitleAuthorWithContact,
   updateTitleAuthors,
 } from "@/modules/title-authors";
-import { updateTitle } from "../actions";
+import { updateTitle, updateTitleAccessibility } from "../actions";
 import type { PublicationStatus, TitleWithAuthor } from "../types";
+import {
+  type AccessibilityData,
+  AccessibilityForm,
+} from "./accessibility-form";
 import { ISBNAssignmentModal } from "./isbn-assignment-modal";
 
 interface TitleDetailProps {
@@ -240,6 +253,15 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
   // Story 4.2: Contract creation modal state
   const [showContractWizard, setShowContractWizard] = useState(false);
 
+  // Story 14.1: ONIX export state
+  // Story 14.6: Added version selection for 3.0/3.1 export
+  const [showOnixExport, setShowOnixExport] = useState(false);
+  const [onixExportResult, setOnixExportResult] = useState<ExportResult | null>(
+    null,
+  );
+  const [onixExporting, setOnixExporting] = useState(false);
+  const [onixVersion, setOnixVersion] = useState<"3.0" | "3.1">("3.1");
+
   // Story 10.1: Multiple authors state
   const [titleAuthors, setTitleAuthors] = useState<TitleAuthorWithContact[]>(
     [],
@@ -250,6 +272,19 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
   const [pendingAuthorChanges, setPendingAuthorChanges] = useState<
     TitleAuthorInput[] | null
   >(null);
+
+  // Story 14.3: Accessibility state
+  const [accessibilityData, setAccessibilityData] = useState<AccessibilityData>(
+    {
+      epub_accessibility_conformance:
+        title.epub_accessibility_conformance ?? null,
+      accessibility_features: title.accessibility_features ?? null,
+      accessibility_hazards: title.accessibility_hazards ?? null,
+      accessibility_summary: title.accessibility_summary ?? null,
+    },
+  );
+  const [accessibilitySaving, setAccessibilitySaving] = useState(false);
+  const [accessibilityChanged, setAccessibilityChanged] = useState(false);
 
   // Load title authors and available authors
   useEffect(() => {
@@ -316,6 +351,42 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
   // Check if there are unsaved author changes
   const hasUnsavedAuthorChanges = pendingAuthorChanges !== null;
 
+  // Story 14.3: Accessibility handlers
+  const handleAccessibilityChange = (data: AccessibilityData) => {
+    setAccessibilityData(data);
+    setAccessibilityChanged(true);
+  };
+
+  const handleSaveAccessibility = async () => {
+    setAccessibilitySaving(true);
+    try {
+      const result = await updateTitleAccessibility(
+        title.id,
+        accessibilityData,
+      );
+      if (result.success) {
+        setAccessibilityChanged(false);
+        toast.success("Accessibility metadata saved");
+        // Update parent with new data
+        onTitleUpdated({
+          ...title,
+          epub_accessibility_conformance:
+            accessibilityData.epub_accessibility_conformance,
+          accessibility_features: accessibilityData.accessibility_features,
+          accessibility_hazards: accessibilityData.accessibility_hazards,
+          accessibility_summary: accessibilityData.accessibility_summary,
+        });
+      } else {
+        toast.error(result.error || "Failed to save accessibility metadata");
+      }
+    } catch (error) {
+      console.error("Failed to save accessibility:", error);
+      toast.error("Failed to save accessibility metadata");
+    } finally {
+      setAccessibilitySaving(false);
+    }
+  };
+
   const handleSaveField = async (
     field: string,
     value: string | number | null,
@@ -336,6 +407,31 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
       toast.success("Status updated");
     } else {
       toast.error(result.error);
+    }
+  };
+
+  // Story 14.1: Handle ONIX export
+  // Story 14.6: Pass selected version to export
+  const handleOnixExport = async () => {
+    setOnixExporting(true);
+    setShowOnixExport(true);
+    setOnixExportResult(null);
+
+    try {
+      const result = await exportSingleTitle(title.id, {
+        onixVersion: onixVersion,
+      });
+      if (result.success) {
+        setOnixExportResult(result.data);
+      } else {
+        toast.error(result.error || "Export failed");
+        setShowOnixExport(false);
+      }
+    } catch {
+      toast.error("Export failed unexpectedly");
+      setShowOnixExport(false);
+    } finally {
+      setOnixExporting(false);
     }
   };
 
@@ -536,6 +632,93 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
           // The parent component should handle revalidation
           window.location.reload();
         }}
+      />
+
+      {/* Story 14.1: ONIX Export Section */}
+      {/* Story 14.6: Added version selector for 3.0/3.1 */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <FileCode className="h-4 w-4" />
+            ONIX Export
+          </CardTitle>
+          {canEdit && (
+            <div className="flex items-center gap-2">
+              <Select
+                value={onixVersion}
+                onValueChange={(v) => setOnixVersion(v as "3.0" | "3.1")}
+              >
+                <SelectTrigger className="w-[100px] h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3.1">ONIX 3.1</SelectItem>
+                  <SelectItem value="3.0">ONIX 3.0</SelectItem>
+                </SelectContent>
+              </Select>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleOnixExport}
+                        disabled={!title.isbn}
+                      >
+                        Export
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  {!title.isbn && (
+                    <TooltipContent>
+                      <p>Assign an ISBN before exporting to ONIX</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-muted-foreground">
+            {title.isbn ? (
+              <span>
+                Generate ONIX {onixVersion} XML for metadata distribution
+                {onixVersion === "3.0" && (
+                  <span className="text-muted-foreground/70">
+                    {" "}
+                    (legacy channels)
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span className="text-amber-600">
+                ISBN required for ONIX export
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Story 14.1: ONIX Export Modal */}
+      {/* Story 14.6: Pass version for dynamic title */}
+      <ONIXExportModal
+        open={showOnixExport}
+        onOpenChange={setShowOnixExport}
+        exportResult={onixExportResult}
+        isLoading={onixExporting}
+        version={onixVersion}
+      />
+
+      {/* Story 14.3: Accessibility Metadata Section */}
+      <AccessibilityForm
+        data={accessibilityData}
+        onChange={handleAccessibilityChange}
+        onSave={handleSaveAccessibility}
+        readonly={!canEdit}
+        saving={accessibilitySaving}
+        hasChanges={accessibilityChanged}
       />
 
       {/* Sales Summary Placeholder */}

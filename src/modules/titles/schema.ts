@@ -1,5 +1,123 @@
 import { z } from "zod";
 
+// =============================================================================
+// ACCESSIBILITY METADATA (Story 14.3 - Codelist 196)
+// =============================================================================
+
+/**
+ * Valid EPUB accessibility conformance codes (Codelist 196 Type 09: 00-11)
+ * Encodes both EPUB Accessibility version and WCAG conformance level
+ */
+export const VALID_CONFORMANCE = [
+  "00", // No accessibility information
+  "01", // LIA Compliance Scheme
+  "02", // EPUB Accessibility 1.0 compliant
+  "03", // EPUB Accessibility 1.0 + WCAG 2.0 Level A
+  "04", // EPUB Accessibility 1.0 + WCAG 2.0 Level AA
+  "05", // EPUB Accessibility 1.0 + WCAG 2.0 Level AAA
+  "06", // EPUB Accessibility 1.1 + WCAG 2.1 Level A
+  "07", // EPUB Accessibility 1.1 + WCAG 2.1 Level AA
+  "08", // EPUB Accessibility 1.1 + WCAG 2.1 Level AAA
+  "09", // EPUB Accessibility 1.1 + WCAG 2.2 Level A
+  "10", // EPUB Accessibility 1.1 + WCAG 2.2 Level AA
+  "11", // EPUB Accessibility 1.1 + WCAG 2.2 Level AAA
+] as const;
+
+/**
+ * Valid accessibility feature codes (Codelist 196 Type 09: 10-26)
+ */
+export const VALID_FEATURES = [
+  "10", // All textual content can be modified
+  "11", // Language tagging provided
+  "12", // No reading system accessibility options disabled
+  "13", // Table of contents navigation
+  "14", // Index navigation
+  "15", // Reading order provided
+  "16", // Short alternative descriptions
+  "17", // Full alternative descriptions
+  "18", // Visualized data also available as text
+  "19", // ARIA roles provided
+  "20", // Accessible math content (MathML)
+  "21", // Accessible chemistry content (ChemML)
+  "22", // Print-equivalent page numbering
+  // Note: 23 is not used in Codelist 196
+  "24", // Synchronised pre-recorded audio
+  "25", // Text-to-speech hinting provided
+  "26", // No hazards
+] as const;
+
+/**
+ * Valid accessibility hazard codes (Codelist 196 Type 12: 00-07)
+ */
+export const VALID_HAZARDS = [
+  "00", // Unknown
+  "01", // No hazards
+  "02", // Flashing hazard
+  "03", // Motion simulation hazard
+  "04", // Sound hazard
+  "05", // No flashing hazard
+  "06", // No motion simulation hazard
+  "07", // No sound hazard
+] as const;
+
+/**
+ * Hazard mutual exclusivity rules - certain hazard codes cannot coexist
+ * Key: hazard code, Value: array of codes that conflict with it
+ */
+export const HAZARD_CONFLICTS: Record<string, string[]> = {
+  "00": ["01", "02", "03", "04", "05", "06", "07"], // Unknown excludes all
+  "01": ["02", "03", "04"], // No hazards excludes specific hazards
+  "02": ["01", "05"], // Flashing excludes no-hazards and no-flashing
+  "03": ["01", "06"], // Motion excludes no-hazards and no-motion
+  "04": ["01", "07"], // Sound excludes no-hazards and no-sound
+  "05": ["02"], // No flashing excludes flashing
+  "06": ["03"], // No motion excludes motion
+  "07": ["04"], // No sound excludes sound
+};
+
+/**
+ * Validates hazard array for mutual exclusivity conflicts
+ */
+function validateHazardConflicts(hazards: string[]): boolean {
+  for (const h of hazards) {
+    const conflicts = HAZARD_CONFLICTS[h] || [];
+    if (hazards.some((other) => other !== h && conflicts.includes(other))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Accessibility metadata schema for title updates
+ * Story 14.3 - AC1, AC2, AC3
+ */
+export const accessibilitySchema = z.object({
+  epub_accessibility_conformance: z
+    .enum(VALID_CONFORMANCE)
+    .nullable()
+    .optional(),
+  accessibility_features: z
+    .array(z.enum(VALID_FEATURES))
+    .default([])
+    .optional(),
+  accessibility_hazards: z
+    .array(z.enum(VALID_HAZARDS))
+    .default([])
+    .refine(validateHazardConflicts, {
+      message: "Conflicting hazard selections - check mutual exclusivity rules",
+    })
+    .optional(),
+  accessibility_summary: z.string().max(1000).nullable().optional(),
+});
+
+/** Type for accessibility input */
+export type AccessibilityInput = z.infer<typeof accessibilitySchema>;
+
+// =============================================================================
+// PUBLICATION STATUS
+// =============================================================================
+
 /**
  * Publication status enum for Zod validation
  * Matches database enum: draft, pending, published, out_of_print

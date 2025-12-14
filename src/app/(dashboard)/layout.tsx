@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { AnnouncementBannerWrapper } from "@/components/announcement-banner-wrapper";
+import { ImpersonationBannerWrapper } from "@/components/impersonation-banner-wrapper";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { getCurrentUser } from "@/lib/auth";
@@ -56,24 +58,32 @@ export default async function DashboardLayout({
   const userName = user.email?.split("@")[0] || "User";
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar - hidden on mobile */}
-      <DashboardSidebar items={navItems} tenantName={tenantName} />
+    <>
+      {/* Impersonation banner (Story 13.6) - fixed at top when impersonating */}
+      <ImpersonationBannerWrapper />
 
-      {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Header with mobile menu + user dropdown */}
-        <DashboardHeader
-          userName={userName}
-          userEmail={user.email}
-          userRole={user.role}
-          tenantName={tenantName}
-          navItems={navItems}
-        />
+      {/* Platform announcements (Story 13.8) - displays active announcements */}
+      <AnnouncementBannerWrapper userRole={user.role} />
 
-        {/* Page content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar - hidden on mobile */}
+        <DashboardSidebar items={navItems} tenantName={tenantName} />
+
+        {/* Main content area */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Header with mobile menu + user dropdown */}
+          <DashboardHeader
+            userName={userName}
+            userEmail={user.email}
+            userRole={user.role}
+            tenantName={tenantName}
+            navItems={navItems}
+          />
+
+          {/* Page content */}
+          <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

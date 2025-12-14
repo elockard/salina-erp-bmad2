@@ -1,0 +1,85 @@
+{
+  "CodeListNumber": "5",
+  "IssueNumber": 68,
+  "ListName": "Product identifier type",
+  "Codes": [
+    {
+      "CodeValue": "01",
+      "CodeDescription": "Proprietary",
+      "CodeNotes": "Proprietary product identifier",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "02",
+      "CodeDescription": "ISBN-10",
+      "CodeNotes": "International Standard Book Number, 10-digit (deprecated)",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "03",
+      "CodeDescription": "GTIN-13",
+      "CodeNotes": "EAN article number. Note that an ISBN-13 is also a valid GTIN-13",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "04",
+      "CodeDescription": "UPC",
+      "CodeNotes": "UPC article number (12-digit)",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "05",
+      "CodeDescription": "ISMN-10",
+      "CodeNotes": "International Standard Music Number (deprecated)",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "06",
+      "CodeDescription": "DOI",
+      "CodeNotes": "Digital Object Identifier",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "13",
+      "CodeDescription": "LCCN",
+      "CodeNotes": "Library of Congress Control Number",
+      "IssueNumber": 4
+    },
+    {
+      "CodeValue": "14",
+      "CodeDescription": "GTIN-14",
+      "CodeNotes": "14-digit Global Trade Item Number",
+      "IssueNumber": 5
+    },
+    {
+      "CodeValue": "15",
+      "CodeDescription": "ISBN-13",
+      "CodeNotes": "International Standard Book Number, 13-digit",
+      "IssueNumber": 5
+    },
+    {
+      "CodeValue": "17",
+      "CodeDescription": "Legal deposit number",
+      "CodeNotes": "Bibliothèque nationale de France",
+      "IssueNumber": 7
+    },
+    {
+      "CodeValue": "22",
+      "CodeDescription": "URN",
+      "CodeNotes": "Uniform Resource Name",
+      "IssueNumber": 18
+    },
+    {
+      "CodeValue": "23",
+      "CodeDescription": "OCLC number",
+      "CodeNotes": "Online Computer Library Center record number",
+      "IssueNumber": 29
+    },
+    {
+      "CodeValue": "25",
+      "CodeDescription": "ISMN-13",
+      "CodeNotes": "International Standard Music Number, 13-digit",
+      "IssueNumber": 15
+    }
+  ]
+}

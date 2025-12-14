@@ -25,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import type { ONIXVersion } from "../parser/types";
 import type { ExportResultWithValidation } from "../types";
 import { ValidationResultsDisplay } from "./validation-results";
 
@@ -37,6 +38,8 @@ interface ONIXExportModalProps {
   onRevalidate?: () => void;
   /** Whether validation is in progress */
   isValidating?: boolean;
+  /** ONIX version being exported (Story 14.6) */
+  version?: ONIXVersion;
 }
 
 /**
@@ -92,6 +95,7 @@ export function ONIXExportModal({
   isLoading = false,
   onRevalidate,
   isValidating = false,
+  version = "3.1",
 }: ONIXExportModalProps) {
   const [copied, setCopied] = useState(false);
   const validationResult = exportResult?.validation;
@@ -131,7 +135,7 @@ export function ONIXExportModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileCode className="h-5 w-5" />
-            ONIX 3.1 Export
+            ONIX {version} Export
           </DialogTitle>
           <DialogDescription>
             {isLoading

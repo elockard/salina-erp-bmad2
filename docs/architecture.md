@@ -6,7 +6,7 @@ Salina ERP is a multi-tenant SaaS publishing platform built with a modern, serve
 
 **Architectural Approach:** Modular monolith with feature-based organization, serverless deployment, and publishing-specific domain patterns.
 
-**Key Architectural Decisions:**
+**Key Architectural Decisions (Phases 1-2):**
 
 - Next.js 16 App Router with React Server Components for optimal performance
 - Neon PostgreSQL with Row-Level Security for multi-tenant data isolation
@@ -15,6 +15,14 @@ Salina ERP is a multi-tenant SaaS publishing platform built with a modern, serve
 - Inngest for background job processing (royalty calculations, PDF generation)
 - AWS S3 for PDF statement storage with presigned URLs
 - Resend + React Email for transactional emails
+
+**Phase 3 Architectural Additions (Distribution & Scale):**
+
+- ONIX 3.1 metadata generation with XSD validation and Codelist 196 accessibility support
+- REST API with OAuth2 + JWT authentication for third-party integrations
+- Webhook delivery system with HMAC-SHA256 signatures and at-least-once guarantee
+- Channel adapter pattern for Ingram, Amazon, Bowker, and Google integrations
+- Production pipeline with workflow state machine for manuscript-to-print tracking
 
 **Deployment Strategy:** Fly.io with Docker containers, horizontal scaling, serverless PostgreSQL auto-scaling.
 
@@ -83,6 +91,22 @@ npx create-next-app@latest salina-erp \
 | **Error Tracking**      | Sentry (recommended)                     | Latest                | FR77-81          | Production error monitoring, alerting                            |
 | **Deployment**          | Fly.io + Docker                          | N/A                   | All              | Horizontal scaling, global edge, PostgreSQL proximity            |
 
+### Phase 3 Technology Decisions
+
+| Category                | Decision                                 | Version               | Affects FRs      | Rationale                                                        |
+| ----------------------- | ---------------------------------------- | --------------------- | ---------------- | ---------------------------------------------------------------- |
+| **Metadata Standard**   | ONIX 3.1                                 | 3.1.2                 | FR111-FR118      | Current EDItEUR standard, EAA accessibility support, better pricing |
+| **ONIX Validation**     | XSD Schema + Custom Rules                | N/A                   | FR112            | Schema catches structural errors, custom rules for business logic |
+| **Codelist Management** | EDItEUR JSON Codelists                   | Issue 71+             | FR114            | Quarterly updates, machine-readable format                       |
+| **ONIX Import**         | 2.1/3.0/3.1 Parser                       | N/A                   | FR115-FR116      | Support legacy formats for migration                             |
+| **API Authentication**  | OAuth2 + JWT                             | RFC 6749/7519         | FR119-FR122      | Industry standard, tenant-scoped API keys                        |
+| **API Rate Limiting**   | Token Bucket Algorithm                   | N/A                   | FR124            | Fair usage, burst allowance, per-tenant limits                   |
+| **Webhooks**            | HMAC-SHA256 Signatures                   | N/A                   | FR125-FR127      | At-least-once delivery, signature verification                   |
+| **Channel Delivery**    | FTP/SFTP + API                           | N/A                   | FR128-FR140      | Ingram FTP, Amazon API, channel-specific protocols               |
+| **XML Generation**      | Template-based Builder                   | N/A                   | FR111            | Type-safe, validated output, reusable templates                  |
+| **Barcode Generation**  | GS1-128 / GTIN-14                        | N/A                   | FR147            | BISG shipping label compliance                                   |
+| **PDF Labels**          | React-pdf                                | 4.x                   | FR147            | Consistent with statement generation pattern                     |
+
 ## Project Structure
 
 ```
@@ -106,9 +130,21 @@ salina-erp/
 │   │   │   └── portal/               # FR61-66: Author statement access
 │   │   │       ├── page.tsx
 │   │   │       └── statements/
-│   │   ├── api/                      # API routes (if needed later)
-│   │   │   └── inngest/              # Inngest webhook endpoint
-│   │   │       └── route.ts
+│   │   ├── api/                      # API routes
+│   │   │   ├── inngest/              # Inngest webhook endpoint
+│   │   │   │   └── route.ts
+│   │   │   ├── v1/                   # Phase 3: Public REST API (FR119-FR127)
+│   │   │   │   ├── auth/             # OAuth2 token endpoints
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── titles/           # Title CRUD API
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── onix/             # ONIX export API
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── webhooks/         # Webhook management API
+│   │   │   │       └── route.ts
+│   │   │   └── webhooks/             # Incoming webhook receivers
+│   │   │       ├── ingram/           # Ingram order/inventory webhooks
+│   │   │       └── amazon/           # Amazon sales data webhooks
 │   │   ├── layout.tsx                # Root layout
 │   │   └── page.tsx                  # Marketing/landing page
 │   │
@@ -180,12 +216,110 @@ salina-erp/
 │   │   │   ├── queries.ts
 │   │   │   ├── schema.ts
 │   │   │   └── types.ts
-│   │   └── statements/               # FR53-60: Statement generation
+│   │   ├── statements/               # FR53-60: Statement generation
+│   │   │   ├── components/
+│   │   │   ├── pdf-generator.ts      # PDF generation logic
+│   │   │   ├── actions.ts
+│   │   │   ├── queries.ts
+│   │   │   ├── schema.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   # ═══════════════════════════════════════════════════════════════
+│   │   # PHASE 3 MODULES (FR111-FR163)
+│   │   # ═══════════════════════════════════════════════════════════════
+│   │   │
+│   │   ├── onix/                     # FR111-FR118: ONIX 3.1 Core
+│   │   │   ├── components/
+│   │   │   │   ├── onix-export-wizard.tsx
+│   │   │   │   ├── onix-preview.tsx
+│   │   │   │   └── codelist-selector.tsx
+│   │   │   ├── builder/              # ONIX message construction
+│   │   │   │   ├── message-builder.ts
+│   │   │   │   ├── product-builder.ts
+│   │   │   │   ├── blocks/           # Block 1-6 builders
+│   │   │   │   │   ├── descriptive-detail.ts
+│   │   │   │   │   ├── collateral-detail.ts
+│   │   │   │   │   ├── publishing-detail.ts
+│   │   │   │   │   └── product-supply.ts
+│   │   │   │   └── accessibility.ts  # Codelist 196 handler
+│   │   │   ├── parser/               # ONIX import parsers
+│   │   │   │   ├── onix-21-parser.ts
+│   │   │   │   ├── onix-30-parser.ts
+│   │   │   │   └── onix-31-parser.ts
+│   │   │   ├── validator/            # Validation engine
+│   │   │   │   ├── schema-validator.ts
+│   │   │   │   └── business-rules.ts
+│   │   │   ├── codelists/            # EDItEUR codelist management
+│   │   │   │   ├── loader.ts
+│   │   │   │   └── cache.ts
+│   │   │   ├── actions.ts
+│   │   │   ├── queries.ts
+│   │   │   ├── schema.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── api/                      # FR119-FR127: REST API & Webhooks
+│   │   │   ├── auth/                 # OAuth2 + JWT authentication
+│   │   │   │   ├── token-service.ts
+│   │   │   │   └── api-key-service.ts
+│   │   │   ├── middleware/           # API middleware
+│   │   │   │   ├── rate-limiter.ts
+│   │   │   │   ├── auth-middleware.ts
+│   │   │   │   └── tenant-scope.ts
+│   │   │   ├── webhooks/             # Webhook delivery system
+│   │   │   │   ├── dispatcher.ts
+│   │   │   │   ├── signer.ts         # HMAC-SHA256
+│   │   │   │   └── retry-queue.ts
+│   │   │   ├── openapi/              # API documentation
+│   │   │   │   └── spec.yaml
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── channels/                 # FR128-FR140: Channel Integrations
+│   │   │   ├── adapters/             # Channel-specific adapters
+│   │   │   │   ├── base-adapter.ts   # Abstract adapter interface
+│   │   │   │   ├── ingram/           # Ingram/IngramSpark
+│   │   │   │   │   ├── adapter.ts
+│   │   │   │   │   ├── ftp-client.ts
+│   │   │   │   │   └── order-parser.ts
+│   │   │   │   ├── amazon/           # KDP/Advantage
+│   │   │   │   │   ├── adapter.ts
+│   │   │   │   │   ├── api-client.ts
+│   │   │   │   │   └── asin-tracker.ts
+│   │   │   │   ├── bowker/           # Books In Print
+│   │   │   │   │   └── adapter.ts
+│   │   │   │   └── google/           # Google Books
+│   │   │   │       └── adapter.ts
+│   │   │   ├── components/
+│   │   │   │   ├── channel-status.tsx
+│   │   │   │   └── feed-history.tsx
+│   │   │   ├── actions.ts
+│   │   │   ├── queries.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── production/               # FR141-FR146: Production Pipeline
+│   │   │   ├── components/
+│   │   │   │   ├── production-board.tsx
+│   │   │   │   ├── proof-tracker.tsx
+│   │   │   │   └── vendor-selector.tsx
+│   │   │   ├── workflow/             # Production workflow engine
+│   │   │   │   ├── state-machine.ts
+│   │   │   │   └── transitions.ts
+│   │   │   ├── actions.ts
+│   │   │   ├── queries.ts
+│   │   │   ├── schema.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   └── import-export/            # FR148-FR152: Data Import/Export
 │   │       ├── components/
-│   │       ├── pdf-generator.ts      # PDF generation logic
+│   │       │   ├── bulk-import-wizard.tsx
+│   │       │   └── export-builder.tsx
+│   │       ├── templates/            # CSV/Excel templates
+│   │       │   ├── titles-template.ts
+│   │       │   └── contacts-template.ts
+│   │       ├── parsers/              # Import parsers
+│   │       │   ├── csv-parser.ts
+│   │       │   └── excel-parser.ts
 │   │       ├── actions.ts
 │   │       ├── queries.ts
-│   │       ├── schema.ts
 │   │       └── types.ts
 │   │
 │   ├── db/                           # Database
@@ -198,7 +332,16 @@ salina-erp/
 │   │   │   ├── sales.ts              # FR24-29
 │   │   │   ├── returns.ts            # FR30-37
 │   │   │   ├── contracts.ts          # FR38-44
-│   │   │   └── statements.ts         # FR53-60
+│   │   │   ├── statements.ts         # FR53-60
+│   │   │   # Phase 3 schemas
+│   │   │   ├── onix-exports.ts       # FR111-FR118: ONIX export history
+│   │   │   ├── codelists.ts          # FR114: EDItEUR codelist cache
+│   │   │   ├── api-keys.ts           # FR119-FR122: API authentication
+│   │   │   ├── webhook-subscriptions.ts # FR125-FR127: Webhook config
+│   │   │   ├── webhook-deliveries.ts # FR125-FR127: Delivery log
+│   │   │   ├── channel-feeds.ts      # FR128-FR140: Channel feed history
+│   │   │   ├── channel-credentials.ts # FR128-FR140: Channel auth
+│   │   │   └── production-jobs.ts    # FR141-FR146: Production tracking
 │   │   ├── migrations/               # Drizzle migrations (versioned)
 │   │   └── index.ts                  # DB client export
 │   │
@@ -215,7 +358,14 @@ salina-erp/
 │   └── inngest/                      # Inngest background jobs
 │       ├── client.ts                 # Inngest client configuration
 │       ├── calculate-royalties.ts    # FR45-52: Royalty calculation job
-│       └── generate-statements.ts    # FR53-60: PDF generation job
+│       ├── generate-statements.ts    # FR53-60: PDF generation job
+│       # Phase 3 background jobs
+│       ├── onix-export.ts            # FR111: Bulk ONIX generation
+│       ├── onix-validate.ts          # FR112: Async validation
+│       ├── webhook-dispatch.ts       # FR125: Webhook delivery with retry
+│       ├── channel-sync.ts           # FR128-FR140: Channel feed automation
+│       ├── ingram-orders.ts          # FR130: Ingram order ingestion
+│       └── amazon-sales.ts           # FR136: Amazon sales import
 │
 ├── public/                           # Static assets
 │   └── images/
@@ -247,6 +397,21 @@ salina-erp/
 | **Financial Tracking** (FR67-71)      | modules/royalties/                                   | (aggregations from sales, statements) | FinancialReports, LiabilitySummary, RevenueTracking          | None                         |
 | **Reporting & Analytics** (FR72-76)   | modules/reports/ (future), components in each module | (views/aggregations)                  | ReportBuilder, SalesReport, ISBNPoolReport, CSVExport        | None                         |
 | **System Administration** (FR77-81)   | modules/tenant/, lib/logger.ts                       | audit_logs (future)                   | AuditLog, BackgroundJobMonitor, TenantUsage                  | None                         |
+
+### Phase 3 FR Category to Architecture Mapping
+
+| FR Category                           | Module Path                                          | Database Tables                       | Key Components                                               | Background Jobs              |
+| ------------------------------------- | ---------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------ | ---------------------------- |
+| **ONIX Core** (FR111-FR118)           | modules/onix/                                        | onix_exports, codelists               | ONIXExportWizard, ONIXPreview, CodelistSelector              | Inngest: onix-export, onix-validate |
+| **REST API** (FR119-FR124)            | modules/api/, app/api/v1/                            | api_keys, api_logs                    | TokenService, RateLimiter, APIKeyManagement                  | None                         |
+| **Webhooks** (FR125-FR127)            | modules/api/webhooks/                                | webhook_subscriptions, webhook_deliveries | WebhookDispatcher, WebhookSigner, DeliveryLog             | Inngest: webhook-dispatch    |
+| **Ingram Integration** (FR128-FR132)  | modules/channels/adapters/ingram/                    | channel_feeds, channel_credentials    | IngramAdapter, FTPClient, OrderParser                        | Inngest: channel-sync, ingram-orders |
+| **Amazon Integration** (FR133-FR140)  | modules/channels/adapters/amazon/                    | channel_feeds, asin_mappings          | AmazonAdapter, APIClient, ASINTracker                        | Inngest: amazon-sales        |
+| **Production Pipeline** (FR141-FR146) | modules/production/                                  | production_jobs, vendors              | ProductionBoard, ProofTracker, VendorSelector                | None                         |
+| **BISG Labels** (FR147)               | modules/production/                                  | (uses production_jobs)                | LabelGenerator, BarcodeRenderer                              | None                         |
+| **Data Import/Export** (FR148-FR152)  | modules/import-export/                               | import_logs                           | BulkImportWizard, ExportBuilder, CSVParser                   | None                         |
+| **UX Enhancements** (FR153-FR158)     | app/, components/                                    | onboarding_progress, notifications    | OnboardingWizard, NotificationsCenter, HelpProvider          | None                         |
+| **Author Portal Expansion** (FR159-FR163) | app/(portal)/                                     | author_assets, manuscript_uploads     | ProductionStatus, AssetLibrary, ManuscriptUpload             | None                         |
 
 ## Technology Stack Details
 
@@ -662,6 +827,495 @@ export async function assignISBNToTitle(
 - Transaction ensures atomicity: both ISBN update and title update succeed or both rollback
 - If two users try to assign ISBNs simultaneously, one will get the lock, the other waits
 - Once locked ISBN is assigned, second transaction finds next available ISBN
+
+### Pattern 4: ONIX 3.1 Message Builder (Phase 3)
+
+**Problem:** Generate valid ONIX 3.1 XML messages with proper structure, codelist values, and channel-specific formatting.
+
+**Solution: Type-Safe Builder Pattern with Validation**
+
+```typescript
+// modules/onix/builder/message-builder.ts
+
+interface ONIXMessage {
+  header: ONIXHeader;
+  products: ONIXProduct[];
+}
+
+interface ONIXHeader {
+  sender: {
+    senderName: string;
+    contactName?: string;
+    emailAddress?: string;
+  };
+  sentDateTime: Date;
+  messageNote?: string;
+  defaultLanguageOfText?: string;
+  defaultCurrencyCode?: string;
+}
+
+interface ONIXProduct {
+  recordReference: string;
+  notificationType: "03"; // New/updated record
+  productIdentifiers: ProductIdentifier[];
+  descriptiveDetail: DescriptiveDetail;
+  publishingDetail: PublishingDetail;
+  productSupply: ProductSupply[];
+  collateralDetail?: CollateralDetail;
+}
+
+export class ONIXMessageBuilder {
+  private tenantId: string;
+  private products: ONIXProduct[] = [];
+  private header: ONIXHeader;
+
+  constructor(tenantId: string, tenant: Tenant) {
+    this.tenantId = tenantId;
+    this.header = {
+      sender: {
+        senderName: tenant.name,
+        emailAddress: tenant.email,
+      },
+      sentDateTime: new Date(),
+      defaultLanguageOfText: "eng",
+      defaultCurrencyCode: tenant.defaultCurrency || "USD",
+    };
+  }
+
+  addTitle(title: Title, authors: Contact[], options?: ExportOptions): this {
+    const product = new ProductBuilder(title, authors)
+      .withIdentifiers(title.isbn, title.eisbn)
+      .withDescriptiveDetail(title, authors)
+      .withPublishingDetail(title, this.header.sender.senderName)
+      .withProductSupply(title, options?.markets || ["US"])
+      .build();
+
+    this.products.push(product);
+    return this;
+  }
+
+  async validate(): Promise<ValidationResult> {
+    const xml = this.toXML();
+
+    // Layer 1: XSD Schema validation
+    const schemaResult = await validateAgainstSchema(xml, "ONIX_BookProduct_3.1.2.xsd");
+    if (!schemaResult.valid) {
+      return { valid: false, errors: schemaResult.errors };
+    }
+
+    // Layer 2: Business rule validation
+    const businessResult = await validateBusinessRules(this.products);
+    if (!businessResult.valid) {
+      return { valid: false, errors: businessResult.errors };
+    }
+
+    return { valid: true, errors: [] };
+  }
+
+  toXML(options?: { prettyPrint?: boolean; version?: "3.0" | "3.1" }): string {
+    const version = options?.version || "3.1";
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage release="${version}" xmlns="http://ns.editeur.org/onix/3.${version === "3.1" ? "1" : "0"}/reference">
+  ${this.buildHeader()}
+  ${this.products.map((p) => this.buildProduct(p)).join("\n")}
+</ONIXMessage>`;
+  }
+
+  private buildHeader(): string {
+    return `<Header>
+    <Sender>
+      <SenderName>${escapeXML(this.header.sender.senderName)}</SenderName>
+      ${this.header.sender.emailAddress ? `<EmailAddress>${this.header.sender.emailAddress}</EmailAddress>` : ""}
+    </Sender>
+    <SentDateTime>${formatONIXDate(this.header.sentDateTime)}</SentDateTime>
+    ${this.header.defaultLanguageOfText ? `<DefaultLanguageOfText>${this.header.defaultLanguageOfText}</DefaultLanguageOfText>` : ""}
+    ${this.header.defaultCurrencyCode ? `<DefaultCurrencyCode>${this.header.defaultCurrencyCode}</DefaultCurrencyCode>` : ""}
+  </Header>`;
+  }
+
+  private buildProduct(product: ONIXProduct): string {
+    // Build complete Product element with all blocks
+    // ...
+  }
+}
+```
+
+**Key Features:**
+- Type-safe builder prevents invalid structures
+- Two-layer validation (XSD + business rules)
+- ONIX 3.0 fallback for legacy channels
+- Codelist validation against EDItEUR values
+- XML escaping prevents injection attacks
+
+### Pattern 5: Channel Adapter Architecture (Phase 3)
+
+**Problem:** Integrate with multiple distribution channels (Ingram, Amazon, Bowker) that have different protocols, data formats, and authentication methods.
+
+**Solution: Abstract Adapter Pattern with Channel-Specific Implementations**
+
+```typescript
+// modules/channels/adapters/base-adapter.ts
+
+export interface ChannelAdapter {
+  readonly channelId: string;
+  readonly channelName: string;
+
+  // Connection lifecycle
+  connect(credentials: ChannelCredentials): Promise<void>;
+  disconnect(): Promise<void>;
+  testConnection(): Promise<ConnectionTestResult>;
+
+  // ONIX feed operations
+  sendONIXFeed(message: string, options?: FeedOptions): Promise<FeedResult>;
+  getFeedStatus(feedId: string): Promise<FeedStatus>;
+
+  // Data ingestion (channel-specific)
+  fetchOrders?(since: Date): Promise<Order[]>;
+  fetchSalesData?(period: DateRange): Promise<SalesData[]>;
+  fetchInventory?(): Promise<InventorySnapshot>;
+}
+
+export abstract class BaseChannelAdapter implements ChannelAdapter {
+  abstract readonly channelId: string;
+  abstract readonly channelName: string;
+
+  protected credentials: ChannelCredentials | null = null;
+  protected tenantId: string;
+
+  constructor(tenantId: string) {
+    this.tenantId = tenantId;
+  }
+
+  abstract connect(credentials: ChannelCredentials): Promise<void>;
+  abstract disconnect(): Promise<void>;
+  abstract testConnection(): Promise<ConnectionTestResult>;
+  abstract sendONIXFeed(message: string, options?: FeedOptions): Promise<FeedResult>;
+  abstract getFeedStatus(feedId: string): Promise<FeedStatus>;
+
+  // Shared logging and error handling
+  protected async logFeedActivity(
+    action: "send" | "status" | "error",
+    data: Record<string, any>
+  ): Promise<void> {
+    await db.insert(channelFeeds).values({
+      tenant_id: this.tenantId,
+      channel_id: this.channelId,
+      action,
+      data: JSON.stringify(data),
+      created_at: new Date(),
+    });
+  }
+}
+
+// modules/channels/adapters/ingram/adapter.ts
+
+export class IngramAdapter extends BaseChannelAdapter {
+  readonly channelId = "ingram";
+  readonly channelName = "Ingram Content Group";
+
+  private ftpClient: FTPClient | null = null;
+
+  async connect(credentials: IngramCredentials): Promise<void> {
+    this.credentials = credentials;
+    this.ftpClient = new FTPClient({
+      host: credentials.ftpHost,
+      user: credentials.ftpUser,
+      password: credentials.ftpPassword,
+      secure: true, // FTPS
+    });
+    await this.ftpClient.connect();
+  }
+
+  async sendONIXFeed(message: string, options?: FeedOptions): Promise<FeedResult> {
+    if (!this.ftpClient) throw new Error("Not connected to Ingram");
+
+    const filename = `ONIX_${this.tenantId}_${Date.now()}.xml`;
+    const remotePath = `/inbound/${filename}`;
+
+    try {
+      await this.ftpClient.upload(message, remotePath);
+
+      const result: FeedResult = {
+        feedId: filename,
+        status: "submitted",
+        submittedAt: new Date(),
+        productCount: countProducts(message),
+      };
+
+      await this.logFeedActivity("send", result);
+      return result;
+    } catch (error) {
+      await this.logFeedActivity("error", { error: error.message });
+      throw error;
+    }
+  }
+
+  // Ingram-specific: Fetch order data
+  async fetchOrders(since: Date): Promise<Order[]> {
+    if (!this.ftpClient) throw new Error("Not connected to Ingram");
+
+    const files = await this.ftpClient.list("/outbound/orders/");
+    const newFiles = files.filter((f) => f.modifiedAt > since);
+
+    const orders: Order[] = [];
+    for (const file of newFiles) {
+      const content = await this.ftpClient.download(file.path);
+      const parsed = parseIngramOrderFile(content);
+      orders.push(...parsed);
+    }
+
+    return orders;
+  }
+}
+
+// modules/channels/adapters/amazon/adapter.ts
+
+export class AmazonAdapter extends BaseChannelAdapter {
+  readonly channelId = "amazon";
+  readonly channelName = "Amazon KDP/Advantage";
+
+  private apiClient: AmazonAPIClient | null = null;
+
+  async connect(credentials: AmazonCredentials): Promise<void> {
+    this.credentials = credentials;
+    this.apiClient = new AmazonAPIClient({
+      accessKeyId: credentials.accessKeyId,
+      secretAccessKey: credentials.secretAccessKey,
+      marketplaceId: credentials.marketplaceId,
+    });
+    await this.apiClient.authenticate();
+  }
+
+  async sendONIXFeed(message: string, options?: FeedOptions): Promise<FeedResult> {
+    if (!this.apiClient) throw new Error("Not connected to Amazon");
+
+    // Amazon uses Feeds API for ONIX submission
+    const feedId = await this.apiClient.submitFeed({
+      feedType: "POST_PRODUCT_DATA",
+      feedContent: message,
+      contentType: "text/xml; charset=UTF-8",
+    });
+
+    const result: FeedResult = {
+      feedId,
+      status: "processing",
+      submittedAt: new Date(),
+      productCount: countProducts(message),
+    };
+
+    await this.logFeedActivity("send", result);
+    return result;
+  }
+
+  // Amazon-specific: Track ASIN mappings
+  async linkASINs(isbns: string[]): Promise<ASINMapping[]> {
+    if (!this.apiClient) throw new Error("Not connected to Amazon");
+
+    const mappings: ASINMapping[] = [];
+    for (const isbn of isbns) {
+      const asin = await this.apiClient.getASINByISBN(isbn);
+      if (asin) {
+        mappings.push({ isbn, asin, linkedAt: new Date() });
+      }
+    }
+
+    return mappings;
+  }
+}
+
+// Factory function for getting channel adapter
+export function getChannelAdapter(
+  channelId: string,
+  tenantId: string
+): ChannelAdapter {
+  switch (channelId) {
+    case "ingram":
+      return new IngramAdapter(tenantId);
+    case "amazon":
+      return new AmazonAdapter(tenantId);
+    case "bowker":
+      return new BowkerAdapter(tenantId);
+    case "google":
+      return new GoogleBooksAdapter(tenantId);
+    default:
+      throw new Error(`Unknown channel: ${channelId}`);
+  }
+}
+```
+
+**Implementation Notes:**
+- Abstract base class enforces consistent interface
+- Channel-specific protocols encapsulated (FTP for Ingram, API for Amazon)
+- Credential management per tenant + channel
+- Activity logging for audit and debugging
+- Factory pattern for adapter instantiation
+
+### Pattern 6: Webhook Delivery with At-Least-Once Guarantee (Phase 3)
+
+**Problem:** Deliver webhook events reliably to third-party endpoints with retry logic and signature verification.
+
+**Solution: Queue-Based Dispatch with HMAC Signing**
+
+```typescript
+// modules/api/webhooks/dispatcher.ts
+
+import { inngest } from "@/inngest/client";
+import crypto from "crypto";
+
+interface WebhookEvent {
+  id: string;
+  type: string; // e.g., "title.created", "onix.exported"
+  tenantId: string;
+  data: Record<string, any>;
+  timestamp: Date;
+}
+
+interface WebhookSubscription {
+  id: string;
+  tenantId: string;
+  url: string;
+  secret: string; // For HMAC signing
+  events: string[]; // Event types subscribed to
+  isActive: boolean;
+}
+
+export class WebhookDispatcher {
+  // Queue event for delivery
+  async dispatch(event: WebhookEvent): Promise<void> {
+    // Find all active subscriptions for this event type
+    const subscriptions = await db.query.webhookSubscriptions.findMany({
+      where: and(
+        eq(webhookSubscriptions.tenant_id, event.tenantId),
+        eq(webhookSubscriptions.is_active, true),
+        arrayContains(webhookSubscriptions.events, event.type)
+      ),
+    });
+
+    // Queue delivery for each subscription
+    for (const subscription of subscriptions) {
+      await inngest.send({
+        name: "webhook/deliver",
+        data: {
+          eventId: event.id,
+          subscriptionId: subscription.id,
+          url: subscription.url,
+          secret: subscription.secret,
+          payload: {
+            id: event.id,
+            type: event.type,
+            created_at: event.timestamp.toISOString(),
+            data: event.data,
+          },
+        },
+      });
+    }
+  }
+}
+
+// inngest/webhook-dispatch.ts
+
+export const webhookDeliver = inngest.createFunction(
+  {
+    id: "webhook-deliver",
+    retries: 5, // Retry up to 5 times
+    backoff: {
+      type: "exponential",
+      initialInterval: "30s",
+      maxInterval: "1h",
+    },
+  },
+  { event: "webhook/deliver" },
+  async ({ event, step }) => {
+    const { subscriptionId, url, secret, payload } = event.data;
+
+    // Sign the payload
+    const signature = signPayload(JSON.stringify(payload), secret);
+
+    // Attempt delivery
+    const result = await step.run("deliver", async () => {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Webhook-Signature": signature,
+          "X-Webhook-Id": payload.id,
+          "X-Webhook-Timestamp": payload.created_at,
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(30000), // 30s timeout
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook delivery failed: ${response.status}`);
+      }
+
+      return { status: response.status };
+    });
+
+    // Log successful delivery
+    await step.run("log-success", async () => {
+      await db.insert(webhookDeliveries).values({
+        subscription_id: subscriptionId,
+        event_id: payload.id,
+        status: "delivered",
+        response_status: result.status,
+        delivered_at: new Date(),
+      });
+    });
+  }
+);
+
+// HMAC-SHA256 signature generation
+function signPayload(payload: string, secret: string): string {
+  const timestamp = Date.now().toString();
+  const signaturePayload = `${timestamp}.${payload}`;
+
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(signaturePayload)
+    .digest("hex");
+
+  return `t=${timestamp},v1=${signature}`;
+}
+
+// Signature verification helper (for webhook receivers)
+export function verifyWebhookSignature(
+  payload: string,
+  signature: string,
+  secret: string,
+  tolerance = 300 // 5 minutes
+): boolean {
+  const parts = signature.split(",");
+  const timestamp = parts.find((p) => p.startsWith("t="))?.slice(2);
+  const receivedSig = parts.find((p) => p.startsWith("v1="))?.slice(3);
+
+  if (!timestamp || !receivedSig) return false;
+
+  // Check timestamp is within tolerance
+  const age = (Date.now() - parseInt(timestamp)) / 1000;
+  if (age > tolerance) return false;
+
+  // Verify signature
+  const expectedSig = crypto
+    .createHmac("sha256", secret)
+    .update(`${timestamp}.${payload}`)
+    .digest("hex");
+
+  return crypto.timingSafeEqual(
+    Buffer.from(receivedSig),
+    Buffer.from(expectedSig)
+  );
+}
+```
+
+**Delivery Guarantees:**
+- At-least-once delivery via Inngest retry queue
+- Exponential backoff (30s → 1m → 2m → 4m → 8m)
+- HMAC-SHA256 signatures prevent tampering
+- Timestamp in signature prevents replay attacks
+- 30-second timeout per delivery attempt
+- Full audit log of all delivery attempts
 
 ## Implementation Patterns
 
@@ -2225,7 +2879,107 @@ npm run test         # Run tests (when implemented)
 
 ---
 
+## Phase 3 Architecture Decision Records
+
+### ADR-008: ONIX 3.1 over ONIX 3.0
+
+**Decision:** Implement ONIX 3.1 as the primary metadata standard with 3.0 export fallback.
+
+**Rationale:**
+
+- **Current standard** - ONIX 3.1 released March 2023, recommended by EDItEUR
+- **Accessibility compliance** - Codelist 196 required for European Accessibility Act (June 2025)
+- **Better pricing/tax handling** - Critical for international distribution
+- **Forward-compatible** - Building new system without legacy constraints
+- **Industry deadline** - Amazon mandates ONIX 3 by March 2026
+
+**Consequences:**
+
+- Must maintain ONIX 3.0 export capability for legacy channels
+- Need codelist management system for quarterly EDItEUR updates
+- XSD validation requires latest schema files
+- Channel-specific output profiles needed
+
+### ADR-009: OAuth2 + JWT for API Authentication
+
+**Decision:** Use OAuth2 with JWT tokens for public REST API authentication.
+
+**Rationale:**
+
+- **Industry standard** - RFC 6749 (OAuth2) and RFC 7519 (JWT) are widely adopted
+- **Stateless verification** - JWTs can be validated without database lookup
+- **Tenant scoping** - Claims include tenant_id for multi-tenant isolation
+- **Revocable keys** - API keys can be rotated without invalidating all tokens
+- **Developer familiarity** - Standard pattern reduces integration friction
+
+**Consequences:**
+
+- Need secure key storage for signing secrets
+- Token expiration strategy required (15-minute access, 7-day refresh)
+- Rate limiting must be tenant-aware
+- API key management UI required
+
+### ADR-010: Webhook Delivery with At-Least-Once Guarantee
+
+**Decision:** Use Inngest queue for webhook delivery with HMAC-SHA256 signatures.
+
+**Rationale:**
+
+- **Reliability** - At-least-once delivery via retry queue
+- **Security** - HMAC signatures prevent tampering, timestamps prevent replay
+- **Observability** - Full audit log of delivery attempts
+- **Scalability** - Inngest handles queue infrastructure
+- **Consistency** - Same pattern as existing background jobs
+
+**Consequences:**
+
+- Receivers must handle duplicate events (idempotency)
+- Retry backoff may delay notifications (up to 1 hour on failures)
+- Webhook secret management per subscription
+- Need endpoint for delivery status queries
+
+### ADR-011: Channel Adapter Pattern for Distribution
+
+**Decision:** Use abstract adapter pattern for channel integrations (Ingram, Amazon, Bowker, Google).
+
+**Rationale:**
+
+- **Encapsulation** - Protocol differences hidden behind common interface
+- **Testability** - Can mock adapters for unit testing
+- **Extensibility** - New channels added without core changes
+- **Separation of concerns** - Channel-specific logic isolated
+- **Credential isolation** - Per-tenant, per-channel credentials
+
+**Consequences:**
+
+- Must maintain adapters as channel APIs evolve
+- FTP client needed for Ingram (different from HTTP patterns)
+- Error handling varies by channel protocol
+- Feed status polling may require background jobs
+
+### ADR-012: Template-Based ONIX Builder
+
+**Decision:** Use type-safe builder pattern for ONIX XML generation instead of string templates.
+
+**Rationale:**
+
+- **Type safety** - TypeScript catches structural errors at compile time
+- **Validation hooks** - Built-in XSD and business rule validation
+- **Maintainability** - Easier to modify than string concatenation
+- **Reusability** - Product builders compose into message builders
+- **Testing** - Individual builders can be unit tested
+
+**Consequences:**
+
+- More code than simple templates
+- Must maintain types matching ONIX schema
+- XML escaping handled at builder level
+- Channel-specific formatting via options
+
+---
+
 _Generated by BMAD Decision Architecture Workflow v1.0_
-_Date: 2025-11-21_
+_Phase 1-2 Date: 2025-11-21_
+_Phase 3 Update: 2025-12-12_
 _For: BMad_
 _Project: Salina Bookshelf ERP_

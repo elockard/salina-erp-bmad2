@@ -1,0 +1,175 @@
+{
+  "CodeListNumber": "196",
+  "IssueNumber": 68,
+  "ListName": "E-publication accessibility details",
+  "Codes": [
+    {
+      "CodeValue": "00",
+      "CodeDescription": "Accessibility summary",
+      "CodeNotes": "Indicates a short text summary of the accessibility of the product or content",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "01",
+      "CodeDescription": "LIA Compliance Scheme",
+      "CodeNotes": "Conforms to the LIA Compliance Scheme requirements",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "02",
+      "CodeDescription": "EPUB Accessibility Specification 1.0 A",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.0 (no WCAG level specified)",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "03",
+      "CodeDescription": "EPUB Accessibility Specification 1.0 AA",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.0 with WCAG 2.0 Level A",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "04",
+      "CodeDescription": "EPUB Accessibility Specification 1.0 AA",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.0 with WCAG 2.0 Level AA",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "05",
+      "CodeDescription": "EPUB Accessibility Specification 1.0 AAA",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.0 with WCAG 2.0 Level AAA",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "06",
+      "CodeDescription": "EPUB Accessibility Specification 1.1 A",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.1 with WCAG 2.1 Level A",
+      "IssueNumber": 61
+    },
+    {
+      "CodeValue": "07",
+      "CodeDescription": "EPUB Accessibility Specification 1.1 AA",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.1 with WCAG 2.1 Level AA",
+      "IssueNumber": 61
+    },
+    {
+      "CodeValue": "08",
+      "CodeDescription": "EPUB Accessibility Specification 1.1 AAA",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.1 with WCAG 2.1 Level AAA",
+      "IssueNumber": 61
+    },
+    {
+      "CodeValue": "09",
+      "CodeDescription": "EPUB Accessibility Specification 1.1 WCAG 2.2 A",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.1 with WCAG 2.2 Level A",
+      "IssueNumber": 65
+    },
+    {
+      "CodeValue": "10",
+      "CodeDescription": "EPUB Accessibility Specification 1.1 WCAG 2.2 AA",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.1 with WCAG 2.2 Level AA",
+      "IssueNumber": 65
+    },
+    {
+      "CodeValue": "11",
+      "CodeDescription": "EPUB Accessibility Specification 1.1 WCAG 2.2 AAA",
+      "CodeNotes": "Conforms to EPUB Accessibility 1.1 with WCAG 2.2 Level AAA",
+      "IssueNumber": 65
+    },
+    {
+      "CodeValue": "10",
+      "CodeDescription": "All textual content can be modified",
+      "CodeNotes": "Text can be resized, line height, spacing etc can be modified",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "11",
+      "CodeDescription": "Language tagging provided",
+      "CodeNotes": "Content includes appropriate language tagging for text-to-speech",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "12",
+      "CodeDescription": "No reading system accessibility options disabled",
+      "CodeNotes": "Content does not disable reading system features like text-to-speech",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "13",
+      "CodeDescription": "Table of contents navigation",
+      "CodeNotes": "Content includes a table of contents that provides links to the major sections",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "14",
+      "CodeDescription": "Index navigation",
+      "CodeNotes": "Content includes an index that provides direct access to specific content",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "15",
+      "CodeDescription": "Reading order defined",
+      "CodeNotes": "Content reading order is defined to ensure logical reading sequence",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "16",
+      "CodeDescription": "Short alternative descriptions",
+      "CodeNotes": "Short alternative descriptions provided for images and graphics",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "17",
+      "CodeDescription": "Full alternative descriptions",
+      "CodeNotes": "Full alternative descriptions provided for images and graphics",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "18",
+      "CodeDescription": "Visualized data also available as non-graphical data",
+      "CodeNotes": "Charts, graphs and other visual representations are also available as non-visual data",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "19",
+      "CodeDescription": "Accessible rich content",
+      "CodeNotes": "Rich content like video has accessibility features like captions",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "20",
+      "CodeDescription": "Accessible math content (MathML)",
+      "CodeNotes": "Mathematical content uses MathML",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "21",
+      "CodeDescription": "Accessible chemistry content (ChemML)",
+      "CodeNotes": "Chemical content uses ChemML",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "22",
+      "CodeDescription": "Print-equivalent page numbering",
+      "CodeNotes": "Print-equivalent page numbers are included",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "24",
+      "CodeDescription": "Synchronized pre-recorded audio",
+      "CodeNotes": "Content includes synchronized pre-recorded audio narration",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "25",
+      "CodeDescription": "Text-to-speech hinting provided",
+      "CodeNotes": "Includes SSML or other text-to-speech hinting to improve pronunciation",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "26",
+      "CodeDescription": "Dyslexia readability",
+      "CodeNotes": "Content has been specifically designed for dyslexic readers",
+      "IssueNumber": 55
+    }
+  ]
+}

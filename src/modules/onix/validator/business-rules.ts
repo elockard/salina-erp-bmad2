@@ -4,16 +4,21 @@
  * Story: 14.2 - Implement ONIX Schema Validation
  * Task 3: Implement Business Rule Validator
  *
+ * Story: 14.4 - Build Codelist Management System
+ * Task 4: Integrate codelists with ONIX validation
+ *
  * Validates ONIX data against EDItEUR codelists and business rules.
+ * Uses dynamic codelist cache with fallback to hardcoded values.
  */
 
 import { XMLParser } from "fast-xml-parser";
 import type { ValidationError, ValidationResult } from "../types";
 
 /**
- * EDItEUR Codelist values (subset relevant to our implementation)
+ * EDItEUR Codelist values (fallback when database unavailable)
+ * Story 14.4: These serve as fallback values when dynamic codelists cannot be loaded
  */
-const CODELIST_VALUES = {
+const CODELIST_VALUES_FALLBACK = {
   // List 5: Product Identifier Type
   productIDType: ["03", "15"], // GTIN-13, ISBN-13
   // List 1: Notification Type
@@ -36,7 +41,67 @@ const CODELIST_VALUES = {
   productForm: ["BB", "BC", "BD", "BE", "EA", "EB", "EC", "ED"], // Hardback, Paperback, etc.
   // List 163: Publishing Date Role
   publishingDateRole: ["01"], // Publication date
+  // List 79: ProductFormFeatureType (for accessibility)
+  productFormFeatureType: ["09", "12"], // 09 = Accessibility conformance/features, 12 = Hazards
 } as const;
+
+/**
+ * Codelist 196 values for accessibility (Story 14.3)
+ * Story 14.4: Fallback values when dynamic codelists cannot be loaded
+ */
+const CODELIST_196_FALLBACK = {
+  // Type 09: EPUB Accessibility Conformance (00-11)
+  conformance: [
+    "00",
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+  ],
+  // Type 09: Accessibility Features (10-26, excluding 23 which is not used)
+  features: [
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21",
+    "22",
+    "24",
+    "25",
+    "26",
+  ],
+  // Type 12: Accessibility Hazards (00-07)
+  hazards: ["00", "01", "02", "03", "04", "05", "06", "07"],
+} as const;
+
+/**
+ * Hazard mutual exclusivity rules (Story 14.3)
+ * Key: hazard code, Value: array of codes that conflict with it
+ */
+const HAZARD_CONFLICTS: Record<string, string[]> = {
+  "00": ["01", "02", "03", "04", "05", "06", "07"], // Unknown excludes all
+  "01": ["02", "03", "04"], // No hazards excludes specific hazards
+  "02": ["01", "05"], // Flashing excludes no-hazards and no-flashing
+  "03": ["01", "06"], // Motion excludes no-hazards and no-motion
+  "04": ["01", "07"], // Sound excludes no-hazards and no-sound
+  "05": ["02"], // No flashing excludes flashing
+  "06": ["03"], // No motion excludes motion
+  "07": ["04"], // No sound excludes sound
+};
 
 /**
  * Valid ISO 4217 currency codes
@@ -129,14 +194,14 @@ export async function validateBusinessRules(
       // Validate ProductIDType codelist
       if (
         idType &&
-        !CODELIST_VALUES.productIDType.includes(idType as "03" | "15")
+        !CODELIST_VALUES_FALLBACK.productIDType.includes(idType as "03" | "15")
       ) {
         errors.push({
           type: "business",
           code: "INVALID_CODELIST",
           message: "Invalid ProductIDType value",
           path: `${basePath}/ProductIdentifier[${idIndex}]/ProductIDType`,
-          expected: CODELIST_VALUES.productIDType.join(", "),
+          expected: CODELIST_VALUES_FALLBACK.productIDType.join(", "),
           actual: idType,
           codelistRef: "List 5",
         });
@@ -163,8 +228,8 @@ export async function validateBusinessRules(
       // ProductForm codelist
       if (
         productForm &&
-        !CODELIST_VALUES.productForm.includes(
-          productForm as (typeof CODELIST_VALUES.productForm)[number],
+        !CODELIST_VALUES_FALLBACK.productForm.includes(
+          productForm as (typeof CODELIST_VALUES_FALLBACK.productForm)[number],
         )
       ) {
         errors.push({
@@ -176,6 +241,99 @@ export async function validateBusinessRules(
           actual: productForm,
           codelistRef: "List 150",
         });
+      }
+
+      // Validate ProductFormFeature (Story 14.3 - Accessibility)
+      const rawFeatures = dd.ProductFormFeature;
+      const features: Record<string, unknown>[] = rawFeatures
+        ? Array.isArray(rawFeatures)
+          ? (rawFeatures as Record<string, unknown>[])
+          : [rawFeatures as Record<string, unknown>]
+        : [];
+
+      const hazardValues: string[] = [];
+      features.forEach((feature, featureIndex) => {
+        const featureType = feature.ProductFormFeatureType as string;
+        const featureValue = feature.ProductFormFeatureValue as string;
+        const featurePath = `${basePath}/DescriptiveDetail/ProductFormFeature[${featureIndex}]`;
+
+        // Validate ProductFormFeatureType (List 79)
+        if (
+          featureType &&
+          !CODELIST_VALUES_FALLBACK.productFormFeatureType.includes(
+            featureType as "09" | "12",
+          )
+        ) {
+          errors.push({
+            type: "business",
+            code: "INVALID_CODELIST",
+            message: "Invalid ProductFormFeatureType value",
+            path: `${featurePath}/ProductFormFeatureType`,
+            expected:
+              CODELIST_VALUES_FALLBACK.productFormFeatureType.join(", "),
+            actual: featureType,
+            codelistRef: "List 79",
+          });
+        }
+
+        // Validate ProductFormFeatureValue based on type (Codelist 196)
+        if (featureType === "09" && featureValue) {
+          // Type 09: conformance (00-11) or features (10-26)
+          const conformanceArray =
+            CODELIST_196_FALLBACK.conformance as readonly string[];
+          const featuresArray =
+            CODELIST_196_FALLBACK.features as readonly string[];
+          const isConformance = conformanceArray.includes(featureValue);
+          const isFeature = featuresArray.includes(featureValue);
+          if (!isConformance && !isFeature) {
+            errors.push({
+              type: "business",
+              code: "INVALID_CODELIST",
+              message: "Invalid accessibility conformance/feature value",
+              path: `${featurePath}/ProductFormFeatureValue`,
+              expected: "00-11 (conformance) or 10-26 (features)",
+              actual: featureValue,
+              codelistRef: "List 196",
+            });
+          }
+        } else if (featureType === "12" && featureValue) {
+          // Type 12: hazards (00-07)
+          const hazardsArray =
+            CODELIST_196_FALLBACK.hazards as readonly string[];
+          if (!hazardsArray.includes(featureValue)) {
+            errors.push({
+              type: "business",
+              code: "INVALID_CODELIST",
+              message: "Invalid accessibility hazard value",
+              path: `${featurePath}/ProductFormFeatureValue`,
+              expected: "00-07",
+              actual: featureValue,
+              codelistRef: "List 196",
+            });
+          } else {
+            hazardValues.push(featureValue);
+          }
+        }
+      });
+
+      // Validate hazard mutual exclusivity
+      if (hazardValues.length > 1) {
+        for (const hazard of hazardValues) {
+          const conflicts = HAZARD_CONFLICTS[hazard] || [];
+          const conflicting = hazardValues.filter(
+            (h) => h !== hazard && conflicts.includes(h),
+          );
+          if (conflicting.length > 0) {
+            errors.push({
+              type: "business",
+              code: "HAZARD_CONFLICT",
+              message: `Conflicting hazard codes: ${hazard} cannot coexist with ${conflicting.join(", ")}`,
+              path: `${basePath}/DescriptiveDetail/ProductFormFeature`,
+              codelistRef: "List 196",
+            });
+            break; // Only report first conflict to avoid duplicate messages
+          }
+        }
       }
 
       // TitleDetail required

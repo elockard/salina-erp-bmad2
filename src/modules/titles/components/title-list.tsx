@@ -1,6 +1,6 @@
 "use client";
 
-import { Book, Search } from "lucide-react";
+import { Accessibility, Book, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,8 +11,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { PublicationStatus, TitleWithAuthor } from "../types";
+import {
+  getAccessibilityStatus,
+  getAccessibilityStatusLabel,
+  getAccessibilityStatusStyle,
+} from "../utils";
+
+/**
+ * Story 14.3 - AC6: Accessibility filter options
+ * - "all": Show all titles regardless of accessibility metadata
+ * - "needs_setup": Show only titles missing minimum accessibility metadata
+ * - "has_metadata": Show only titles with accessibility metadata configured
+ */
+export type AccessibilityFilter = "all" | "needs_setup" | "has_metadata";
 
 interface TitleListProps {
   titles: TitleWithAuthor[];
@@ -22,6 +41,8 @@ interface TitleListProps {
   onSearchChange: (query: string) => void;
   statusFilter: PublicationStatus | "all";
   onStatusFilterChange: (status: PublicationStatus | "all") => void;
+  accessibilityFilter: AccessibilityFilter;
+  onAccessibilityFilterChange: (filter: AccessibilityFilter) => void;
   loading: boolean;
 }
 
@@ -70,6 +91,47 @@ function ISBNIndicator({ isbn }: { isbn: string | null }) {
 }
 
 /**
+ * Accessibility status indicator
+ * Story 14.3 - AC5: Shows accessibility metadata status for EAA compliance
+ */
+function AccessibilityIndicator({ title }: { title: TitleWithAuthor }) {
+  const status = getAccessibilityStatus({
+    epub_accessibility_conformance:
+      title.epub_accessibility_conformance ?? null,
+    accessibility_features: title.accessibility_features ?? null,
+    accessibility_hazards: title.accessibility_hazards ?? null,
+    accessibility_summary: title.accessibility_summary ?? null,
+  });
+
+  // Don't show indicator if status is missing (would be too noisy)
+  if (status === "missing") return null;
+
+  const label = getAccessibilityStatusLabel(status);
+  const style = getAccessibilityStatusStyle(status);
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className={cn(
+              "inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded",
+              style,
+            )}
+          >
+            <Accessibility className="h-2.5 w-2.5" />
+            {status === "complete" && "A11y"}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Accessibility: {label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+/**
  * Title List component for the left panel
  *
  * AC 2: Left panel displays title list with search and filter
@@ -88,6 +150,8 @@ export function TitleList({
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
+  accessibilityFilter,
+  onAccessibilityFilterChange,
   loading,
 }: TitleListProps) {
   // Empty state (no titles at all)
@@ -95,7 +159,8 @@ export function TitleList({
     !loading &&
     titles.length === 0 &&
     !searchQuery &&
-    statusFilter === "all"
+    statusFilter === "all" &&
+    accessibilityFilter === "all"
   ) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
@@ -125,24 +190,44 @@ export function TitleList({
           />
         </div>
 
-        {/* Status Filter Dropdown */}
-        <Select
-          value={statusFilter}
-          onValueChange={(value) =>
-            onStatusFilterChange(value as PublicationStatus | "all")
-          }
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="out_of_print">Out of Print</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Filter Dropdowns */}
+        <div className="flex gap-2">
+          {/* Status Filter Dropdown */}
+          <Select
+            value={statusFilter}
+            onValueChange={(value) =>
+              onStatusFilterChange(value as PublicationStatus | "all")
+            }
+          >
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="out_of_print">Out of Print</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Accessibility Filter Dropdown - Story 14.3 AC6 */}
+          <Select
+            value={accessibilityFilter}
+            onValueChange={(value) =>
+              onAccessibilityFilterChange(value as AccessibilityFilter)
+            }
+          >
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="Accessibility" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All A11y</SelectItem>
+              <SelectItem value="needs_setup">Needs Setup</SelectItem>
+              <SelectItem value="has_metadata">Has A11y</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Loading State */}
@@ -163,13 +248,19 @@ export function TitleList({
       {/* No Results State */}
       {!loading &&
         titles.length === 0 &&
-        (searchQuery || statusFilter !== "all") && (
+        (searchQuery ||
+          statusFilter !== "all" ||
+          accessibilityFilter !== "all") && (
           <div className="flex-1 flex items-center justify-center p-8">
             <p className="text-sm text-muted-foreground text-center">
               No titles found
               {searchQuery && ` matching "${searchQuery}"`}
               {statusFilter !== "all" &&
                 ` with status "${statusFilter.replace("_", " ")}"`}
+              {accessibilityFilter === "needs_setup" &&
+                " needing accessibility setup"}
+              {accessibilityFilter === "has_metadata" &&
+                " with accessibility metadata"}
             </p>
           </div>
         )}
@@ -202,6 +293,7 @@ export function TitleList({
                     <div className="flex items-center gap-2 mt-1">
                       {getStatusBadge(title.publication_status)}
                       <ISBNIndicator isbn={title.isbn} />
+                      <AccessibilityIndicator title={title} />
                     </div>
                   </div>
                 </button>

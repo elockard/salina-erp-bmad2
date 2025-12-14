@@ -225,3 +225,88 @@ export async function downloadIngramOrderFile(
     client.close();
   }
 }
+
+/**
+ * List files in Ingram's outbound inventory directory
+ *
+ * Story 16.4 - AC4: Import Ingram Inventory Snapshot
+ * Lists inventory files available for download, optionally filtering by modification date.
+ *
+ * @param credentials - Ingram FTP credentials
+ * @param since - Optional date to filter files modified after this time
+ * @returns Array of file metadata (name, modifiedAt, size)
+ */
+export async function listIngramInventoryFiles(
+  credentials: IngramCredentials,
+  since?: Date,
+): Promise<{ name: string; modifiedAt: Date; size: number }[]> {
+  const client = new Client(30000); // 30 second timeout
+
+  try {
+    await client.access({
+      host: credentials.host,
+      user: credentials.username,
+      password: credentials.password,
+      port: credentials.port,
+      secure: true,
+      secureOptions: { rejectUnauthorized: true },
+    });
+
+    const files = await client.list("/outbound/inventory/");
+
+    return files
+      .filter((f) => f.type === 1) // Regular files only (not directories)
+      .filter((f) => !since || (f.modifiedAt && f.modifiedAt > since))
+      .map((f) => ({
+        name: f.name,
+        modifiedAt: f.modifiedAt || new Date(),
+        size: f.size,
+      }));
+  } finally {
+    client.close();
+  }
+}
+
+/**
+ * Download a file from Ingram's outbound inventory directory
+ *
+ * Story 16.4 - AC4: Import Ingram Inventory Snapshot
+ * Downloads an inventory file to a local path for processing.
+ *
+ * @param credentials - Ingram FTP credentials
+ * @param fileName - Name of the file in /outbound/inventory/
+ * @param localPath - Local file path to save the download
+ * @returns Download result with success flag and message
+ */
+export async function downloadIngramInventoryFile(
+  credentials: IngramCredentials,
+  fileName: string,
+  localPath: string,
+): Promise<ConnectionTestResult> {
+  const client = new Client(60000); // 60 second timeout for downloads
+
+  try {
+    await client.access({
+      host: credentials.host,
+      user: credentials.username,
+      password: credentials.password,
+      port: credentials.port,
+      secure: true,
+      secureOptions: { rejectUnauthorized: true },
+    });
+
+    await client.downloadTo(localPath, `/outbound/inventory/${fileName}`);
+
+    return {
+      success: true,
+      message: `Successfully downloaded ${fileName}`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Download failed",
+    };
+  } finally {
+    client.close();
+  }
+}

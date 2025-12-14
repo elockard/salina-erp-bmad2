@@ -1,12 +1,16 @@
 /**
- * ONIX 3.1 Type Definitions
+ * ONIX Type Definitions
  *
  * Story: 14.1 - Create ONIX 3.1 Message Generator
+ * Story: 14.6 - Add ONIX 3.0 Export Fallback
  * Task 1: Create ONIX module structure
  *
- * TypeScript interfaces matching ONIX 3.1 reference schema elements.
+ * TypeScript interfaces matching ONIX 3.0/3.1 reference schema elements.
  * These types are used by the builder classes to ensure type safety.
  */
+
+// Re-export ONIXVersion for convenience (Story 14.6)
+export type { ONIXVersion } from "./parser/types";
 
 /**
  * ONIX Message Header - Sender identification
@@ -112,11 +116,24 @@ export interface ProductSupply {
 }
 
 /**
+ * ProductFormFeature for accessibility metadata (Codelist 196)
+ *
+ * Story: 14.3 - Add Accessibility Metadata Support
+ * AC: 4 - ProductFormFeature elements include Codelist 196 values
+ */
+export interface ProductFormFeature {
+  productFormFeatureType: string; // "09" for accessibility conformance/features, "12" for hazards
+  productFormFeatureValue: string; // Codelist 196 code
+  productFormFeatureDescription?: string; // Optional description
+}
+
+/**
  * Block 1: Descriptive Detail
  */
 export interface DescriptiveDetail {
   productComposition: string; // Codelist 2: "00" = Single-item
   productForm: string; // Codelist 150: "BC" = Paperback
+  productFormFeatures?: ProductFormFeature[]; // Accessibility metadata
   titleDetail: TitleDetail;
   contributors: Contributor[];
 }
@@ -152,10 +169,13 @@ export interface ONIXMessage {
 
 /**
  * Export options for builder
+ * Story 14.6: Added onixVersion for 3.0/3.1 selection
  */
 export interface ExportOptions {
   prettyPrint?: boolean;
   includeXMLDeclaration?: boolean;
+  /** ONIX version to export (default: "3.1") - Story 14.6 */
+  onixVersion?: "3.0" | "3.1";
 }
 
 /**
@@ -202,10 +222,13 @@ export interface ValidationResult {
  * Extended export result with validation
  *
  * Story: 14.2 - Implement ONIX Schema Validation
+ * Story: 14.6 - Add ONIX 3.0 Export Fallback
  * AC: 5, 6 - Only validated exports are sent; results stored
  */
 export interface ExportResultWithValidation extends ExportResult {
   validation?: ValidationResult;
   /** Title IDs that were skipped during batch export (missing or no ISBN) */
   skippedTitleIds?: string[];
+  /** ONIX version used for this export - Story 14.6 */
+  onixVersion?: "3.0" | "3.1";
 }

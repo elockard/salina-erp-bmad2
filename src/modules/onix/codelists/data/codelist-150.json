@@ -1,0 +1,770 @@
+{
+  "CodeListNumber": "150",
+  "IssueNumber": 68,
+  "ListName": "Product form",
+  "Codes": [
+    {
+      "CodeValue": "00",
+      "CodeDescription": "Undefined",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "AA",
+      "CodeDescription": "Audio",
+      "CodeNotes": "Audio recording – detail unspecified",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "AB",
+      "CodeDescription": "Audio cassette",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "AC",
+      "CodeDescription": "CD-Audio",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "AD",
+      "CodeDescription": "DAT",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "AE",
+      "CodeDescription": "Audio disc",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "AF",
+      "CodeDescription": "Audio tape",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "AG",
+      "CodeDescription": "MiniDisc",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "AH",
+      "CodeDescription": "CD-Extra",
+      "IssueNumber": 6
+    },
+    {
+      "CodeValue": "AI",
+      "CodeDescription": "DVD Audio",
+      "IssueNumber": 6
+    },
+    {
+      "CodeValue": "AJ",
+      "CodeDescription": "Downloadable audio file",
+      "IssueNumber": 7
+    },
+    {
+      "CodeValue": "AK",
+      "CodeDescription": "Pre-recorded digital audio player",
+      "IssueNumber": 22
+    },
+    {
+      "CodeValue": "AL",
+      "CodeDescription": "Pre-recorded SD card",
+      "IssueNumber": 36
+    },
+    {
+      "CodeValue": "AM",
+      "CodeDescription": "LP",
+      "CodeNotes": "Vinyl long-playing record",
+      "IssueNumber": 47
+    },
+    {
+      "CodeValue": "AN",
+      "CodeDescription": "Streaming audio",
+      "IssueNumber": 57
+    },
+    {
+      "CodeValue": "AO",
+      "CodeDescription": "Shellac",
+      "CodeNotes": "Shellac (78 rpm) record",
+      "IssueNumber": 63
+    },
+    {
+      "CodeValue": "AZ",
+      "CodeDescription": "Other audio format",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "BA",
+      "CodeDescription": "Book",
+      "CodeNotes": "Book – detail unspecified",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "BB",
+      "CodeDescription": "Hardback",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "BC",
+      "CodeDescription": "Paperback / softback",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "BD",
+      "CodeDescription": "Loose-leaf",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "BE",
+      "CodeDescription": "Spiral bound",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "BF",
+      "CodeDescription": "Pamphlet",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "BG",
+      "CodeDescription": "Leather / fine binding",
+      "IssueNumber": 7
+    },
+    {
+      "CodeValue": "BH",
+      "CodeDescription": "Board book",
+      "IssueNumber": 18
+    },
+    {
+      "CodeValue": "BI",
+      "CodeDescription": "Rag book",
+      "IssueNumber": 18
+    },
+    {
+      "CodeValue": "BJ",
+      "CodeDescription": "Bath book",
+      "IssueNumber": 18
+    },
+    {
+      "CodeValue": "BK",
+      "CodeDescription": "Novelty book",
+      "IssueNumber": 21
+    },
+    {
+      "CodeValue": "BL",
+      "CodeDescription": "Slide bound",
+      "IssueNumber": 30
+    },
+    {
+      "CodeValue": "BM",
+      "CodeDescription": "Big book",
+      "CodeNotes": "Oversized book for classroom reading",
+      "IssueNumber": 36
+    },
+    {
+      "CodeValue": "BN",
+      "CodeDescription": "Part-work (fascículo)",
+      "IssueNumber": 37
+    },
+    {
+      "CodeValue": "BO",
+      "CodeDescription": "Fold-out book or chart",
+      "IssueNumber": 38
+    },
+    {
+      "CodeValue": "BP",
+      "CodeDescription": "Foam book",
+      "IssueNumber": 45
+    },
+    {
+      "CodeValue": "BZ",
+      "CodeDescription": "Other book format",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "CA",
+      "CodeDescription": "Sheet map",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "CB",
+      "CodeDescription": "Sheet map, folded",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "CC",
+      "CodeDescription": "Sheet map, flat",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "CD",
+      "CodeDescription": "Sheet map, rolled",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "CE",
+      "CodeDescription": "Globe",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "CZ",
+      "CodeDescription": "Other cartographic",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "DA",
+      "CodeDescription": "Digital (on physical carrier)",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "DB",
+      "CodeDescription": "CD-ROM",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "DC",
+      "CodeDescription": "CD-I",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "DE",
+      "CodeDescription": "Game cartridge",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "DF",
+      "CodeDescription": "Diskette",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "DG",
+      "CodeDescription": "DVD-ROM",
+      "IssueNumber": 6
+    },
+    {
+      "CodeValue": "DH",
+      "CodeDescription": "Secure Digital (SD) Memory Card",
+      "IssueNumber": 22
+    },
+    {
+      "CodeValue": "DI",
+      "CodeDescription": "Compact Flash Memory Card",
+      "IssueNumber": 22
+    },
+    {
+      "CodeValue": "DJ",
+      "CodeDescription": "Memory Stick Memory Card",
+      "IssueNumber": 22
+    },
+    {
+      "CodeValue": "DK",
+      "CodeDescription": "USB Flash Drive",
+      "IssueNumber": 22
+    },
+    {
+      "CodeValue": "DL",
+      "CodeDescription": "Double-sided CD/DVD",
+      "IssueNumber": 32
+    },
+    {
+      "CodeValue": "DM",
+      "CodeDescription": "Blu-ray",
+      "IssueNumber": 54
+    },
+    {
+      "CodeValue": "DN",
+      "CodeDescription": "Ultra HD Blu-ray",
+      "IssueNumber": 63
+    },
+    {
+      "CodeValue": "DZ",
+      "CodeDescription": "Other digital carrier",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "EA",
+      "CodeDescription": "Digital (delivered electronically)",
+      "IssueNumber": 9
+    },
+    {
+      "CodeValue": "EB",
+      "CodeDescription": "Digital download and online",
+      "CodeNotes": "Digital content delivered both by download and online access",
+      "IssueNumber": 26
+    },
+    {
+      "CodeValue": "EC",
+      "CodeDescription": "Digital online",
+      "CodeNotes": "Digital content delivered online only",
+      "IssueNumber": 26
+    },
+    {
+      "CodeValue": "ED",
+      "CodeDescription": "Digital download",
+      "CodeNotes": "Digital content delivered by download only",
+      "IssueNumber": 26
+    },
+    {
+      "CodeValue": "FA",
+      "CodeDescription": "Film or transparency",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "FC",
+      "CodeDescription": "Slides",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "FD",
+      "CodeDescription": "OHP transparencies",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "FE",
+      "CodeDescription": "Filmstrip",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "FF",
+      "CodeDescription": "Film",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "FZ",
+      "CodeDescription": "Other film or transparency format",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "LA",
+      "CodeDescription": "Digital product license",
+      "IssueNumber": 41
+    },
+    {
+      "CodeValue": "LB",
+      "CodeDescription": "Digital product license key",
+      "IssueNumber": 41
+    },
+    {
+      "CodeValue": "LC",
+      "CodeDescription": "Digital product license code",
+      "IssueNumber": 41
+    },
+    {
+      "CodeValue": "MA",
+      "CodeDescription": "Microform",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "MB",
+      "CodeDescription": "Microfiche",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "MC",
+      "CodeDescription": "Microfilm",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "MZ",
+      "CodeDescription": "Other microform",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PA",
+      "CodeDescription": "Miscellaneous print",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PB",
+      "CodeDescription": "Address book",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PC",
+      "CodeDescription": "Calendar",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PD",
+      "CodeDescription": "Cards",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PE",
+      "CodeDescription": "Copymasters",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PF",
+      "CodeDescription": "Diary or journal",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PG",
+      "CodeDescription": "Frieze",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PH",
+      "CodeDescription": "Kit",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PI",
+      "CodeDescription": "Sheet music",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PJ",
+      "CodeDescription": "Postcard book or pack",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PK",
+      "CodeDescription": "Poster",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PL",
+      "CodeDescription": "Record book",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PM",
+      "CodeDescription": "Wallet or folder",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PN",
+      "CodeDescription": "Pictures or photographs",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PO",
+      "CodeDescription": "Wallchart",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PP",
+      "CodeDescription": "Stickers",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "PQ",
+      "CodeDescription": "Plate (lámina)",
+      "IssueNumber": 4
+    },
+    {
+      "CodeValue": "PR",
+      "CodeDescription": "Notebook / blank book",
+      "IssueNumber": 22
+    },
+    {
+      "CodeValue": "PS",
+      "CodeDescription": "Organizer",
+      "IssueNumber": 23
+    },
+    {
+      "CodeValue": "PT",
+      "CodeDescription": "Bookmark",
+      "IssueNumber": 33
+    },
+    {
+      "CodeValue": "PU",
+      "CodeDescription": "Coloring / activity book",
+      "IssueNumber": 63
+    },
+    {
+      "CodeValue": "PZ",
+      "CodeDescription": "Other printed item",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "SA",
+      "CodeDescription": "Multiple-component retail product",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "SB",
+      "CodeDescription": "Multiple-component retail product, boxed",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "SC",
+      "CodeDescription": "Multiple-component retail product, slip-cased",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "SD",
+      "CodeDescription": "Multiple-component retail product, shrink-wrapped",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "SE",
+      "CodeDescription": "Multiple-component retail product, loose",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "SF",
+      "CodeDescription": "Multiple-component retail product, part(s) enclosed",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "VA",
+      "CodeDescription": "Video",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "VB",
+      "CodeDescription": "Videodisc",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "VC",
+      "CodeDescription": "VHS videotape",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "VD",
+      "CodeDescription": "Betamax videotape",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "VE",
+      "CodeDescription": "VCD",
+      "IssueNumber": 6
+    },
+    {
+      "CodeValue": "VF",
+      "CodeDescription": "SVCD",
+      "IssueNumber": 6
+    },
+    {
+      "CodeValue": "VG",
+      "CodeDescription": "DVD video",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "VH",
+      "CodeDescription": "VHS-NTSC",
+      "IssueNumber": 19
+    },
+    {
+      "CodeValue": "VI",
+      "CodeDescription": "VHS-PAL",
+      "IssueNumber": 19
+    },
+    {
+      "CodeValue": "VJ",
+      "CodeDescription": "Downloadable video file",
+      "IssueNumber": 28
+    },
+    {
+      "CodeValue": "VK",
+      "CodeDescription": "Streaming video",
+      "IssueNumber": 50
+    },
+    {
+      "CodeValue": "VL",
+      "CodeDescription": "Blu-ray",
+      "IssueNumber": 51
+    },
+    {
+      "CodeValue": "VM",
+      "CodeDescription": "UHD Blu-ray",
+      "IssueNumber": 63
+    },
+    {
+      "CodeValue": "VN",
+      "CodeDescription": "Blu-ray 3D",
+      "IssueNumber": 68
+    },
+    {
+      "CodeValue": "VZ",
+      "CodeDescription": "Other video format",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "WW",
+      "CodeDescription": "Mixed media product",
+      "IssueNumber": 3
+    },
+    {
+      "CodeValue": "WX",
+      "CodeDescription": "Multimedia",
+      "IssueNumber": 55
+    },
+    {
+      "CodeValue": "XA",
+      "CodeDescription": "Trade-only material",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "XB",
+      "CodeDescription": "Dumpbin – empty",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "XC",
+      "CodeDescription": "Dumpbin – filled",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "XD",
+      "CodeDescription": "Counterpack – empty",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "XE",
+      "CodeDescription": "Counterpack – filled",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "XF",
+      "CodeDescription": "Poster, promotional",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "XG",
+      "CodeDescription": "Shelf strip",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "XH",
+      "CodeDescription": "Window piece",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "XI",
+      "CodeDescription": "Streamer",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "XJ",
+      "CodeDescription": "Spinner – empty",
+      "IssueNumber": 7
+    },
+    {
+      "CodeValue": "XK",
+      "CodeDescription": "Large book display",
+      "IssueNumber": 11
+    },
+    {
+      "CodeValue": "XL",
+      "CodeDescription": "Shrink-wrapped pack",
+      "IssueNumber": 11
+    },
+    {
+      "CodeValue": "XM",
+      "CodeDescription": "Boxed pack",
+      "IssueNumber": 28
+    },
+    {
+      "CodeValue": "XN",
+      "CodeDescription": "Pack (outer packaging unspecified)",
+      "IssueNumber": 28
+    },
+    {
+      "CodeValue": "XO",
+      "CodeDescription": "Spinner – filled",
+      "IssueNumber": 35
+    },
+    {
+      "CodeValue": "XY",
+      "CodeDescription": "Other point of sale",
+      "IssueNumber": 28
+    },
+    {
+      "CodeValue": "XZ",
+      "CodeDescription": "Other point of sale",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "ZA",
+      "CodeDescription": "General merchandise",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "ZB",
+      "CodeDescription": "Doll or figure",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "ZC",
+      "CodeDescription": "Soft toy",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "ZD",
+      "CodeDescription": "Toy",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "ZE",
+      "CodeDescription": "Game",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "ZF",
+      "CodeDescription": "T-shirt",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "ZG",
+      "CodeDescription": "E-book reader",
+      "IssueNumber": 21
+    },
+    {
+      "CodeValue": "ZH",
+      "CodeDescription": "Tablet computer",
+      "IssueNumber": 40
+    },
+    {
+      "CodeValue": "ZI",
+      "CodeDescription": "Audiobook player",
+      "IssueNumber": 40
+    },
+    {
+      "CodeValue": "ZJ",
+      "CodeDescription": "Jigsaw",
+      "IssueNumber": 47
+    },
+    {
+      "CodeValue": "ZK",
+      "CodeDescription": "Mug",
+      "IssueNumber": 58
+    },
+    {
+      "CodeValue": "ZL",
+      "CodeDescription": "Tote bag",
+      "IssueNumber": 58
+    },
+    {
+      "CodeValue": "ZM",
+      "CodeDescription": "Puzzle",
+      "IssueNumber": 65
+    },
+    {
+      "CodeValue": "ZN",
+      "CodeDescription": "Advent calendar",
+      "IssueNumber": 66
+    },
+    {
+      "CodeValue": "ZO",
+      "CodeDescription": "Craft kit",
+      "IssueNumber": 67
+    },
+    {
+      "CodeValue": "ZX",
+      "CodeDescription": "Other apparel",
+      "IssueNumber": 28
+    },
+    {
+      "CodeValue": "ZY",
+      "CodeDescription": "Other merchandise",
+      "IssueNumber": 28
+    },
+    {
+      "CodeValue": "ZZ",
+      "CodeDescription": "Other",
+      "IssueNumber": 1
+    }
+  ]
+}

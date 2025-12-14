@@ -1,0 +1,412 @@
+{
+  "CodeListNumber": "17",
+  "IssueNumber": 68,
+  "ListName": "Contributor role code",
+  "Codes": [
+    {
+      "CodeValue": "A01",
+      "CodeDescription": "By (author)",
+      "CodeNotes": "Author of a textual work",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A02",
+      "CodeDescription": "With",
+      "CodeNotes": "With or as told to",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A03",
+      "CodeDescription": "Screenplay by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A04",
+      "CodeDescription": "Libretto by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A05",
+      "CodeDescription": "Lyrics by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A06",
+      "CodeDescription": "By (composer)",
+      "CodeNotes": "Composer of a musical work",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A07",
+      "CodeDescription": "By (artist)",
+      "CodeNotes": "Visual artist when named as the primary creator",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A08",
+      "CodeDescription": "By (photographer)",
+      "IssueNumber": 9
+    },
+    {
+      "CodeValue": "A09",
+      "CodeDescription": "Created by",
+      "IssueNumber": 19
+    },
+    {
+      "CodeValue": "A10",
+      "CodeDescription": "From an idea by",
+      "IssueNumber": 19
+    },
+    {
+      "CodeValue": "A11",
+      "CodeDescription": "Designed by",
+      "IssueNumber": 24
+    },
+    {
+      "CodeValue": "A12",
+      "CodeDescription": "Illustrated by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A13",
+      "CodeDescription": "Photographs by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A14",
+      "CodeDescription": "Text by",
+      "CodeNotes": "Secondary text written by another author",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A15",
+      "CodeDescription": "Preface by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A16",
+      "CodeDescription": "Prologue by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A17",
+      "CodeDescription": "Summary by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A18",
+      "CodeDescription": "Supplement by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A19",
+      "CodeDescription": "Afterword by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A20",
+      "CodeDescription": "Notes by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A21",
+      "CodeDescription": "Commentaries by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A22",
+      "CodeDescription": "Epilogue by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A23",
+      "CodeDescription": "Foreword by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A24",
+      "CodeDescription": "Introduction by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A25",
+      "CodeDescription": "Footnotes by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A26",
+      "CodeDescription": "Memoir by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A27",
+      "CodeDescription": "Experiments by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A29",
+      "CodeDescription": "Introduction and notes by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A30",
+      "CodeDescription": "Software written by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "A31",
+      "CodeDescription": "Book and lyrics by",
+      "IssueNumber": 20
+    },
+    {
+      "CodeValue": "A32",
+      "CodeDescription": "Contributions by",
+      "IssueNumber": 21
+    },
+    {
+      "CodeValue": "A33",
+      "CodeDescription": "Appendix by",
+      "IssueNumber": 22
+    },
+    {
+      "CodeValue": "A34",
+      "CodeDescription": "Index by",
+      "IssueNumber": 22
+    },
+    {
+      "CodeValue": "A35",
+      "CodeDescription": "Drawings by",
+      "IssueNumber": 25
+    },
+    {
+      "CodeValue": "A36",
+      "CodeDescription": "Cover design by",
+      "IssueNumber": 25
+    },
+    {
+      "CodeValue": "A37",
+      "CodeDescription": "Preliminary work by",
+      "IssueNumber": 35
+    },
+    {
+      "CodeValue": "A38",
+      "CodeDescription": "Original author",
+      "IssueNumber": 35
+    },
+    {
+      "CodeValue": "A39",
+      "CodeDescription": "Maps by",
+      "IssueNumber": 42
+    },
+    {
+      "CodeValue": "A40",
+      "CodeDescription": "Inked or colored by",
+      "IssueNumber": 44
+    },
+    {
+      "CodeValue": "A41",
+      "CodeDescription": "Paper engineering by",
+      "IssueNumber": 53
+    },
+    {
+      "CodeValue": "A42",
+      "CodeDescription": "Continued by",
+      "IssueNumber": 55
+    },
+    {
+      "CodeValue": "A43",
+      "CodeDescription": "Interviewer",
+      "IssueNumber": 56
+    },
+    {
+      "CodeValue": "A44",
+      "CodeDescription": "Interviewee",
+      "IssueNumber": 56
+    },
+    {
+      "CodeValue": "A45",
+      "CodeDescription": "Comic script by",
+      "IssueNumber": 61
+    },
+    {
+      "CodeValue": "A46",
+      "CodeDescription": "Inker",
+      "IssueNumber": 61
+    },
+    {
+      "CodeValue": "A47",
+      "CodeDescription": "Colorist",
+      "IssueNumber": 61
+    },
+    {
+      "CodeValue": "A48",
+      "CodeDescription": "Letterer",
+      "IssueNumber": 61
+    },
+    {
+      "CodeValue": "A99",
+      "CodeDescription": "Other primary creator",
+      "IssueNumber": 61
+    },
+    {
+      "CodeValue": "B01",
+      "CodeDescription": "Edited by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B02",
+      "CodeDescription": "Revised by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B03",
+      "CodeDescription": "Retold by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B04",
+      "CodeDescription": "Abridged by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B05",
+      "CodeDescription": "Adapted by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B06",
+      "CodeDescription": "Translated by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B07",
+      "CodeDescription": "As told by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B08",
+      "CodeDescription": "Translated with commentary by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B09",
+      "CodeDescription": "Series edited by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B10",
+      "CodeDescription": "Edited and translated by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B11",
+      "CodeDescription": "Editor-in-chief",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B12",
+      "CodeDescription": "Guest editor",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B13",
+      "CodeDescription": "Volume editor",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B14",
+      "CodeDescription": "Editorial board member",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B15",
+      "CodeDescription": "Editorial coordination by",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B16",
+      "CodeDescription": "Managing editor",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "B17",
+      "CodeDescription": "Founded by",
+      "IssueNumber": 26
+    },
+    {
+      "CodeValue": "B18",
+      "CodeDescription": "Prepared for publication by",
+      "IssueNumber": 32
+    },
+    {
+      "CodeValue": "B19",
+      "CodeDescription": "Associate editor",
+      "IssueNumber": 32
+    },
+    {
+      "CodeValue": "B20",
+      "CodeDescription": "Consultant editor",
+      "IssueNumber": 32
+    },
+    {
+      "CodeValue": "B21",
+      "CodeDescription": "General editor",
+      "IssueNumber": 32
+    },
+    {
+      "CodeValue": "B22",
+      "CodeDescription": "Dramatized by",
+      "IssueNumber": 34
+    },
+    {
+      "CodeValue": "B23",
+      "CodeDescription": "General rapporteur",
+      "IssueNumber": 36
+    },
+    {
+      "CodeValue": "B24",
+      "CodeDescription": "Literary editor",
+      "IssueNumber": 38
+    },
+    {
+      "CodeValue": "B25",
+      "CodeDescription": "Arranged by (music)",
+      "IssueNumber": 42
+    },
+    {
+      "CodeValue": "B26",
+      "CodeDescription": "Technical editor",
+      "IssueNumber": 49
+    },
+    {
+      "CodeValue": "B27",
+      "CodeDescription": "Thesis advisor or supervisor",
+      "IssueNumber": 52
+    },
+    {
+      "CodeValue": "B28",
+      "CodeDescription": "Thesis examiner",
+      "IssueNumber": 52
+    },
+    {
+      "CodeValue": "B29",
+      "CodeDescription": "Scientific editor",
+      "IssueNumber": 55
+    },
+    {
+      "CodeValue": "B30",
+      "CodeDescription": "Historical advisor",
+      "IssueNumber": 61
+    },
+    {
+      "CodeValue": "B31",
+      "CodeDescription": "Original editor",
+      "IssueNumber": 65
+    },
+    {
+      "CodeValue": "B99",
+      "CodeDescription": "Other adaptation by",
+      "IssueNumber": 1
+    }
+  ]
+}

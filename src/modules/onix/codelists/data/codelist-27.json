@@ -1,0 +1,175 @@
+{
+  "CodeListNumber": "27",
+  "IssueNumber": 68,
+  "ListName": "Subject scheme identifier code",
+  "Codes": [
+    {
+      "CodeValue": "01",
+      "CodeDescription": "Dewey",
+      "CodeNotes": "Dewey Decimal Classification",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "02",
+      "CodeDescription": "Abridged Dewey",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "03",
+      "CodeDescription": "LC classification",
+      "CodeNotes": "Library of Congress Classification",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "04",
+      "CodeDescription": "LC subject heading",
+      "CodeNotes": "Library of Congress Subject Headings",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "05",
+      "CodeDescription": "NLM classification",
+      "CodeNotes": "National Library of Medicine Classification",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "06",
+      "CodeDescription": "MeSH heading",
+      "CodeNotes": "Medical Subject Headings",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "07",
+      "CodeDescription": "NAL subject heading",
+      "CodeNotes": "National Agricultural Library Subject Headings",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "08",
+      "CodeDescription": "AAT",
+      "CodeNotes": "Getty Art and Architecture Thesaurus",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "09",
+      "CodeDescription": "UDC",
+      "CodeNotes": "Universal Decimal Classification",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "10",
+      "CodeDescription": "BISAC Subject Heading",
+      "CodeNotes": "Book Industry Standards and Communications Subject Heading",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "11",
+      "CodeDescription": "BISAC region code",
+      "CodeNotes": "Region code from BISAC Geographic Areas list",
+      "IssueNumber": 9
+    },
+    {
+      "CodeValue": "12",
+      "CodeDescription": "BIC subject category",
+      "CodeNotes": "Book Industry Communication standard subject category",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "13",
+      "CodeDescription": "BIC geographical qualifier",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "14",
+      "CodeDescription": "BIC language qualifier",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "15",
+      "CodeDescription": "BIC time period qualifier",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "16",
+      "CodeDescription": "BIC educational purpose qualifier",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "17",
+      "CodeDescription": "BIC reading level and special interest qualifier",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "18",
+      "CodeDescription": "DDC-Sachgruppen der Deutschen Nationalbibliografie",
+      "IssueNumber": 6
+    },
+    {
+      "CodeValue": "19",
+      "CodeDescription": "LC fiction genre heading",
+      "IssueNumber": 7
+    },
+    {
+      "CodeValue": "20",
+      "CodeDescription": "Keywords",
+      "CodeNotes": "Free text keywords",
+      "IssueNumber": 8
+    },
+    {
+      "CodeValue": "21",
+      "CodeDescription": "BIC children's book marketing category",
+      "IssueNumber": 9
+    },
+    {
+      "CodeValue": "22",
+      "CodeDescription": "BISAC Merchandising Theme",
+      "IssueNumber": 9
+    },
+    {
+      "CodeValue": "23",
+      "CodeDescription": "Publisher's own category code",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "24",
+      "CodeDescription": "Proprietary subject scheme",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "93",
+      "CodeDescription": "Thema subject category",
+      "CodeNotes": "Thema: the subject category scheme for a global book trade",
+      "IssueNumber": 42
+    },
+    {
+      "CodeValue": "94",
+      "CodeDescription": "Thema geographical qualifier",
+      "IssueNumber": 42
+    },
+    {
+      "CodeValue": "95",
+      "CodeDescription": "Thema language qualifier",
+      "IssueNumber": 42
+    },
+    {
+      "CodeValue": "96",
+      "CodeDescription": "Thema time period qualifier",
+      "IssueNumber": 42
+    },
+    {
+      "CodeValue": "97",
+      "CodeDescription": "Thema educational purpose qualifier",
+      "IssueNumber": 42
+    },
+    {
+      "CodeValue": "98",
+      "CodeDescription": "Thema interest age / special interest qualifier",
+      "IssueNumber": 42
+    },
+    {
+      "CodeValue": "99",
+      "CodeDescription": "Thema style qualifier",
+      "IssueNumber": 42
+    }
+  ]
+}

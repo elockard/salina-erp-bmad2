@@ -34,6 +34,12 @@ export const tenants = pgTable("tenants", {
   royalty_period_start_month: integer("royalty_period_start_month"),
   royalty_period_start_day: integer("royalty_period_start_day"),
 
+  // Tenant suspension status (Story 13.4)
+  status: text("status").notNull().default("active"), // "active" | "suspended"
+  suspended_at: timestamp("suspended_at", { withTimezone: true }),
+  suspended_reason: text("suspended_reason"),
+  suspended_by_admin_email: text("suspended_by_admin_email"),
+
   // Payer information for 1099 generation (Story 11.3)
   // CRITICAL: Required for IRS 1099-MISC compliance
   payer_ein_encrypted: text("payer_ein_encrypted"),

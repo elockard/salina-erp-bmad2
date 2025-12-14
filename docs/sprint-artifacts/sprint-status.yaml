@@ -1,4 +1,4 @@
-# generated: 2025-12-07
+# generated: 2025-12-12
 # project: Salina ERP
 # project_key: salina-erp
 # tracking_system: file-system
@@ -7,29 +7,34 @@
 # STATUS DEFINITIONS:
 # ==================
 # Epic Status:
-#   - backlog: Epic exists in epic file but not contexted
-#   - contexted: Next epic tech context created by *epic-tech-context (required)
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
 #   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
 #
 # Story Status:
 #   - backlog: Story only exists in epic file
-#   - drafted: Story file created in stories folder by *create-story
-#   - ready-for-dev: Draft approved and story context created by *story-ready
-#   - in-progress: Developer actively working on implementation by *dev-story
-#   - review: Implementation complete, ready for review by *code-review
-#   - done: Story completed by *story-done
+#   - drafted: Story file created in stories folder
+#   - ready-for-dev: Draft approved and story context created
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
 #
 # Retrospective Status:
 #   - optional: Can be completed but not required
-#   - completed: Retrospective has been done by *retrospective
+#   - completed: Retrospective has been done
 #
 # WORKFLOW NOTES:
 # ===============
-# - Epics should be 'contexted' before stories can be 'drafted'
-# - SM typically drafts next story ONLY after previous one is 'done' to incorporate learnings
-# - Dev moves story to 'review', dev reviews, then Dev moves to 'done'
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically drafts next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2025-12-07
+generated: 2025-12-12
 project: Salina ERP
 project_key: salina-erp
 tracking_system: file-system
@@ -186,7 +191,7 @@ development_status:
   10-2-implement-split-royalty-calculation-engine: done
   10-3-generate-split-royalty-statements-for-co-authors: done
   10-4-implement-escalating-lifetime-royalty-rates: done
-  epic-10-retrospective: done
+  epic-10-retrospective: completed
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 11: Tax & Compliance (COMPLETE)
@@ -202,13 +207,126 @@ development_status:
   # EPIC 13: Platform Administration
   # Goal: SaaS operator tools for tenant management and monitoring
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-13: backlog
-  13-1-implement-platform-administrator-authentication: backlog
-  13-2-build-tenant-list-and-search-interface: backlog
-  13-3-build-tenant-detail-view: backlog
-  13-4-implement-tenant-suspension-and-reactivation: backlog
-  13-5-build-platform-analytics-dashboard: backlog
-  13-6-implement-tenant-impersonation-for-support: backlog
-  13-7-build-system-health-and-job-monitoring: backlog
-  13-8-implement-platform-wide-announcements: backlog
-  epic-13-retrospective: optional
+  epic-13: done
+  13-1-implement-platform-administrator-authentication: done
+  13-2-build-tenant-list-and-search-interface: done
+  13-3-build-tenant-detail-view: done
+  13-4-implement-tenant-suspension-and-reactivation: done
+  13-5-build-platform-analytics-dashboard: done
+  13-6-implement-tenant-impersonation-for-support: done
+  13-7-build-system-health-and-job-monitoring: done
+  13-8-implement-platform-wide-announcements: done
+  epic-13-retrospective: completed
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PHASE 3: DISTRIBUTION & SCALE
+  # Added: 2025-12-12 - ONIX metadata, REST API, channel integrations, production
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 14: ONIX 3.1 Core
+  # Goal: ONIX 3.1 message generation, validation, accessibility, import
+  # FRs: FR135-FR142
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-14: done
+  14-1-create-onix-3-1-message-generator: done
+  14-2-implement-onix-schema-validation: done
+  14-3-add-accessibility-metadata-support-codelist-196: done
+  14-4-build-codelist-management-system: done
+  14-5-implement-onix-import-parser: done
+  14-6-add-onix-3-0-export-fallback: done
+  epic-14-retrospective: completed
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 15: REST API & Webhooks
+  # Goal: Public REST API with OAuth2, webhook delivery system
+  # FRs: FR143-FR150
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-15: backlog
+  15-1-implement-api-authentication-with-oauth2: backlog
+  15-2-build-core-rest-api-endpoints: backlog
+  15-3-implement-rate-limiting: backlog
+  15-4-build-webhook-subscription-system: backlog
+  15-5-implement-webhook-delivery-with-signatures: backlog
+  15-6-create-api-documentation-portal: backlog
+  epic-15-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 16: Ingram Integration
+  # Goal: Automate ONIX feeds to Ingram, ingest orders and inventory
+  # FRs: FR151-FR155
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-16: in-progress
+  16-1-configure-ingram-account-connection: done
+  16-2-schedule-automated-onix-feeds-to-ingram: done
+  16-3-ingest-ingram-order-data: done
+  16-4-sync-inventory-status-with-ingram: done
+  16-5-view-ingram-feed-history: backlog
+  epic-16-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 17: Amazon Integration
+  # Goal: Automate ONIX feeds to Amazon KDP/Advantage, import sales
+  # FRs: FR156-FR160
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-17: backlog
+  17-1-configure-amazon-account-connection: backlog
+  17-2-schedule-automated-onix-feeds-to-amazon: backlog
+  17-3-import-amazon-sales-data: backlog
+  17-4-link-titles-to-asins: backlog
+  17-5-view-amazon-feed-history: backlog
+  epic-17-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 18: Production Pipeline
+  # Goal: Manuscript-to-print workflow, vendor management, proof tracking
+  # FRs: FR161-FR169
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-18: backlog
+  18-1-create-production-projects: backlog
+  18-2-assign-production-tasks-to-vendors: backlog
+  18-3-track-production-workflow-stages: backlog
+  18-4-upload-and-manage-proof-files: backlog
+  18-5-approve-or-request-corrections-on-proofs: backlog
+  18-6-view-production-calendar: backlog
+  18-7-generate-bisg-compliant-shipping-labels: backlog
+  epic-18-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 19: Data Import/Export
+  # Goal: Bulk operations, ONIX catalog import, CSV templates
+  # FRs: FR170-FR175
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-19: backlog
+  19-1-import-catalog-via-csv: backlog
+  19-2-download-csv-templates: backlog
+  19-3-export-catalog-to-csv: backlog
+  19-4-bulk-update-via-csv: backlog
+  19-5-bisac-code-suggestions: backlog
+  epic-19-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 20: UX Enhancements
+  # Goal: Onboarding wizard, notifications, mobile optimization, contextual help
+  # FRs: FR176-FR181
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-20: backlog
+  20-1-build-onboarding-wizard: backlog
+  20-2-build-notifications-center: backlog
+  20-3-configure-notification-preferences: backlog
+  20-4-mobile-responsive-layout: backlog
+  20-5-add-contextual-help-system: backlog
+  epic-20-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 21: Author Portal Expansion
+  # Goal: Production tracking, marketing assets, manuscript upload for authors
+  # FRs: FR182-FR186
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-21: backlog
+  21-1-view-production-status-in-author-portal: backlog
+  21-2-access-marketing-asset-library: backlog
+  21-3-upload-manuscript-files: backlog
+  21-4-receive-production-milestone-notifications: backlog
+  21-5-view-publication-schedule: backlog
+  epic-21-retrospective: optional

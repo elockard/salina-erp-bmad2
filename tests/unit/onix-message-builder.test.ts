@@ -87,6 +87,11 @@ const mockTitleWithAuthors: TitleWithAuthors = {
   authors: [createMockTitleAuthor()],
   primaryAuthor: null,
   isSoleAuthor: true,
+  // Story 14.3: Accessibility metadata
+  epub_accessibility_conformance: null,
+  accessibility_features: null,
+  accessibility_hazards: null,
+  accessibility_summary: null,
 };
 
 // Mock title with co-authors
@@ -370,6 +375,94 @@ describe("ONIXMessageBuilder", () => {
       // Count Product elements
       const productMatches = xml.match(/<Product>/g);
       expect(productMatches?.length).toBe(2);
+    });
+  });
+
+  // Story 14.6: ONIX 3.0 Export Fallback
+  describe("ONIX 3.0 version support", () => {
+    it("generates ONIX 3.0 with correct namespace when version specified", () => {
+      const builder30 = new ONIXMessageBuilder(
+        mockTenant.id,
+        mockTenant,
+        "3.0",
+      );
+      builder30.addTitle(mockTitleWithAuthors);
+      const xml = builder30.toXML();
+
+      expect(xml).toContain('release="3.0"');
+      expect(xml).toContain('xmlns="http://ns.editeur.org/onix/3.0/reference"');
+    });
+
+    it("generates ONIX 3.1 by default (no version parameter)", () => {
+      const builderDefault = new ONIXMessageBuilder(mockTenant.id, mockTenant);
+      const xml = builderDefault.toXML();
+
+      expect(xml).toContain('release="3.1"');
+      expect(xml).toContain('xmlns="http://ns.editeur.org/onix/3.1/reference"');
+    });
+
+    it("generates ONIX 3.1 when explicitly specified", () => {
+      const builder31 = new ONIXMessageBuilder(
+        mockTenant.id,
+        mockTenant,
+        "3.1",
+      );
+      builder31.addTitle(mockTitleWithAuthors);
+      const xml = builder31.toXML();
+
+      expect(xml).toContain('release="3.1"');
+      expect(xml).toContain('xmlns="http://ns.editeur.org/onix/3.1/reference"');
+    });
+
+    it("includes DefaultCurrencyCode in both versions", () => {
+      const builder30 = new ONIXMessageBuilder(
+        mockTenant.id,
+        mockTenant,
+        "3.0",
+      );
+      const builder31 = new ONIXMessageBuilder(
+        mockTenant.id,
+        mockTenant,
+        "3.1",
+      );
+
+      builder30.addTitle(mockTitleWithAuthors);
+      builder31.addTitle(mockTitleWithAuthors);
+
+      expect(builder30.toXML()).toContain(
+        `<DefaultCurrencyCode>${mockTenant.default_currency}</DefaultCurrencyCode>`,
+      );
+      expect(builder31.toXML()).toContain(
+        `<DefaultCurrencyCode>${mockTenant.default_currency}</DefaultCurrencyCode>`,
+      );
+    });
+
+    it("uses same product structure for both versions", () => {
+      const builder30 = new ONIXMessageBuilder(
+        mockTenant.id,
+        mockTenant,
+        "3.0",
+      );
+      const builder31 = new ONIXMessageBuilder(
+        mockTenant.id,
+        mockTenant,
+        "3.1",
+      );
+
+      builder30.addTitle(mockTitleWithAuthors);
+      builder31.addTitle(mockTitleWithAuthors);
+
+      const xml30 = builder30.toXML();
+      const xml31 = builder31.toXML();
+
+      // Both should have same blocks structure
+      expect(xml30).toContain("<DescriptiveDetail>");
+      expect(xml30).toContain("<PublishingDetail>");
+      expect(xml30).toContain("<ProductSupply>");
+
+      expect(xml31).toContain("<DescriptiveDetail>");
+      expect(xml31).toContain("<PublishingDetail>");
+      expect(xml31).toContain("<ProductSupply>");
     });
   });
 });

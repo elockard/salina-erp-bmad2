@@ -738,6 +738,56 @@ Salina ERP is a professional tool for publishing operations. The UI should feel 
 - Check constraints enforce business rules at database level (e.g., positive prices)
 - Validation at application layer before database operations
 
+### Phase 3 NFR Extensions
+
+#### Performance (Phase 3)
+
+| Requirement | Target | Measurement |
+|-------------|--------|-------------|
+| ONIX feed generation | < 5 seconds single title, < 60 seconds full catalog | Performance benchmark |
+| REST API response time | p95 < 200ms reads, p95 < 500ms writes | APM monitoring |
+| Webhook delivery latency | < 30 seconds from event trigger | Event logs |
+| Shipping label generation | < 3 seconds per label PDF | Performance benchmark |
+| Catalog import processing | < 1 minute per 100 titles | Import job metrics |
+
+#### Security (Phase 3)
+
+| Requirement | Specification |
+|-------------|---------------|
+| API authentication | OAuth2 with JWT tokens, 24-hour expiration |
+| API key management | Tenant-scoped keys with granular permission sets |
+| Webhook signatures | HMAC-SHA256 with shared secret per endpoint |
+| Channel credentials | Encrypted at rest using tenant-specific keys |
+| Rate limiting | Configurable per tenant, default 1000 requests/minute |
+
+#### Integration (Phase 3)
+
+| Requirement | Specification |
+|-------------|---------------|
+| ONIX conformance | Valid against EDItEUR ONIX 3.1 XSD schema |
+| BISG label compliance | Scannable GS1-128 barcodes per BISG specification |
+| Channel feed delivery | At-least-once delivery with retry on failure |
+| Webhook delivery | Exponential backoff retry (3 attempts over 24 hours) |
+| API backwards compatibility | Semantic versioning, 90-day deprecation notices |
+
+#### Reliability (Phase 3)
+
+| Requirement | Target |
+|-------------|--------|
+| API availability | 99.9% uptime (8.7 hours downtime/year max) |
+| Webhook delivery success | 99.5% within retry window |
+| Channel feed success rate | 99% successful deliveries |
+| Scheduled job execution | Jobs execute within 5 minutes of scheduled time |
+
+#### Scalability (Phase 3)
+
+| Requirement | Specification |
+|-------------|---------------|
+| Concurrent API requests | 100 concurrent requests per tenant |
+| ONIX export size | Support catalogs up to 10,000 titles |
+| Webhook fanout | Support 50 webhook endpoints per tenant |
+| Import batch size | Support CSV imports up to 5,000 rows |
+
 ---
 
 _This PRD captures the essence of Salina ERP - a publishing-first ERP that consolidates disconnected workflows into a unified platform with specialized capabilities for ISBN management, tiered royalty calculations, and author transparency._
@@ -746,12 +796,393 @@ _Created through collaborative discovery between BMad and AI facilitator, inform
 
 ---
 
+## Phase 3: Distribution & Scale
+
+**Added:** 2025-12-12
+**Status:** Approved
+**Epics:** 14-21
+
+### Phase 3 Executive Summary
+
+Phase 3 transforms Salina ERP from an internal operations platform into an **industry-connected distribution hub**. While Phase 1-2 focused on managing titles, royalties, and compliance internally, Phase 3 enables publishers to syndicate their catalog data industry-wide and integrate with major sales channels.
+
+**The Core Problem Phase 3 Solves:**
+
+Publishers currently maintain their catalog in Salina but must manually re-enter the same title information across multiple platforms - Ingram, Amazon, Bowker, library distributors, and discovery services. This duplication creates data inconsistencies, delays time-to-market, and wastes operational hours.
+
+**Phase 3 Solution:**
+
+ONIX 3.1 as the metadata backbone enables "update once, distribute everywhere" - publishers maintain a single source of truth in Salina that automatically syndicates to all connected channels.
+
+### What Makes Phase 3 Special
+
+**For Publishers:**
+- Single catalog management with automated channel distribution
+- ONIX 3.1 compliance for industry-standard metadata exchange
+- Accessibility metadata support for European Accessibility Act compliance
+- Bulk import capability for migrating existing catalogs
+
+**For Operations:**
+- Production pipeline from manuscript to finished book
+- Real-time inventory synchronization with distributors
+- API access for accounting and reporting integrations
+- Webhook notifications for automated workflows
+
+**For Authors:**
+- Production status tracking in the author portal
+- Marketing asset library access
+- Manuscript upload workflow
+
+### Phase 3 Classification
+
+**Technical Type:** SaaS B2B (extending existing platform)
+**Domain:** Publishing Industry
+**Complexity:** Medium
+**Project Context:** Brownfield - Phase 3 extension of established system
+
+**Key Technical Decisions:**
+- **ONIX 3.1** (not 3.0) as the metadata standard - current EDItEUR recommendation with accessibility support
+- **REST API** with webhook events for third-party integration
+- **Channel-specific adapters** for Ingram, Amazon, and future channels
+- **Backwards compatibility** - ONIX 3.0 export for legacy channel requirements
+
+### Phase 3 Scope
+
+| Sub-Phase | Epics | Focus |
+|-----------|-------|-------|
+| **3A - Metadata Foundation** | 14, 15 | ONIX 3.1 Core, REST API & Webhooks |
+| **3B - Channel Distribution** | 16, 17 | Ingram Integration, Amazon Integration |
+| **3C - Operations** | 18, 19 | Production Pipeline, Data Import/Export |
+| **3D - Experience** | 20, 21 | UX Enhancements, Author Portal Expansion |
+
+**Removed from Scope:** Baker & Taylor integration (company winding down operations)
+
+### Phase 3 Success Criteria
+
+#### User Success Indicators
+
+**Publishers will know Phase 3 succeeds when they can:**
+1. Generate ONIX 3.1 metadata for any title with accessibility compliance
+2. Send automated feeds to Ingram and Amazon with one-click distribution
+3. Track production from manuscript to printed book in a unified pipeline
+4. Generate BISG-compliant shipping labels with GS1-128 barcodes
+5. Import existing catalogs via ONIX 2.1/3.0/3.1 or CSV templates
+6. Access the platform seamlessly on mobile devices
+7. Receive proactive notifications about distribution status changes
+
+**Authors will know Phase 3 succeeds when they can:**
+8. View real-time production status for their titles
+9. Access and download marketing assets from a centralized library
+10. Upload manuscripts directly through the author portal
+
+#### Business Success Indicators
+
+1. **Channel Coverage** - Support for 80%+ of industry distribution volume (Ingram + Amazon)
+2. **Metadata Compliance** - 100% ONIX 3.1 validation pass rate for generated feeds
+3. **Operational Efficiency** - 50% reduction in manual data entry for distribution setup
+4. **Customer Acquisition** - Migration tools enable onboarding of publishers with existing catalogs
+5. **API Adoption** - Third-party integrations demonstrate platform extensibility
+
+#### Technical Success Indicators
+
+1. **ONIX 3.1 Conformance** - Full EDItEUR codelist support with backwards-compatible 3.0 export
+2. **API Reliability** - REST API with 99.9% uptime and <200ms p95 response time
+3. **Webhook Delivery** - At-least-once delivery with retry logic for event notifications
+4. **Label Generation** - BISG-compliant GS1-128 shipping labels with GTIN-14 ISBN encoding
+5. **Import Flexibility** - Support ONIX 2.1, 3.0, 3.1, and CSV import formats
+
+#### Measurable Outcomes (Phase 3)
+
+| Outcome | Target | Measurement |
+|---------|--------|-------------|
+| ONIX feed generation | < 5 seconds per title | Performance benchmark |
+| Channel sync latency | < 24 hours to distributor | Feed delivery logs |
+| API rate limit | 1000 requests/minute | Rate limiter metrics |
+| Shipping label accuracy | 100% GS1-128 compliant | Validation scan tests |
+| Mobile responsiveness | 100% pages optimized | Lighthouse scores |
+
+#### Product Scope - Phase 3
+
+**In Scope:**
+- ONIX 3.1 message generation, validation, and codelist management
+- ONIX import (2.1/3.0/3.1) and export (3.1 default, 3.0 fallback)
+- REST API with OAuth2 authentication and rate limiting
+- Webhook event system for distribution status changes
+- Ingram/IngramSpark ONIX feed automation and order data ingestion
+- Amazon KDP/Advantage ONIX feeds and ASIN linking
+- Production pipeline: manuscript intake, vendor management, proof tracking
+- BISG shipping label generation (GS1-128, GTIN-14 ISBN encoding)
+- Bulk data import/export with CSV templates
+- Tenant onboarding wizard and notifications center
+- Mobile-optimized responsive design
+- Author portal: production tracking, marketing assets, manuscript upload
+
+**Out of Scope:**
+- Baker & Taylor integration (business wind-down)
+- Print-on-demand manufacturing (vendor responsibility)
+- eBook conversion (separate toolchain)
+- International tax compliance beyond US (future phase)
+
+### Phase 3 User Journeys
+
+**Journey 1: Sarah Chen - From Metadata Nightmare to Channel Domination**
+
+Sarah runs a mid-size independent publisher with 200 active titles. Every month, she dreads "distribution day" - manually copying metadata into Ingram's portal, reformatting the same data for Amazon, and praying she didn't transpose an ISBN. Last quarter, a pricing error cost her $3,000 in margin before anyone noticed.
+
+When Sarah discovers Salina's ONIX 3.1 distribution module, she's skeptical but desperate. She imports her existing catalog via CSV and watches as Salina validates every field, flagging three titles with missing accessibility metadata required for European sales. Within an hour, her entire catalog is ONIX 3.1 compliant.
+
+The breakthrough comes on her first automated distribution run. She clicks "Distribute to Ingram," watches the ONIX feed generate in seconds, and receives confirmation within minutes. Amazon follows. When Ingram sends back order data, it flows directly into her sales tracking. Sarah now spends distribution day doing acquisitions calls instead of data entry. Her error rate: zero.
+
+**Journey 2: Marcus Webb - The Warehouse Shipping Revolution**
+
+Marcus manages fulfillment for a publisher shipping 50,000 units monthly. His team prints labels from three different systems, hand-writes carton counts, and once shipped 500 books to the wrong distributor because someone misread an ISBN. The returns cost more than his monthly coffee budget.
+
+He starts using Salina's BISG shipping label generator after a particularly painful mislabeling incident. The first time he scans a generated GS1-128 label and watches the GTIN-14 ISBN decode perfectly, he feels actual relief. The system auto-calculates carton weights, generates compliant zone labels, and creates pick lists that match his warehouse layout.
+
+Six months later, Marcus's error rate has dropped 95%. Ingram's receiving team comments that his shipments are "the cleanest they see." He's promoted to operations director.
+
+**Journey 3: Dev Team at BookFlow - API Integration**
+
+The BookFlow team builds inventory management software for small publishers. Their customers keep asking for Salina integration, but they dread another custom API project with sparse documentation and breaking changes.
+
+They discover Salina's REST API with OAuth2 authentication, OpenAPI documentation, and webhook events. Within a day, they have a proof-of-concept pulling title metadata. The webhook system notifies them when royalty statements are generated, triggering automatic reconciliation in BookFlow.
+
+The integration launches in two weeks instead of the projected two months. BookFlow adds "Salina Certified Integration" to their marketing. Three publishers sign up specifically for the integration.
+
+**Journey 4: Amanda Torres - Author Production Tracking**
+
+Amanda is a first-time author whose book is "somewhere in production." Her publisher sends sporadic email updates, and she has no idea if her proof corrections were received or when to expect printed copies for her launch event.
+
+When her publisher enables Salina's author portal expansion, Amanda logs in and sees her book's journey visualized: manuscript received → editing complete → cover design approved → interior layout (current) → proof pending → print queue. She can see her proof corrections were applied yesterday and the timeline shows printed copies arriving two weeks before her event.
+
+Amanda stops anxious-emailing her publisher. She shares production status screenshots with her launch team. When friends ask about self-publishing, she recommends finding a publisher who uses "that system with the progress tracker."
+
+**Journey 5: New Publisher Onboarding - Catalog Migration**
+
+Rivera Press is switching from spreadsheets and manual tracking. They have 80 titles in various states of documentation - some with full metadata, some with just ISBNs and titles. The thought of manual data entry has delayed their Salina adoption for months.
+
+The onboarding wizard detects their CSV upload, maps columns intelligently, and flags 12 titles with validation issues. The system suggests BISAC codes based on descriptions, auto-formats contributor names, and identifies duplicate ISBNs. What they expected to take a week takes an afternoon.
+
+Within a month, Rivera Press has cleaner metadata than they've ever had. They distribute their first ONIX feed to Ingram and feel like a "real publisher" for the first time.
+
+#### Journey Requirements Summary
+
+| Journey | Capabilities Required |
+|---------|----------------------|
+| Sarah (Distribution) | ONIX 3.1 generation, validation, channel feeds, order ingestion |
+| Marcus (Shipping) | BISG label generation, GS1-128 encoding, carton management |
+| BookFlow (API) | REST API, OAuth2, webhooks, OpenAPI docs |
+| Amanda (Author) | Production tracking, portal expansion, status visualization |
+| Rivera (Onboarding) | Catalog import, CSV mapping, validation, onboarding wizard |
+
+### Phase 3 Technical Requirements
+
+#### ONIX 3.1 Integration Layer
+
+| Requirement | Specification |
+|-------------|---------------|
+| **Message Format** | ONIX 3.1 XML with EDItEUR namespace |
+| **Codelist Management** | Embed EDItEUR codelists with update mechanism |
+| **Validation** | Schema validation + business rule validation |
+| **Import Formats** | ONIX 2.1, 3.0, 3.1, CSV |
+| **Export Formats** | ONIX 3.1 (default), 3.0 (legacy fallback) |
+| **Accessibility** | Full ONIX 3.1 accessibility metadata support (EPUB Accessibility) |
+
+#### REST API Architecture
+
+| Requirement | Specification |
+|-------------|---------------|
+| **Authentication** | OAuth2 with JWT tokens |
+| **Authorization** | Tenant-scoped API keys with permission sets |
+| **Rate Limiting** | 1000 requests/minute per tenant (configurable) |
+| **Versioning** | URL path versioning (`/api/v1/`) |
+| **Documentation** | OpenAPI 3.0 spec auto-generated |
+| **Response Format** | JSON with consistent error envelope |
+
+#### Webhook Event System
+
+| Requirement | Specification |
+|-------------|---------------|
+| **Delivery** | At-least-once with exponential backoff retry |
+| **Signature** | HMAC-SHA256 payload signature |
+| **Events** | title.created, statement.generated, distribution.completed, etc. |
+| **Management** | Webhook endpoint registration per tenant |
+| **Logging** | Delivery attempts with response codes |
+
+#### Channel Integration Adapters
+
+| Channel | Integration Type | Data Flow |
+|---------|------------------|-----------|
+| **Ingram/IngramSpark** | ONIX 3.1 feed + FTP | Outbound: metadata, Inbound: orders/inventory |
+| **Amazon KDP/Advantage** | ONIX 3.1 feed + API | Outbound: metadata, Inbound: sales/ASIN |
+| **Bowker (Books In Print)** | ONIX 3.1 feed | Outbound only |
+
+#### BISG Shipping Label Generation
+
+| Requirement | Specification |
+|-------------|---------------|
+| **Label Format** | GS1-128 with GTIN-14 ISBN encoding |
+| **Zones** | A-I shipping zones per BISG spec |
+| **Product Label** | Zones 1-3 per BISG spec |
+| **Application Identifiers** | AI-01 (ISBN), AI-30 (qty), AI-3401 (weight), AI-9012Q (price) |
+| **Output** | PDF with 300 DPI barcode resolution |
+
+#### Production Pipeline Workflow
+
+| Stage | Capabilities |
+|-------|-------------|
+| **Manuscript Intake** | File upload, metadata extraction, format validation |
+| **Vendor Assignment** | Vendor database, task assignment, SLA tracking |
+| **Proof Management** | Proof upload, correction workflow, approval gates |
+| **Scheduling** | Production calendar, milestone tracking, alerts |
+
+#### Multi-Tenant API Considerations
+
+- API keys scoped to tenant with platform-admin override
+- Request logging with tenant attribution
+- Usage metering for potential monetization
+- Cross-tenant data isolation in all endpoints
+
+### Phase 3 Scoping & Delivery Plan
+
+#### Phase 3 MVP Approach
+
+**Strategy:** Platform MVP - Build the distribution foundation for channel expansion
+
+**Product State:**
+- Phase 1 (MVP): COMPLETE - Foundation, Multi-Tenant, Auth, Catalog, ISBN
+- Phase 2 (Growth): COMPLETE - Advanced Royalties, Tax Compliance, Platform Admin
+- Phase 3 (Distribution): 8 epics across 4 sub-phases
+
+#### Sub-Phase Delivery Sequence
+
+**Sub-Phase 3A: Metadata Foundation** (Must ship first)
+| Epic | Priority | Rationale |
+|------|----------|-----------|
+| 14: ONIX 3.1 Core | P0 | Foundation for all distribution |
+| 15: REST API & Webhooks | P0 | Enables integrations and automation |
+
+**Sub-Phase 3B: Channel Distribution** (Depends on 3A)
+| Epic | Priority | Rationale |
+|------|----------|-----------|
+| 16: Ingram Integration | P0 | 40%+ of industry distribution |
+| 17: Amazon Integration | P0 | Largest retail channel |
+
+**Sub-Phase 3C: Operations** (Can parallelize)
+| Epic | Priority | Rationale |
+|------|----------|-----------|
+| 18: Production Pipeline | P1 | Operational efficiency, BISG labels |
+| 19: Data Import/Export | P1 | Customer onboarding |
+
+**Sub-Phase 3D: Experience** (Independent track)
+| Epic | Priority | Rationale |
+|------|----------|-----------|
+| 20: UX Enhancements | P1 | Onboarding, notifications, mobile |
+| 21: Author Portal Expansion | P2 | Enhanced author experience |
+
+#### Risk Mitigation Strategy
+
+**Technical Risks:**
+- ONIX 3.1 complexity → Start with core fields, expand progressively
+- Channel API changes → Abstract behind adapter pattern
+- BISG label compliance → Validate against physical scanners early
+
+**Market Risks:**
+- Channel adoption timing → Start with Ingram (most standardized)
+- Publisher migration → Robust import tools, CSV fallback
+
+**Resource Risks:**
+- Parallel track capacity → 3A+3B sequential, 3C+3D can parallelize
+- ONIX expertise → EDItEUR documentation, reference implementations
+
+### Phase 3 Functional Requirements (FR111-FR163)
+
+#### ONIX Metadata Management (Epic 14)
+
+- **FR111:** Publisher can generate ONIX 3.1 messages for individual titles or batch catalog exports
+- **FR112:** Publisher can validate ONIX messages against EDItEUR schema and business rules before export
+- **FR113:** Publisher can import title metadata from ONIX 2.1, 3.0, or 3.1 files
+- **FR114:** Publisher can manage EDItEUR codelist values for subject codes, contributor roles, and product forms
+- **FR115:** Publisher can add accessibility metadata (EPUB Accessibility, screen reader compatibility) to titles
+- **FR116:** Publisher can export ONIX 3.0 format for legacy channel compatibility
+- **FR117:** System validates required fields and displays specific validation errors before feed generation
+- **FR118:** Publisher can preview generated ONIX XML before distribution
+
+#### REST API & Webhooks (Epic 15)
+
+- **FR119:** Developer can authenticate API requests using OAuth2 with tenant-scoped API keys
+- **FR120:** Developer can retrieve title metadata, sales transactions, and royalty data via REST endpoints
+- **FR121:** Developer can create and update titles via API with validation feedback
+- **FR122:** Developer can register webhook endpoints to receive event notifications
+- **FR123:** System delivers webhook events with HMAC-SHA256 signatures for verification
+- **FR124:** Developer can view API request logs and webhook delivery history
+- **FR125:** System enforces configurable rate limits per tenant
+- **FR126:** Developer can access auto-generated OpenAPI 3.0 documentation
+
+#### Ingram Integration (Epic 16)
+
+- **FR127:** Publisher can configure Ingram/IngramSpark account credentials and FTP settings
+- **FR128:** Publisher can schedule automated ONIX feed delivery to Ingram
+- **FR129:** Publisher can manually trigger immediate ONIX feed to Ingram
+- **FR130:** System can ingest order data from Ingram and create sales transactions
+- **FR131:** System can synchronize inventory availability status with Ingram
+- **FR132:** Publisher can view Ingram feed history with delivery status and error logs
+
+#### Amazon Integration (Epic 17)
+
+- **FR133:** Publisher can configure Amazon KDP/Advantage account settings
+- **FR134:** Publisher can schedule automated ONIX feed delivery to Amazon
+- **FR135:** System can import sales data from Amazon and create sales transactions
+- **FR136:** Publisher can link titles to ASINs for sales tracking
+- **FR137:** Publisher can view Amazon feed history with delivery status
+
+#### Production Pipeline (Epic 18)
+
+- **FR138:** Publisher can create production projects for titles with manuscript upload
+- **FR139:** Publisher can assign production tasks to vendors with due dates
+- **FR140:** Publisher can track production status through workflow stages (manuscript, editing, design, proof, print)
+- **FR141:** Publisher can upload and manage proof files with version tracking
+- **FR142:** Publisher can approve or request corrections on proofs
+- **FR143:** Publisher can view production calendar with milestone dates
+- **FR144:** Publisher can generate BISG-compliant GS1-128 shipping labels with GTIN-14 ISBN encoding
+- **FR145:** Publisher can configure carton contents and generate carton labels with Application Identifiers
+- **FR146:** Publisher can print product labels with barcode and pricing zones per BISG specification
+
+#### Data Import/Export (Epic 19)
+
+- **FR147:** Publisher can import existing catalog via CSV with column mapping
+- **FR148:** System validates imported data and displays row-level error details
+- **FR149:** Publisher can download CSV templates for bulk data entry
+- **FR150:** Publisher can export catalog data to CSV for external analysis
+- **FR151:** Publisher can bulk update title metadata via CSV upload
+- **FR152:** System suggests BISAC codes based on title descriptions during import
+
+#### User Experience Enhancements (Epic 20)
+
+- **FR153:** New tenant can complete guided onboarding wizard with essential setup steps
+- **FR154:** User can view notifications center with distribution status, system alerts, and action items
+- **FR155:** User can configure notification preferences by channel and event type
+- **FR156:** User can access all core functionality on mobile devices with responsive layout
+- **FR157:** User can access contextual help tooltips and documentation links throughout the interface
+- **FR158:** System displays onboarding progress indicator until essential setup is complete
+
+#### Author Portal Expansion (Epic 21)
+
+- **FR159:** Author can view real-time production status for their titles with visual timeline
+- **FR160:** Author can access marketing asset library with downloadable cover images and promotional materials
+- **FR161:** Author can upload manuscript files directly through the portal
+- **FR162:** Author can receive notifications when production milestones are reached
+- **FR163:** Author can view scheduled publication dates and estimated delivery timelines
+
+---
+
 ## PRD Summary
 
-**Document Status:** Complete (Updated 2025-12-05 with Growth Phase 1)
-**Total Functional Requirements:** 110 FRs across 17 capability areas
+**Document Status:** Complete (Updated 2025-12-12 with Phase 3)
+**Total Functional Requirements:** 163 FRs across 25 capability areas
 - MVP (FR1-FR81): 81 FRs across 12 capability areas - **COMPLETE**
-- Growth Phase 1 (FR82-FR110): 29 FRs across 5 capability areas - **Epics 7-9**
+- Growth Phase 1 (FR82-FR110): 29 FRs across 5 capability areas - **COMPLETE (Epics 7-9)**
+- Phase 3 Distribution (FR111-FR163): 53 FRs across 8 capability areas - **Epics 14-21**
 
 **Non-Functional Requirements:** Performance, Security, Scalability, Accessibility, Integration, Reliability
 

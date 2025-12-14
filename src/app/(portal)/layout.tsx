@@ -2,6 +2,8 @@ import { SignOutButton } from "@clerk/nextjs";
 import { FileText } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AnnouncementBannerWrapper } from "@/components/announcement-banner-wrapper";
+import { ImpersonationBannerWrapper } from "@/components/impersonation-banner-wrapper";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -38,50 +40,58 @@ export default async function PortalLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      {/* AC-5.6.1: Simplified header with Logo, My Statements, Logout */}
-      <header className="border-b bg-white shadow-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Logo / Brand */}
-          <Link
-            href="/portal"
-            className="flex items-center gap-2 text-lg font-semibold text-slate-800 hover:text-slate-600"
-          >
-            <FileText className="h-5 w-5" />
-            Author Portal
-          </Link>
+    <>
+      {/* Impersonation banner (Story 13.6) - fixed at top when impersonating */}
+      <ImpersonationBannerWrapper />
 
-          {/* Navigation */}
-          <nav className="flex items-center gap-4">
-            {/* My Statements link */}
+      {/* Platform announcements (Story 13.8) - displays active announcements */}
+      <AnnouncementBannerWrapper userRole="author" />
+
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        {/* AC-5.6.1: Simplified header with Logo, My Statements, Logout */}
+        <header className="border-b bg-white shadow-sm">
+          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+            {/* Logo / Brand */}
             <Link
               href="/portal"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900 min-h-[44px] flex items-center px-2"
+              className="flex items-center gap-2 text-lg font-semibold text-slate-800 hover:text-slate-600"
             >
-              My Statements
+              <FileText className="h-5 w-5" />
+              Author Portal
             </Link>
 
-            {/* Logout button */}
-            <SignOutButton>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="min-h-[44px]" // Touch target
+            {/* Navigation */}
+            <nav className="flex items-center gap-4">
+              {/* My Statements link */}
+              <Link
+                href="/portal"
+                className="text-sm font-medium text-slate-600 hover:text-slate-900 min-h-[44px] flex items-center px-2"
               >
-                Logout
-              </Button>
-            </SignOutButton>
-          </nav>
-        </div>
-      </header>
+                My Statements
+              </Link>
 
-      {/* Page content */}
-      <main className="flex-1 container mx-auto px-4 py-6">{children}</main>
+              {/* Logout button */}
+              <SignOutButton>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="min-h-[44px]" // Touch target
+                >
+                  Logout
+                </Button>
+              </SignOutButton>
+            </nav>
+          </div>
+        </header>
 
-      {/* Footer */}
-      <footer className="border-t bg-white py-4 text-center text-sm text-muted-foreground">
-        <p>Salina ERP Author Portal</p>
-      </footer>
-    </div>
+        {/* Page content */}
+        <main className="flex-1 container mx-auto px-4 py-6">{children}</main>
+
+        {/* Footer */}
+        <footer className="border-t bg-white py-4 text-center text-sm text-muted-foreground">
+          <p>Salina ERP Author Portal</p>
+        </footer>
+      </div>
+    </>
   );
 }

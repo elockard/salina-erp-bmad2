@@ -9,6 +9,7 @@ const settingsNav = [
   { href: "/settings/users", label: "Users", exact: false },
   { href: "/settings/isbn-import", label: "ISBN Import", exact: false },
   { href: "/settings/isbn-prefixes", label: "ISBN Prefixes", exact: false },
+  { href: "/settings/integrations", label: "Integrations", exact: false },
 ];
 
 export default function SettingsLayout({

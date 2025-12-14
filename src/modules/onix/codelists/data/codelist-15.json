@@ -1,0 +1,80 @@
+{
+  "CodeListNumber": "15",
+  "IssueNumber": 68,
+  "ListName": "Title type",
+  "Codes": [
+    {
+      "CodeValue": "00",
+      "CodeDescription": "Undefined",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "01",
+      "CodeDescription": "Distinctive title (book)",
+      "CodeNotes": "The full text of the distinctive title of the item, without abbreviation or truncation",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "02",
+      "CodeDescription": "ISSN key title of serial",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "03",
+      "CodeDescription": "Title in original language",
+      "CodeNotes": "If the book is a translation",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "04",
+      "CodeDescription": "Title acronym or initialism",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "05",
+      "CodeDescription": "Abbreviated title",
+      "IssueNumber": 1
+    },
+    {
+      "CodeValue": "06",
+      "CodeDescription": "Title in other language",
+      "CodeNotes": "A translation of the title into another language",
+      "IssueNumber": 5
+    },
+    {
+      "CodeValue": "07",
+      "CodeDescription": "Thematic title of journal issue",
+      "IssueNumber": 17
+    },
+    {
+      "CodeValue": "08",
+      "CodeDescription": "Former title",
+      "IssueNumber": 19
+    },
+    {
+      "CodeValue": "10",
+      "CodeDescription": "Distributor's title",
+      "IssueNumber": 13
+    },
+    {
+      "CodeValue": "11",
+      "CodeDescription": "Alternative title on cover",
+      "IssueNumber": 30
+    },
+    {
+      "CodeValue": "12",
+      "CodeDescription": "Alternative title on back",
+      "IssueNumber": 30
+    },
+    {
+      "CodeValue": "13",
+      "CodeDescription": "Expanded title",
+      "IssueNumber": 36
+    },
+    {
+      "CodeValue": "14",
+      "CodeDescription": "Alternative title",
+      "IssueNumber": 48
+    }
+  ]
+}
