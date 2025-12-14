@@ -82,4 +82,37 @@ export interface InngestEvents {
       userId?: string;
     };
   };
+  /**
+   * Ingram inventory sync event (push to Ingram)
+   * Story 16.4: Sync Inventory Status with Ingram
+   */
+  "channel/ingram.inventory-sync": {
+    data: {
+      tenantId: string;
+      triggeredBy: "schedule" | "manual";
+      userId?: string;
+    };
+  };
+  /**
+   * Ingram inventory import event (pull from Ingram)
+   * Story 16.4: Sync Inventory Status with Ingram
+   */
+  "channel/ingram.inventory-import": {
+    data: {
+      tenantId: string;
+      triggeredBy: "schedule" | "manual";
+      userId?: string;
+    };
+  };
+  /**
+   * Ingram feed retry event
+   * Story 16.5: View Ingram Feed History - Retry Failed Feeds
+   */
+  "channel/ingram.feed-retry": {
+    data: {
+      tenantId: string;
+      originalFeedId: string;
+      userId?: string;
+    };
+  };
 }

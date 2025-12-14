@@ -9,14 +9,17 @@
  * Story: 7.4 - Implement Publisher ISBN Prefix System
  * Story: 16.2 - Schedule Automated ONIX Feeds to Ingram
  * Story: 16.3 - Ingest Ingram Order Data
+ * Story: 16.4 - Sync Inventory Status with Ingram
+ * Story: 16.5 - View Ingram Feed History (Retry Feeds)
  * Related: src/app/api/inngest/route.ts (serve handler)
  */
 
 import { generateIsbnPrefixes } from "./generate-isbn-prefixes";
 import { generateStatementPdf } from "./generate-statement-pdf";
 import { generateStatementsBatch } from "./generate-statements-batch";
-import { ingramFeed } from "./ingram-feed";
+import { ingramFeed, ingramFeedRetry } from "./ingram-feed";
 import { ingramFeedScheduler } from "./ingram-feed-scheduler";
+import { ingramInventoryImport, ingramInventorySync } from "./ingram-inventory";
 import { ingramOrders } from "./ingram-orders";
 
 /**
@@ -28,6 +31,9 @@ export const functions = [
   generateStatementsBatch,
   generateIsbnPrefixes,
   ingramFeed,
+  ingramFeedRetry,
   ingramFeedScheduler,
+  ingramInventorySync,
+  ingramInventoryImport,
   ingramOrders,
 ];

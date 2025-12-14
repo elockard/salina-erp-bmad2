@@ -10,6 +10,7 @@ import {
   CHANNEL_TYPES,
   channelCredentials,
 } from "@/db/schema/channel-credentials";
+import { channelFeeds } from "@/db/schema/channel-feeds";
 import {
   decryptCredentials,
   encryptCredentials,
@@ -437,6 +438,208 @@ export async function triggerIngramOrderImport(): Promise<{
       success: false,
       message:
         error instanceof Error ? error.message : "Failed to trigger import",
+    };
+  }
+}
+
+/**
+ * Trigger manual Ingram inventory sync
+ *
+ * Story 16.4 - AC3: Manual Immediate Status Push
+ * Generates and uploads an inventory-focused ONIX feed with all titles
+ */
+export async function triggerIngramInventorySync(): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  try {
+    const user = await getAuthenticatedUserWithTenant();
+
+    // Check Ingram is configured
+    const credentials = await db.query.channelCredentials.findFirst({
+      where: and(
+        eq(channelCredentials.tenantId, user.tenant_id),
+        eq(channelCredentials.channel, CHANNEL_TYPES.INGRAM),
+      ),
+    });
+
+    if (!credentials) {
+      return { success: false, message: "Ingram is not configured" };
+    }
+
+    // Trigger Inngest job with inventory_sync type
+    const { inngest } = await import("@/inngest/client");
+    await inngest.send({
+      name: "channel/ingram.inventory-sync",
+      data: {
+        tenantId: user.tenant_id,
+        triggeredBy: "manual",
+        userId: user.id,
+      },
+    });
+
+    revalidatePath("/settings/integrations/ingram");
+
+    return { success: true, message: "Inventory sync started" };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to trigger sync",
+    };
+  }
+}
+
+/**
+ * Trigger manual Ingram inventory import
+ *
+ * Story 16.4 - AC4: Import Ingram Inventory Snapshot
+ * Downloads inventory files from Ingram and compares with local catalog
+ */
+export async function triggerIngramInventoryImport(): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  try {
+    const user = await getAuthenticatedUserWithTenant();
+
+    const credentials = await db.query.channelCredentials.findFirst({
+      where: and(
+        eq(channelCredentials.tenantId, user.tenant_id),
+        eq(channelCredentials.channel, CHANNEL_TYPES.INGRAM),
+      ),
+    });
+
+    if (!credentials) {
+      return { success: false, message: "Ingram is not configured" };
+    }
+
+    const { inngest } = await import("@/inngest/client");
+    await inngest.send({
+      name: "channel/ingram.inventory-import",
+      data: {
+        tenantId: user.tenant_id,
+        triggeredBy: "manual",
+        userId: user.id,
+      },
+    });
+
+    revalidatePath("/settings/integrations/ingram");
+
+    return { success: true, message: "Inventory import started" };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to trigger import",
+    };
+  }
+}
+
+/**
+ * Get feed content (XML) for preview
+ *
+ * Story 16.5 - AC2: View Feed Content (XML Preview)
+ * Returns the stored XML content for a feed entry.
+ * Validates user has access to the feed's tenant.
+ */
+export async function getFeedContent(feedId: string): Promise<{
+  success: boolean;
+  content?: string;
+  fileName?: string;
+  message?: string;
+}> {
+  try {
+    const user = await getAuthenticatedUserWithTenant();
+
+    const feed = await db.query.channelFeeds.findFirst({
+      where: and(
+        eq(channelFeeds.id, feedId),
+        eq(channelFeeds.tenantId, user.tenant_id),
+        eq(channelFeeds.channel, CHANNEL_TYPES.INGRAM),
+      ),
+    });
+
+    if (!feed) {
+      return { success: false, message: "Feed not found" };
+    }
+
+    if (!feed.feedContent) {
+      return { success: false, message: "Feed content not available" };
+    }
+
+    return {
+      success: true,
+      content: feed.feedContent,
+      fileName: feed.fileName || `feed-${feedId}.xml`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to get feed content",
+    };
+  }
+}
+
+/**
+ * Retry a failed Ingram feed
+ *
+ * Story 16.5 - AC4: Retry Failed Feeds
+ * Re-attempts upload using stored XML content.
+ * Creates new feed record linked to original via retryOf.
+ */
+export async function retryFailedFeed(feedId: string): Promise<{
+  success: boolean;
+  newFeedId?: string;
+  message?: string;
+}> {
+  try {
+    const user = await getAuthenticatedUserWithTenant();
+
+    // Get the original feed
+    const originalFeed = await db.query.channelFeeds.findFirst({
+      where: and(
+        eq(channelFeeds.id, feedId),
+        eq(channelFeeds.tenantId, user.tenant_id),
+        eq(channelFeeds.channel, CHANNEL_TYPES.INGRAM),
+      ),
+    });
+
+    if (!originalFeed) {
+      return { success: false, message: "Feed not found" };
+    }
+
+    if (originalFeed.status !== "failed") {
+      return { success: false, message: "Only failed feeds can be retried" };
+    }
+
+    if (!originalFeed.feedContent) {
+      return {
+        success: false,
+        message:
+          "Feed content not available for retry. Please trigger a new feed.",
+      };
+    }
+
+    // Trigger retry job
+    const { inngest } = await import("@/inngest/client");
+    await inngest.send({
+      name: "channel/ingram.feed-retry",
+      data: {
+        tenantId: user.tenant_id,
+        originalFeedId: feedId,
+        userId: user.id,
+      },
+    });
+
+    revalidatePath("/settings/integrations/ingram");
+
+    return { success: true, message: "Retry started" };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Failed to retry feed",
     };
   }
 }

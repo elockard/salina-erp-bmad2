@@ -4,16 +4,24 @@
  * Ingram Feed History Component
  *
  * Story 16.2 - AC5: Feed History
+ * Story 16.5 - AC1, AC5: Enhanced feed history with detail modal
+ *
  * Displays a list of all feed deliveries with status, counts, and error messages.
+ * Clicking on a feed entry opens the detail modal with XML preview and retry options.
  */
 
 import { format, formatDistanceToNow } from "date-fns";
+import { Eye, RefreshCw } from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ChannelFeed } from "@/db/schema/channel-feeds";
+import { FeedDetailModal } from "./feed-detail-modal";
 
 interface IngramFeedHistoryProps {
   feeds: ChannelFeed[];
+  onRefresh?: () => void;
 }
 
 /**
@@ -53,68 +61,123 @@ function formatFileSize(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function IngramFeedHistory({ feeds }: IngramFeedHistoryProps) {
+export function IngramFeedHistory({
+  feeds,
+  onRefresh,
+}: IngramFeedHistoryProps) {
+  const [selectedFeed, setSelectedFeed] = useState<ChannelFeed | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+  function handleViewDetails(feed: ChannelFeed) {
+    setSelectedFeed(feed);
+    setDetailModalOpen(true);
+  }
+
+  function handleRetryComplete() {
+    // Trigger parent refresh if available
+    onRefresh?.();
+  }
+
+  // Filter to only show full/delta feed types (not imports, inventory syncs)
+  const filteredFeeds = feeds.filter(
+    (f) => f.feedType === "full" || f.feedType === "delta",
+  );
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Feed History</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {feeds.length === 0 ? (
-          <p className="text-muted-foreground">No feeds sent yet.</p>
-        ) : (
-          <div className="space-y-3">
-            {feeds.map((feed) => (
-              <div
-                key={feed.id}
-                className="flex items-start justify-between p-3 border rounded-lg"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={statusVariants[feed.status] || "secondary"}>
-                      {statusLabels[feed.status] || feed.status}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {feed.triggeredBy === "schedule" ? "Scheduled" : "Manual"}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      ({feed.feedType === "full" ? "Full" : "Delta"})
-                    </span>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Feed History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {filteredFeeds.length === 0 ? (
+            <p className="text-muted-foreground">No feeds sent yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {filteredFeeds.map((feed) => (
+                <button
+                  key={feed.id}
+                  type="button"
+                  className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors w-full text-left"
+                  onClick={() => handleViewDetails(feed)}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={statusVariants[feed.status] || "secondary"}
+                      >
+                        {statusLabels[feed.status] || feed.status}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {feed.triggeredBy === "schedule"
+                          ? "Scheduled"
+                          : "Manual"}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        ({feed.feedType === "full" ? "Full" : "Delta"})
+                      </span>
+                      {feed.retryOf && (
+                        <Badge variant="outline" className="text-xs">
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          Retry
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm">
+                      {feed.createdAt
+                        ? formatDistanceToNow(new Date(feed.createdAt), {
+                            addSuffix: true,
+                          })
+                        : "Unknown time"}
+                    </p>
+                    {feed.fileName && (
+                      <p className="text-xs text-muted-foreground font-mono">
+                        {feed.fileName}
+                      </p>
+                    )}
+                    {feed.errorMessage && (
+                      <p className="text-sm text-destructive line-clamp-1">
+                        {feed.errorMessage}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-sm">
-                    {feed.createdAt
-                      ? formatDistanceToNow(new Date(feed.createdAt), {
-                          addSuffix: true,
-                        })
-                      : "Unknown time"}
-                  </p>
-                  {feed.fileName && (
-                    <p className="text-xs text-muted-foreground font-mono">
-                      {feed.fileName}
+                  <div className="text-right text-sm flex flex-col items-end gap-1">
+                    <p className="font-medium">
+                      {feed.productCount ?? 0} titles
                     </p>
-                  )}
-                  {feed.errorMessage && (
-                    <p className="text-sm text-destructive">
-                      {feed.errorMessage}
+                    <p className="text-muted-foreground">
+                      {formatFileSize(feed.fileSize)}
                     </p>
-                  )}
-                </div>
-                <div className="text-right text-sm">
-                  <p className="font-medium">{feed.productCount ?? 0} titles</p>
-                  <p className="text-muted-foreground">
-                    {formatFileSize(feed.fileSize)}
-                  </p>
-                  {feed.completedAt && (
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(feed.completedAt), "MMM d, HH:mm")}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                    {feed.completedAt && (
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(feed.completedAt), "MMM d, HH:mm")}
+                      </p>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails(feed);
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Details
+                    </Button>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <FeedDetailModal
+        feed={selectedFeed}
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        onRetryComplete={handleRetryComplete}
+      />
+    </>
   );
 }

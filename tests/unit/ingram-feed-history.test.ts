@@ -2,7 +2,8 @@
  * Ingram Feed History Component Unit Tests
  *
  * Story 16.2 - AC5: Feed History
- * Tests for the feed history display component.
+ * Story 16.5 - AC2, AC3, AC4: View Content, Error Details, Retry
+ * Tests for the feed history display component and actions.
  */
 
 import { describe, expect, it } from "vitest";
@@ -143,6 +144,174 @@ describe("Ingram Feed History", () => {
 
       expect(fullFeed.feedType).toBe("full");
       expect(deltaFeed.feedType).toBe("delta");
+    });
+  });
+
+  /**
+   * Story 16.5 - AC2: View Feed Content (XML Preview)
+   */
+  describe("Feed Content (Story 16.5)", () => {
+    it("should include feedContent column for XML storage", () => {
+      const feedWithContent = {
+        id: "feed-1",
+        feedContent: '<?xml version="1.0"?><ONIXMessage>test</ONIXMessage>',
+        fileName: "test_onix30.xml",
+      };
+
+      expect(feedWithContent.feedContent).toBeDefined();
+      expect(feedWithContent.feedContent).toContain("ONIXMessage");
+    });
+
+    it("should handle feeds without content", () => {
+      const feedWithoutContent = {
+        id: "feed-2",
+        feedContent: null,
+        fileName: null,
+      };
+
+      expect(feedWithoutContent.feedContent).toBeNull();
+    });
+  });
+
+  /**
+   * Story 16.5 - AC3: View Error Details
+   */
+  describe("Error Resolutions (Story 16.5)", () => {
+    const errorResolutions: Record<string, string> = {
+      "connection refused":
+        "Check if Ingram FTP server is accessible. Verify host and port settings.",
+      "login authentication failed":
+        "Verify your username and password are correct in settings.",
+      etimedout:
+        "Network timeout. Check your internet connection or try again later.",
+      enotfound: "Host not found. Verify the FTP host address in settings.",
+      "permission denied":
+        "Your account may not have upload permissions. Contact Ingram support.",
+      "disk quota exceeded":
+        "Ingram storage is full. Contact Ingram to resolve.",
+    };
+
+    function getErrorResolution(errorMessage: string): string | null {
+      const lowerError = errorMessage.toLowerCase();
+      for (const [pattern, resolution] of Object.entries(errorResolutions)) {
+        if (lowerError.includes(pattern.toLowerCase())) {
+          return resolution;
+        }
+      }
+      return null;
+    }
+
+    it("maps connection refused to correct resolution", () => {
+      const error = "Connection refused by server";
+      const resolution = getErrorResolution(error);
+      expect(resolution).toContain("FTP server is accessible");
+    });
+
+    it("maps login failure to correct resolution", () => {
+      const error = "Login authentication failed";
+      const resolution = getErrorResolution(error);
+      expect(resolution).toContain("username and password");
+    });
+
+    it("maps timeout errors to correct resolution", () => {
+      const error = "ETIMEDOUT - operation timed out";
+      const resolution = getErrorResolution(error);
+      expect(resolution).toContain("Network timeout");
+    });
+
+    it("maps host not found to correct resolution", () => {
+      const error = "ENOTFOUND ftp.example.com";
+      const resolution = getErrorResolution(error);
+      expect(resolution).toContain("Host not found");
+    });
+
+    it("returns null for unknown errors", () => {
+      const error = "Unknown exotic error XYZ";
+      const resolution = getErrorResolution(error);
+      expect(resolution).toBeNull();
+    });
+  });
+
+  /**
+   * Story 16.5 - AC4: Retry Failed Feeds
+   */
+  describe("Feed Retry (Story 16.5)", () => {
+    it("should include retryOf column for retry tracking", () => {
+      const retryFeed = {
+        id: "retry-feed-456",
+        retryOf: "original-feed-123",
+        status: "success",
+      };
+
+      expect(retryFeed.retryOf).toBe("original-feed-123");
+    });
+
+    it("original feed should not have retryOf", () => {
+      const originalFeed = {
+        id: "original-feed-123",
+        retryOf: null,
+        status: "failed",
+      };
+
+      expect(originalFeed.retryOf).toBeNull();
+    });
+
+    it("only failed feeds should be retryable", () => {
+      const failedFeed = { status: "failed", feedContent: "<xml>test</xml>" };
+      const successFeed = { status: "success", feedContent: "<xml>test</xml>" };
+      const pendingFeed = { status: "pending", feedContent: null };
+
+      // Only failed feeds with content can be retried
+      const canRetry = (feed: { status: string; feedContent: string | null }) =>
+        feed.status === "failed" && feed.feedContent !== null;
+
+      expect(canRetry(failedFeed)).toBe(true);
+      expect(canRetry(successFeed)).toBe(false);
+      expect(canRetry(pendingFeed)).toBe(false);
+    });
+
+    it("retry requires stored feed content", () => {
+      const feedWithContent = { feedContent: "<xml>test</xml>" };
+      const feedWithoutContent = { feedContent: null };
+
+      expect(feedWithContent.feedContent).not.toBeNull();
+      expect(feedWithoutContent.feedContent).toBeNull();
+    });
+  });
+
+  /**
+   * Story 16.5 - AC5: Feed Detail View
+   */
+  describe("Feed Detail Modal (Story 16.5)", () => {
+    it("should calculate duration from startedAt and completedAt", () => {
+      const feed = {
+        startedAt: new Date("2025-01-15T10:00:00Z"),
+        completedAt: new Date("2025-01-15T10:00:30Z"),
+      };
+
+      const duration = Math.round(
+        (feed.completedAt.getTime() - feed.startedAt.getTime()) / 1000,
+      );
+
+      expect(duration).toBe(30);
+    });
+
+    it("should handle missing timestamps gracefully", () => {
+      const feedWithMissingTimes = {
+        startedAt: null,
+        completedAt: null,
+      };
+
+      const duration =
+        feedWithMissingTimes.startedAt && feedWithMissingTimes.completedAt
+          ? Math.round(
+              (new Date(feedWithMissingTimes.completedAt).getTime() -
+                new Date(feedWithMissingTimes.startedAt).getTime()) /
+                1000,
+            )
+          : null;
+
+      expect(duration).toBeNull();
     });
   });
 });

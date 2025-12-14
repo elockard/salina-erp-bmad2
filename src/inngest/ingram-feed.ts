@@ -232,6 +232,14 @@ export const ingramFeed = inngest.createFunction(
         return { xml: builder.toXML(), fileName };
       });
 
+      // Story 16.5: Store XML content for preview/retry functionality
+      await step.run("store-feed-content", async () => {
+        await adminDb
+          .update(channelFeeds)
+          .set({ feedContent: xml })
+          .where(eq(channelFeeds.id, feedId));
+      });
+
       // Step 7: Write temp file
       const tempFilePath = await step.run("write-temp-file", async () => {
         const tempDir = os.tmpdir();
@@ -302,6 +310,145 @@ export const ingramFeed = inngest.createFunction(
         .where(eq(channelFeeds.id, feedId));
 
       throw error; // Re-throw for Inngest retry (AC7)
+    }
+  },
+);
+
+/**
+ * Ingram Feed Retry Job
+ *
+ * Story 16.5 - AC4: Retry Failed Feeds
+ * Re-attempts upload using stored XML content from original feed.
+ */
+export const ingramFeedRetry = inngest.createFunction(
+  {
+    id: "ingram-feed-retry",
+    retries: 2,
+  },
+  { event: "channel/ingram.feed-retry" },
+  async ({ event, step }) => {
+    const { tenantId, originalFeedId } = event.data as {
+      tenantId: string;
+      originalFeedId: string;
+      userId?: string;
+    };
+
+    // Get original feed with content
+    const originalFeed = await step.run("get-original-feed", async () => {
+      return adminDb.query.channelFeeds.findFirst({
+        where: and(
+          eq(channelFeeds.id, originalFeedId),
+          eq(channelFeeds.tenantId, tenantId),
+        ),
+      });
+    });
+
+    if (!originalFeed?.feedContent) {
+      throw new Error("Original feed content not found");
+    }
+
+    // Capture feed content - validated above so safe to use in closures
+    const feedContent = originalFeed.feedContent;
+
+    // Create new retry feed record
+    const retryFeedId = await step.run("create-retry-record", async () => {
+      const [feed] = await adminDb
+        .insert(channelFeeds)
+        .values({
+          tenantId,
+          channel: CHANNEL_TYPES.INGRAM,
+          status: FEED_STATUS.PENDING,
+          feedType: originalFeed.feedType,
+          triggeredBy: "manual",
+          productCount: originalFeed.productCount,
+          feedContent,
+          fileName: originalFeed.fileName,
+          retryOf: originalFeedId,
+          startedAt: new Date(),
+        })
+        .returning();
+      return feed.id;
+    });
+
+    try {
+      // Get credentials
+      const credentials = await step.run("get-credentials", async () => {
+        const cred = await adminDb.query.channelCredentials.findFirst({
+          where: and(
+            eq(channelCredentials.tenantId, tenantId),
+            eq(channelCredentials.channel, CHANNEL_TYPES.INGRAM),
+          ),
+        });
+        if (!cred) throw new Error("Ingram credentials not configured");
+        return JSON.parse(decryptCredentials(cred.credentials));
+      });
+
+      // Write temp file
+      const tempFilePath = await step.run("write-temp-file", async () => {
+        const tempDir = os.tmpdir();
+        const filePath = path.join(
+          tempDir,
+          originalFeed.fileName || `retry-${retryFeedId}.xml`,
+        );
+        await fs.writeFile(filePath, feedContent, "utf-8");
+        return filePath;
+      });
+
+      // Upload to Ingram
+      const uploadResult = await step.run("upload-to-ingram", async () => {
+        await adminDb
+          .update(channelFeeds)
+          .set({ status: FEED_STATUS.UPLOADING })
+          .where(eq(channelFeeds.id, retryFeedId));
+        return await uploadToIngram(
+          credentials,
+          tempFilePath,
+          originalFeed.fileName || `retry-${retryFeedId}.xml`,
+        );
+      });
+
+      // Get file size
+      const fileSize = await step.run("get-file-size", async () => {
+        const stats = await fs.stat(tempFilePath).catch(() => null);
+        return stats?.size || feedContent.length;
+      });
+
+      // Cleanup temp file
+      await step.run("cleanup", async () => {
+        try {
+          await fs.unlink(tempFilePath);
+        } catch {
+          // Ignore cleanup errors
+        }
+      });
+
+      if (uploadResult.success) {
+        await step.run("mark-success", async () => {
+          await adminDb
+            .update(channelFeeds)
+            .set({
+              status: FEED_STATUS.SUCCESS,
+              fileSize,
+              completedAt: new Date(),
+            })
+            .where(eq(channelFeeds.id, retryFeedId));
+        });
+
+        return { success: true, retryFeedId };
+      } else {
+        throw new Error(uploadResult.message);
+      }
+    } catch (error) {
+      await adminDb
+        .update(channelFeeds)
+        .set({
+          status: FEED_STATUS.FAILED,
+          errorMessage: error instanceof Error ? error.message : "Retry failed",
+          completedAt: new Date(),
+        })
+        .where(eq(channelFeeds.id, retryFeedId));
+
+      throw error;
     }
   },
 );

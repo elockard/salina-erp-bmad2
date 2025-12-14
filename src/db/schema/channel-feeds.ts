@@ -33,6 +33,9 @@ export const channelFeeds = pgTable("channel_feeds", {
   triggeredBy: text("triggered_by").notNull(), // 'schedule', 'manual'
   errorMessage: text("error_message"),
   metadata: jsonb("metadata"), // { schedule_frequency, onix_version, etc. }
+  // Story 16.5: XML content storage for preview and retry functionality
+  feedContent: text("feed_content"), // Stores ONIX XML for preview/retry
+  retryOf: uuid("retry_of"), // References original feed when this is a retry
   startedAt: timestamp("started_at", { mode: "date", withTimezone: true }),
   completedAt: timestamp("completed_at", { mode: "date", withTimezone: true }),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
@@ -56,11 +59,13 @@ export const FEED_STATUS = {
 
 export type FeedStatus = (typeof FEED_STATUS)[keyof typeof FEED_STATUS];
 
-// Feed type constants (AC6: full vs delta, Story 16.3: import)
+// Feed type constants (AC6: full vs delta, Story 16.3: import, Story 16.4: inventory)
 export const FEED_TYPE = {
   FULL: "full",
   DELTA: "delta",
   IMPORT: "import", // Story 16.3: Order imports from channels
+  INVENTORY_SYNC: "inventory_sync", // Story 16.4: Outbound inventory status push
+  INVENTORY_IMPORT: "inventory_import", // Story 16.4: Inbound inventory snapshot
 } as const;
 
 export type FeedType = (typeof FEED_TYPE)[keyof typeof FEED_TYPE];
