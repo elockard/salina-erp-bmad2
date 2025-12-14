@@ -1,26 +1,30 @@
-import {
-  getIngramStatus,
-  getIngramSchedule,
-  getIngramFeedHistory,
-} from "@/modules/channels/adapters/ingram/queries";
-import { IngramSettingsForm } from "@/modules/channels/adapters/ingram/components/ingram-settings-form";
-import { IngramFeedSchedule } from "@/modules/channels/adapters/ingram/components/ingram-feed-schedule";
-import { IngramFeedHistory } from "@/modules/channels/adapters/ingram/components/ingram-feed-history";
-import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
+import { IngramFeedHistory } from "@/modules/channels/adapters/ingram/components/ingram-feed-history";
+import { IngramFeedSchedule } from "@/modules/channels/adapters/ingram/components/ingram-feed-schedule";
+import { IngramImportHistory } from "@/modules/channels/adapters/ingram/components/ingram-import-history";
+import { IngramSettingsForm } from "@/modules/channels/adapters/ingram/components/ingram-settings-form";
+import {
+  getIngramFeedHistory,
+  getIngramImportHistory,
+  getIngramSchedule,
+  getIngramStatus,
+} from "@/modules/channels/adapters/ingram/queries";
 
 /**
  * Ingram Settings Page
  *
  * Story 16.1 - Configure Ingram Account Connection
  * Story 16.2 - Schedule Automated ONIX Feeds to Ingram
- * Allows publishers to configure their Ingram FTPS credentials and feed schedules.
+ * Story 16.3 - Ingest Ingram Order Data
+ * Allows publishers to configure their Ingram FTPS credentials, feed schedules, and view import history.
  */
 export default async function IngramSettingsPage() {
-  const [status, schedule, feedHistory] = await Promise.all([
+  const [status, schedule, feedHistory, importHistory] = await Promise.all([
     getIngramStatus(),
     getIngramSchedule(),
     getIngramFeedHistory(),
+    getIngramImportHistory(),
   ]);
 
   const isConnected = status?.connected ?? false;
@@ -49,9 +53,14 @@ export default async function IngramSettingsPage() {
 
       <IngramSettingsForm initialStatus={status} />
 
-      <IngramFeedSchedule currentSchedule={schedule} isConnected={isConnected} />
+      <IngramFeedSchedule
+        currentSchedule={schedule}
+        isConnected={isConnected}
+      />
 
       {isConnected && <IngramFeedHistory feeds={feedHistory} />}
+
+      {isConnected && <IngramImportHistory imports={importHistory} />}
     </div>
   );
 }

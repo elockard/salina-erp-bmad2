@@ -56,10 +56,11 @@ export const FEED_STATUS = {
 
 export type FeedStatus = (typeof FEED_STATUS)[keyof typeof FEED_STATUS];
 
-// Feed type constants (AC6: full vs delta)
+// Feed type constants (AC6: full vs delta, Story 16.3: import)
 export const FEED_TYPE = {
   FULL: "full",
   DELTA: "delta",
+  IMPORT: "import", // Story 16.3: Order imports from channels
 } as const;
 
 export type FeedType = (typeof FEED_TYPE)[keyof typeof FEED_TYPE];

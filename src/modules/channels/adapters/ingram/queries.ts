@@ -1,12 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, gte } from "drizzle-orm";
-import { db } from "@/db";
+import { adminDb } from "@/db";
 import { users } from "@/db/schema";
 import {
   CHANNEL_TYPES,
   channelCredentials,
 } from "@/db/schema/channel-credentials";
-import { channelFeeds } from "@/db/schema/channel-feeds";
+import { channelFeeds, FEED_TYPE } from "@/db/schema/channel-feeds";
 import type { IngramSchedule, IngramStatus } from "./types";
 
 /**
@@ -28,7 +28,7 @@ export async function getIngramStatus(): Promise<IngramStatus | null> {
   }
 
   // Get user's tenant
-  const user = await db.query.users.findFirst({
+  const user = await adminDb.query.users.findFirst({
     where: eq(users.clerk_user_id, userId),
   });
 
@@ -36,7 +36,7 @@ export async function getIngramStatus(): Promise<IngramStatus | null> {
     return null;
   }
 
-  const credential = await db.query.channelCredentials.findFirst({
+  const credential = await adminDb.query.channelCredentials.findFirst({
     where: and(
       eq(channelCredentials.tenantId, user.tenant_id),
       eq(channelCredentials.channel, CHANNEL_TYPES.INGRAM),
@@ -77,7 +77,7 @@ export async function getIngramSchedule(): Promise<IngramSchedule | null> {
     return null;
   }
 
-  const user = await db.query.users.findFirst({
+  const user = await adminDb.query.users.findFirst({
     where: eq(users.clerk_user_id, userId),
   });
 
@@ -85,7 +85,7 @@ export async function getIngramSchedule(): Promise<IngramSchedule | null> {
     return null;
   }
 
-  const credential = await db.query.channelCredentials.findFirst({
+  const credential = await adminDb.query.channelCredentials.findFirst({
     where: and(
       eq(channelCredentials.tenantId, user.tenant_id),
       eq(channelCredentials.channel, CHANNEL_TYPES.INGRAM),
@@ -114,7 +114,7 @@ export async function getIngramFeedHistory(limit = 50) {
     return [];
   }
 
-  const user = await db.query.users.findFirst({
+  const user = await adminDb.query.users.findFirst({
     where: eq(users.clerk_user_id, userId),
   });
 
@@ -126,10 +126,50 @@ export async function getIngramFeedHistory(limit = 50) {
   const ninetyDaysAgo = new Date();
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-  return db.query.channelFeeds.findMany({
+  return adminDb.query.channelFeeds.findMany({
     where: and(
       eq(channelFeeds.tenantId, user.tenant_id),
       eq(channelFeeds.channel, CHANNEL_TYPES.INGRAM),
+      gte(channelFeeds.createdAt, ninetyDaysAgo),
+    ),
+    orderBy: (feeds, { desc }) => [desc(feeds.createdAt)],
+    limit,
+  });
+}
+
+/**
+ * Get order import history for tenant
+ *
+ * Story 16.3 - AC5: Flag Unmatched ISBNs for Review
+ * AC7: Ingestion history recorded in channel_feeds
+ *
+ * Returns imports (feedType='import') from the last 90 days.
+ * @returns Array of import feeds with metadata including unmatched ISBNs
+ */
+export async function getIngramImportHistory(limit = 50) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return [];
+  }
+
+  const user = await adminDb.query.users.findFirst({
+    where: eq(users.clerk_user_id, userId),
+  });
+
+  if (!user?.tenant_id) {
+    return [];
+  }
+
+  // Get imports from the last 90 days
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+  return adminDb.query.channelFeeds.findMany({
+    where: and(
+      eq(channelFeeds.tenantId, user.tenant_id),
+      eq(channelFeeds.channel, CHANNEL_TYPES.INGRAM),
+      eq(channelFeeds.feedType, FEED_TYPE.IMPORT),
       gte(channelFeeds.createdAt, ninetyDaysAgo),
     ),
     orderBy: (feeds, { desc }) => [desc(feeds.createdAt)],

@@ -8,6 +8,7 @@
  * Story: 5.3 - Build Statement Generation Wizard for Finance
  * Story: 7.4 - Implement Publisher ISBN Prefix System
  * Story: 16.2 - Schedule Automated ONIX Feeds to Ingram
+ * Story: 16.3 - Ingest Ingram Order Data
  * Related: src/app/api/inngest/route.ts (serve handler)
  */
 
@@ -16,6 +17,7 @@ import { generateStatementPdf } from "./generate-statement-pdf";
 import { generateStatementsBatch } from "./generate-statements-batch";
 import { ingramFeed } from "./ingram-feed";
 import { ingramFeedScheduler } from "./ingram-feed-scheduler";
+import { ingramOrders } from "./ingram-orders";
 
 /**
  * All Inngest functions to be served
@@ -27,4 +29,5 @@ export const functions = [
   generateIsbnPrefixes,
   ingramFeed,
   ingramFeedScheduler,
+  ingramOrders,
 ];

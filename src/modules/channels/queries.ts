@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
+import { adminDb } from "@/db";
 import { users } from "@/db/schema";
 import {
   CHANNEL_TYPES,
@@ -32,7 +32,7 @@ export async function getChannelStatuses(): Promise<ChannelStatuses> {
   }
 
   // Get user's tenant
-  const user = await db.query.users.findFirst({
+  const user = await adminDb.query.users.findFirst({
     where: eq(users.clerk_user_id, userId),
   });
 
@@ -41,7 +41,7 @@ export async function getChannelStatuses(): Promise<ChannelStatuses> {
   }
 
   // Get all channel credentials for this tenant
-  const credentials = await db.query.channelCredentials.findMany({
+  const credentials = await adminDb.query.channelCredentials.findMany({
     where: eq(channelCredentials.tenantId, user.tenant_id),
   });
 

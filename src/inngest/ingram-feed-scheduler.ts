@@ -2,9 +2,13 @@
  * Inngest: Ingram Feed Scheduler Cron Job
  *
  * Story 16.2 - AC7: Scheduled Job Reliability
+ * Story 16.3 - AC7: Scheduled Order Ingestion
  *
  * Runs hourly and triggers feed generation for tenants whose
  * schedule matches the current UTC hour/day.
+ *
+ * Also triggers order ingestion for all active connections
+ * to download and process any new order files from Ingram.
  *
  * Note: Schedule matching is done in application code because
  * Inngest cron doesn't support per-tenant dynamic schedules.
@@ -53,6 +57,7 @@ export const ingramFeedScheduler = inngest.createFunction(
     );
 
     const triggeredFeeds: string[] = [];
+    const triggeredOrderImports: string[] = [];
 
     for (const connection of activeConnections) {
       // Parse schedule from metadata JSONB field
@@ -100,11 +105,23 @@ export const ingramFeedScheduler = inngest.createFunction(
         });
         triggeredFeeds.push(connection.tenantId);
       }
+
+      // Story 16.3 AC7: Trigger order ingestion for all active connections
+      // Order imports run hourly regardless of feed schedule to catch new orders
+      await step.sendEvent(`trigger-orders-${connection.tenantId}`, {
+        name: "channel/ingram.orders",
+        data: {
+          tenantId: connection.tenantId,
+          triggeredBy: "schedule",
+        },
+      });
+      triggeredOrderImports.push(connection.tenantId);
     }
 
     return {
       checkedConnections: activeConnections.length,
       triggeredFeeds,
+      triggeredOrderImports,
       currentTime: {
         hour: currentHour,
         dayOfWeek: currentDay,

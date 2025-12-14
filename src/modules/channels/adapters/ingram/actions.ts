@@ -392,3 +392,51 @@ export async function triggerIngramFeed(): Promise<{
     };
   }
 }
+
+/**
+ * Trigger manual Ingram order import
+ *
+ * Story 16.3 - AC7: Manual Import Trigger
+ * Sends Inngest event to download and process order files immediately
+ */
+export async function triggerIngramOrderImport(): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  try {
+    const user = await getAuthenticatedUserWithTenant();
+
+    // Check Ingram is configured
+    const credentials = await db.query.channelCredentials.findFirst({
+      where: and(
+        eq(channelCredentials.tenantId, user.tenant_id),
+        eq(channelCredentials.channel, CHANNEL_TYPES.INGRAM),
+      ),
+    });
+
+    if (!credentials) {
+      return { success: false, message: "Ingram is not configured" };
+    }
+
+    // Trigger Inngest job
+    const { inngest } = await import("@/inngest/client");
+    await inngest.send({
+      name: "channel/ingram.orders",
+      data: {
+        tenantId: user.tenant_id,
+        triggeredBy: "manual",
+        userId: user.id,
+      },
+    });
+
+    revalidatePath("/settings/integrations/ingram");
+
+    return { success: true, message: "Order import started" };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to trigger import",
+    };
+  }
+}

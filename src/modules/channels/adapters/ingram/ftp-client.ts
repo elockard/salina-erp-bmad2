@@ -140,3 +140,88 @@ export async function uploadToIngram(
     client.close();
   }
 }
+
+/**
+ * List files in Ingram's outbound orders directory
+ *
+ * Story 16.3 - AC1: Download Order Files from FTP
+ * Lists order files available for download, optionally filtering by modification date.
+ *
+ * @param credentials - Ingram FTP credentials
+ * @param since - Optional date to filter files modified after this time
+ * @returns Array of file metadata (name, modifiedAt, size)
+ */
+export async function listIngramOrderFiles(
+  credentials: IngramCredentials,
+  since?: Date,
+): Promise<{ name: string; modifiedAt: Date; size: number }[]> {
+  const client = new Client(30000); // 30 second timeout
+
+  try {
+    await client.access({
+      host: credentials.host,
+      user: credentials.username,
+      password: credentials.password,
+      port: credentials.port,
+      secure: true,
+      secureOptions: { rejectUnauthorized: true },
+    });
+
+    const files = await client.list("/outbound/orders/");
+
+    return files
+      .filter((f) => f.type === 1) // Regular files only (not directories)
+      .filter((f) => !since || (f.modifiedAt && f.modifiedAt > since))
+      .map((f) => ({
+        name: f.name,
+        modifiedAt: f.modifiedAt || new Date(),
+        size: f.size,
+      }));
+  } finally {
+    client.close();
+  }
+}
+
+/**
+ * Download a file from Ingram's outbound orders directory
+ *
+ * Story 16.3 - AC1: Download Order Files from FTP
+ * Downloads an order file to a local path for processing.
+ *
+ * @param credentials - Ingram FTP credentials
+ * @param fileName - Name of the file in /outbound/orders/
+ * @param localPath - Local file path to save the download
+ * @returns Download result with success flag and message
+ */
+export async function downloadIngramOrderFile(
+  credentials: IngramCredentials,
+  fileName: string,
+  localPath: string,
+): Promise<ConnectionTestResult> {
+  const client = new Client(60000); // 60 second timeout for downloads
+
+  try {
+    await client.access({
+      host: credentials.host,
+      user: credentials.username,
+      password: credentials.password,
+      port: credentials.port,
+      secure: true,
+      secureOptions: { rejectUnauthorized: true },
+    });
+
+    await client.downloadTo(localPath, `/outbound/orders/${fileName}`);
+
+    return {
+      success: true,
+      message: `Successfully downloaded ${fileName}`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Download failed",
+    };
+  } finally {
+    client.close();
+  }
+}

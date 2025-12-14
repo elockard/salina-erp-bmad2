@@ -71,4 +71,15 @@ export interface InngestEvents {
       userId?: string;
     };
   };
+  /**
+   * Ingram order ingestion event
+   * Story 16.3: Ingest Ingram Order Data
+   */
+  "channel/ingram.orders": {
+    data: {
+      tenantId: string;
+      triggeredBy: "schedule" | "manual";
+      userId?: string;
+    };
+  };
 }
