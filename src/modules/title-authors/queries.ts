@@ -26,10 +26,13 @@ import type { TitleAuthorWithContact } from "./types";
 
 /**
  * Title with all authors including ownership details
+ *
+ * Story 14.3: Added accessibility metadata fields for ONIX export
  */
 export interface TitleWithAuthors {
   id: string;
   title: string;
+  subtitle: string | null;
   isbn: string | null;
   tenant_id: string;
   publication_status: string | null;
@@ -38,6 +41,11 @@ export interface TitleWithAuthors {
   authors: TitleAuthorWithContact[];
   primaryAuthor: TitleAuthorWithContact | null;
   isSoleAuthor: boolean;
+  // Accessibility metadata (Story 14.3 - Codelist 196)
+  epub_accessibility_conformance: string | null;
+  accessibility_features: string[] | null;
+  accessibility_hazards: string[] | null;
+  accessibility_summary: string | null;
 }
 
 /**
@@ -206,6 +214,7 @@ export async function getTitleWithAuthors(
   return {
     id: title.id,
     title: title.title,
+    subtitle: title.subtitle,
     isbn: title.isbn,
     tenant_id: title.tenant_id,
     publication_status: title.publication_status,
@@ -214,6 +223,11 @@ export async function getTitleWithAuthors(
     authors,
     primaryAuthor,
     isSoleAuthor: authors.length === 1,
+    // Accessibility metadata (Story 14.3)
+    epub_accessibility_conformance: title.epub_accessibility_conformance,
+    accessibility_features: title.accessibility_features,
+    accessibility_hazards: title.accessibility_hazards,
+    accessibility_summary: title.accessibility_summary,
   };
 }
 
@@ -381,5 +395,70 @@ export async function getTitleOwnershipSum(
   return {
     total: total.toString(),
     isValid: total.equals(100),
+  };
+}
+
+// =============================================================================
+// Admin Functions (for background jobs)
+// =============================================================================
+
+/**
+ * Get title with authors - Admin version for Inngest background jobs
+ *
+ * Story 16.2: Required for feed generation without HTTP request context.
+ * Uses adminDb to bypass RLS since Inngest jobs run outside authenticated sessions.
+ *
+ * @param titleId - UUID of the title
+ * @param tenantId - UUID of the tenant (required since no RLS context)
+ * @returns Title with authors or null if not found
+ */
+export async function getTitleWithAuthorsAdmin(
+  titleId: string,
+  tenantId: string,
+): Promise<TitleWithAuthors | null> {
+  const { adminDb } = await import("@/db");
+
+  // Get title with explicit tenant check
+  const title = await adminDb.query.titles.findFirst({
+    where: and(eq(titles.id, titleId), eq(titles.tenant_id, tenantId)),
+  });
+
+  if (!title) {
+    return null;
+  }
+
+  // Get all authors for this title
+  const authors = await adminDb.query.titleAuthors.findMany({
+    where: eq(titleAuthors.title_id, titleId),
+    with: {
+      contact: true,
+    },
+    orderBy: [
+      desc(titleAuthors.is_primary),
+      desc(titleAuthors.ownership_percentage),
+    ],
+  });
+
+  // Find primary author
+  const primaryAuthor =
+    (authors.find((a) => a.is_primary) as TitleAuthorWithContact) || null;
+
+  return {
+    id: title.id,
+    title: title.title,
+    subtitle: title.subtitle,
+    isbn: title.isbn,
+    tenant_id: title.tenant_id,
+    publication_status: title.publication_status,
+    created_at: title.created_at,
+    updated_at: title.updated_at,
+    authors: authors as TitleAuthorWithContact[],
+    primaryAuthor,
+    isSoleAuthor: authors.length === 1,
+    // Accessibility metadata (Story 14.3)
+    epub_accessibility_conformance: title.epub_accessibility_conformance,
+    accessibility_features: title.accessibility_features,
+    accessibility_hazards: title.accessibility_hazards,
+    accessibility_summary: title.accessibility_summary,
   };
 }

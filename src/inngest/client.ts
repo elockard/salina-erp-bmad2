@@ -59,4 +59,16 @@ export interface InngestEvents {
       blockSize: number;
     };
   };
+  /**
+   * Ingram ONIX feed generation event
+   * Story 16.2: Scheduled and manual feed delivery
+   */
+  "channel/ingram.feed": {
+    data: {
+      tenantId: string;
+      feedType: "full" | "delta";
+      triggeredBy: "schedule" | "manual";
+      userId?: string;
+    };
+  };
 }
