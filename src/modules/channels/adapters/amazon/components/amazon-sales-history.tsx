@@ -6,9 +6,11 @@ import {
   CheckCircle,
   Clock,
   Download,
+  Link2,
   Loader2,
   XCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,8 +63,16 @@ interface AmazonSalesHistoryProps {
  * - Manual import trigger button
  */
 export function AmazonSalesHistory({ imports }: AmazonSalesHistoryProps) {
+  const router = useRouter();
   const [isImporting, setIsImporting] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+
+  // Story 17.4: Navigate to titles with ASIN for manual linking
+  const handleResolveAsin = (asin: string) => {
+    // Navigate to titles page with search query to help find matching title
+    // User can then manually add ASIN to the correct title
+    router.push(`/dashboard/titles?resolve_asin=${encodeURIComponent(asin)}`);
+  };
 
   const handleTriggerImport = async () => {
     setIsImporting(true);
@@ -215,17 +225,18 @@ export function AmazonSalesHistory({ imports }: AmazonSalesHistoryProps) {
                           records
                         </CollapsibleTrigger>
                         <CollapsibleContent className="mt-2">
-                          <div className="bg-muted rounded p-2 text-xs space-y-1 max-h-40 overflow-y-auto">
-                            <div className="grid grid-cols-4 gap-2 font-medium border-b pb-1 mb-1">
+                          <div className="bg-muted rounded p-2 text-xs space-y-1 max-h-48 overflow-y-auto">
+                            <div className="grid grid-cols-5 gap-2 font-medium border-b pb-1 mb-1">
                               <span>ASIN</span>
                               <span>ISBN</span>
                               <span>Order ID</span>
                               <span>Qty</span>
+                              <span>Action</span>
                             </div>
                             {meta?.unmatchedRecords?.map((item, idx) => (
                               <div
                                 key={`${item.asin}-${item.orderId}-${idx}`}
-                                className="grid grid-cols-4 gap-2 font-mono"
+                                className="grid grid-cols-5 gap-2 font-mono items-center"
                               >
                                 <span className="truncate" title={item.asin}>
                                   {item.asin || "-"}
@@ -237,12 +248,29 @@ export function AmazonSalesHistory({ imports }: AmazonSalesHistoryProps) {
                                   {item.orderId}
                                 </span>
                                 <span>{item.quantity}</span>
+                                <span>
+                                  {item.asin && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs"
+                                      onClick={() =>
+                                        handleResolveAsin(item.asin)
+                                      }
+                                      title="Link this ASIN to a title"
+                                    >
+                                      <Link2 className="h-3 w-3 mr-1" />
+                                      Resolve
+                                    </Button>
+                                  )}
+                                </span>
                               </div>
                             ))}
                           </div>
                           <p className="mt-2 text-xs text-muted-foreground">
-                            Note: Unmatched records can be resolved by adding
-                            matching ISBNs to your catalog.
+                            Story 17.4: Click &quot;Resolve&quot; to navigate to
+                            Titles and link the ASIN to a title. Re-import sales
+                            after linking to match these records.
                           </p>
                         </CollapsibleContent>
                       </>

@@ -256,12 +256,12 @@ development_status:
   # Goal: Automate ONIX feeds to Ingram, ingest orders and inventory
   # FRs: FR151-FR155
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-16: in-progress
+  epic-16: done
   16-1-configure-ingram-account-connection: done
   16-2-schedule-automated-onix-feeds-to-ingram: done
   16-3-ingest-ingram-order-data: done
   16-4-sync-inventory-status-with-ingram: done
-  16-5-view-ingram-feed-history: backlog
+  16-5-view-ingram-feed-history: done
   epic-16-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -269,11 +269,11 @@ development_status:
   # Goal: Automate ONIX feeds to Amazon KDP/Advantage, import sales
   # FRs: FR156-FR160
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-17: backlog
-  17-1-configure-amazon-account-connection: backlog
-  17-2-schedule-automated-onix-feeds-to-amazon: backlog
-  17-3-import-amazon-sales-data: backlog
-  17-4-link-titles-to-asins: backlog
+  epic-17: in-progress
+  17-1-configure-amazon-account-connection: done
+  17-2-schedule-automated-onix-feeds-to-amazon: review
+  17-3-import-amazon-sales-data: review
+  17-4-link-titles-to-asins: review
   17-5-view-amazon-feed-history: backlog
   epic-17-retrospective: optional
 

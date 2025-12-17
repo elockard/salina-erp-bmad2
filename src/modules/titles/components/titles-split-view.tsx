@@ -1,8 +1,10 @@
 "use client";
 
-import { FileUp } from "lucide-react";
+import { FileUp, Info, X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
 import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
@@ -26,6 +28,7 @@ interface TitlesSplitViewProps {
  * AC 1: Mobile responsive: single column layout below 768px
  */
 export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
+  const searchParams = useSearchParams();
   const [titles, setTitles] = useState<TitleWithAuthor[]>(initialTitles);
   const [selectedTitleId, setSelectedTitleId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | "all">(
@@ -38,6 +41,10 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
+
+  // Story 17.4: ASIN resolution flow
+  const resolveAsin = searchParams.get("resolve_asin");
+  const [showResolveAlert, setShowResolveAlert] = useState(!!resolveAsin);
 
   const canCreateTitles = useHasPermission(CREATE_AUTHORS_TITLES);
 
@@ -147,6 +154,31 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
             </div>
           )}
         </div>
+
+        {/* Story 17.4: ASIN Resolution Alert */}
+        {showResolveAlert && resolveAsin && (
+          <Alert className="m-2 bg-blue-50 border-blue-200">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="flex items-center justify-between">
+              <span className="text-sm">
+                Link ASIN{" "}
+                <code className="font-mono bg-blue-100 px-1 rounded">
+                  {resolveAsin}
+                </code>{" "}
+                to a title below. Select the title and click &quot;Add
+                ASIN&quot;.
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 ml-2"
+                onClick={() => setShowResolveAlert(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Title List */}
         <TitleList

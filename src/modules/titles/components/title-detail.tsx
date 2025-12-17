@@ -3,6 +3,7 @@
 import {
   BookOpen,
   DollarSign,
+  ExternalLink,
   FileCode,
   FileText,
   Pencil,
@@ -43,7 +44,11 @@ import {
   type TitleAuthorWithContact,
   updateTitleAuthors,
 } from "@/modules/title-authors";
-import { updateTitle, updateTitleAccessibility } from "../actions";
+import {
+  updateTitle,
+  updateTitleAccessibility,
+  updateTitleAsin,
+} from "../actions";
 import type { PublicationStatus, TitleWithAuthor } from "../types";
 import {
   type AccessibilityData,
@@ -286,6 +291,11 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
   const [accessibilitySaving, setAccessibilitySaving] = useState(false);
   const [accessibilityChanged, setAccessibilityChanged] = useState(false);
 
+  // Story 17.4: ASIN state
+  const [asinEditing, setAsinEditing] = useState(false);
+  const [asinValue, setAsinValue] = useState(title.asin || "");
+  const [asinSaving, setAsinSaving] = useState(false);
+
   // Load title authors and available authors
   useEffect(() => {
     async function loadAuthorsData() {
@@ -384,6 +394,25 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
       toast.error("Failed to save accessibility metadata");
     } finally {
       setAccessibilitySaving(false);
+    }
+  };
+
+  // Story 17.4: ASIN handlers
+  const handleSaveAsin = async () => {
+    setAsinSaving(true);
+    try {
+      const result = await updateTitleAsin(title.id, asinValue || null);
+      if (result.success) {
+        onTitleUpdated(result.data);
+        setAsinEditing(false);
+        toast.success(asinValue ? "ASIN linked successfully" : "ASIN removed");
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error("Failed to update ASIN");
+    } finally {
+      setAsinSaving(false);
     }
   };
 
@@ -633,6 +662,69 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
           window.location.reload();
         }}
       />
+
+      {/* Story 17.4: Amazon ASIN Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <ExternalLink className="h-4 w-4" />
+            Amazon ASIN
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {asinEditing && canEdit ? (
+            <div className="flex gap-2">
+              <Input
+                value={asinValue}
+                onChange={(e) => setAsinValue(e.target.value.toUpperCase())}
+                placeholder="Enter 10-char ASIN"
+                maxLength={10}
+                className="w-32 font-mono"
+              />
+              <Button size="sm" onClick={handleSaveAsin} disabled={asinSaving}>
+                {asinSaving ? "..." : "Save"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setAsinEditing(false);
+                  setAsinValue(title.asin || "");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div>
+                {title.asin ? (
+                  <a
+                    href={`https://www.amazon.com/dp/${title.asin}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    {title.asin}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground italic">Not set</span>
+                )}
+              </div>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAsinEditing(true)}
+                >
+                  {title.asin ? "Edit" : "Add ASIN"}
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Story 14.1: ONIX Export Section */}
       {/* Story 14.6: Added version selector for 3.0/3.1 */}

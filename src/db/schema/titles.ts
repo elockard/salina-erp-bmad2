@@ -178,6 +178,26 @@ export const titles = pgTable(
      * Story 14.3 - AC4: Include in ONIX export
      */
     accessibility_summary: text("accessibility_summary"),
+
+    // ==========================================================================
+    // AMAZON INTEGRATION (Story 17.4 - Link Titles to ASINs)
+    // ==========================================================================
+
+    /**
+     * Amazon Standard Identification Number (ASIN)
+     * 10-character alphanumeric identifier for Amazon listings
+     * Story 17.4 - Link Titles to ASINs (FR159)
+     *
+     * Used for:
+     * - Verifying Amazon listings match catalog
+     * - ASIN-based sales matching (enhancement to Story 17.3)
+     * - Direct links to Amazon product pages
+     *
+     * Format: 10 chars, alphanumeric (A-Z, 0-9)
+     * Books: Often matches ISBN-10 OR starts with "B0"
+     * Uniqueness: Globally unique across ALL tenants
+     */
+    asin: text("asin"),
   },
   (table) => ({
     /** Index on tenant_id for RLS filtering and foreign key join performance */
@@ -202,6 +222,13 @@ export const titles = pgTable(
      * Index automatically created via unique constraint
      */
     eisbnUnique: unique("titles_eisbn_unique").on(table.eisbn),
+
+    /**
+     * Unique constraint on asin - globally unique across ALL tenants
+     * Story 17.4 - Link Titles to ASINs
+     * Index automatically created via unique constraint
+     */
+    asinUnique: unique("titles_asin_unique").on(table.asin),
   }),
 );
 

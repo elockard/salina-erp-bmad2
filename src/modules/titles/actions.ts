@@ -10,6 +10,7 @@ import type { ActionResult } from "@/lib/types";
 import { getTitleById, getTitles } from "./queries";
 import {
   accessibilitySchema,
+  asinSchema,
   createTitleSchema,
   updateTitleSchema,
 } from "./schema";
@@ -296,6 +297,99 @@ export async function updateTitleAccessibility(
     return {
       success: false,
       error: "Failed to update accessibility metadata. Please try again.",
+    };
+  }
+}
+
+/**
+ * Update title ASIN
+ * Permission: CREATE_AUTHORS_TITLES (owner, admin, editor)
+ *
+ * Story 17.4 - Link Titles to ASINs
+ * AC2: Manually Enter ASIN
+ */
+export async function updateTitleAsin(
+  titleId: string,
+  asin: string | null,
+): Promise<ActionResult<TitleWithAuthor>> {
+  try {
+    // Check permission (same as updateTitle)
+    await requirePermission(CREATE_AUTHORS_TITLES);
+
+    // Validate ASIN format
+    let validatedAsin: string | null = null;
+    if (asin !== null && asin !== "") {
+      const validated = asinSchema.parse(asin);
+      validatedAsin = validated ?? null;
+    }
+
+    // Get tenant context
+    const tenantId = await getCurrentTenantId();
+    const db = await getDb();
+
+    // Get existing title to verify ownership
+    const existing = await db.query.titles.findFirst({
+      where: and(eq(titles.id, titleId), eq(titles.tenant_id, tenantId)),
+    });
+
+    if (!existing) {
+      return { success: false, error: "Title not found" };
+    }
+
+    // Check ASIN uniqueness (global - use adminDb for cross-tenant check)
+    if (validatedAsin) {
+      const { adminDb } = await import("@/db");
+      const existingAsin = await adminDb.query.titles.findFirst({
+        where: eq(titles.asin, validatedAsin),
+      });
+
+      if (existingAsin && existingAsin.id !== titleId) {
+        return {
+          success: false,
+          error: "This ASIN is already linked to another title",
+        };
+      }
+    }
+
+    // Update ASIN
+    await db
+      .update(titles)
+      .set({
+        asin: validatedAsin,
+        updated_at: new Date(),
+      })
+      .where(and(eq(titles.id, titleId), eq(titles.tenant_id, tenantId)));
+
+    // Revalidate cache
+    revalidatePath("/dashboard/titles");
+
+    // Fetch updated title
+    const titleWithAuthor = await getTitleById(titleId);
+
+    if (!titleWithAuthor) {
+      return { success: false, error: "Failed to fetch updated title" };
+    }
+
+    return { success: true, data: titleWithAuthor };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to update titles",
+      };
+    }
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues[0]?.message || "Invalid ASIN format",
+      };
+    }
+
+    console.error("updateTitleAsin error:", error);
+    return {
+      success: false,
+      error: "Failed to update ASIN. Please try again.",
     };
   }
 }

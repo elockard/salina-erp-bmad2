@@ -1,6 +1,34 @@
 import { z } from "zod";
 
 // =============================================================================
+// AMAZON ASIN VALIDATION (Story 17.4 - Link Titles to ASINs)
+// =============================================================================
+
+/**
+ * ASIN validation schema
+ * Story 17.4 - Link Titles to ASINs
+ *
+ * Format: 10 characters, alphanumeric (A-Z, 0-9)
+ * Books: Often matches ISBN-10 OR starts with "B0"
+ */
+export const asinSchema = z
+  .string()
+  .length(10, "ASIN must be exactly 10 characters")
+  .regex(/^[A-Z0-9]{10}$/i, "ASIN must be alphanumeric")
+  .transform((val) => val.toUpperCase())
+  .nullable()
+  .optional();
+
+/**
+ * Validate ASIN format (standalone function)
+ * Story 17.4 - Link Titles to ASINs
+ */
+export function isValidAsin(asin: string): boolean {
+  if (!asin || asin.length !== 10) return false;
+  return /^[A-Z0-9]{10}$/i.test(asin);
+}
+
+// =============================================================================
 // ACCESSIBILITY METADATA (Story 14.3 - Codelist 196)
 // =============================================================================
 

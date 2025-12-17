@@ -289,36 +289,43 @@ export const amazonSalesImport = inngest.createFunction(
         return owner.id;
       });
 
-      // Step 10: Build ISBN map for matching
-      // Note: ASIN matching requires Story 17.4 - only ISBN matching for now
-      const isbnMapRaw = await step.run("build-isbn-map", async () => {
+      // Step 10: Build ISBN AND ASIN maps for matching
+      // Story 17.4: Added ASIN matching support
+      const matchingMaps = await step.run("build-matching-maps", async () => {
         const tenantTitles = await adminDb.query.titles.findMany({
           where: eq(titles.tenant_id, tenantId),
-          columns: { id: true, isbn: true, eisbn: true },
+          columns: { id: true, isbn: true, eisbn: true, asin: true },
         });
 
-        const entries: [
+        const isbnEntries: [
           string,
           { id: string; format: "physical" | "ebook" },
         ][] = [];
+        const asinEntries: [string, string][] = []; // ASIN -> title ID
+
         for (const title of tenantTitles) {
           if (title.isbn) {
-            entries.push([
+            isbnEntries.push([
               normalizeIsbn(title.isbn),
               { id: title.id, format: "physical" },
             ]);
           }
           if (title.eisbn) {
-            entries.push([
+            isbnEntries.push([
               normalizeIsbn(title.eisbn),
               { id: title.id, format: "ebook" },
             ]);
           }
+          // Story 17.4: Add ASIN to map for fallback matching
+          if (title.asin) {
+            asinEntries.push([title.asin.toUpperCase(), title.id]);
+          }
         }
-        return entries;
+        return { isbnEntries, asinEntries };
       });
 
-      const isbnMap = new Map(isbnMapRaw);
+      const isbnMap = new Map(matchingMaps.isbnEntries);
+      const asinMap = new Map(matchingMaps.asinEntries);
 
       // Step 11: Batch fetch existing sales for duplicate detection
       // Issue 4 fix: Include orderId in deduplication key to distinguish different orders
@@ -352,7 +359,7 @@ export const amazonSalesImport = inngest.createFunction(
       const dupeSet = new Set(existingSalesSet);
 
       // Step 12: Process sales records with batch inserts (Issue 2 fix)
-      // Note: ISBN matching only - ASIN matching requires Story 17.4
+      // Story 17.4: Added ASIN-based matching as fallback
       const processResult = await step.run("process-sales", async () => {
         let salesCreated = 0;
         const unmatchedRecords: ImportMetadata["unmatchedRecords"] = [];
@@ -370,9 +377,16 @@ export const amazonSalesImport = inngest.createFunction(
         }[] = [];
 
         for (const sale of parseResult.sales) {
-          // Match by ISBN extracted from SKU field
-          // ASIN-based matching will be added in Story 17.4
-          const titleMatch = sale.isbn ? isbnMap.get(sale.isbn) : undefined;
+          // Match by ISBN first (priority 1)
+          let titleMatch = sale.isbn ? isbnMap.get(sale.isbn) : undefined;
+
+          // Story 17.4: Fallback to ASIN matching (priority 2)
+          if (!titleMatch && sale.asin) {
+            const asinTitleId = asinMap.get(sale.asin.toUpperCase());
+            if (asinTitleId) {
+              titleMatch = { id: asinTitleId, format: "physical" };
+            }
+          }
 
           if (!titleMatch) {
             unmatchedRecords.push({
