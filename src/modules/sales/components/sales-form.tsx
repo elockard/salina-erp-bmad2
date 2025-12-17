@@ -80,6 +80,7 @@ const CHANNEL_LABELS: Record<SalesChannel, string> = {
   wholesale: "Wholesale",
   direct: "Direct",
   distributor: "Distributor",
+  amazon: "Amazon",
 };
 
 /**

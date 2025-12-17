@@ -11,9 +11,13 @@
  * Story: 16.3 - Ingest Ingram Order Data
  * Story: 16.4 - Sync Inventory Status with Ingram
  * Story: 16.5 - View Ingram Feed History (Retry Feeds)
+ * Story: 17.2 - Schedule Automated ONIX Feeds to Amazon
  * Related: src/app/api/inngest/route.ts (serve handler)
  */
 
+import { amazonFeed } from "./amazon-feed";
+import { amazonFeedScheduler } from "./amazon-feed-scheduler";
+import { amazonSalesImport } from "./amazon-sales-import";
 import { generateIsbnPrefixes } from "./generate-isbn-prefixes";
 import { generateStatementPdf } from "./generate-statement-pdf";
 import { generateStatementsBatch } from "./generate-statements-batch";
@@ -36,4 +40,7 @@ export const functions = [
   ingramInventorySync,
   ingramInventoryImport,
   ingramOrders,
+  amazonFeed,
+  amazonFeedScheduler,
+  amazonSalesImport,
 ];

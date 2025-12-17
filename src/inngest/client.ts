@@ -115,4 +115,30 @@ export interface InngestEvents {
       userId?: string;
     };
   };
+  /**
+   * Amazon ONIX feed generation event
+   * Story 17.2: Schedule Automated ONIX Feeds to Amazon
+   */
+  "channel/amazon.feed": {
+    data: {
+      tenantId: string;
+      feedType: "full" | "delta";
+      triggeredBy: "schedule" | "manual";
+      userId?: string;
+    };
+  };
+  /**
+   * Amazon sales import event
+   * Story 17.3: Import Amazon Sales Data
+   */
+  "channel/amazon.sales-import": {
+    data: {
+      tenantId: string;
+      triggeredBy: "schedule" | "manual";
+      userId?: string;
+      // Optional date range override (defaults to last import to now)
+      startDate?: string; // ISO date
+      endDate?: string; // ISO date
+    };
+  };
 }

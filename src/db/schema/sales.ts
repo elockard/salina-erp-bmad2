@@ -47,13 +47,15 @@ import { users } from "./users";
  * - retail: Direct retail sales (bookstores, etc.)
  * - wholesale: Bulk sales to distributors/retailers
  * - direct: Direct-to-consumer sales (publisher website, etc.)
- * - distributor: Sales through distribution partners
+ * - distributor: Sales through distribution partners (e.g., Ingram)
+ * - amazon: Sales through Amazon marketplace (Story 17.3)
  */
 export const salesChannelValues = [
   "retail",
   "wholesale",
   "direct",
   "distributor",
+  "amazon",
 ] as const;
 
 export type SalesChannel = (typeof salesChannelValues)[number];
@@ -139,7 +141,7 @@ export const sales = pgTable(
     /**
      * Sales channel
      * Enforced via text enum at database level
-     * Valid values: retail, wholesale, direct, distributor
+     * Valid values: retail, wholesale, direct, distributor, amazon
      */
     channel: text("channel", { enum: salesChannelValues }).notNull(),
 
