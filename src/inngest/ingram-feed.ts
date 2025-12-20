@@ -29,6 +29,7 @@ import { channelFeeds, FEED_STATUS } from "@/db/schema/channel-feeds";
 import { tenants } from "@/db/schema/tenants";
 import { titles } from "@/db/schema/titles";
 import { decryptCredentials } from "@/lib/channel-encryption";
+import { webhookEvents } from "@/modules/api/webhooks/dispatcher";
 import { uploadToIngram } from "@/modules/channels/adapters/ingram/ftp-client";
 import { ONIXMessageBuilder } from "@/modules/onix/builder/message-builder";
 import {
@@ -36,6 +37,7 @@ import {
   type TitleWithAuthors,
 } from "@/modules/title-authors/queries";
 import { inngest } from "./client";
+import { createFeedNotificationAdmin } from "./notification-helpers";
 
 /**
  * Event payload for Ingram feed generation
@@ -288,6 +290,27 @@ export const ingramFeed = inngest.createFunction(
             .where(eq(channelFeeds.id, feedId));
         });
 
+        // Fire-and-forget webhook dispatch (Story 15.5)
+        webhookEvents
+          .onixExported(tenantId, {
+            id: feedId,
+            channel: "ingram",
+            format: "ONIX 3.0",
+            titleCount: titlesToExport.length,
+            fileName,
+          })
+          .catch(() => {}); // Ignore errors
+
+        // Create success notification (Story 20.2)
+        await step.run("create-success-notification", async () => {
+          await createFeedNotificationAdmin(tenantId, {
+            success: true,
+            channel: "Ingram",
+            productCount: titlesToExport.length,
+            feedId,
+          });
+        });
+
         return {
           success: true,
           feedId,
@@ -298,16 +321,27 @@ export const ingramFeed = inngest.createFunction(
         throw new Error(uploadResult.message);
       }
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+
       // Mark feed as failed
       await adminDb
         .update(channelFeeds)
         .set({
           status: FEED_STATUS.FAILED,
-          errorMessage:
-            error instanceof Error ? error.message : "Unknown error",
+          errorMessage,
           completedAt: new Date(),
         })
         .where(eq(channelFeeds.id, feedId));
+
+      // Create failure notification (Story 20.2)
+      await createFeedNotificationAdmin(tenantId, {
+        success: false,
+        channel: "Ingram",
+        productCount: 0,
+        feedId,
+        errorMessage,
+      });
 
       throw error; // Re-throw for Inngest retry (AC7)
     }
@@ -324,6 +358,10 @@ export const ingramFeedRetry = inngest.createFunction(
   {
     id: "ingram-feed-retry",
     retries: 2,
+    // Note: Intentionally no onFailure handler (unlike main ingramFeed).
+    // Retry failures don't indicate channel misconfiguration - they're
+    // user-initiated attempts on already-failed feeds. The feed record
+    // status is updated to 'failed' in the catch block below.
   },
   { event: "channel/ingram.feed-retry" },
   async ({ event, step }) => {
@@ -434,19 +472,39 @@ export const ingramFeedRetry = inngest.createFunction(
             .where(eq(channelFeeds.id, retryFeedId));
         });
 
+        // Create success notification (Story 20.2)
+        await createFeedNotificationAdmin(tenantId, {
+          success: true,
+          channel: "Ingram",
+          productCount: originalFeed.productCount || 0,
+          feedId: retryFeedId,
+        });
+
         return { success: true, retryFeedId };
       } else {
         throw new Error(uploadResult.message);
       }
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Retry failed";
+
       await adminDb
         .update(channelFeeds)
         .set({
           status: FEED_STATUS.FAILED,
-          errorMessage: error instanceof Error ? error.message : "Retry failed",
+          errorMessage,
           completedAt: new Date(),
         })
         .where(eq(channelFeeds.id, retryFeedId));
+
+      // Create failure notification (Story 20.2)
+      await createFeedNotificationAdmin(tenantId, {
+        success: false,
+        channel: "Ingram",
+        productCount: 0,
+        feedId: retryFeedId,
+        errorMessage,
+      });
 
       throw error;
     }

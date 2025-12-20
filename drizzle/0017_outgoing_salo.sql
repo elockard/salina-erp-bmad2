@@ -1,0 +1,1 @@
+ALTER TABLE "statements" ALTER COLUMN "author_id" DROP NOT NULL;

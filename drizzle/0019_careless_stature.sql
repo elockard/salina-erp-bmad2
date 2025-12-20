@@ -1,0 +1,1 @@
+ALTER TABLE "contracts" ADD COLUMN "tier_calculation_mode" text DEFAULT 'period' NOT NULL;

@@ -6,8 +6,10 @@
  * TanStack Table data grid for statements with:
  * - Period, Author, Generated On, Status, Net Payable, Actions columns
  * - Row actions: View, Download PDF, Resend Email
+ * - Mobile: Card-based layout (Story 20.4)
  *
  * Story: 5.5 - Build Statements List and Detail View for Finance
+ * Story 20.4: Mobile-Responsive Layout (AC 20.4.3)
  * Task 4: Build statements list table component (AC: 1)
  *
  * Related:
@@ -31,6 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { MobileCardSkeleton } from "@/components/ui/responsive-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -45,6 +48,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import type { StatementCalculations, StatementWithRelations } from "../types";
 import { StatementStatusBadge } from "./statement-status-badge";
 
@@ -130,6 +134,92 @@ function getOwnershipPercentage(
 }
 
 /**
+ * Mobile card component for statements
+ * Story 20.4: Mobile-Responsive Layout (AC 20.4.3)
+ */
+function StatementMobileCard({
+  statement,
+  onView,
+  onDownloadPDF,
+  onResendEmail,
+}: {
+  statement: StatementWithRelations;
+  onView: () => void;
+  onDownloadPDF: () => void;
+  onResendEmail: () => void;
+}) {
+  const isCoAuthored = isCoAuthoredStatement(statement);
+  const ownershipPct = getOwnershipPercentage(statement);
+
+  return (
+    <div className="rounded-lg border p-4 space-y-3">
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="font-medium flex items-center gap-2">
+            {getAuthorName(statement)}
+            {isCoAuthored && (
+              <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
+                <Users className="h-3 w-3" />
+                {ownershipPct}%
+              </span>
+            )}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {formatPeriod(statement.period_start)}
+          </div>
+        </div>
+        <StatementStatusBadge
+          status={statement.status as "draft" | "sent" | "failed"}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div>
+          <span className="text-muted-foreground">Generated:</span>
+          <span className="ml-1">
+            {format(new Date(statement.created_at), "MMM dd, yyyy")}
+          </span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Net Payable:</span>
+          <span className="ml-1 font-bold">
+            {formatCurrency(statement.net_payable)}
+          </span>
+        </div>
+      </div>
+      <div className="flex gap-2 pt-2 border-t">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onView}
+          className="flex-1 h-11"
+        >
+          <Eye className="h-4 w-4 mr-1" />
+          View
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onDownloadPDF}
+          className="flex-1 h-11"
+        >
+          <Download className="h-4 w-4 mr-1" />
+          PDF
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onResendEmail}
+          className="flex-1 h-11"
+        >
+          <Mail className="h-4 w-4 mr-1" />
+          Email
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Statements data table with TanStack Table
  *
  * AC-5.5.1: Table displays period, author, generated on date, status badge,
@@ -142,6 +232,8 @@ export function StatementsList({
   onDownloadPDF,
   onResendEmail,
 }: StatementsListProps) {
+  const isMobile = useIsMobile();
+
   // Define columns
   const columns: ColumnDef<StatementWithRelations>[] = useMemo(
     () => [
@@ -242,6 +334,10 @@ export function StatementsList({
 
   // Loading state
   if (loading) {
+    // Mobile: Card skeletons (Story 20.4)
+    if (isMobile) {
+      return <MobileCardSkeleton count={5} />;
+    }
     return (
       <div className="rounded-md border">
         <Table>
@@ -287,30 +383,30 @@ export function StatementsList({
   // Empty state
   if (statements.length === 0) {
     return (
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Period</TableHead>
-              <TableHead>Author</TableHead>
-              <TableHead>Generated On</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Net Payable</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                No statements found.
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+      <div className="flex flex-col items-center justify-center py-12 text-center rounded-md border">
+        <p className="text-muted-foreground">No statements found.</p>
       </div>
     );
   }
 
+  // Mobile: Card layout (Story 20.4)
+  if (isMobile) {
+    return (
+      <div className="space-y-3">
+        {statements.map((statement) => (
+          <StatementMobileCard
+            key={statement.id}
+            statement={statement}
+            onView={() => onView(statement)}
+            onDownloadPDF={() => onDownloadPDF(statement)}
+            onResendEmail={() => onResendEmail(statement)}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Desktop: Table layout
   return (
     <div className="rounded-md border">
       <Table>

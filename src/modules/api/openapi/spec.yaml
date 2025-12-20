@@ -1,0 +1,1156 @@
+openapi: 3.0.3
+info:
+  title: Salina ERP API
+  version: "1.0.0"
+  description: |
+    REST API for Salina ERP - Publisher Royalty Management Platform.
+
+    ## Authentication
+    All API requests require authentication via Bearer tokens. See the Authentication section for details.
+
+    ## Rate Limits
+    - Default: 100 requests/minute + 1000 requests/hour
+    - Premium: 1000 requests/minute + 10000 requests/hour
+    - Auth endpoint: 10 requests/minute (IP-based)
+
+    Rate limit headers are included in all responses.
+  contact:
+    name: Salina Support
+    email: support@salina.app
+  license:
+    name: Proprietary
+    url: https://salina.app/terms
+
+servers:
+  - url: https://{tenant}.salina.app/api/v1
+    description: Production API
+    variables:
+      tenant:
+        default: demo
+        description: Your tenant subdomain
+
+tags:
+  - name: Authentication
+    description: API key exchange and token management
+  - name: Titles
+    description: Book title catalog management
+  - name: Contacts
+    description: Author and contact management
+  - name: Sales
+    description: Sales transaction management
+  - name: ONIX
+    description: ONIX metadata export
+  - name: Webhooks
+    description: Webhook subscription and delivery management
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/token:
+    post:
+      tags: [Authentication]
+      summary: Exchange API key for access token
+      description: |
+        Exchange your API key credentials for a JWT access token.
+        Tokens are valid for 15 minutes and must be included in the
+        Authorization header of subsequent requests.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [client_id, client_secret, grant_type]
+              properties:
+                client_id:
+                  type: string
+                  description: Your API key ID
+                  example: "sk_live_abc123..."
+                client_secret:
+                  type: string
+                  description: Your API key secret
+                  example: "secret_xyz789..."
+                grant_type:
+                  type: string
+                  enum: [client_credentials]
+                  default: client_credentials
+      responses:
+        "200":
+          description: Token issued successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /titles:
+    get:
+      tags: [Titles]
+      summary: List titles
+      description: Returns a paginated list of titles for your tenant.
+      parameters:
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending, published, out_of_print]
+        - name: search
+          in: query
+          description: Search by title or ISBN
+          schema:
+            type: string
+        - name: author_id
+          in: query
+          description: Filter by author contact ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Paginated list of titles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TitleListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    post:
+      tags: [Titles]
+      summary: Create a title
+      description: Create a new title in your catalog. Requires `write` scope.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TitleCreate"
+      responses:
+        "201":
+          description: Title created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TitleResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /titles/{id}:
+    get:
+      tags: [Titles]
+      summary: Get a title
+      description: Retrieve a single title by ID.
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Title details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TitleResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Titles]
+      summary: Update a title
+      description: Update an existing title. Partial updates supported. Requires `write` scope.
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TitleUpdate"
+      responses:
+        "200":
+          description: Title updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TitleResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /contacts:
+    get:
+      tags: [Contacts]
+      summary: List contacts
+      description: Returns a paginated list of contacts (authors, vendors, etc.).
+      parameters:
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+        - name: role
+          in: query
+          description: Filter by contact role
+          schema:
+            type: string
+            enum: [author, vendor, editor, illustrator]
+        - name: search
+          in: query
+          description: Search by name or email
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of contacts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactListResponse"
+    post:
+      tags: [Contacts]
+      summary: Create a contact
+      description: Create a new contact. Requires `write` scope.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactCreate"
+      responses:
+        "201":
+          description: Contact created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+
+  /contacts/{id}:
+    get:
+      tags: [Contacts]
+      summary: Get a contact
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Contact details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Contacts]
+      summary: Update a contact
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactUpdate"
+      responses:
+        "200":
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+
+  /sales:
+    get:
+      tags: [Sales]
+      summary: List sales transactions
+      description: Returns a paginated list of sales transactions.
+      parameters:
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+        - name: title_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: channel
+          in: query
+          schema:
+            type: string
+            enum: [amazon, ingram, direct, other]
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [paperback, hardcover, ebook, audiobook]
+      responses:
+        "200":
+          description: Paginated list of sales
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalesListResponse"
+    post:
+      tags: [Sales]
+      summary: Record sales transactions
+      description: |
+        Record one or more sales transactions. Requires `write` scope.
+        Supports bulk creation (max 100 per request).
+        Sales are immutable - they cannot be updated or deleted via API.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/SaleCreate"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/SaleCreate"
+                  maxItems: 100
+      responses:
+        "201":
+          description: Sales recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalesCreateResponse"
+
+  /sales/{id}:
+    get:
+      tags: [Sales]
+      summary: Get a sale transaction
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Sale details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /onix/export:
+    get:
+      tags: [ONIX]
+      summary: Export ONIX metadata
+      description: |
+        Export title metadata in ONIX 3.1 (default) or 3.0 XML format.
+        Use this endpoint to sync your catalog with distribution channels.
+      parameters:
+        - name: title_ids
+          in: query
+          description: Comma-separated list of title IDs to export
+          schema:
+            type: string
+        - name: version
+          in: query
+          description: ONIX version
+          schema:
+            type: string
+            enum: ["3.1", "3.0"]
+            default: "3.1"
+        - name: since
+          in: query
+          description: Only export titles updated after this timestamp
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: ONIX XML document
+          content:
+            application/xml:
+              schema:
+                type: string
+                example: '<?xml version="1.0"?>...'
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      summary: List webhook subscriptions
+      responses:
+        "200":
+          description: List of webhook subscriptions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookListResponse"
+    post:
+      tags: [Webhooks]
+      summary: Create webhook subscription
+      description: |
+        Subscribe to receive webhook notifications for specified events.
+        Requires `admin` scope. The signing secret is returned only once
+        in the creation response - store it securely for signature verification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookCreate"
+      responses:
+        "201":
+          description: Webhook subscription created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookResponse"
+
+  /webhooks/{id}:
+    get:
+      tags: [Webhooks]
+      summary: Get webhook subscription
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Webhook subscription details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookResponse"
+    put:
+      tags: [Webhooks]
+      summary: Update webhook subscription
+      description: Update webhook subscription settings. Requires `admin` scope.
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookUpdate"
+      responses:
+        "200":
+          description: Webhook updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    delete:
+      tags: [Webhooks]
+      summary: Delete webhook subscription
+      description: Delete a webhook subscription. Requires `admin` scope.
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "204":
+          description: Webhook deleted
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /webhooks/{id}/test:
+    post:
+      tags: [Webhooks]
+      summary: Send test webhook
+      description: Send a test payload to verify your webhook endpoint.
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Test delivery result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookTestResponse"
+
+  /webhooks/{id}/deliveries:
+    get:
+      tags: [Webhooks]
+      summary: List webhook deliveries
+      description: View delivery history for a webhook subscription.
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, delivered, failed]
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: Delivery history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookDeliveryListResponse"
+
+  /webhooks/{id}/secret:
+    post:
+      tags: [Webhooks]
+      summary: Regenerate webhook secret
+      description: |
+        Generate a new signing secret for this webhook subscription.
+        The old secret is immediately invalidated. Requires `admin` scope.
+        **Important:** The new secret is only shown once in the response.
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: New secret generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret:
+                    type: string
+                    description: New signing secret (shown once only)
+                    example: "whsec_abc123xyz..."
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /webhooks/deliveries/{deliveryId}:
+    get:
+      tags: [Webhooks]
+      summary: Get delivery details
+      description: Retrieve details of a specific webhook delivery attempt.
+      parameters:
+        - name: deliveryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Delivery details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookDelivery"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token obtained via /auth/token endpoint.
+        Include in Authorization header: `Bearer <token>`
+
+  parameters:
+    cursor:
+      name: cursor
+      in: query
+      description: Pagination cursor from previous response
+      schema:
+        type: string
+    limit:
+      name: limit
+      in: query
+      description: Number of results per page (default 20, max 100)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    resourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Authentication required or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: unauthorized
+              message: Invalid or expired access token
+    Forbidden:
+      description: Insufficient permissions (scope)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: forbidden
+              message: This endpoint requires write scope
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: not_found
+              message: Resource not found
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: validation_error
+              message: Validation failed
+              details:
+                title: Title is required
+                isbn: Invalid ISBN-13 format
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Request limit per window
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Remaining requests in window
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Unix timestamp when limit resets
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until requests allowed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: rate_limited
+              message: Rate limit exceeded. Retry after 30 seconds.
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [validation_error, not_found, unauthorized, forbidden, rate_limited, server_error]
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                type: string
+
+    Pagination:
+      type: object
+      properties:
+        cursor:
+          type: string
+          nullable: true
+          description: Cursor for next page (null if no more results)
+        has_more:
+          type: boolean
+        total_count:
+          type: integer
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+          description: Token lifetime in seconds (900 = 15 minutes)
+        scope:
+          type: string
+          description: Granted scopes (read, write, admin, or combinations)
+      example:
+        access_token: eyJhbGciOiJIUzI1NiIs...
+        token_type: Bearer
+        expires_in: 900
+        scope: read write admin
+
+    Title:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        subtitle:
+          type: string
+        isbn:
+          type: string
+          description: ISBN-13
+        asin:
+          type: string
+          description: Amazon Standard Identification Number
+        format:
+          type: string
+          enum: [paperback, hardcover, ebook, audiobook]
+        publication_status:
+          type: string
+          enum: [draft, pending, published, out_of_print]
+        list_price:
+          type: number
+          format: decimal
+        publication_date:
+          type: string
+          format: date
+        authors:
+          type: array
+          items:
+            type: object
+            properties:
+              contactId:
+                type: string
+                format: uuid
+              name:
+                type: string
+              isPrimary:
+                type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TitleCreate:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        subtitle:
+          type: string
+          maxLength: 500
+        isbn:
+          type: string
+          pattern: "^97[89]\\d{10}$"
+          description: ISBN-13 (must start with 978 or 979)
+        asin:
+          type: string
+          pattern: "^[A-Z0-9]{10}$"
+        format:
+          type: string
+          enum: [paperback, hardcover, ebook, audiobook]
+        publication_status:
+          type: string
+          enum: [draft, pending, published, out_of_print]
+          default: draft
+        list_price:
+          type: number
+        publication_date:
+          type: string
+          format: date
+        contact_id:
+          type: string
+          format: uuid
+          description: Primary author contact ID
+
+    TitleUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        subtitle:
+          type: string
+        publication_status:
+          type: string
+          enum: [draft, pending, published, out_of_print]
+        list_price:
+          type: number
+        publication_date:
+          type: string
+          format: date
+        asin:
+          type: string
+
+    TitleResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Title"
+
+    TitleListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Title"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    Contact:
+      type: object
+      description: |
+        Contact resource. Note: Sensitive fields (tax_id, payment_info, etc.)
+        are never exposed via API.
+      properties:
+        id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        company:
+          type: string
+        phone:
+          type: string
+        address:
+          type: object
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            postal_code:
+              type: string
+            country:
+              type: string
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [author, vendor, editor, illustrator]
+              assigned_at:
+                type: string
+                format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ContactCreate:
+      type: object
+      required: [first_name, last_name]
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        company:
+          type: string
+        phone:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [author, vendor, editor, illustrator]
+
+    ContactUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        company:
+          type: string
+        phone:
+          type: string
+
+    ContactResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Contact"
+
+    ContactListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contact"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    Sale:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+        unit_price:
+          type: number
+        total_amount:
+          type: number
+        channel:
+          type: string
+          enum: [amazon, ingram, direct, other]
+        format:
+          type: string
+          enum: [paperback, hardcover, ebook, audiobook]
+        sale_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    SaleCreate:
+      type: object
+      required: [title_id, quantity, unit_price, sale_date]
+      properties:
+        title_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: number
+          minimum: 0
+        channel:
+          type: string
+          enum: [amazon, ingram, direct, other]
+        format:
+          type: string
+          enum: [paperback, hardcover, ebook, audiobook]
+        sale_date:
+          type: string
+          format: date
+
+    SaleResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Sale"
+
+    SalesListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Sale"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    SalesCreateResponse:
+      type: object
+      properties:
+        data:
+          oneOf:
+            - $ref: "#/components/schemas/Sale"
+            - type: array
+              items:
+                $ref: "#/components/schemas/Sale"
+        created_count:
+          type: integer
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+            enum: [title.created, title.updated, sale.created, statement.generated, onix.exported]
+        is_active:
+          type: boolean
+        last_delivery_at:
+          type: string
+          format: date-time
+        last_delivery_status:
+          type: string
+          enum: [success, failed]
+        consecutive_failures:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    WebhookCreate:
+      type: object
+      required: [name, url, events]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        url:
+          type: string
+          format: uri
+          description: HTTPS URL to receive webhook payloads
+        events:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [title.created, title.updated, sale.created, statement.generated, onix.exported]
+
+    WebhookUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+            enum: [title.created, title.updated, sale.created, statement.generated, onix.exported]
+        is_active:
+          type: boolean
+
+    WebhookResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Webhook"
+
+    WebhookListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Webhook"
+
+    WebhookTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        status_code:
+          type: integer
+        response_time_ms:
+          type: integer
+        error:
+          type: string
+
+    WebhookDelivery:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        event_type:
+          type: string
+        status:
+          type: string
+          enum: [pending, delivered, failed]
+        response_status_code:
+          type: integer
+        error_message:
+          type: string
+        attempt_count:
+          type: integer
+        max_attempts:
+          type: integer
+        duration_ms:
+          type: integer
+        delivered_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    WebhookDeliveryListResponse:
+      type: object
+      properties:
+        deliveries:
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookDelivery"
+
+    WebhookPayload:
+      type: object
+      description: |
+        Webhook payload format. All webhooks include these standard fields.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique event ID (same across retries for idempotency)
+        type:
+          type: string
+          enum: [title.created, title.updated, sale.created, statement.generated, onix.exported]
+        created_at:
+          type: string
+          format: date-time
+        data:
+          type: object
+          description: Event-specific payload
+      example:
+        id: "550e8400-e29b-41d4-a716-446655440000"
+        type: "title.created"
+        created_at: "2024-01-15T10:30:00Z"
+        data:
+          title_id: "123e4567-e89b-12d3-a456-426614174000"
+          title: "The Great Novel"
+          isbn: "9781234567890"

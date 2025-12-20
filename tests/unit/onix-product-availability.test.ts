@@ -69,6 +69,8 @@ describe("ONIXMessageBuilder ProductAvailability integration", () => {
     accessibility_features: null,
     accessibility_hazards: null,
     accessibility_summary: null,
+    bisac_code: null,
+    bisac_codes: null,
   });
 
   it("generates ProductAvailability 10 for draft title", () => {

@@ -25,6 +25,7 @@ import {
 } from "@/lib/auth";
 import { RECORD_SALES } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
+import { webhookEvents } from "@/modules/api/webhooks/dispatcher";
 import {
   getSaleById,
   getSalesStats,
@@ -175,6 +176,16 @@ export async function recordSale(
         },
       },
     });
+
+    // Fire-and-forget webhook dispatch (Story 15.5)
+    webhookEvents
+      .saleCreated(tenantId, {
+        id: sale.id,
+        titleId: sale.title_id,
+        quantity: sale.quantity,
+        amount: sale.total_amount,
+      })
+      .catch(() => {}); // Ignore errors
 
     // 9. Revalidate sales-related paths
     revalidatePath("/sales");

@@ -45,6 +45,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { MobileCardSkeleton } from "@/components/ui/responsive-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -54,6 +55,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import type { InvoiceStatusType, InvoiceWithCustomer } from "../types";
 import { InvoiceStatusBadge } from "./invoice-status-badge";
 
@@ -122,6 +124,122 @@ function canVoid(status: InvoiceStatusType): boolean {
 }
 
 /**
+ * Mobile card component for invoices
+ * Story 20.4: Mobile-Responsive Layout (AC 20.4.3)
+ */
+function InvoiceMobileCard({
+  invoice,
+  onView,
+  onEdit,
+  onRecordPayment,
+  onSend,
+  onVoid,
+}: {
+  invoice: InvoiceWithCustomer;
+  onView: () => void;
+  onEdit?: () => void;
+  onRecordPayment?: () => void;
+  onSend?: () => void;
+  onVoid: () => void;
+}) {
+  const status = invoice.status as InvoiceStatusType;
+  const balance = Number.parseFloat(invoice.balance_due);
+
+  return (
+    <div className="rounded-lg border p-4 space-y-3">
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="font-mono text-sm font-medium">
+            {invoice.invoice_number}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {getCustomerName(invoice.customer)}
+          </div>
+        </div>
+        <InvoiceStatusBadge status={status} />
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div>
+          <span className="text-muted-foreground">Date:</span>
+          <span className="ml-1">
+            {format(new Date(invoice.invoice_date), "MMM dd, yyyy")}
+          </span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Amount:</span>
+          <span className="ml-1 font-medium">
+            {formatCurrency(invoice.total)}
+          </span>
+        </div>
+        <div className="col-span-2">
+          <span className="text-muted-foreground">Balance:</span>
+          <span
+            className={`ml-1 ${balance > 0 ? "font-bold text-amber-600" : ""}`}
+          >
+            {formatCurrency(invoice.balance_due)}
+          </span>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2 pt-2 border-t">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onView}
+          className="flex-1 h-11 min-w-[80px]"
+        >
+          <Eye className="h-4 w-4 mr-1" />
+          View
+        </Button>
+        {canEdit(status) && onEdit && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEdit}
+            className="flex-1 h-11 min-w-[80px]"
+          >
+            <Edit className="h-4 w-4 mr-1" />
+            Edit
+          </Button>
+        )}
+        {canRecordPayment(status) && onRecordPayment && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRecordPayment}
+            className="flex-1 h-11 min-w-[80px]"
+          >
+            <CreditCard className="h-4 w-4 mr-1" />
+            Pay
+          </Button>
+        )}
+        {canSend(status) && onSend && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSend}
+            className="flex-1 h-11 min-w-[80px]"
+          >
+            <Send className="h-4 w-4 mr-1" />
+            Send
+          </Button>
+        )}
+        {canVoid(status) && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onVoid}
+            className="flex-1 h-11 min-w-[80px] text-red-600 hover:text-red-700"
+          >
+            <Ban className="h-4 w-4 mr-1" />
+            Void
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
  * Invoice data table with TanStack Table
  *
  * AC-8.3.1: Table displays Invoice #, Date, Customer, Amount, Balance, Status, Actions
@@ -137,6 +255,7 @@ export function InvoiceListTable({
   onSend,
   onVoid,
 }: InvoiceListTableProps) {
+  const isMobile = useIsMobile();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "invoice_date", desc: true },
   ]);
@@ -321,6 +440,10 @@ export function InvoiceListTable({
 
   // Loading state
   if (loading) {
+    // Mobile: Card skeletons (Story 20.4)
+    if (isMobile) {
+      return <MobileCardSkeleton count={5} />;
+    }
     return (
       <div className="rounded-md border">
         <Table>
@@ -370,39 +493,40 @@ export function InvoiceListTable({
   // Empty state (AC-8.3.10)
   if (invoices.length === 0) {
     return (
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Invoice #</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Balance</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={7} className="h-48 text-center">
-                <div className="flex flex-col items-center justify-center gap-4">
-                  <p className="text-muted-foreground">No invoices yet</p>
-                  <Button asChild>
-                    <Link href="/invoices/new">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Your First Invoice
-                    </Link>
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+      <div className="flex flex-col items-center justify-center py-12 text-center rounded-md border">
+        <p className="text-muted-foreground mb-4">No invoices yet</p>
+        <Button asChild>
+          <Link href="/invoices/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Your First Invoice
+          </Link>
+        </Button>
       </div>
     );
   }
 
+  // Mobile: Card layout (Story 20.4)
+  if (isMobile) {
+    return (
+      <div className="space-y-3">
+        {invoices.map((invoice) => (
+          <InvoiceMobileCard
+            key={invoice.id}
+            invoice={invoice}
+            onView={() => onView(invoice)}
+            onEdit={onEdit ? () => onEdit(invoice) : undefined}
+            onRecordPayment={
+              onRecordPayment ? () => onRecordPayment(invoice) : undefined
+            }
+            onSend={onSend ? () => onSend(invoice) : undefined}
+            onVoid={() => onVoid(invoice)}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Desktop: Table layout
   return (
     <div className="rounded-md border">
       <Table>

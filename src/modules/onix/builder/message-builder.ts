@@ -217,6 +217,7 @@ ${productSupply}
    * Build DescriptiveDetail (Block 1)
    *
    * Story 14.3: Added accessibility metadata via ProductFormFeature elements
+   * Story 19.5: Added BISAC subject codes via Subject elements
    */
   private buildDescriptiveDetail(title: TitleWithAuthors): string {
     const titleDetail = this.buildTitleDetail(title);
@@ -228,13 +229,51 @@ ${productSupply}
       accessibility_summary: title.accessibility_summary,
     });
     const accessibilityBlock = accessibilityXML ? `\n${accessibilityXML}` : "";
+    const subjectsXML = this.buildSubjects(title);
+    const subjectsBlock = subjectsXML ? `\n${subjectsXML}` : "";
 
     return `    <DescriptiveDetail>
       <ProductComposition>00</ProductComposition>
       <ProductForm>BC</ProductForm>${accessibilityBlock}
 ${titleDetail}
-${contributors}
+${contributors}${subjectsBlock}
     </DescriptiveDetail>`;
+  }
+
+  /**
+   * Build Subject elements for BISAC codes
+   *
+   * Story 19.5: BISAC Code Suggestions - Include in ONIX export
+   *
+   * ONIX Subject structure:
+   * - SubjectSchemeIdentifier: 10 = BISAC Subject Heading
+   * - SubjectCode: the 9-character BISAC code
+   *
+   * @param title - Title with bisac_code and bisac_codes
+   * @returns XML string with Subject elements, or empty string if no BISAC codes
+   */
+  private buildSubjects(title: TitleWithAuthors): string {
+    const subjects: string[] = [];
+
+    // Primary BISAC code
+    if (title.bisac_code) {
+      subjects.push(`      <Subject>
+        <SubjectSchemeIdentifier>10</SubjectSchemeIdentifier>
+        <SubjectCode>${escapeXML(title.bisac_code)}</SubjectCode>
+      </Subject>`);
+    }
+
+    // Secondary BISAC codes
+    if (title.bisac_codes && title.bisac_codes.length > 0) {
+      for (const code of title.bisac_codes) {
+        subjects.push(`      <Subject>
+        <SubjectSchemeIdentifier>10</SubjectSchemeIdentifier>
+        <SubjectCode>${escapeXML(code)}</SubjectCode>
+      </Subject>`);
+      }
+    }
+
+    return subjects.join("\n");
   }
 
   /**

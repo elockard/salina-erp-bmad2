@@ -13,7 +13,11 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { hasPermission } from "@/lib/auth";
+import { getCurrentTenantId, hasPermission } from "@/lib/auth";
+import {
+  createLowIsbnNotification,
+  hasRecentNotificationOfType,
+} from "@/modules/notifications";
 import { ISBNPoolAlert } from "@/modules/reports/components/isbn-pool-alert";
 import { ISBNPoolCharts } from "@/modules/reports/components/isbn-pool-charts";
 import { ISBNPoolInsights } from "@/modules/reports/components/isbn-pool-insights";
@@ -46,12 +50,31 @@ function ChartsSkeleton() {
   );
 }
 
+const LOW_ISBN_THRESHOLD = 10;
+
 async function ISBNPoolContent() {
   const [metrics, history, prefixBreakdown] = await Promise.all([
     getISBNPoolMetrics(),
     getISBNAssignmentHistory(6),
     getISBNPrefixBreakdown(),
   ]);
+
+  // Story 20.2: Create notification when ISBN pool is low
+  // Only create if no recent notification exists (deduplication)
+  if (metrics.available < LOW_ISBN_THRESHOLD && metrics.total > 0) {
+    const hasRecent = await hasRecentNotificationOfType("action_low_isbn", 24);
+    if (!hasRecent) {
+      const tenantId = await getCurrentTenantId();
+      // Fire-and-forget - don't block page render
+      createLowIsbnNotification({
+        tenantId,
+        threshold: LOW_ISBN_THRESHOLD,
+        currentCount: metrics.available,
+      }).catch((error) => {
+        console.error("Failed to create low ISBN notification:", error);
+      });
+    }
+  }
 
   return (
     <>

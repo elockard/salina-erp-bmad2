@@ -7,6 +7,7 @@ import {
   BookOpen,
   ClipboardList,
   DollarSign,
+  Factory,
   FileText,
   Hash,
   Home,
@@ -40,6 +41,7 @@ import {
 } from "@/components/ui/sheet";
 import type { IconName, NavItem } from "@/lib/dashboard-nav";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/modules/notifications/components/notification-bell";
 
 // Map icon names to actual Lucide components
 const iconMap: Record<IconName, LucideIcon> = {
@@ -55,6 +57,7 @@ const iconMap: Record<IconName, LucideIcon> = {
   BarChart,
   Settings,
   Server,
+  Factory,
 };
 
 interface DashboardHeaderProps {
@@ -131,6 +134,9 @@ export function DashboardHeader({
 
       {/* Spacer for desktop */}
       <div className="hidden flex-1 md:block" />
+
+      {/* Notification Bell (Story 20.2) */}
+      <NotificationBell />
 
       {/* User Dropdown */}
       <DropdownMenu>

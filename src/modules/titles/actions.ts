@@ -7,10 +7,12 @@ import { titles } from "@/db/schema/titles";
 import { getCurrentTenantId, getDb, requirePermission } from "@/lib/auth";
 import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
+import { webhookEvents } from "@/modules/api/webhooks/dispatcher";
 import { getTitleById, getTitles } from "./queries";
 import {
   accessibilitySchema,
   asinSchema,
+  bisacSchema,
   createTitleSchema,
   updateTitleSchema,
 } from "./schema";
@@ -93,6 +95,15 @@ export async function createTitle(
     if (!titleWithAuthor) {
       return { success: false, error: "Failed to fetch created title" };
     }
+
+    // Fire-and-forget webhook dispatch (Story 15.5)
+    webhookEvents
+      .titleCreated(tenantId, {
+        id: titleWithAuthor.id,
+        title: titleWithAuthor.title,
+        isbn: titleWithAuthor.isbn,
+      })
+      .catch(() => {}); // Ignore errors
 
     return { success: true, data: titleWithAuthor };
   } catch (error) {
@@ -199,6 +210,19 @@ export async function updateTitle(
       return { success: false, error: "Failed to fetch updated title" };
     }
 
+    // Fire-and-forget webhook dispatch (Story 15.5)
+    // Build list of changed fields for webhook payload
+    const changedFields = Object.keys(updateValues).filter(
+      (k) => k !== "updated_at",
+    );
+    webhookEvents
+      .titleUpdated(tenantId, {
+        id: titleWithAuthor.id,
+        title: titleWithAuthor.title,
+        changes: changedFields,
+      })
+      .catch(() => {}); // Ignore errors
+
     return { success: true, data: titleWithAuthor };
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
@@ -276,6 +300,15 @@ export async function updateTitleAccessibility(
     if (!titleWithAuthor) {
       return { success: false, error: "Failed to fetch updated title" };
     }
+
+    // Fire-and-forget webhook dispatch (Story 15.5)
+    webhookEvents
+      .titleUpdated(tenantId, {
+        id: titleWithAuthor.id,
+        title: titleWithAuthor.title,
+        changes: ["accessibility_metadata"],
+      })
+      .catch(() => {}); // Ignore errors
 
     return { success: true, data: titleWithAuthor };
   } catch (error) {
@@ -370,6 +403,15 @@ export async function updateTitleAsin(
       return { success: false, error: "Failed to fetch updated title" };
     }
 
+    // Fire-and-forget webhook dispatch (Story 15.5)
+    webhookEvents
+      .titleUpdated(tenantId, {
+        id: titleWithAuthor.id,
+        title: titleWithAuthor.title,
+        changes: ["asin"],
+      })
+      .catch(() => {}); // Ignore errors
+
     return { success: true, data: titleWithAuthor };
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
@@ -390,6 +432,96 @@ export async function updateTitleAsin(
     return {
       success: false,
       error: "Failed to update ASIN. Please try again.",
+    };
+  }
+}
+
+/**
+ * Update BISAC subject codes for a title
+ *
+ * Story 19.5: BISAC Code Suggestions
+ *
+ * @param titleId - Title ID to update
+ * @param bisacCode - Primary BISAC code
+ * @param bisacCodes - Secondary BISAC codes array (max 2)
+ */
+export async function updateTitleBisac(
+  titleId: string,
+  bisacCode: string | null,
+  bisacCodes: string[] | null,
+): Promise<ActionResult<TitleWithAuthor>> {
+  try {
+    // Check permission
+    await requirePermission(CREATE_AUTHORS_TITLES);
+
+    // Validate BISAC data
+    const validated = bisacSchema.parse({
+      bisac_code: bisacCode,
+      bisac_codes: bisacCodes,
+    });
+
+    // Get tenant context
+    const tenantId = await getCurrentTenantId();
+    const db = await getDb();
+
+    // Get existing title to verify ownership
+    const existing = await db.query.titles.findFirst({
+      where: and(eq(titles.id, titleId), eq(titles.tenant_id, tenantId)),
+    });
+
+    if (!existing) {
+      return { success: false, error: "Title not found" };
+    }
+
+    // Update BISAC codes
+    await db
+      .update(titles)
+      .set({
+        bisac_code: validated.bisac_code ?? null,
+        bisac_codes: validated.bisac_codes ?? null,
+        updated_at: new Date(),
+      })
+      .where(and(eq(titles.id, titleId), eq(titles.tenant_id, tenantId)));
+
+    // Revalidate cache
+    revalidatePath("/dashboard/titles");
+
+    // Fetch updated title
+    const titleWithAuthor = await getTitleById(titleId);
+
+    if (!titleWithAuthor) {
+      return { success: false, error: "Failed to fetch updated title" };
+    }
+
+    // Fire-and-forget webhook dispatch
+    webhookEvents
+      .titleUpdated(tenantId, {
+        id: titleWithAuthor.id,
+        title: titleWithAuthor.title,
+        changes: ["bisac_code", "bisac_codes"],
+      })
+      .catch(() => {}); // Ignore errors
+
+    return { success: true, data: titleWithAuthor };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return {
+        success: false,
+        error: "You don't have permission to update titles",
+      };
+    }
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues[0]?.message || "Invalid BISAC code format",
+      };
+    }
+
+    console.error("updateTitleBisac error:", error);
+    return {
+      success: false,
+      error: "Failed to update BISAC codes. Please try again.",
     };
   }
 }

@@ -6,6 +6,7 @@ import {
   BookOpen,
   ClipboardList,
   DollarSign,
+  Factory,
   FileText,
   Hash,
   Home,
@@ -35,6 +36,7 @@ const iconMap: Record<IconName, LucideIcon> = {
   BarChart,
   Settings,
   Server,
+  Factory,
 };
 
 interface DashboardSidebarProps {

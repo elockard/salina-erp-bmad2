@@ -1,8 +1,8 @@
-# generated: 2025-12-12
+# generated: 2025-12-20
 # project: Salina ERP
 # project_key: salina-erp
 # tracking_system: file-system
-# story_location: /Users/elockard/office/salina-erp-bmad2/docs/sprint-artifacts
+# story_location: docs/sprint-artifacts
 
 # STATUS DEFINITIONS:
 # ==================
@@ -34,11 +34,11 @@
 # - SM typically drafts next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2025-12-12
+generated: 2025-12-20
 project: Salina ERP
 project_key: salina-erp
 tracking_system: file-system
-story_location: /Users/elockard/office/salina-erp-bmad2/docs/sprint-artifacts
+story_location: docs/sprint-artifacts
 
 development_status:
   # ═══════════════════════════════════════════════════════════════════════════
@@ -242,14 +242,14 @@ development_status:
   # Goal: Public REST API with OAuth2, webhook delivery system
   # FRs: FR143-FR150
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-15: backlog
-  15-1-implement-api-authentication-with-oauth2: backlog
-  15-2-build-core-rest-api-endpoints: backlog
-  15-3-implement-rate-limiting: backlog
-  15-4-build-webhook-subscription-system: backlog
-  15-5-implement-webhook-delivery-with-signatures: backlog
-  15-6-create-api-documentation-portal: backlog
-  epic-15-retrospective: optional
+  epic-15: done
+  15-1-implement-api-authentication-with-oauth2: done
+  15-2-build-core-rest-api-endpoints: done
+  15-3-implement-rate-limiting: done
+  15-4-build-webhook-subscription-system: done
+  15-5-implement-webhook-delivery-with-signatures: done
+  15-6-create-api-documentation-portal: done
+  epic-15-retrospective: completed
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 16: Ingram Integration
@@ -269,21 +269,21 @@ development_status:
   # Goal: Automate ONIX feeds to Amazon KDP/Advantage, import sales
   # FRs: FR156-FR160
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-17: in-progress
+  epic-17: done
   17-1-configure-amazon-account-connection: done
-  17-2-schedule-automated-onix-feeds-to-amazon: review
-  17-3-import-amazon-sales-data: review
-  17-4-link-titles-to-asins: review
-  17-5-view-amazon-feed-history: backlog
-  epic-17-retrospective: optional
+  17-2-schedule-automated-onix-feeds-to-amazon: done
+  17-3-import-amazon-sales-data: done
+  17-4-link-titles-to-asins: done
+  17-5-view-amazon-feed-history: done
+  epic-17-retrospective: completed
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 18: Production Pipeline
   # Goal: Manuscript-to-print workflow, vendor management, proof tracking
   # FRs: FR161-FR169
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-18: backlog
-  18-1-create-production-projects: backlog
+  epic-18: in-progress
+  18-1-create-production-projects: done
   18-2-assign-production-tasks-to-vendors: backlog
   18-3-track-production-workflow-stages: backlog
   18-4-upload-and-manage-proof-files: backlog
@@ -297,24 +297,24 @@ development_status:
   # Goal: Bulk operations, ONIX catalog import, CSV templates
   # FRs: FR170-FR175
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-19: backlog
-  19-1-import-catalog-via-csv: backlog
-  19-2-download-csv-templates: backlog
-  19-3-export-catalog-to-csv: backlog
-  19-4-bulk-update-via-csv: backlog
-  19-5-bisac-code-suggestions: backlog
-  epic-19-retrospective: optional
+  epic-19: done
+  19-1-import-catalog-via-csv: done
+  19-2-download-csv-templates: done
+  19-3-export-catalog-to-csv: done
+  19-4-bulk-update-via-csv: done
+  19-5-bisac-code-suggestions: done
+  epic-19-retrospective: completed
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 20: UX Enhancements
   # Goal: Onboarding wizard, notifications, mobile optimization, contextual help
   # FRs: FR176-FR181
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-20: backlog
-  20-1-build-onboarding-wizard: backlog
-  20-2-build-notifications-center: backlog
-  20-3-configure-notification-preferences: backlog
-  20-4-mobile-responsive-layout: backlog
+  epic-20: in-progress
+  20-1-build-onboarding-wizard: done
+  20-2-build-notifications-center: done
+  20-3-configure-notification-preferences: done
+  20-4-mobile-responsive-layout: complete
   20-5-add-contextual-help-system: backlog
   epic-20-retrospective: optional
 

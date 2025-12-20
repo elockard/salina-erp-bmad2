@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ExportDialog } from "@/modules/import-export/components";
 import { fetchContacts, getContactWithRoles } from "../actions";
 import type { ContactRoleType, ContactWithRoles } from "../types";
 import { ContactDetail } from "./contact-detail";
@@ -181,9 +182,12 @@ export function ContactsSplitView({
         {/* Header with Create Button */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Contacts</h2>
-          <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-            + Create Contact
-          </Button>
+          <div className="flex items-center gap-2">
+            <ExportDialog />
+            <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+              + Create Contact
+            </Button>
+          </div>
         </div>
 
         {/* Contact List */}

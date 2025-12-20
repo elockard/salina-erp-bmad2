@@ -44,6 +44,7 @@ import {
 import { cn } from "@/lib/utils";
 import { fetchAuthors } from "@/modules/authors/actions";
 import type { Author } from "@/modules/authors/types";
+import { BisacSelector } from "@/modules/import-export/components/bisac-selector";
 import { createTitle } from "../actions";
 import { type CreateTitleFormInput, createTitleFormSchema } from "../schema";
 import type { TitleWithAuthor } from "../types";
@@ -100,6 +101,8 @@ export function TitleForm({ open, onOpenChange, onSuccess }: TitleFormProps) {
       genre: "",
       word_count: undefined,
       publication_status: "draft",
+      bisac_code: null,
+      bisac_codes: null,
     },
   });
 
@@ -295,6 +298,33 @@ export function TitleForm({ open, onOpenChange, onSuccess }: TitleFormProps) {
                 </FormItem>
               )}
             />
+
+            {/* BISAC Codes - Story 19.5 */}
+            <FormItem>
+              <FormLabel>BISAC Subject Codes</FormLabel>
+              <BisacSelector
+                value={[
+                  ...(form.watch("bisac_code")
+                    ? [form.watch("bisac_code") as string]
+                    : []),
+                  ...(form.watch("bisac_codes") || []),
+                ].filter(Boolean)}
+                onChange={(codes) => {
+                  form.setValue("bisac_code", codes[0] || null);
+                  form.setValue(
+                    "bisac_codes",
+                    codes.slice(1).length > 0 ? codes.slice(1) : null,
+                  );
+                }}
+                title={form.watch("title")}
+                subtitle={form.watch("subtitle")}
+                genre={form.watch("genre")}
+                placeholder="Select up to 3 BISAC codes..."
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Select BISAC subject codes for catalog classification (optional)
+              </p>
+            </FormItem>
 
             {/* Word Count */}
             <FormField

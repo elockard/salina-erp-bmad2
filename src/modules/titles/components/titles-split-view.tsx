@@ -1,14 +1,25 @@
 "use client";
 
-import { FileUp, Info, X } from "lucide-react";
+import { ChevronDown, FileUp, Info, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useHasPermission } from "@/lib/hooks/useHasPermission";
 import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+import {
+  CsvImportModal,
+  CsvUpdateModal,
+  ExportDialog,
+} from "@/modules/import-export/components";
 import { ONIXImportModal } from "@/modules/onix/components";
 import { fetchTitles } from "../actions";
 import type { PublicationStatus, TitleWithAuthor } from "../types";
@@ -39,7 +50,9 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [onixImportDialogOpen, setOnixImportDialogOpen] = useState(false);
+  const [csvImportDialogOpen, setCsvImportDialogOpen] = useState(false);
+  const [csvUpdateDialogOpen, setCsvUpdateDialogOpen] = useState(false);
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
 
   // Story 17.4: ASIN resolution flow
@@ -140,14 +153,33 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
           <h2 className="text-lg font-semibold">Titles</h2>
           {canCreateTitles && (
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setImportDialogOpen(true)}
-              >
-                <FileUp className="h-4 w-4 mr-1" />
-                Import
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <FileUp className="h-4 w-4 mr-1" />
+                    Import
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setCsvImportDialogOpen(true)}
+                  >
+                    Import CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setCsvUpdateDialogOpen(true)}
+                  >
+                    Update via CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setOnixImportDialogOpen(true)}
+                  >
+                    Import ONIX
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <ExportDialog />
               <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
                 + Create Title
               </Button>
@@ -237,11 +269,33 @@ export function TitlesSplitView({ initialTitles }: TitlesSplitViewProps) {
         />
       )}
 
+      {/* CSV Import Dialog - Story 19.1 */}
+      {canCreateTitles && (
+        <CsvImportModal
+          open={csvImportDialogOpen}
+          onOpenChange={setCsvImportDialogOpen}
+          onImportComplete={() => {
+            reloadTitles();
+          }}
+        />
+      )}
+
+      {/* CSV Update Dialog - Story 19.4 */}
+      {canCreateTitles && (
+        <CsvUpdateModal
+          open={csvUpdateDialogOpen}
+          onOpenChange={setCsvUpdateDialogOpen}
+          onUpdateComplete={() => {
+            reloadTitles();
+          }}
+        />
+      )}
+
       {/* ONIX Import Dialog */}
       {canCreateTitles && (
         <ONIXImportModal
-          open={importDialogOpen}
-          onOpenChange={setImportDialogOpen}
+          open={onixImportDialogOpen}
+          onOpenChange={setOnixImportDialogOpen}
           onImportComplete={() => {
             reloadTitles();
           }}

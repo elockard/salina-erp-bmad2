@@ -1,8 +1,14 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getDashboardStats } from "@/modules/dashboard/actions";
+import {
+  getOnboardingProgress,
+  shouldShowOnboardingWidget,
+} from "@/modules/onboarding/queries";
+import type { StepsCompleted } from "@/modules/onboarding/types";
 import { EditorDashboard } from "./components/editor-dashboard";
 import { FinanceDashboard } from "./components/finance-dashboard";
+import { OnboardingWidgetWrapper } from "./components/onboarding-widget-wrapper";
 import { OwnerAdminDashboard } from "./components/owner-admin-dashboard";
 
 export const metadata = {
@@ -21,8 +27,12 @@ export default async function DashboardPage() {
     redirect("/portal");
   }
 
-  // Fetch role-specific stats
-  const statsResult = await getDashboardStats();
+  // Fetch role-specific stats and onboarding progress in parallel
+  const [statsResult, showWidget, onboardingProgress] = await Promise.all([
+    getDashboardStats(),
+    shouldShowOnboardingWidget(),
+    getOnboardingProgress(),
+  ]);
 
   if (!statsResult.success) {
     return (
@@ -38,20 +48,43 @@ export default async function DashboardPage() {
   const stats = statsResult.data.stats;
   const isbnStats = statsResult.data.isbnStats;
 
+  // Onboarding widget (shown at top for incomplete onboarding)
+  const onboardingWidget =
+    showWidget && onboardingProgress ? (
+      <OnboardingWidgetWrapper
+        currentStep={onboardingProgress.current_step}
+        stepsCompleted={onboardingProgress.steps_completed as StepsCompleted}
+        percentComplete={onboardingProgress.percentComplete}
+      />
+    ) : null;
+
   // Render role-appropriate dashboard
   switch (user.role) {
     case "owner":
     case "admin":
       return (
-        <OwnerAdminDashboard stats={stats} user={user} isbnStats={isbnStats} />
+        <>
+          {onboardingWidget}
+          <OwnerAdminDashboard
+            stats={stats}
+            user={user}
+            isbnStats={isbnStats}
+          />
+        </>
       );
     case "editor":
       return (
-        <EditorDashboard stats={stats} user={user} isbnStats={isbnStats} />
+        <>
+          {onboardingWidget}
+          <EditorDashboard stats={stats} user={user} isbnStats={isbnStats} />
+        </>
       );
     case "finance":
       return (
-        <FinanceDashboard stats={stats} user={user} isbnStats={isbnStats} />
+        <>
+          {onboardingWidget}
+          <FinanceDashboard stats={stats} user={user} isbnStats={isbnStats} />
+        </>
       );
     default:
       return (

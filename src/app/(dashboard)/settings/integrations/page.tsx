@@ -49,20 +49,27 @@ export default async function IntegrationsPage() {
           </Card>
         </Link>
 
-        {/* Amazon - Coming Soon */}
-        <Card className="opacity-60">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Amazon KDP/Advantage</CardTitle>
-                <CardDescription>
-                  Automated ONIX feed delivery and sales data import
-                </CardDescription>
+        {/* Amazon KDP/Advantage - Story 17.1 */}
+        <Link href="/settings/integrations/amazon">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">
+                    Amazon KDP / Advantage
+                  </CardTitle>
+                  <CardDescription>
+                    Automated ONIX feed delivery to the world&apos;s largest
+                    book retailer
+                  </CardDescription>
+                </div>
+                <Badge variant={statuses.amazon ? "default" : "secondary"}>
+                  {statuses.amazon ? "Connected" : "Not Connected"}
+                </Badge>
               </div>
-              <Badge variant="outline">Coming Soon</Badge>
-            </div>
-          </CardHeader>
-        </Card>
+            </CardHeader>
+          </Card>
+        </Link>
       </div>
     </div>
   );

@@ -122,6 +122,9 @@ const mockTitleWithAuthors: TitleWithAuthors = {
   accessibility_features: null,
   accessibility_hazards: null,
   accessibility_summary: null,
+  // Story 19.5: BISAC subject codes
+  bisac_code: null,
+  bisac_codes: null,
 };
 
 // Mock database

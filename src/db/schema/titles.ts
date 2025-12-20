@@ -198,6 +198,31 @@ export const titles = pgTable(
      * Uniqueness: Globally unique across ALL tenants
      */
     asin: text("asin"),
+
+    // ==========================================================================
+    // BISAC SUBJECT CODES (Story 19.5 - BISAC Code Suggestions)
+    // ==========================================================================
+
+    /**
+     * Primary BISAC subject code
+     * Story 19.5 - BISAC Code Suggestions (FR175)
+     * Format: 9-character code (3-letter prefix + 6-digit number)
+     * Example: "FIC000000" for Fiction / General
+     *
+     * Used for:
+     * - Title categorization during import
+     * - ONIX export Subject element (SubjectSchemeIdentifier=10)
+     * - Catalog organization and search
+     */
+    bisac_code: text("bisac_code"),
+
+    /**
+     * Secondary BISAC codes array
+     * Industry standard allows max 3 BISAC codes per product
+     * Story 19.5 - BISAC Code Suggestions (FR175)
+     * Stores up to 2 additional BISAC codes beyond the primary
+     */
+    bisac_codes: text("bisac_codes").array(),
   },
   (table) => ({
     /** Index on tenant_id for RLS filtering and foreign key join performance */
@@ -229,6 +254,13 @@ export const titles = pgTable(
      * Index automatically created via unique constraint
      */
     asinUnique: unique("titles_asin_unique").on(table.asin),
+
+    /**
+     * Index on bisac_code for filtering/searching by BISAC category
+     * Story 19.5 - BISAC Code Suggestions
+     * Partial index - only indexes non-null values
+     */
+    bisacCodeIdx: index("titles_bisac_code_idx").on(table.bisac_code),
   }),
 );
 

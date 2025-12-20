@@ -12,12 +12,15 @@
  * Story: 16.4 - Sync Inventory Status with Ingram
  * Story: 16.5 - View Ingram Feed History (Retry Feeds)
  * Story: 17.2 - Schedule Automated ONIX Feeds to Amazon
+ * Story: 17.5 - View Amazon Feed History (Retry Feeds)
+ * Story: 20.2 - Build Notifications Center (Cleanup Job)
  * Related: src/app/api/inngest/route.ts (serve handler)
  */
 
-import { amazonFeed } from "./amazon-feed";
+import { amazonFeed, amazonFeedRetry } from "./amazon-feed";
 import { amazonFeedScheduler } from "./amazon-feed-scheduler";
 import { amazonSalesImport } from "./amazon-sales-import";
+import { csvExportGenerate } from "./csv-export";
 import { generateIsbnPrefixes } from "./generate-isbn-prefixes";
 import { generateStatementPdf } from "./generate-statement-pdf";
 import { generateStatementsBatch } from "./generate-statements-batch";
@@ -25,6 +28,8 @@ import { ingramFeed, ingramFeedRetry } from "./ingram-feed";
 import { ingramFeedScheduler } from "./ingram-feed-scheduler";
 import { ingramInventoryImport, ingramInventorySync } from "./ingram-inventory";
 import { ingramOrders } from "./ingram-orders";
+import { notificationCleanup } from "./notification-cleanup";
+import { webhookDeliver } from "./webhook-deliver";
 
 /**
  * All Inngest functions to be served
@@ -41,6 +46,10 @@ export const functions = [
   ingramInventoryImport,
   ingramOrders,
   amazonFeed,
+  amazonFeedRetry,
   amazonFeedScheduler,
   amazonSalesImport,
+  webhookDeliver,
+  csvExportGenerate,
+  notificationCleanup,
 ];

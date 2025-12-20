@@ -24,6 +24,7 @@ import * as React from "react";
 import { Suspense } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ExportDialog } from "@/modules/import-export/components";
 import {
   getSalesHistoryAction,
   getSalesStatsAction,
@@ -168,13 +169,15 @@ export default function SalesHistoryPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <ExportDialog />
           <Button
             variant="outline"
             onClick={handleExport}
             disabled={isExporting || !salesData || salesData.total === 0}
+            title="Quick export with current filters"
           >
             <Download className="mr-2 h-4 w-4" />
-            {isExporting ? "Exporting..." : "Export to CSV"}
+            {isExporting ? "Exporting..." : "Quick Export"}
           </Button>
           <Button asChild>
             <Link href="/sales/new">

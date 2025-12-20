@@ -17,6 +17,7 @@ import { tenants } from "@/db/schema/tenants";
 import { getCurrentTenantId, getDb, requirePermission } from "@/lib/auth";
 import { CREATE_AUTHORS_TITLES } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
+import { webhookEvents } from "@/modules/api/webhooks/dispatcher";
 import { getTitleWithAuthors } from "@/modules/title-authors/queries";
 import { ONIXMessageBuilder } from "./builder/message-builder";
 import type { ONIXVersion } from "./parser/types";
@@ -113,15 +114,28 @@ export async function exportSingleTitle(
       : JSON.stringify(validation.errors);
 
     // Story 14.6: Store version in export record
-    await db.insert(onixExports).values({
-      tenant_id: tenantId,
-      title_ids: [titleId],
-      xml_content: xml,
-      product_count: 1,
-      onix_version: version,
-      status: exportStatus,
-      error_message: errorMessage,
-    });
+    const [exportRecord] = await db
+      .insert(onixExports)
+      .values({
+        tenant_id: tenantId,
+        title_ids: [titleId],
+        xml_content: xml,
+        product_count: 1,
+        onix_version: version,
+        status: exportStatus,
+        error_message: errorMessage,
+      })
+      .returning();
+
+    // Fire-and-forget webhook dispatch (Story 15.5)
+    webhookEvents
+      .onixExported(tenantId, {
+        id: exportRecord.id,
+        format: `ONIX ${version}`,
+        titleCount: 1,
+        fileName: filename,
+      })
+      .catch(() => {}); // Ignore errors
 
     return {
       success: true,
@@ -243,15 +257,28 @@ export async function exportBatchTitles(
       : JSON.stringify(validation.errors);
 
     // Story 14.6: Store version in export record
-    await db.insert(onixExports).values({
-      tenant_id: tenantId,
-      title_ids: exportedTitleIds,
-      xml_content: xml,
-      product_count: productCount,
-      onix_version: version,
-      status: exportStatus,
-      error_message: errorMessage,
-    });
+    const [exportRecord] = await db
+      .insert(onixExports)
+      .values({
+        tenant_id: tenantId,
+        title_ids: exportedTitleIds,
+        xml_content: xml,
+        product_count: productCount,
+        onix_version: version,
+        status: exportStatus,
+        error_message: errorMessage,
+      })
+      .returning();
+
+    // Fire-and-forget webhook dispatch (Story 15.5)
+    webhookEvents
+      .onixExported(tenantId, {
+        id: exportRecord.id,
+        format: `ONIX ${version}`,
+        titleCount: productCount,
+        fileName: filename,
+      })
+      .catch(() => {}); // Ignore errors
 
     return {
       success: true,

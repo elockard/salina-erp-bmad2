@@ -1,3 +1,4 @@
+export * from "./api-keys";
 export * from "./audit-logs";
 export * from "./authors";
 export * from "./channel-credentials";
@@ -5,14 +6,21 @@ export * from "./channel-feeds";
 export * from "./codelists";
 export * from "./contacts";
 export * from "./contracts";
+export * from "./csv-exports";
+export * from "./csv-imports";
 export * from "./form-1099";
 export * from "./invoices";
 export * from "./isbn-prefixes";
 export * from "./isbns";
+export * from "./notification-preferences";
+export * from "./notifications";
+export * from "./onboarding";
 export * from "./onix-exports";
 export * from "./onix-imports";
 export * from "./platform-announcements";
 export * from "./platform-audit-logs";
+export * from "./production-projects";
+export * from "./rate-limit-overrides";
 export * from "./relations";
 export * from "./returns";
 export * from "./sales";
@@ -21,7 +29,10 @@ export * from "./tenants";
 export * from "./title-authors";
 export * from "./titles";
 export * from "./users";
+export * from "./webhook-deliveries";
+export * from "./webhook-subscriptions";
 
+import type { apiKeys } from "./api-keys";
 import type { auditLogs } from "./audit-logs";
 import type { authors } from "./authors";
 import type { channelCredentials } from "./channel-credentials";
@@ -29,6 +40,8 @@ import type { channelFeeds } from "./channel-feeds";
 import type { codelists, codelistValues } from "./codelists";
 import type { contactRoles, contacts } from "./contacts";
 import type { contracts, contractTiers } from "./contracts";
+import type { csvExports } from "./csv-exports";
+import type { csvImports } from "./csv-imports";
 import type { form1099 } from "./form-1099";
 import type { invoiceLineItems, invoices, payments } from "./invoices";
 import type { isbnPrefixes } from "./isbn-prefixes";
@@ -68,4 +81,25 @@ export type OnixExport = typeof onixExports.$inferSelect;
 export type OnixImport = typeof onixImports.$inferSelect;
 export type ChannelCredential = typeof channelCredentials.$inferSelect;
 export type ChannelFeed = typeof channelFeeds.$inferSelect;
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type CsvExport = typeof csvExports.$inferSelect;
+export type CsvImport = typeof csvImports.$inferSelect;
 export type UserRole = "owner" | "admin" | "editor" | "finance" | "author";
+
+import type { webhookDeliveries } from "./webhook-deliveries";
+import type { webhookSubscriptions } from "./webhook-subscriptions";
+export type WebhookDelivery = typeof webhookDeliveries.$inferSelect;
+export type WebhookSubscription = typeof webhookSubscriptions.$inferSelect;
+
+import type { onboardingProgress } from "./onboarding";
+export type OnboardingProgress = typeof onboardingProgress.$inferSelect;
+
+import type { notifications } from "./notifications";
+export type Notification = typeof notifications.$inferSelect;
+
+import type { notificationPreferences } from "./notification-preferences";
+export type NotificationPreference =
+  typeof notificationPreferences.$inferSelect;
+
+import type { productionProjects } from "./production-projects";
+export type ProductionProject = typeof productionProjects.$inferSelect;

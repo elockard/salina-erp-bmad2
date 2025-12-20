@@ -1,3 +1,11 @@
+/**
+ * Welcome Page
+ * Story 20.1: Build Onboarding Wizard
+ * AC 20.1.1: New Tenant Wizard Trigger
+ *
+ * Updated to check onboarding status and redirect accordingly
+ */
+
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
@@ -13,6 +21,7 @@ import {
 import { adminDb } from "@/db";
 import { tenants } from "@/db/schema/tenants";
 import { users } from "@/db/schema/users";
+import { shouldShowOnboarding } from "@/modules/onboarding/queries";
 
 export default async function WelcomePage() {
   const { userId } = await auth();
@@ -37,12 +46,21 @@ export default async function WelcomePage() {
     where: eq(tenants.id, user.tenant_id),
   });
 
+  // AC 20.1.1: Check if onboarding should be shown
+  const showOnboarding = await shouldShowOnboarding();
+
+  // Redirect to onboarding wizard if not completed
+  if (showOnboarding) {
+    redirect("/onboarding");
+  }
+
+  // Otherwise show welcome page (for returning users)
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
       <Card className="w-full max-w-2xl rounded-lg border border-slate-200 shadow-sm">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-3xl font-semibold tracking-tight text-[#1E3A5F]">
-            Welcome to Salina ERP!
+            Welcome Back to Salina ERP!
           </CardTitle>
           <CardDescription className="text-lg text-slate-600">
             Your workspace{" "}
@@ -52,27 +70,19 @@ export default async function WelcomePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-3 rounded-md bg-slate-100 p-4">
-            <h3 className="font-medium text-slate-900">Getting Started</h3>
+            <h3 className="font-medium text-slate-900">Quick Actions</h3>
             <ul className="space-y-2 text-sm text-slate-700">
               <li className="flex items-start">
-                <span className="mr-2">✓</span>
-                <span>Your account has been created successfully</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">✓</span>
-                <span>
-                  Your workspace is available at{" "}
-                  <span className="font-mono text-xs">
-                    {tenant?.subdomain}.salina.media
-                  </span>
-                </span>
+                <span className="mr-2">→</span>
+                <span>View your dashboard and recent activity</span>
               </li>
               <li className="flex items-start">
                 <span className="mr-2">→</span>
-                <span>
-                  Next: Continue to your dashboard to start managing your
-                  publishing business
-                </span>
+                <span>Manage your titles and authors</span>
+              </li>
+              <li className="flex items-start">
+                <span className="mr-2">→</span>
+                <span>Generate royalty statements</span>
               </li>
             </ul>
           </div>
@@ -85,15 +95,6 @@ export default async function WelcomePage() {
             >
               <Link href="/dashboard">Continue to Dashboard</Link>
             </Button>
-          </div>
-
-          <div className="mt-6 space-y-2 rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-600">
-            <p className="font-medium text-slate-900">What's Next?</p>
-            <p>
-              This welcome page is a placeholder for Story 1.4. The full
-              role-based dashboard with navigation and module access will be
-              implemented in Story 1.8.
-            </p>
           </div>
         </CardContent>
       </Card>

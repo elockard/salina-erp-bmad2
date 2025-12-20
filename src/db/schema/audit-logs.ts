@@ -59,6 +59,7 @@ export type AuditActionType = (typeof auditActionTypeValues)[number];
  * Represents the types of resources that can be audited
  */
 export const auditResourceTypeValues = [
+  "api_key",
   "author",
   "title",
   "sale",
@@ -71,6 +72,7 @@ export const auditResourceTypeValues = [
   "invoice",
   "payment",
   "form_1099",
+  "production_project",
 ] as const;
 
 export type AuditResourceType = (typeof auditResourceTypeValues)[number];

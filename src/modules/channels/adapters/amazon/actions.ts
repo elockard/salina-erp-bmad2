@@ -446,3 +446,115 @@ export async function triggerAmazonSalesImport(): Promise<{
     };
   }
 }
+
+/**
+ * Get Amazon feed content (XML) for preview
+ *
+ * Story 17.5 - AC2: View Feed Content (XML Preview)
+ * Returns the stored XML content for a feed entry.
+ * Validates user has access to the feed's tenant.
+ */
+export async function getAmazonFeedContent(feedId: string): Promise<{
+  success: boolean;
+  content?: string;
+  fileName?: string;
+  message?: string;
+}> {
+  try {
+    const user = await getAuthenticatedUserWithTenant();
+
+    const { channelFeeds } = await import("@/db/schema/channel-feeds");
+
+    const feed = await db.query.channelFeeds.findFirst({
+      where: and(
+        eq(channelFeeds.id, feedId),
+        eq(channelFeeds.tenantId, user.tenant_id),
+        eq(channelFeeds.channel, CHANNEL_TYPES.AMAZON),
+      ),
+    });
+
+    if (!feed) {
+      return { success: false, message: "Feed not found" };
+    }
+
+    if (!feed.feedContent) {
+      return { success: false, message: "Feed content not available" };
+    }
+
+    return {
+      success: true,
+      content: feed.feedContent,
+      fileName: feed.fileName || `amazon-feed-${feedId}.xml`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to get feed content",
+    };
+  }
+}
+
+/**
+ * Retry a failed Amazon feed
+ *
+ * Story 17.5 - AC4: Retry Failed Feeds
+ * Re-attempts upload using stored XML content.
+ * Creates new feed record linked to original via retryOf.
+ */
+export async function retryAmazonFeed(feedId: string): Promise<{
+  success: boolean;
+  newFeedId?: string;
+  message?: string;
+}> {
+  try {
+    const user = await getAuthenticatedUserWithTenant();
+
+    const { channelFeeds } = await import("@/db/schema/channel-feeds");
+
+    // Get the original feed
+    const originalFeed = await db.query.channelFeeds.findFirst({
+      where: and(
+        eq(channelFeeds.id, feedId),
+        eq(channelFeeds.tenantId, user.tenant_id),
+        eq(channelFeeds.channel, CHANNEL_TYPES.AMAZON),
+      ),
+    });
+
+    if (!originalFeed) {
+      return { success: false, message: "Feed not found" };
+    }
+
+    if (originalFeed.status !== "failed") {
+      return { success: false, message: "Only failed feeds can be retried" };
+    }
+
+    if (!originalFeed.feedContent) {
+      return {
+        success: false,
+        message:
+          "Feed content not available for retry. Please trigger a new feed.",
+      };
+    }
+
+    // Trigger retry job
+    const { inngest } = await import("@/inngest/client");
+    await inngest.send({
+      name: "channel/amazon.feed-retry",
+      data: {
+        tenantId: user.tenant_id,
+        originalFeedId: feedId,
+        userId: user.id,
+      },
+    });
+
+    revalidatePath("/settings/integrations/amazon");
+
+    return { success: true, message: "Retry started" };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Failed to retry feed",
+    };
+  }
+}

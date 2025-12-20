@@ -48,6 +48,7 @@ import {
   updateTitle,
   updateTitleAccessibility,
   updateTitleAsin,
+  updateTitleBisac,
 } from "../actions";
 import type { PublicationStatus, TitleWithAuthor } from "../types";
 import {
@@ -296,6 +297,14 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
   const [asinValue, setAsinValue] = useState(title.asin || "");
   const [asinSaving, setAsinSaving] = useState(false);
 
+  // Story 19.5: BISAC state
+  const [bisacEditing, setBisacEditing] = useState(false);
+  const [bisacCode, setBisacCode] = useState(title.bisac_code || "");
+  const [bisacCodes, setBisacCodes] = useState<string[]>(
+    title.bisac_codes || [],
+  );
+  const [bisacSaving, setBisacSaving] = useState(false);
+
   // Load title authors and available authors
   useEffect(() => {
     async function loadAuthorsData() {
@@ -413,6 +422,29 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
       toast.error("Failed to update ASIN");
     } finally {
       setAsinSaving(false);
+    }
+  };
+
+  // Story 19.5: BISAC handlers
+  const handleSaveBisac = async () => {
+    setBisacSaving(true);
+    try {
+      const result = await updateTitleBisac(
+        title.id,
+        bisacCode || null,
+        bisacCodes.length > 0 ? bisacCodes : null,
+      );
+      if (result.success) {
+        onTitleUpdated(result.data);
+        setBisacEditing(false);
+        toast.success("BISAC codes updated");
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error("Failed to update BISAC codes");
+    } finally {
+      setBisacSaving(false);
     }
   };
 
@@ -719,6 +751,108 @@ export function TitleDetail({ title, onTitleUpdated }: TitleDetailProps) {
                   onClick={() => setAsinEditing(true)}
                 >
                   {title.asin ? "Edit" : "Add ASIN"}
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Story 19.5: BISAC Subject Codes Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            BISAC Subject Codes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {bisacEditing && canEdit ? (
+            <div className="space-y-3">
+              <div>
+                <label
+                  htmlFor="bisac-primary-code"
+                  className="text-xs text-muted-foreground"
+                >
+                  Primary Code
+                </label>
+                <Input
+                  id="bisac-primary-code"
+                  value={bisacCode}
+                  onChange={(e) => setBisacCode(e.target.value.toUpperCase())}
+                  placeholder="e.g., FIC000000"
+                  maxLength={9}
+                  className="font-mono"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="bisac-secondary-codes"
+                  className="text-xs text-muted-foreground"
+                >
+                  Secondary Codes (comma separated)
+                </label>
+                <Input
+                  id="bisac-secondary-codes"
+                  value={bisacCodes.join(", ")}
+                  onChange={(e) => {
+                    const codes = e.target.value
+                      .split(/[,\s]+/)
+                      .map((c) => c.trim().toUpperCase())
+                      .filter((c) => c.length > 0)
+                      .slice(0, 2);
+                    setBisacCodes(codes);
+                  }}
+                  placeholder="e.g., FIC009000, FIC004000"
+                  className="font-mono"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleSaveBisac}
+                  disabled={bisacSaving}
+                >
+                  {bisacSaving ? "Saving..." : "Save"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setBisacEditing(false);
+                    setBisacCode(title.bisac_code || "");
+                    setBisacCodes(title.bisac_codes || []);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                {title.bisac_code ? (
+                  <>
+                    <p className="font-mono text-sm">{title.bisac_code}</p>
+                    {title.bisac_codes && title.bisac_codes.length > 0 && (
+                      <p className="font-mono text-xs text-muted-foreground">
+                        + {title.bisac_codes.join(", ")}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-muted-foreground italic text-sm">
+                    Not set
+                  </span>
+                )}
+              </div>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBisacEditing(true)}
+                >
+                  {title.bisac_code ? "Edit" : "Add BISAC"}
                 </Button>
               )}
             </div>

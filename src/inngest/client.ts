@@ -141,4 +141,30 @@ export interface InngestEvents {
       endDate?: string; // ISO date
     };
   };
+  /**
+   * Amazon feed retry event
+   * Story 17.5: View Amazon Feed History - Retry Failed Feeds
+   */
+  "channel/amazon.feed-retry": {
+    data: {
+      tenantId: string;
+      originalFeedId: string;
+      userId?: string;
+    };
+  };
+  /**
+   * Webhook delivery event
+   * Story 15.5: Webhook delivery with HMAC signatures
+   */
+  "webhook/deliver": {
+    data: {
+      deliveryId: string;
+      subscriptionId: string;
+      tenantId: string;
+      url: string;
+      payload: string;
+      eventId: string;
+      eventType: string;
+    };
+  };
 }

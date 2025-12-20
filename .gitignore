@@ -47,8 +47,6 @@ next-env.d.ts
 *.sublime-project
 *.sublime-workspace
 
-# Drizzle
-drizzle/
 
 #Claude
 .claude/audio/

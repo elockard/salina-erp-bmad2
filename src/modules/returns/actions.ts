@@ -35,6 +35,7 @@ import {
   VIEW_RETURNS,
 } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/types";
+import { createReturnNotification } from "@/modules/notifications/service";
 import {
   getPendingReturns,
   getReturnById,
@@ -195,11 +196,21 @@ export async function recordReturn(
       },
     });
 
-    // 10. Revalidate returns-related paths
+    // 10. Create notification for pending return (Story 20.2)
+    // Fire-and-forget - don't block return creation on notification
+    createReturnNotification({
+      tenantId,
+      returnId: returnRecord.id,
+      returnNumber: `RTN-${returnRecord.id.slice(0, 8).toUpperCase()}`,
+    }).catch((error) => {
+      console.error("Failed to create return notification:", error);
+    });
+
+    // 11. Revalidate returns-related paths
     revalidatePath("/returns");
     revalidatePath("/dashboard");
 
-    // 11. Return success with return details for toast message (AC 11)
+    // 12. Return success with return details for toast message (AC 11)
     return {
       success: true,
       data: {

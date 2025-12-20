@@ -143,6 +143,52 @@ export const accessibilitySchema = z.object({
 export type AccessibilityInput = z.infer<typeof accessibilitySchema>;
 
 // =============================================================================
+// BISAC SUBJECT CODES (Story 19.5)
+// =============================================================================
+
+/**
+ * BISAC code validation pattern
+ * Format: 3 uppercase letters followed by 6 digits
+ * Example: FIC000000, BIO000000, COM051360
+ */
+export const BISAC_CODE_PATTERN = /^[A-Z]{3}\d{6}$/;
+
+/**
+ * BISAC code schema for single code validation
+ * Story 19.5 - BISAC Code Suggestions
+ */
+export const bisacCodeSchema = z
+  .string()
+  .regex(
+    BISAC_CODE_PATTERN,
+    "BISAC code must be 3 uppercase letters followed by 6 digits",
+  )
+  .nullable()
+  .optional();
+
+/**
+ * BISAC codes array schema for secondary codes
+ * Maximum 2 additional codes (3 total including primary)
+ */
+export const bisacCodesSchema = z
+  .array(z.string().regex(BISAC_CODE_PATTERN, "Invalid BISAC code format"))
+  .max(2, "Maximum 2 secondary BISAC codes allowed")
+  .nullable()
+  .optional();
+
+/**
+ * Combined BISAC schema for title updates
+ * Story 19.5 - BISAC Code Suggestions
+ */
+export const bisacSchema = z.object({
+  bisac_code: bisacCodeSchema,
+  bisac_codes: bisacCodesSchema,
+});
+
+/** Type for BISAC input */
+export type BisacInput = z.infer<typeof bisacSchema>;
+
+// =============================================================================
 // PUBLICATION STATUS
 // =============================================================================
 
@@ -236,6 +282,7 @@ export const titleFilterSchema = z.object({
 
 /**
  * Form schema for create title form (without defaults for better form compatibility)
+ * Story 19.5: Added optional BISAC code fields
  */
 export const createTitleFormSchema = z.object({
   title: z.string().min(1, "Title is required").max(500, "Title is too long"),
@@ -248,6 +295,9 @@ export const createTitleFormSchema = z.object({
   genre: z.string().max(100, "Genre is too long").optional().or(z.literal("")),
   word_count: z.number().int().positive().optional().nullable(),
   publication_status: publicationStatusSchema,
+  // Story 19.5: BISAC Code Suggestions
+  bisac_code: bisacCodeSchema,
+  bisac_codes: bisacCodesSchema,
 });
 
 /** Input type inferred from createTitleSchema */

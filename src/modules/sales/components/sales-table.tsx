@@ -5,6 +5,7 @@
  *
  * Data table for sales transaction history using TanStack Table.
  * Story 3.3: AC 3 (table columns), AC 5 (sorting, pagination)
+ * Story 20.4: Mobile-Responsive Layout (AC 20.4.3)
  *
  * Columns:
  * - Date: Formatted as "Nov 21, 2025"
@@ -20,6 +21,7 @@
  * - Sortable columns (Date desc default, Total Amount)
  * - Pagination (20 items per page)
  * - Row click opens detail modal
+ * - Mobile: Card-based layout (Story 20.4)
  */
 
 import {
@@ -35,6 +37,10 @@ import { ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  MobileCard,
+  MobileCardSkeleton,
+} from "@/components/ui/responsive-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -44,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import type { PaginatedSales, SaleWithRelations } from "../types";
 
 interface SalesTableProps {
@@ -207,12 +214,55 @@ function TableSkeleton() {
   );
 }
 
+/**
+ * Mobile card component for sales transactions
+ * Story 20.4: Mobile-Responsive Layout (AC 20.4.3)
+ */
+function SalesMobileCard({
+  sale,
+  onClick,
+}: {
+  sale: SaleWithRelations;
+  onClick: () => void;
+}) {
+  const saleDate = new Date(sale.sale_date);
+
+  return (
+    <MobileCard
+      title={sale.title.title}
+      subtitle={
+        <div className="flex items-center gap-2">
+          <FormatBadge format={sale.format} />
+          <ChannelBadge channel={sale.channel} />
+        </div>
+      }
+      fields={[
+        { label: "Date", value: format(saleDate, "MMM d, yyyy") },
+        {
+          label: "Quantity × Price",
+          value: `${sale.quantity} × ${formatCurrency(sale.unit_price)}`,
+        },
+        {
+          label: "Total",
+          value: (
+            <span className="font-bold">
+              {formatCurrency(sale.total_amount)}
+            </span>
+          ),
+        },
+      ]}
+      onClick={onClick}
+    />
+  );
+}
+
 export function SalesTable({
   data,
   isLoading,
   onRowClick,
   onPageChange,
 }: SalesTableProps) {
+  const isMobile = useIsMobile();
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "sale_date", desc: true },
   ]);
@@ -230,10 +280,12 @@ export function SalesTable({
     pageCount: data?.totalPages ?? 0,
   });
 
+  // Loading state
   if (isLoading) {
-    return <TableSkeleton />;
+    return isMobile ? <MobileCardSkeleton count={5} /> : <TableSkeleton />;
   }
 
+  // Empty state
   if (!data || data.items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -250,6 +302,59 @@ export function SalesTable({
   const startItem = (data.page - 1) * data.pageSize + 1;
   const endItem = Math.min(data.page * data.pageSize, data.total);
 
+  // Pagination controls (shared between mobile and desktop)
+  const PaginationControls = (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-2">
+      <p className="text-sm text-muted-foreground">
+        Showing {startItem}-{endItem} of {data.total} transactions
+      </p>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(data.page - 1)}
+          disabled={data.page <= 1}
+          className="h-11 min-w-[44px]"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="hidden sm:inline ml-1">Previous</span>
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          {data.page} / {data.totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(data.page + 1)}
+          disabled={data.page >= data.totalPages}
+          className="h-11 min-w-[44px]"
+        >
+          <span className="hidden sm:inline mr-1">Next</span>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Mobile: Card layout (Story 20.4)
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-3">
+          {data.items.map((sale) => (
+            <SalesMobileCard
+              key={sale.id}
+              sale={sale}
+              onClick={() => onRowClick(sale)}
+            />
+          ))}
+        </div>
+        {PaginationControls}
+      </div>
+    );
+  }
+
+  // Desktop: Table layout
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
@@ -287,36 +392,7 @@ export function SalesTable({
           </TableBody>
         </Table>
       </div>
-
-      {/* Pagination controls */}
-      <div className="flex items-center justify-between px-2">
-        <p className="text-sm text-muted-foreground">
-          Showing {startItem}-{endItem} of {data.total} transactions
-        </p>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(data.page - 1)}
-            disabled={data.page <= 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {data.page} of {data.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(data.page + 1)}
-            disabled={data.page >= data.totalPages}
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      {PaginationControls}
     </div>
   );
 }

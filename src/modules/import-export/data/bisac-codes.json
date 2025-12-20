@@ -1,0 +1,1765 @@
+[
+  {
+    "code": "FIC000000",
+    "description": "FICTION / General",
+    "parentCode": null,
+    "keywords": ["fiction", "novel", "story", "narrative"],
+    "category": "FIC",
+    "depth": 1
+  },
+  {
+    "code": "FIC002000",
+    "description": "FICTION / Action & Adventure",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "action",
+      "adventure",
+      "hero",
+      "quest",
+      "journey",
+      "danger",
+      "thriller"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC004000",
+    "description": "FICTION / Anthologies (multiple authors)",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "anthology",
+      "collection",
+      "stories",
+      "multiple authors",
+      "short stories"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC009000",
+    "description": "FICTION / Fantasy / General",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "fantasy",
+      "magic",
+      "wizard",
+      "dragon",
+      "magical",
+      "mythical",
+      "enchanted"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC009010",
+    "description": "FICTION / Fantasy / Contemporary",
+    "parentCode": "FIC009000",
+    "keywords": [
+      "urban fantasy",
+      "contemporary fantasy",
+      "modern magic",
+      "hidden world"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC009020",
+    "description": "FICTION / Fantasy / Dark Fantasy",
+    "parentCode": "FIC009000",
+    "keywords": [
+      "dark fantasy",
+      "gothic",
+      "horror fantasy",
+      "grim",
+      "grimdark"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC009030",
+    "description": "FICTION / Fantasy / Epic",
+    "parentCode": "FIC009000",
+    "keywords": [
+      "epic fantasy",
+      "high fantasy",
+      "world building",
+      "kingdoms",
+      "quest"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC009040",
+    "description": "FICTION / Fantasy / Historical",
+    "parentCode": "FIC009000",
+    "keywords": ["historical fantasy", "alternate history", "period fantasy"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC009050",
+    "description": "FICTION / Fantasy / Paranormal",
+    "parentCode": "FIC009000",
+    "keywords": [
+      "paranormal",
+      "supernatural",
+      "vampires",
+      "werewolves",
+      "shapeshifters"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC009060",
+    "description": "FICTION / Fantasy / Romantic",
+    "parentCode": "FIC009000",
+    "keywords": ["romantic fantasy", "fantasy romance", "fae", "faerie"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC009070",
+    "description": "FICTION / Fantasy / Urban",
+    "parentCode": "FIC009000",
+    "keywords": ["urban fantasy", "city", "modern", "magical realism"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC014000",
+    "description": "FICTION / Historical / General",
+    "parentCode": "FIC000000",
+    "keywords": ["historical", "period", "era", "past", "century", "war"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC014010",
+    "description": "FICTION / Historical / Ancient",
+    "parentCode": "FIC014000",
+    "keywords": ["ancient", "rome", "greek", "egypt", "classical", "antiquity"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC014020",
+    "description": "FICTION / Historical / Medieval",
+    "parentCode": "FIC014000",
+    "keywords": ["medieval", "middle ages", "knights", "castles", "feudal"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC014030",
+    "description": "FICTION / Historical / Renaissance",
+    "parentCode": "FIC014000",
+    "keywords": ["renaissance", "tudor", "elizabethan", "16th century"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC014050",
+    "description": "FICTION / Historical / World War I",
+    "parentCode": "FIC014000",
+    "keywords": ["world war i", "wwi", "great war", "1914", "1918", "trenches"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC014060",
+    "description": "FICTION / Historical / World War II",
+    "parentCode": "FIC014000",
+    "keywords": [
+      "world war ii",
+      "wwii",
+      "1940s",
+      "nazi",
+      "holocaust",
+      "resistance"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC015000",
+    "description": "FICTION / Horror",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "horror",
+      "scary",
+      "terror",
+      "nightmare",
+      "fear",
+      "haunted",
+      "monster"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC016000",
+    "description": "FICTION / Humorous / General",
+    "parentCode": "FIC000000",
+    "keywords": ["humor", "comedy", "funny", "satirical", "witty", "comedic"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC019000",
+    "description": "FICTION / Literary",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "literary",
+      "literature",
+      "contemporary",
+      "character study",
+      "prose"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC022000",
+    "description": "FICTION / Mystery & Detective / General",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "mystery",
+      "detective",
+      "crime",
+      "investigation",
+      "whodunit",
+      "sleuth"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC022010",
+    "description": "FICTION / Mystery & Detective / Amateur Sleuth",
+    "parentCode": "FIC022000",
+    "keywords": ["amateur sleuth", "cozy mystery", "amateur detective"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC022020",
+    "description": "FICTION / Mystery & Detective / Cozy",
+    "parentCode": "FIC022000",
+    "keywords": ["cozy", "cosy", "light mystery", "gentle", "small town"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC022030",
+    "description": "FICTION / Mystery & Detective / Hard-Boiled",
+    "parentCode": "FIC022000",
+    "keywords": ["hard-boiled", "noir", "gritty", "tough", "cynical"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC022040",
+    "description": "FICTION / Mystery & Detective / Historical",
+    "parentCode": "FIC022000",
+    "keywords": ["historical mystery", "period detective", "vintage crime"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC022050",
+    "description": "FICTION / Mystery & Detective / Police Procedural",
+    "parentCode": "FIC022000",
+    "keywords": [
+      "police",
+      "procedural",
+      "cop",
+      "detective",
+      "investigation",
+      "forensic"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC027000",
+    "description": "FICTION / Romance / General",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "romance",
+      "love",
+      "relationship",
+      "romantic",
+      "passion",
+      "heart"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC027010",
+    "description": "FICTION / Romance / Contemporary",
+    "parentCode": "FIC027000",
+    "keywords": ["contemporary romance", "modern romance", "present day"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC027020",
+    "description": "FICTION / Romance / Historical / General",
+    "parentCode": "FIC027000",
+    "keywords": [
+      "historical romance",
+      "regency",
+      "victorian",
+      "period romance"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC027030",
+    "description": "FICTION / Romance / Paranormal",
+    "parentCode": "FIC027000",
+    "keywords": ["paranormal romance", "vampire romance", "shifter romance"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC027050",
+    "description": "FICTION / Romance / Romantic Comedy",
+    "parentCode": "FIC027000",
+    "keywords": ["romantic comedy", "romcom", "funny romance", "light romance"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC027070",
+    "description": "FICTION / Romance / Suspense",
+    "parentCode": "FIC027000",
+    "keywords": ["romantic suspense", "danger", "intrigue", "thriller romance"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC028000",
+    "description": "FICTION / Science Fiction / General",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "science fiction",
+      "sci-fi",
+      "scifi",
+      "future",
+      "space",
+      "technology"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC028010",
+    "description": "FICTION / Science Fiction / Action & Adventure",
+    "parentCode": "FIC028000",
+    "keywords": ["space opera", "adventure scifi", "action science fiction"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC028020",
+    "description": "FICTION / Science Fiction / Alien Contact",
+    "parentCode": "FIC028000",
+    "keywords": [
+      "aliens",
+      "first contact",
+      "extraterrestrial",
+      "ufo",
+      "invasion"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC028030",
+    "description": "FICTION / Science Fiction / Apocalyptic & Post-Apocalyptic",
+    "parentCode": "FIC028000",
+    "keywords": [
+      "apocalypse",
+      "post-apocalyptic",
+      "dystopia",
+      "end of world",
+      "survival"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC028040",
+    "description": "FICTION / Science Fiction / Cyberpunk",
+    "parentCode": "FIC028000",
+    "keywords": [
+      "cyberpunk",
+      "cyber",
+      "hacker",
+      "virtual reality",
+      "augmented"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC028050",
+    "description": "FICTION / Science Fiction / Hard Science Fiction",
+    "parentCode": "FIC028000",
+    "keywords": ["hard science fiction", "technical", "realistic", "physics"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC028060",
+    "description": "FICTION / Science Fiction / Military",
+    "parentCode": "FIC028000",
+    "keywords": [
+      "military scifi",
+      "space military",
+      "war",
+      "fleet",
+      "soldiers"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC028070",
+    "description": "FICTION / Science Fiction / Space Opera",
+    "parentCode": "FIC028000",
+    "keywords": [
+      "space opera",
+      "galactic",
+      "empire",
+      "starship",
+      "interstellar"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC028080",
+    "description": "FICTION / Science Fiction / Steampunk",
+    "parentCode": "FIC028000",
+    "keywords": ["steampunk", "victorian", "steam", "clockwork", "airship"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC028090",
+    "description": "FICTION / Science Fiction / Time Travel",
+    "parentCode": "FIC028000",
+    "keywords": ["time travel", "temporal", "paradox", "timeline"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC030000",
+    "description": "FICTION / Suspense",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "suspense",
+      "tension",
+      "psychological",
+      "thriller",
+      "gripping"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC031000",
+    "description": "FICTION / Thrillers / General",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "thriller",
+      "suspense",
+      "edge of seat",
+      "page turner",
+      "tension"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC031010",
+    "description": "FICTION / Thrillers / Crime",
+    "parentCode": "FIC031000",
+    "keywords": ["crime thriller", "criminal", "heist", "organized crime"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC031020",
+    "description": "FICTION / Thrillers / Espionage",
+    "parentCode": "FIC031000",
+    "keywords": [
+      "spy",
+      "espionage",
+      "secret agent",
+      "intelligence",
+      "cia",
+      "mi6"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC031030",
+    "description": "FICTION / Thrillers / Legal",
+    "parentCode": "FIC031000",
+    "keywords": ["legal thriller", "lawyer", "courtroom", "trial", "attorney"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC031040",
+    "description": "FICTION / Thrillers / Medical",
+    "parentCode": "FIC031000",
+    "keywords": [
+      "medical thriller",
+      "doctor",
+      "hospital",
+      "disease",
+      "pandemic"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC031050",
+    "description": "FICTION / Thrillers / Military",
+    "parentCode": "FIC031000",
+    "keywords": [
+      "military thriller",
+      "soldier",
+      "combat",
+      "special forces",
+      "war"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC031060",
+    "description": "FICTION / Thrillers / Political",
+    "parentCode": "FIC031000",
+    "keywords": [
+      "political thriller",
+      "conspiracy",
+      "government",
+      "power",
+      "corruption"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC031070",
+    "description": "FICTION / Thrillers / Psychological",
+    "parentCode": "FIC031000",
+    "keywords": [
+      "psychological thriller",
+      "mind games",
+      "unreliable narrator",
+      "twist"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC031080",
+    "description": "FICTION / Thrillers / Supernatural",
+    "parentCode": "FIC031000",
+    "keywords": [
+      "supernatural thriller",
+      "paranormal",
+      "occult",
+      "dark forces"
+    ],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC031090",
+    "description": "FICTION / Thrillers / Technological",
+    "parentCode": "FIC031000",
+    "keywords": ["techno thriller", "technology", "hacking", "cyber", "ai"],
+    "category": "FIC",
+    "depth": 3
+  },
+  {
+    "code": "FIC045000",
+    "description": "FICTION / Family Life / General",
+    "parentCode": "FIC000000",
+    "keywords": ["family", "domestic", "home", "relationships", "generations"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC066000",
+    "description": "FICTION / Small Town & Rural",
+    "parentCode": "FIC000000",
+    "keywords": ["small town", "rural", "countryside", "village", "community"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC042000",
+    "description": "FICTION / Christian / General",
+    "parentCode": "FIC000000",
+    "keywords": [
+      "christian",
+      "faith",
+      "religious",
+      "spiritual",
+      "inspirational"
+    ],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC046000",
+    "description": "FICTION / African American / General",
+    "parentCode": "FIC000000",
+    "keywords": ["african american", "black", "urban"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC048000",
+    "description": "FICTION / LGBTQ+ / General",
+    "parentCode": "FIC000000",
+    "keywords": ["lgbtq", "gay", "lesbian", "queer", "bisexual", "transgender"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC050000",
+    "description": "FICTION / Crime",
+    "parentCode": "FIC000000",
+    "keywords": ["crime", "criminal", "noir", "murder", "investigation"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC052000",
+    "description": "FICTION / Satire",
+    "parentCode": "FIC000000",
+    "keywords": ["satire", "satirical", "parody", "social commentary"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC055000",
+    "description": "FICTION / Short Stories (single author)",
+    "parentCode": "FIC000000",
+    "keywords": ["short stories", "collection", "short fiction"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC060000",
+    "description": "FICTION / Visionary & Metaphysical",
+    "parentCode": "FIC000000",
+    "keywords": ["visionary", "metaphysical", "spiritual", "transcendent"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC064000",
+    "description": "FICTION / Absurdist",
+    "parentCode": "FIC000000",
+    "keywords": ["absurdist", "surreal", "bizarre", "avant-garde"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "FIC065000",
+    "description": "FICTION / Magical Realism",
+    "parentCode": "FIC000000",
+    "keywords": ["magical realism", "magical", "literary fantasy", "wonder"],
+    "category": "FIC",
+    "depth": 2
+  },
+  {
+    "code": "BIO000000",
+    "description": "BIOGRAPHY & AUTOBIOGRAPHY / General",
+    "parentCode": null,
+    "keywords": [
+      "biography",
+      "autobiography",
+      "memoir",
+      "life story",
+      "personal"
+    ],
+    "category": "BIO",
+    "depth": 1
+  },
+  {
+    "code": "BIO006000",
+    "description": "BIOGRAPHY & AUTOBIOGRAPHY / Business",
+    "parentCode": "BIO000000",
+    "keywords": [
+      "business biography",
+      "entrepreneur",
+      "ceo",
+      "founder",
+      "leader"
+    ],
+    "category": "BIO",
+    "depth": 2
+  },
+  {
+    "code": "BIO007000",
+    "description": "BIOGRAPHY & AUTOBIOGRAPHY / Composers & Musicians",
+    "parentCode": "BIO000000",
+    "keywords": ["musician", "composer", "singer", "band", "rock star"],
+    "category": "BIO",
+    "depth": 2
+  },
+  {
+    "code": "BIO008000",
+    "description": "BIOGRAPHY & AUTOBIOGRAPHY / Entertainment & Performing Arts",
+    "parentCode": "BIO000000",
+    "keywords": [
+      "entertainment",
+      "actor",
+      "actress",
+      "celebrity",
+      "hollywood",
+      "star"
+    ],
+    "category": "BIO",
+    "depth": 2
+  },
+  {
+    "code": "BIO010000",
+    "description": "BIOGRAPHY & AUTOBIOGRAPHY / Historical",
+    "parentCode": "BIO000000",
+    "keywords": ["historical biography", "historical figure", "history"],
+    "category": "BIO",
+    "depth": 2
+  },
+  {
+    "code": "BIO013000",
+    "description": "BIOGRAPHY & AUTOBIOGRAPHY / Literary Figures",
+    "parentCode": "BIO000000",
+    "keywords": ["author", "writer", "literary", "poet", "novelist"],
+    "category": "BIO",
+    "depth": 2
+  },
+  {
+    "code": "BIO016000",
+    "description": "BIOGRAPHY & AUTOBIOGRAPHY / Personal Memoirs",
+    "parentCode": "BIO000000",
+    "keywords": ["memoir", "personal", "life story", "experiences"],
+    "category": "BIO",
+    "depth": 2
+  },
+  {
+    "code": "BIO017000",
+    "description": "BIOGRAPHY & AUTOBIOGRAPHY / Political",
+    "parentCode": "BIO000000",
+    "keywords": [
+      "political",
+      "politician",
+      "president",
+      "prime minister",
+      "leader"
+    ],
+    "category": "BIO",
+    "depth": 2
+  },
+  {
+    "code": "BIO026000",
+    "description": "BIOGRAPHY & AUTOBIOGRAPHY / Sports",
+    "parentCode": "BIO000000",
+    "keywords": ["sports", "athlete", "player", "champion", "olympic"],
+    "category": "BIO",
+    "depth": 2
+  },
+  {
+    "code": "BUS000000",
+    "description": "BUSINESS & ECONOMICS / General",
+    "parentCode": null,
+    "keywords": ["business", "economics", "commerce", "trade", "market"],
+    "category": "BUS",
+    "depth": 1
+  },
+  {
+    "code": "BUS007000",
+    "description": "BUSINESS & ECONOMICS / Careers / General",
+    "parentCode": "BUS000000",
+    "keywords": ["career", "job", "employment", "profession", "work"],
+    "category": "BUS",
+    "depth": 2
+  },
+  {
+    "code": "BUS025000",
+    "description": "BUSINESS & ECONOMICS / Entrepreneurship",
+    "parentCode": "BUS000000",
+    "keywords": [
+      "entrepreneur",
+      "startup",
+      "founder",
+      "business owner",
+      "venture"
+    ],
+    "category": "BUS",
+    "depth": 2
+  },
+  {
+    "code": "BUS041000",
+    "description": "BUSINESS & ECONOMICS / Management",
+    "parentCode": "BUS000000",
+    "keywords": ["management", "manager", "leadership", "organization", "team"],
+    "category": "BUS",
+    "depth": 2
+  },
+  {
+    "code": "BUS046000",
+    "description": "BUSINESS & ECONOMICS / Marketing / General",
+    "parentCode": "BUS000000",
+    "keywords": ["marketing", "advertising", "branding", "promotion", "sales"],
+    "category": "BUS",
+    "depth": 2
+  },
+  {
+    "code": "BUS050000",
+    "description": "BUSINESS & ECONOMICS / Nonprofit Organizations & Charities",
+    "parentCode": "BUS000000",
+    "keywords": [
+      "nonprofit",
+      "charity",
+      "ngo",
+      "philanthropy",
+      "social enterprise"
+    ],
+    "category": "BUS",
+    "depth": 2
+  },
+  {
+    "code": "BUS063000",
+    "description": "BUSINESS & ECONOMICS / Strategic Planning",
+    "parentCode": "BUS000000",
+    "keywords": ["strategy", "planning", "strategic", "business plan"],
+    "category": "BUS",
+    "depth": 2
+  },
+  {
+    "code": "BUS070000",
+    "description": "BUSINESS & ECONOMICS / Personal Finance / General",
+    "parentCode": "BUS000000",
+    "keywords": ["personal finance", "money", "savings", "investing", "wealth"],
+    "category": "BUS",
+    "depth": 2
+  },
+  {
+    "code": "BUS085000",
+    "description": "BUSINESS & ECONOMICS / Organizational Behavior",
+    "parentCode": "BUS000000",
+    "keywords": ["organizational behavior", "workplace", "culture", "behavior"],
+    "category": "BUS",
+    "depth": 2
+  },
+  {
+    "code": "COM000000",
+    "description": "COMPUTERS / General",
+    "parentCode": null,
+    "keywords": ["computers", "computing", "technology", "digital", "tech"],
+    "category": "COM",
+    "depth": 1
+  },
+  {
+    "code": "COM012000",
+    "description": "COMPUTERS / Computer Science",
+    "parentCode": "COM000000",
+    "keywords": ["computer science", "algorithms", "data structures", "theory"],
+    "category": "COM",
+    "depth": 2
+  },
+  {
+    "code": "COM018000",
+    "description": "COMPUTERS / Data Science / General",
+    "parentCode": "COM000000",
+    "keywords": ["data science", "analytics", "big data", "data analysis"],
+    "category": "COM",
+    "depth": 2
+  },
+  {
+    "code": "COM032000",
+    "description": "COMPUTERS / Information Technology",
+    "parentCode": "COM000000",
+    "keywords": ["information technology", "it", "systems", "infrastructure"],
+    "category": "COM",
+    "depth": 2
+  },
+  {
+    "code": "COM051000",
+    "description": "COMPUTERS / Programming / General",
+    "parentCode": "COM000000",
+    "keywords": ["programming", "coding", "software development", "developer"],
+    "category": "COM",
+    "depth": 2
+  },
+  {
+    "code": "COM051010",
+    "description": "COMPUTERS / Programming / Algorithms",
+    "parentCode": "COM051000",
+    "keywords": ["algorithms", "data structures", "optimization"],
+    "category": "COM",
+    "depth": 3
+  },
+  {
+    "code": "COM051060",
+    "description": "COMPUTERS / Programming / Games",
+    "parentCode": "COM051000",
+    "keywords": ["game programming", "game development", "unity", "unreal"],
+    "category": "COM",
+    "depth": 3
+  },
+  {
+    "code": "COM051070",
+    "description": "COMPUTERS / Programming / Object Oriented",
+    "parentCode": "COM051000",
+    "keywords": ["object oriented", "oop", "classes", "objects", "inheritance"],
+    "category": "COM",
+    "depth": 3
+  },
+  {
+    "code": "COM051210",
+    "description": "COMPUTERS / Programming Languages / JavaScript",
+    "parentCode": "COM051000",
+    "keywords": [
+      "javascript",
+      "js",
+      "typescript",
+      "node",
+      "react",
+      "angular",
+      "vue"
+    ],
+    "category": "COM",
+    "depth": 3
+  },
+  {
+    "code": "COM051360",
+    "description": "COMPUTERS / Programming Languages / Python",
+    "parentCode": "COM051000",
+    "keywords": ["python", "django", "flask", "pandas", "numpy"],
+    "category": "COM",
+    "depth": 3
+  },
+  {
+    "code": "COM051380",
+    "description": "COMPUTERS / Programming Languages / Java",
+    "parentCode": "COM051000",
+    "keywords": ["java", "spring", "jvm", "kotlin", "android"],
+    "category": "COM",
+    "depth": 3
+  },
+  {
+    "code": "COM060000",
+    "description": "COMPUTERS / Machine Learning",
+    "parentCode": "COM000000",
+    "keywords": [
+      "machine learning",
+      "ml",
+      "ai",
+      "artificial intelligence",
+      "neural"
+    ],
+    "category": "COM",
+    "depth": 2
+  },
+  {
+    "code": "COM062000",
+    "description": "COMPUTERS / Web / General",
+    "parentCode": "COM000000",
+    "keywords": ["web", "internet", "website", "online", "www"],
+    "category": "COM",
+    "depth": 2
+  },
+  {
+    "code": "COM079000",
+    "description": "COMPUTERS / Security / General",
+    "parentCode": "COM000000",
+    "keywords": [
+      "security",
+      "cybersecurity",
+      "hacking",
+      "encryption",
+      "privacy"
+    ],
+    "category": "COM",
+    "depth": 2
+  },
+  {
+    "code": "COM084000",
+    "description": "COMPUTERS / Software Development & Engineering / General",
+    "parentCode": "COM000000",
+    "keywords": [
+      "software development",
+      "engineering",
+      "devops",
+      "agile",
+      "scrum"
+    ],
+    "category": "COM",
+    "depth": 2
+  },
+  {
+    "code": "CKB000000",
+    "description": "COOKING / General",
+    "parentCode": null,
+    "keywords": [
+      "cooking",
+      "cookbook",
+      "recipes",
+      "food",
+      "culinary",
+      "kitchen"
+    ],
+    "category": "CKB",
+    "depth": 1
+  },
+  {
+    "code": "CKB004000",
+    "description": "COOKING / Methods / Baking",
+    "parentCode": "CKB000000",
+    "keywords": ["baking", "bread", "pastry", "desserts", "cakes", "cookies"],
+    "category": "CKB",
+    "depth": 2
+  },
+  {
+    "code": "CKB070000",
+    "description": "COOKING / Health & Healing / General",
+    "parentCode": "CKB000000",
+    "keywords": [
+      "healthy cooking",
+      "diet",
+      "nutrition",
+      "wellness",
+      "clean eating"
+    ],
+    "category": "CKB",
+    "depth": 2
+  },
+  {
+    "code": "CKB086000",
+    "description": "COOKING / Vegetarian",
+    "parentCode": "CKB000000",
+    "keywords": ["vegetarian", "veggie", "meatless", "plant-based"],
+    "category": "CKB",
+    "depth": 2
+  },
+  {
+    "code": "CKB125000",
+    "description": "COOKING / Vegan",
+    "parentCode": "CKB000000",
+    "keywords": ["vegan", "plant-based", "dairy-free", "animal-free"],
+    "category": "CKB",
+    "depth": 2
+  },
+  {
+    "code": "EDU000000",
+    "description": "EDUCATION / General",
+    "parentCode": null,
+    "keywords": ["education", "teaching", "learning", "school", "curriculum"],
+    "category": "EDU",
+    "depth": 1
+  },
+  {
+    "code": "EDU016000",
+    "description": "EDUCATION / Higher",
+    "parentCode": "EDU000000",
+    "keywords": ["higher education", "college", "university", "academic"],
+    "category": "EDU",
+    "depth": 2
+  },
+  {
+    "code": "HEA000000",
+    "description": "HEALTH & FITNESS / General",
+    "parentCode": null,
+    "keywords": ["health", "fitness", "wellness", "exercise", "workout"],
+    "category": "HEA",
+    "depth": 1
+  },
+  {
+    "code": "HEA007000",
+    "description": "HEALTH & FITNESS / Diet & Nutrition / General",
+    "parentCode": "HEA000000",
+    "keywords": ["diet", "nutrition", "weight loss", "eating", "food"],
+    "category": "HEA",
+    "depth": 2
+  },
+  {
+    "code": "HEA010000",
+    "description": "HEALTH & FITNESS / Exercise / General",
+    "parentCode": "HEA000000",
+    "keywords": ["exercise", "workout", "training", "gym", "strength"],
+    "category": "HEA",
+    "depth": 2
+  },
+  {
+    "code": "HEA025000",
+    "description": "HEALTH & FITNESS / Yoga",
+    "parentCode": "HEA000000",
+    "keywords": ["yoga", "poses", "asanas", "stretching", "flexibility"],
+    "category": "HEA",
+    "depth": 2
+  },
+  {
+    "code": "HEA032000",
+    "description": "HEALTH & FITNESS / Sleep & Sleep Disorders",
+    "parentCode": "HEA000000",
+    "keywords": ["sleep", "insomnia", "rest", "sleep disorders"],
+    "category": "HEA",
+    "depth": 2
+  },
+  {
+    "code": "HIS000000",
+    "description": "HISTORY / General",
+    "parentCode": null,
+    "keywords": [
+      "history",
+      "historical",
+      "past",
+      "era",
+      "period",
+      "civilization"
+    ],
+    "category": "HIS",
+    "depth": 1
+  },
+  {
+    "code": "HIS036000",
+    "description": "HISTORY / United States / General",
+    "parentCode": "HIS000000",
+    "keywords": ["american history", "united states", "usa", "america"],
+    "category": "HIS",
+    "depth": 2
+  },
+  {
+    "code": "HIS010000",
+    "description": "HISTORY / Europe / General",
+    "parentCode": "HIS000000",
+    "keywords": ["european history", "europe", "european"],
+    "category": "HIS",
+    "depth": 2
+  },
+  {
+    "code": "HIS027000",
+    "description": "HISTORY / Military / General",
+    "parentCode": "HIS000000",
+    "keywords": ["military history", "war", "battles", "army", "navy"],
+    "category": "HIS",
+    "depth": 2
+  },
+  {
+    "code": "HIS037000",
+    "description": "HISTORY / World",
+    "parentCode": "HIS000000",
+    "keywords": ["world history", "global", "civilization", "ancient"],
+    "category": "HIS",
+    "depth": 2
+  },
+  {
+    "code": "JUV000000",
+    "description": "JUVENILE FICTION / General",
+    "parentCode": null,
+    "keywords": ["children", "kids", "juvenile", "young readers", "elementary"],
+    "category": "JUV",
+    "depth": 1
+  },
+  {
+    "code": "JUV001000",
+    "description": "JUVENILE FICTION / Action & Adventure / General",
+    "parentCode": "JUV000000",
+    "keywords": ["adventure", "action", "quest", "hero", "journey"],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JUV002000",
+    "description": "JUVENILE FICTION / Animals / General",
+    "parentCode": "JUV000000",
+    "keywords": ["animals", "pets", "wildlife", "dogs", "cats", "horses"],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JUV012000",
+    "description": "JUVENILE FICTION / Fantasy & Magic",
+    "parentCode": "JUV000000",
+    "keywords": [
+      "fantasy",
+      "magic",
+      "wizard",
+      "fairy",
+      "enchanted",
+      "mythical"
+    ],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JUV028000",
+    "description": "JUVENILE FICTION / Mysteries & Detective Stories",
+    "parentCode": "JUV000000",
+    "keywords": ["mystery", "detective", "whodunit", "clues", "solving"],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JUV029000",
+    "description": "JUVENILE FICTION / Readers / Beginner",
+    "parentCode": "JUV000000",
+    "keywords": ["beginner reader", "early reader", "learning to read"],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JUV030000",
+    "description": "JUVENILE FICTION / Readers / Intermediate",
+    "parentCode": "JUV000000",
+    "keywords": ["intermediate reader", "chapter book", "middle grade"],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JUV039000",
+    "description": "JUVENILE FICTION / Science Fiction / General",
+    "parentCode": "JUV000000",
+    "keywords": ["science fiction", "space", "robots", "future", "aliens"],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JUV013000",
+    "description": "JUVENILE FICTION / Family / General",
+    "parentCode": "JUV000000",
+    "keywords": ["family", "parents", "siblings", "home"],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JUV035000",
+    "description": "JUVENILE FICTION / School & Education",
+    "parentCode": "JUV000000",
+    "keywords": ["school", "classroom", "teacher", "student", "education"],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JUV019000",
+    "description": "JUVENILE FICTION / Humorous Stories",
+    "parentCode": "JUV000000",
+    "keywords": ["funny", "humor", "comedy", "silly", "laughs"],
+    "category": "JUV",
+    "depth": 2
+  },
+  {
+    "code": "JNF000000",
+    "description": "JUVENILE NONFICTION / General",
+    "parentCode": null,
+    "keywords": ["children nonfiction", "educational", "learning", "facts"],
+    "category": "JNF",
+    "depth": 1
+  },
+  {
+    "code": "JNF003000",
+    "description": "JUVENILE NONFICTION / Animals / General",
+    "parentCode": "JNF000000",
+    "keywords": ["animals", "nature", "wildlife", "zoology"],
+    "category": "JNF",
+    "depth": 2
+  },
+  {
+    "code": "JNF018000",
+    "description": "JUVENILE NONFICTION / Biography & Autobiography / General",
+    "parentCode": "JNF000000",
+    "keywords": ["biography", "famous people", "historical figures"],
+    "category": "JNF",
+    "depth": 2
+  },
+  {
+    "code": "JNF051000",
+    "description": "JUVENILE NONFICTION / Science & Nature / General",
+    "parentCode": "JNF000000",
+    "keywords": ["science", "nature", "experiments", "discovery"],
+    "category": "JNF",
+    "depth": 2
+  },
+  {
+    "code": "LAW000000",
+    "description": "LAW / General",
+    "parentCode": null,
+    "keywords": ["law", "legal", "attorney", "lawyer", "court"],
+    "category": "LAW",
+    "depth": 1
+  },
+  {
+    "code": "MED000000",
+    "description": "MEDICAL / General",
+    "parentCode": null,
+    "keywords": ["medical", "medicine", "health", "healthcare", "clinical"],
+    "category": "MED",
+    "depth": 1
+  },
+  {
+    "code": "OCC000000",
+    "description": "BODY, MIND & SPIRIT / General",
+    "parentCode": null,
+    "keywords": [
+      "spirituality",
+      "mind body",
+      "new age",
+      "consciousness",
+      "metaphysical"
+    ],
+    "category": "OCC",
+    "depth": 1
+  },
+  {
+    "code": "OCC011000",
+    "description": "BODY, MIND & SPIRIT / Meditation",
+    "parentCode": "OCC000000",
+    "keywords": ["meditation", "mindfulness", "zen", "contemplation"],
+    "category": "OCC",
+    "depth": 2
+  },
+  {
+    "code": "OCC019000",
+    "description": "BODY, MIND & SPIRIT / Inspiration & Personal Growth",
+    "parentCode": "OCC000000",
+    "keywords": ["inspiration", "personal growth", "self-help", "motivation"],
+    "category": "OCC",
+    "depth": 2
+  },
+  {
+    "code": "PHI000000",
+    "description": "PHILOSOPHY / General",
+    "parentCode": null,
+    "keywords": [
+      "philosophy",
+      "philosophical",
+      "ethics",
+      "logic",
+      "metaphysics"
+    ],
+    "category": "PHI",
+    "depth": 1
+  },
+  {
+    "code": "POE000000",
+    "description": "POETRY / General",
+    "parentCode": null,
+    "keywords": ["poetry", "poems", "verse", "poet", "lyric"],
+    "category": "POE",
+    "depth": 1
+  },
+  {
+    "code": "POL000000",
+    "description": "POLITICAL SCIENCE / General",
+    "parentCode": null,
+    "keywords": ["politics", "political", "government", "policy", "democracy"],
+    "category": "POL",
+    "depth": 1
+  },
+  {
+    "code": "PSY000000",
+    "description": "PSYCHOLOGY / General",
+    "parentCode": null,
+    "keywords": [
+      "psychology",
+      "psychological",
+      "mental",
+      "behavior",
+      "cognitive"
+    ],
+    "category": "PSY",
+    "depth": 1
+  },
+  {
+    "code": "PSY017000",
+    "description": "PSYCHOLOGY / Developmental / General",
+    "parentCode": "PSY000000",
+    "keywords": ["developmental", "child development", "growth", "lifespan"],
+    "category": "PSY",
+    "depth": 2
+  },
+  {
+    "code": "REL000000",
+    "description": "RELIGION / General",
+    "parentCode": null,
+    "keywords": ["religion", "religious", "faith", "spiritual", "worship"],
+    "category": "REL",
+    "depth": 1
+  },
+  {
+    "code": "REL006000",
+    "description": "RELIGION / Biblical Studies / General",
+    "parentCode": "REL000000",
+    "keywords": ["bible", "biblical", "scripture", "testament", "gospel"],
+    "category": "REL",
+    "depth": 2
+  },
+  {
+    "code": "REL012000",
+    "description": "RELIGION / Christian Living / General",
+    "parentCode": "REL000000",
+    "keywords": ["christian living", "faith", "devotional", "spiritual growth"],
+    "category": "REL",
+    "depth": 2
+  },
+  {
+    "code": "SCI000000",
+    "description": "SCIENCE / General",
+    "parentCode": null,
+    "keywords": [
+      "science",
+      "scientific",
+      "research",
+      "discovery",
+      "experiment"
+    ],
+    "category": "SCI",
+    "depth": 1
+  },
+  {
+    "code": "SCI004000",
+    "description": "SCIENCE / Astronomy",
+    "parentCode": "SCI000000",
+    "keywords": [
+      "astronomy",
+      "space",
+      "stars",
+      "planets",
+      "universe",
+      "cosmos"
+    ],
+    "category": "SCI",
+    "depth": 2
+  },
+  {
+    "code": "SCI007000",
+    "description": "SCIENCE / Life Sciences / Biology",
+    "parentCode": "SCI000000",
+    "keywords": ["biology", "life science", "organisms", "cells", "genetics"],
+    "category": "SCI",
+    "depth": 2
+  },
+  {
+    "code": "SCI034000",
+    "description": "SCIENCE / Physics / General",
+    "parentCode": "SCI000000",
+    "keywords": ["physics", "quantum", "relativity", "mechanics", "energy"],
+    "category": "SCI",
+    "depth": 2
+  },
+  {
+    "code": "SEL000000",
+    "description": "SELF-HELP / General",
+    "parentCode": null,
+    "keywords": [
+      "self-help",
+      "self improvement",
+      "personal development",
+      "growth"
+    ],
+    "category": "SEL",
+    "depth": 1
+  },
+  {
+    "code": "SEL016000",
+    "description": "SELF-HELP / Personal Growth / General",
+    "parentCode": "SEL000000",
+    "keywords": [
+      "personal growth",
+      "self improvement",
+      "development",
+      "better self"
+    ],
+    "category": "SEL",
+    "depth": 2
+  },
+  {
+    "code": "SEL021000",
+    "description": "SELF-HELP / Motivational & Inspirational",
+    "parentCode": "SEL000000",
+    "keywords": ["motivation", "inspiration", "inspiring", "empowerment"],
+    "category": "SEL",
+    "depth": 2
+  },
+  {
+    "code": "SEL031000",
+    "description": "SELF-HELP / Self-Management / Time Management",
+    "parentCode": "SEL000000",
+    "keywords": [
+      "time management",
+      "productivity",
+      "efficiency",
+      "organization"
+    ],
+    "category": "SEL",
+    "depth": 2
+  },
+  {
+    "code": "SEL027000",
+    "description": "SELF-HELP / Personal Growth / Success",
+    "parentCode": "SEL000000",
+    "keywords": ["success", "achievement", "goals", "winning", "excellence"],
+    "category": "SEL",
+    "depth": 2
+  },
+  {
+    "code": "SOC000000",
+    "description": "SOCIAL SCIENCE / General",
+    "parentCode": null,
+    "keywords": [
+      "social science",
+      "society",
+      "social",
+      "culture",
+      "anthropology"
+    ],
+    "category": "SOC",
+    "depth": 1
+  },
+  {
+    "code": "SOC026000",
+    "description": "SOCIAL SCIENCE / Sociology / General",
+    "parentCode": "SOC000000",
+    "keywords": ["sociology", "social", "society", "culture", "groups"],
+    "category": "SOC",
+    "depth": 2
+  },
+  {
+    "code": "SPO000000",
+    "description": "SPORTS & RECREATION / General",
+    "parentCode": null,
+    "keywords": ["sports", "recreation", "athletics", "games", "fitness"],
+    "category": "SPO",
+    "depth": 1
+  },
+  {
+    "code": "SPO003000",
+    "description": "SPORTS & RECREATION / Baseball / General",
+    "parentCode": "SPO000000",
+    "keywords": ["baseball", "mlb", "pitcher", "batter", "home run"],
+    "category": "SPO",
+    "depth": 2
+  },
+  {
+    "code": "SPO004000",
+    "description": "SPORTS & RECREATION / Basketball",
+    "parentCode": "SPO000000",
+    "keywords": ["basketball", "nba", "hoops", "court", "dunk"],
+    "category": "SPO",
+    "depth": 2
+  },
+  {
+    "code": "SPO012000",
+    "description": "SPORTS & RECREATION / Football (American)",
+    "parentCode": "SPO000000",
+    "keywords": ["football", "nfl", "touchdown", "quarterback"],
+    "category": "SPO",
+    "depth": 2
+  },
+  {
+    "code": "SPO040000",
+    "description": "SPORTS & RECREATION / Soccer",
+    "parentCode": "SPO000000",
+    "keywords": ["soccer", "football", "fifa", "goal", "pitch"],
+    "category": "SPO",
+    "depth": 2
+  },
+  {
+    "code": "TEC000000",
+    "description": "TECHNOLOGY & ENGINEERING / General",
+    "parentCode": null,
+    "keywords": ["technology", "engineering", "technical", "innovation"],
+    "category": "TEC",
+    "depth": 1
+  },
+  {
+    "code": "TRV000000",
+    "description": "TRAVEL / General",
+    "parentCode": null,
+    "keywords": [
+      "travel",
+      "tourism",
+      "vacation",
+      "trip",
+      "journey",
+      "destination"
+    ],
+    "category": "TRV",
+    "depth": 1
+  },
+  {
+    "code": "TRV003000",
+    "description": "TRAVEL / Asia / General",
+    "parentCode": "TRV000000",
+    "keywords": ["asia", "asian", "japan", "china", "india", "thailand"],
+    "category": "TRV",
+    "depth": 2
+  },
+  {
+    "code": "TRV009000",
+    "description": "TRAVEL / Europe / General",
+    "parentCode": "TRV000000",
+    "keywords": ["europe", "european", "france", "italy", "spain", "germany"],
+    "category": "TRV",
+    "depth": 2
+  },
+  {
+    "code": "TRV025000",
+    "description": "TRAVEL / United States / General",
+    "parentCode": "TRV000000",
+    "keywords": ["america", "usa", "united states", "american"],
+    "category": "TRV",
+    "depth": 2
+  },
+  {
+    "code": "TRU000000",
+    "description": "TRUE CRIME / General",
+    "parentCode": null,
+    "keywords": ["true crime", "crime", "murder", "investigation", "criminal"],
+    "category": "TRU",
+    "depth": 1
+  },
+  {
+    "code": "YAF000000",
+    "description": "YOUNG ADULT FICTION / General",
+    "parentCode": null,
+    "keywords": ["young adult", "ya", "teen", "teenage", "adolescent"],
+    "category": "YAF",
+    "depth": 1
+  },
+  {
+    "code": "YAF001000",
+    "description": "YOUNG ADULT FICTION / Action & Adventure / General",
+    "parentCode": "YAF000000",
+    "keywords": ["adventure", "action", "quest", "hero", "journey"],
+    "category": "YAF",
+    "depth": 2
+  },
+  {
+    "code": "YAF019000",
+    "description": "YOUNG ADULT FICTION / Fantasy / General",
+    "parentCode": "YAF000000",
+    "keywords": ["fantasy", "magic", "supernatural", "mythical", "enchanted"],
+    "category": "YAF",
+    "depth": 2
+  },
+  {
+    "code": "YAF019010",
+    "description": "YOUNG ADULT FICTION / Fantasy / Contemporary",
+    "parentCode": "YAF019000",
+    "keywords": ["urban fantasy", "contemporary", "modern magic"],
+    "category": "YAF",
+    "depth": 3
+  },
+  {
+    "code": "YAF019020",
+    "description": "YOUNG ADULT FICTION / Fantasy / Dark Fantasy",
+    "parentCode": "YAF019000",
+    "keywords": ["dark fantasy", "gothic", "grim"],
+    "category": "YAF",
+    "depth": 3
+  },
+  {
+    "code": "YAF019030",
+    "description": "YOUNG ADULT FICTION / Fantasy / Epic",
+    "parentCode": "YAF019000",
+    "keywords": ["epic fantasy", "high fantasy", "quest", "kingdoms"],
+    "category": "YAF",
+    "depth": 3
+  },
+  {
+    "code": "YAF042000",
+    "description": "YOUNG ADULT FICTION / Romance / General",
+    "parentCode": "YAF000000",
+    "keywords": ["romance", "love", "relationship", "dating"],
+    "category": "YAF",
+    "depth": 2
+  },
+  {
+    "code": "YAF056000",
+    "description": "YOUNG ADULT FICTION / Science Fiction / General",
+    "parentCode": "YAF000000",
+    "keywords": ["science fiction", "scifi", "future", "space", "technology"],
+    "category": "YAF",
+    "depth": 2
+  },
+  {
+    "code": "YAF058000",
+    "description": "YOUNG ADULT FICTION / Thrillers & Suspense",
+    "parentCode": "YAF000000",
+    "keywords": ["thriller", "suspense", "tension", "mystery"],
+    "category": "YAF",
+    "depth": 2
+  },
+  {
+    "code": "YAF024000",
+    "description": "YOUNG ADULT FICTION / Horror",
+    "parentCode": "YAF000000",
+    "keywords": ["horror", "scary", "terror", "fear", "creepy"],
+    "category": "YAF",
+    "depth": 2
+  },
+  {
+    "code": "YAF027000",
+    "description": "YOUNG ADULT FICTION / LGBTQ+",
+    "parentCode": "YAF000000",
+    "keywords": ["lgbtq", "gay", "lesbian", "queer", "transgender"],
+    "category": "YAF",
+    "depth": 2
+  },
+  {
+    "code": "YAF052000",
+    "description": "YOUNG ADULT FICTION / Social Themes / General",
+    "parentCode": "YAF000000",
+    "keywords": ["social issues", "contemporary", "realistic", "coming of age"],
+    "category": "YAF",
+    "depth": 2
+  },
+  {
+    "code": "YAN000000",
+    "description": "YOUNG ADULT NONFICTION / General",
+    "parentCode": null,
+    "keywords": ["young adult nonfiction", "teen nonfiction", "educational"],
+    "category": "YAN",
+    "depth": 1
+  },
+  {
+    "code": "YAN006000",
+    "description": "YOUNG ADULT NONFICTION / Biography & Autobiography / General",
+    "parentCode": "YAN000000",
+    "keywords": ["biography", "memoir", "life story", "famous people"],
+    "category": "YAN",
+    "depth": 2
+  },
+  {
+    "code": "NON000000",
+    "description": "NON-CLASSIFIABLE",
+    "parentCode": null,
+    "keywords": [],
+    "category": "NON",
+    "depth": 1
+  }
+]

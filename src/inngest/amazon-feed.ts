@@ -32,6 +32,7 @@ import { channelFeeds, FEED_STATUS } from "@/db/schema/channel-feeds";
 import { tenants } from "@/db/schema/tenants";
 import { titles } from "@/db/schema/titles";
 import { decryptCredentials } from "@/lib/channel-encryption";
+import { webhookEvents } from "@/modules/api/webhooks/dispatcher";
 import {
   type AmazonCredentials,
   getRegionForMarketplace,
@@ -49,6 +50,7 @@ import {
   type TitleWithAuthors,
 } from "@/modules/title-authors/queries";
 import { inngest } from "./client";
+import { createFeedNotificationAdmin } from "./notification-helpers";
 
 /**
  * Event payload for Amazon feed generation
@@ -343,6 +345,27 @@ export const amazonFeed = inngest.createFunction(
             .where(eq(channelFeeds.id, feedId));
         });
 
+        // Fire-and-forget webhook dispatch (Story 15.5)
+        webhookEvents
+          .onixExported(tenantId, {
+            id: feedId,
+            channel: "amazon",
+            format: "ONIX 3.1",
+            titleCount: titlesToExport.length,
+            fileName,
+          })
+          .catch(() => {}); // Ignore errors
+
+        // Create success notification (Story 20.2)
+        await step.run("create-success-notification", async () => {
+          await createFeedNotificationAdmin(tenantId, {
+            success: true,
+            channel: "Amazon",
+            productCount: titlesToExport.length,
+            feedId,
+          });
+        });
+
         return {
           success: true,
           feedId,
@@ -361,18 +384,243 @@ export const amazonFeed = inngest.createFunction(
         throw new Error("Feed processing timed out after 10 minutes");
       }
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+
       // Mark feed as failed
       await adminDb
         .update(channelFeeds)
         .set({
           status: FEED_STATUS.FAILED,
-          errorMessage:
-            error instanceof Error ? error.message : "Unknown error",
+          errorMessage,
           completedAt: new Date(),
         })
         .where(eq(channelFeeds.id, feedId));
 
+      // Create failure notification (Story 20.2)
+      await createFeedNotificationAdmin(tenantId, {
+        success: false,
+        channel: "Amazon",
+        productCount: 0,
+        feedId,
+        errorMessage,
+      });
+
       throw error; // Re-throw for Inngest retry (AC7)
+    }
+  },
+);
+
+/**
+ * Amazon Feed Retry Job
+ *
+ * Story 17.5 - AC4: Retry Failed Feeds
+ * Re-attempts upload using stored XML content from original feed.
+ *
+ * CRITICAL: Must follow same multi-step flow as main amazonFeed:
+ * 1. createFeedDocument - Get pre-signed S3 URL
+ * 2. uploadFeedContent - Upload XML to S3
+ * 3. createFeed - Submit to Amazon
+ * 4. getFeedStatus - Poll for completion
+ */
+export const amazonFeedRetry = inngest.createFunction(
+  {
+    id: "amazon-feed-retry",
+    retries: 2,
+    // Note: Intentionally no onFailure handler (unlike main amazonFeed).
+    // Retry failures don't indicate channel misconfiguration - they're
+    // user-initiated attempts on already-failed feeds. The feed record
+    // status is updated to 'failed' in the catch block below.
+  },
+  { event: "channel/amazon.feed-retry" },
+  async ({ event, step }) => {
+    const { tenantId, originalFeedId } = event.data as {
+      tenantId: string;
+      originalFeedId: string;
+      userId?: string;
+    };
+
+    // Step 1: Get original feed with content
+    const originalFeed = await step.run("get-original-feed", async () => {
+      return adminDb.query.channelFeeds.findFirst({
+        where: and(
+          eq(channelFeeds.id, originalFeedId),
+          eq(channelFeeds.tenantId, tenantId),
+        ),
+      });
+    });
+
+    if (!originalFeed?.feedContent) {
+      throw new Error("Original feed content not found");
+    }
+
+    // Capture feed content for closures
+    const feedContent = originalFeed.feedContent;
+    const fileName = originalFeed.fileName || `retry-${originalFeedId}.xml`;
+
+    // Step 2: Create new retry feed record
+    const retryFeedId = await step.run("create-retry-record", async () => {
+      const [feed] = await adminDb
+        .insert(channelFeeds)
+        .values({
+          tenantId,
+          channel: CHANNEL_TYPES.AMAZON,
+          status: FEED_STATUS.PENDING,
+          feedType: originalFeed.feedType,
+          triggeredBy: "manual",
+          productCount: originalFeed.productCount,
+          feedContent,
+          fileName,
+          retryOf: originalFeedId,
+          startedAt: new Date(),
+        })
+        .returning();
+      return feed.id;
+    });
+
+    try {
+      // Step 3: Get credentials
+      const storedCredentials = await step.run("get-credentials", async () => {
+        const cred = await adminDb.query.channelCredentials.findFirst({
+          where: and(
+            eq(channelCredentials.tenantId, tenantId),
+            eq(channelCredentials.channel, CHANNEL_TYPES.AMAZON),
+          ),
+        });
+        if (!cred) throw new Error("Amazon credentials not configured");
+        return JSON.parse(
+          decryptCredentials(cred.credentials),
+        ) as AmazonStoredCredentials;
+      });
+
+      // Build API credentials
+      const apiCredentials: AmazonCredentials = {
+        accessKeyId: storedCredentials.accessKeyId,
+        secretAccessKey: storedCredentials.secretAccessKey,
+        marketplaceId: storedCredentials.marketplaceId,
+        region: getRegionForMarketplace(storedCredentials.marketplaceCode),
+      };
+
+      // Step 4: Create feed document (get pre-signed S3 URL)
+      const feedDocument = await step.run("create-feed-document", async () => {
+        await adminDb
+          .update(channelFeeds)
+          .set({ status: FEED_STATUS.UPLOADING })
+          .where(eq(channelFeeds.id, retryFeedId));
+
+        return await createFeedDocument(apiCredentials);
+      });
+
+      // Step 5: Upload XML to S3
+      const uploadResult = await step.run("upload-to-s3", async () => {
+        return await uploadFeedContent(feedDocument.url, feedContent);
+      });
+
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.message || "S3 upload failed");
+      }
+
+      // Step 6: Create feed submission
+      const feedSubmission = await step.run("create-feed", async () => {
+        return await createFeed(apiCredentials, feedDocument.feedDocumentId);
+      });
+
+      // Store Amazon feed ID in metadata
+      await step.run("store-amazon-feed-id", async () => {
+        await adminDb
+          .update(channelFeeds)
+          .set({
+            metadata: {
+              ...((originalFeed.metadata as Record<string, unknown>) || {}),
+              amazonFeedId: feedSubmission.feedId,
+              feedDocumentId: feedDocument.feedDocumentId,
+              retryOf: originalFeedId,
+            },
+          })
+          .where(eq(channelFeeds.id, retryFeedId));
+      });
+
+      // Step 7: Poll for completion status (same as main amazonFeed)
+      let feedStatus = await step.run("get-initial-status", async () => {
+        return await getFeedStatus(apiCredentials, feedSubmission.feedId);
+      });
+
+      let pollAttempts = 0;
+      const maxPollAttempts = 20; // 10 minutes at 30 second intervals
+
+      while (
+        (feedStatus.processingStatus === "IN_PROGRESS" ||
+          feedStatus.processingStatus === "IN_QUEUE") &&
+        pollAttempts < maxPollAttempts
+      ) {
+        await step.sleep(`poll-wait-${pollAttempts}`, "30 seconds");
+
+        feedStatus = await step.run(`poll-status-${pollAttempts}`, async () => {
+          return await getFeedStatus(apiCredentials, feedSubmission.feedId);
+        });
+
+        pollAttempts++;
+      }
+
+      // Step 8: Handle final status
+      if (feedStatus.processingStatus === "DONE") {
+        await step.run("mark-success", async () => {
+          await adminDb
+            .update(channelFeeds)
+            .set({
+              status: FEED_STATUS.SUCCESS,
+              fileSize: feedContent.length,
+              completedAt: new Date(),
+            })
+            .where(eq(channelFeeds.id, retryFeedId));
+        });
+
+        // Create success notification (Story 20.2)
+        await createFeedNotificationAdmin(tenantId, {
+          success: true,
+          channel: "Amazon",
+          productCount: originalFeed.productCount || 0,
+          feedId: retryFeedId,
+        });
+
+        return {
+          success: true,
+          retryFeedId,
+          amazonFeedId: feedSubmission.feedId,
+        };
+      } else if (
+        feedStatus.processingStatus === "FATAL" ||
+        feedStatus.processingStatus === "CANCELLED"
+      ) {
+        throw new Error(
+          `Amazon feed processing ${feedStatus.processingStatus}`,
+        );
+      } else {
+        throw new Error("Feed processing timed out after 10 minutes");
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Retry failed";
+
+      await adminDb
+        .update(channelFeeds)
+        .set({
+          status: FEED_STATUS.FAILED,
+          errorMessage,
+          completedAt: new Date(),
+        })
+        .where(eq(channelFeeds.id, retryFeedId));
+
+      // Create failure notification (Story 20.2)
+      await createFeedNotificationAdmin(tenantId, {
+        success: false,
+        channel: "Amazon",
+        productCount: 0,
+        feedId: retryFeedId,
+        errorMessage,
+      });
+
+      throw error;
     }
   },
 );

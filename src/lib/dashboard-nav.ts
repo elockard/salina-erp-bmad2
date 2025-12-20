@@ -13,7 +13,8 @@ export type IconName =
   | "ClipboardList"
   | "BarChart"
   | "Settings"
-  | "Server";
+  | "Server"
+  | "Factory";
 
 export interface NavItem {
   label: string;
@@ -50,6 +51,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Titles",
     href: "/titles",
     icon: "BookOpen",
+    allowedRoles: ["owner", "admin", "editor"],
+  },
+  {
+    label: "Production",
+    href: "/production",
+    icon: "Factory",
     allowedRoles: ["owner", "admin", "editor"],
   },
   {

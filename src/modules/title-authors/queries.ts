@@ -28,6 +28,7 @@ import type { TitleAuthorWithContact } from "./types";
  * Title with all authors including ownership details
  *
  * Story 14.3: Added accessibility metadata fields for ONIX export
+ * Story 19.5: Added BISAC subject code fields for ONIX export
  */
 export interface TitleWithAuthors {
   id: string;
@@ -46,6 +47,9 @@ export interface TitleWithAuthors {
   accessibility_features: string[] | null;
   accessibility_hazards: string[] | null;
   accessibility_summary: string | null;
+  // BISAC subject codes (Story 19.5 - BISAC Code Suggestions)
+  bisac_code: string | null;
+  bisac_codes: string[] | null;
 }
 
 /**
@@ -228,6 +232,9 @@ export async function getTitleWithAuthors(
     accessibility_features: title.accessibility_features,
     accessibility_hazards: title.accessibility_hazards,
     accessibility_summary: title.accessibility_summary,
+    // BISAC subject codes (Story 19.5)
+    bisac_code: title.bisac_code,
+    bisac_codes: title.bisac_codes,
   };
 }
 
@@ -460,5 +467,86 @@ export async function getTitleWithAuthorsAdmin(
     accessibility_features: title.accessibility_features,
     accessibility_hazards: title.accessibility_hazards,
     accessibility_summary: title.accessibility_summary,
+    // BISAC subject codes (Story 19.5)
+    bisac_code: title.bisac_code,
+    bisac_codes: title.bisac_codes,
   };
+}
+
+/**
+ * Get multiple titles with authors - Batch Admin version for Inngest background jobs
+ *
+ * Story 17.2: Optimized batch query to avoid N+1 problem in feed generation.
+ * Uses adminDb to bypass RLS since Inngest jobs run outside authenticated sessions.
+ *
+ * @param titleIds - Array of title UUIDs
+ * @param tenantId - UUID of the tenant (required since no RLS context)
+ * @returns Array of titles with authors
+ */
+export async function getTitlesWithAuthorsAdminBatch(
+  titleIds: string[],
+  tenantId: string,
+): Promise<TitleWithAuthors[]> {
+  if (titleIds.length === 0) {
+    return [];
+  }
+
+  const { adminDb } = await import("@/db");
+
+  // Batch query: Get all titles at once
+  const allTitles = await adminDb.query.titles.findMany({
+    where: and(eq(titles.tenant_id, tenantId), inArray(titles.id, titleIds)),
+  });
+
+  if (allTitles.length === 0) {
+    return [];
+  }
+
+  // Batch query: Get all authors for all titles at once
+  const allAuthors = await adminDb.query.titleAuthors.findMany({
+    where: inArray(titleAuthors.title_id, titleIds),
+    with: {
+      contact: true,
+    },
+    orderBy: [
+      desc(titleAuthors.is_primary),
+      desc(titleAuthors.ownership_percentage),
+    ],
+  });
+
+  // Group authors by title_id for O(1) lookup
+  const authorsByTitleId = new Map<string, TitleAuthorWithContact[]>();
+  for (const author of allAuthors) {
+    const existing = authorsByTitleId.get(author.title_id) || [];
+    existing.push(author as TitleAuthorWithContact);
+    authorsByTitleId.set(author.title_id, existing);
+  }
+
+  // Build results
+  return allTitles.map((title) => {
+    const authors = authorsByTitleId.get(title.id) || [];
+    const primaryAuthor = authors.find((a) => a.is_primary) || null;
+
+    return {
+      id: title.id,
+      title: title.title,
+      subtitle: title.subtitle,
+      isbn: title.isbn,
+      tenant_id: title.tenant_id,
+      publication_status: title.publication_status,
+      created_at: title.created_at,
+      updated_at: title.updated_at,
+      authors,
+      primaryAuthor,
+      isSoleAuthor: authors.length === 1,
+      // Accessibility metadata (Story 14.3)
+      epub_accessibility_conformance: title.epub_accessibility_conformance,
+      accessibility_features: title.accessibility_features,
+      accessibility_hazards: title.accessibility_hazards,
+      accessibility_summary: title.accessibility_summary,
+      // BISAC subject codes (Story 19.5)
+      bisac_code: title.bisac_code,
+      bisac_codes: title.bisac_codes,
+    };
+  });
 }

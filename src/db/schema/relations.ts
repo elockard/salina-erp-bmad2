@@ -14,13 +14,21 @@
  */
 
 import { relations } from "drizzle-orm";
+import { apiKeys } from "./api-keys";
 import { auditLogs } from "./audit-logs";
 import { authors } from "./authors";
 import { contactRoles, contacts } from "./contacts";
 import { contracts, contractTiers } from "./contracts";
+import { csvExports } from "./csv-exports";
+import { csvImports } from "./csv-imports";
 import { invoiceLineItems, invoices, payments } from "./invoices";
 import { isbnPrefixes } from "./isbn-prefixes";
 import { isbns } from "./isbns";
+import { notificationPreferences } from "./notification-preferences";
+import { notifications } from "./notifications";
+import { onboardingProgress } from "./onboarding";
+import { productionProjects } from "./production-projects";
+import { rateLimitOverrides } from "./rate-limit-overrides";
 import { returns } from "./returns";
 import { sales } from "./sales";
 import { statements } from "./statements";
@@ -28,13 +36,16 @@ import { tenants } from "./tenants";
 import { titleAuthors } from "./title-authors";
 import { titles } from "./titles";
 import { users } from "./users";
+import { webhookDeliveries } from "./webhook-deliveries";
+import { webhookSubscriptions } from "./webhook-subscriptions";
 
 /**
  * Tenant relations
  * One tenant has many users, authors, titles, isbns, isbnPrefixes, sales, returns, contracts, statements, audit logs, contacts, invoices, and payments
  * Story 8.1: Added invoices and payments relations
+ * Story 20.1: Added onboardingProgress relation (one-to-one)
  */
-export const tenantsRelations = relations(tenants, ({ many }) => ({
+export const tenantsRelations = relations(tenants, ({ one, many }) => ({
   users: many(users),
   authors: many(authors),
   titles: many(titles),
@@ -48,6 +59,26 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   contacts: many(contacts),
   invoices: many(invoices),
   payments: many(payments),
+  apiKeys: many(apiKeys),
+  webhookSubscriptions: many(webhookSubscriptions),
+  /**
+   * Notifications - one tenant has many notifications
+   * Story 20.2: Build Notifications Center
+   */
+  notifications: many(notifications),
+  /**
+   * Production Projects - one tenant has many production projects
+   * Story 18.1: Create Production Projects
+   */
+  productionProjects: many(productionProjects),
+  /**
+   * Onboarding progress - one-to-one relationship
+   * Story 20.1: Build Onboarding Wizard
+   */
+  onboardingProgress: one(onboardingProgress, {
+    fields: [tenants.id],
+    references: [onboardingProgress.tenant_id],
+  }),
 }));
 
 /**
@@ -69,6 +100,16 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   reviewedReturns: many(returns, { relationName: "reviewedByUser" }),
   generatedStatements: many(statements),
   auditLogs: many(auditLogs),
+  /**
+   * Notifications - each user may have many notifications targeted to them
+   * Story 20.2: Build Notifications Center
+   */
+  notifications: many(notifications),
+  /**
+   * Notification Preferences - each user can configure their notification preferences
+   * Story 20.3: Configure Notification Preferences
+   */
+  notificationPreferences: many(notificationPreferences),
 }));
 
 /**
@@ -126,6 +167,11 @@ export const titlesRelations = relations(titles, ({ one, many }) => ({
   sales: many(sales),
   returns: many(returns),
   contracts: many(contracts),
+  /**
+   * Production Projects - titles in production
+   * Story 18.1: Create Production Projects
+   */
+  productionProjects: many(productionProjects),
 }));
 
 /**
@@ -474,3 +520,192 @@ export const titleAuthorsRelations = relations(titleAuthors, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+/**
+ * API Keys relations
+ * Each API key belongs to one tenant
+ * Story 15.1: OAuth2 API Authentication with API keys
+ */
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [apiKeys.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+/**
+ * Rate Limit Overrides relations
+ * Each rate limit override belongs to one tenant
+ * Story 15.3: Configurable Per-Tenant Rate Limits
+ */
+export const rateLimitOverridesRelations = relations(
+  rateLimitOverrides,
+  ({ one }) => ({
+    tenant: one(tenants, {
+      fields: [rateLimitOverrides.tenantId],
+      references: [tenants.id],
+    }),
+  }),
+);
+
+/**
+ * Webhook Subscriptions relations
+ * Each webhook subscription belongs to one tenant
+ * Each subscription can have many deliveries
+ * Story 15.4: Webhook subscription management
+ * Story 15.5: Added deliveries relation
+ */
+export const webhookSubscriptionsRelations = relations(
+  webhookSubscriptions,
+  ({ one, many }) => ({
+    tenant: one(tenants, {
+      fields: [webhookSubscriptions.tenantId],
+      references: [tenants.id],
+    }),
+    deliveries: many(webhookDeliveries),
+  }),
+);
+
+/**
+ * Webhook Deliveries relations
+ * Each delivery belongs to one subscription
+ * Story 15.5: Webhook delivery audit trail
+ *
+ * APPEND-ONLY: Delivery records are immutable for audit trail integrity.
+ */
+export const webhookDeliveriesRelations = relations(
+  webhookDeliveries,
+  ({ one }) => ({
+    subscription: one(webhookSubscriptions, {
+      fields: [webhookDeliveries.subscriptionId],
+      references: [webhookSubscriptions.id],
+    }),
+  }),
+);
+
+/**
+ * CSV Exports relations
+ * Each export belongs to one tenant and optionally one user (requester)
+ * Story 19.3: Export Catalog to CSV
+ *
+ * Tracks async export jobs with S3 presigned URLs for download.
+ */
+export const csvExportsRelations = relations(csvExports, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [csvExports.tenant_id],
+    references: [tenants.id],
+  }),
+  requestedByUser: one(users, {
+    fields: [csvExports.requested_by],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * CSV Imports relations
+ * Each import belongs to one tenant and optionally one user (importer)
+ * Story 19.1: Import Catalog via CSV
+ *
+ * Tracks import history with validation results.
+ */
+export const csvImportsRelations = relations(csvImports, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [csvImports.tenant_id],
+    references: [tenants.id],
+  }),
+  importedByUser: one(users, {
+    fields: [csvImports.imported_by],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * Onboarding Progress relations
+ * Each onboarding progress record belongs to one tenant
+ * Story 20.1: Build Onboarding Wizard
+ *
+ * Tracks wizard state including current step, completed steps, and status.
+ * One-to-one relationship with tenant (each tenant has exactly one progress record).
+ */
+export const onboardingProgressRelations = relations(
+  onboardingProgress,
+  ({ one }) => ({
+    tenant: one(tenants, {
+      fields: [onboardingProgress.tenant_id],
+      references: [tenants.id],
+    }),
+  }),
+);
+
+/**
+ * Notifications relations
+ * Each notification belongs to one tenant and optionally one user (target)
+ * Story 20.2: Build Notifications Center
+ *
+ * Supports both tenant-wide notifications (userId = null) and user-specific notifications.
+ * Read tracking via readAt timestamp.
+ */
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [notifications.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * Notification Preferences relations
+ * Each preference belongs to one tenant and one user
+ * Story 20.3: Configure Notification Preferences
+ *
+ * Stores per-user preferences for each notification type.
+ * Controls both in-app and email notification delivery.
+ */
+export const notificationPreferencesRelations = relations(
+  notificationPreferences,
+  ({ one }) => ({
+    tenant: one(tenants, {
+      fields: [notificationPreferences.tenantId],
+      references: [tenants.id],
+    }),
+    user: one(users, {
+      fields: [notificationPreferences.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+/**
+ * Production Projects relations
+ * Each production project belongs to one tenant and one title
+ * Each project may have been created/updated by users
+ * Story 18.1: Create Production Projects
+ *
+ * Soft delete pattern: Query with isNull(deletedAt) filter
+ */
+export const productionProjectsRelations = relations(
+  productionProjects,
+  ({ one }) => ({
+    tenant: one(tenants, {
+      fields: [productionProjects.tenantId],
+      references: [tenants.id],
+    }),
+    title: one(titles, {
+      fields: [productionProjects.titleId],
+      references: [titles.id],
+    }),
+    createdByUser: one(users, {
+      fields: [productionProjects.createdBy],
+      references: [users.id],
+      relationName: "productionProjectCreatedBy",
+    }),
+    updatedByUser: one(users, {
+      fields: [productionProjects.updatedBy],
+      references: [users.id],
+      relationName: "productionProjectUpdatedBy",
+    }),
+  }),
+);

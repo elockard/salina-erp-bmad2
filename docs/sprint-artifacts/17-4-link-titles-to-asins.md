@@ -1,6 +1,6 @@
 # Story 17.4: Link Titles to ASINs
 
-Status: in-review
+Status: done
 
 ## Story
 

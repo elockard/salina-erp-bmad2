@@ -17,6 +17,7 @@
 import { eq } from "drizzle-orm";
 import { adminDb } from "@/db";
 import { statements } from "@/db/schema/statements";
+import { webhookEvents } from "@/modules/api/webhooks/dispatcher";
 import { generateStatementPDF } from "@/modules/statements/pdf-generator";
 import type { StatementWithDetails } from "@/modules/statements/types";
 import { inngest } from "./client";
@@ -209,6 +210,17 @@ export const generateStatementPdf = inngest.createFunction(
     console.log(
       `[Inngest] Completed PDF generation for statement ${statementId} (${totalTime}ms)`,
     );
+
+    // Fire-and-forget webhook dispatch (Story 15.5)
+    // Note: Inngest serializes dates as strings, so convert period fields
+    webhookEvents
+      .statementGenerated(tenantId, {
+        id: statementId,
+        authorId: statementWithDates.author.id,
+        periodStart: statementWithDates.period_start.toISOString().slice(0, 10),
+        periodEnd: statementWithDates.period_end.toISOString().slice(0, 10),
+      })
+      .catch(() => {}); // Ignore errors
 
     return {
       success: true,

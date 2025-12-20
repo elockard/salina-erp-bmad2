@@ -6,10 +6,13 @@ import { cn } from "@/lib/utils";
 
 const settingsNav = [
   { href: "/settings", label: "General", exact: true },
+  { href: "/settings/notifications", label: "Notifications", exact: false },
   { href: "/settings/users", label: "Users", exact: false },
+  { href: "/settings/api-keys", label: "API Keys", exact: false },
   { href: "/settings/isbn-import", label: "ISBN Import", exact: false },
   { href: "/settings/isbn-prefixes", label: "ISBN Prefixes", exact: false },
   { href: "/settings/integrations", label: "Integrations", exact: false },
+  { href: "/settings/webhooks", label: "Webhooks", exact: false },
 ];
 
 export default function SettingsLayout({
