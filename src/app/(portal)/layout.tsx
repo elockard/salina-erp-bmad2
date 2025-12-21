@@ -79,6 +79,14 @@ export default async function PortalLayout({
                 Manuscripts
               </Link>
 
+              {/* Schedule link - Story 21.5 */}
+              <Link
+                href="/portal/schedule"
+                className="text-sm font-medium text-slate-600 hover:text-slate-900 min-h-[44px] flex items-center px-2"
+              >
+                Schedule
+              </Link>
+
               {/* Settings link - Story 21.4 */}
               <Link
                 href="/portal/settings"
