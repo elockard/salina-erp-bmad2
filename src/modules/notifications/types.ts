@@ -60,3 +60,15 @@ export interface ImportNotificationMetadata {
 export interface AnnouncementNotificationMetadata {
   externalLink?: string;
 }
+
+/**
+ * Story 21.4: Production Milestone Notifications
+ * Metadata for production stage transition notifications sent to authors
+ */
+export interface ProductionMilestoneNotificationMetadata {
+  titleId: string;
+  titleName: string;
+  projectId: string;
+  previousStage: string;
+  newStage: string;
+}

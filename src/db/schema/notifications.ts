@@ -29,6 +29,7 @@ export const NOTIFICATION_TYPES = [
   "system_announcement",
   "import_complete",
   "manuscript_submitted", // Story 21.3: Upload Manuscript Files
+  "production_milestone", // Story 21.4: Production Milestone Notifications
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

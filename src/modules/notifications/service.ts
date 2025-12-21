@@ -8,8 +8,17 @@
  * AC 20.3.5: Notifications respect user preference settings.
  */
 
+import { adminDb } from "@/db";
 import { notifications } from "@/db/schema/notifications";
 import { getDb } from "@/lib/auth";
+import {
+  getEffectiveAuthorPreferences,
+  shouldNotifyForStage,
+} from "@/modules/author-notifications";
+import {
+  WORKFLOW_STAGE_LABELS,
+  type WorkflowStage,
+} from "@/modules/production/schema";
 import { sendNotificationEmail } from "./email/notification-email-service";
 import { getEffectiveUserPreference } from "./preferences/queries";
 import {
@@ -29,6 +38,7 @@ import type {
   ImportNotificationMetadata,
   IsbnNotificationMetadata,
   NotificationType,
+  ProductionMilestoneNotificationMetadata,
   ReturnNotificationMetadata,
 } from "./types";
 
@@ -328,6 +338,105 @@ export async function createAnnouncementNotification(
       metadata: null,
     })
     .returning();
+
+  return notification.id;
+}
+
+/**
+ * Input for production milestone notification
+ * Story 21.4: Production Milestone Notifications
+ */
+export interface ProductionMilestoneNotificationInput {
+  tenantId: string;
+  contactId: string;
+  titleId: string;
+  titleName: string;
+  projectId: string;
+  previousStage: WorkflowStage;
+  newStage: WorkflowStage;
+}
+
+/**
+ * Options for author notification
+ */
+interface AuthorNotificationOptions {
+  userEmail?: string;
+  userName?: string;
+  userId?: string; // AC 21.4.2: Scope notification to specific author's user account
+}
+
+/**
+ * Create a production milestone notification for an author.
+ * Story 21.4 - AC 21.4.1: Author receives notification when workflow stage transitions.
+ * AC 21.4.4: Both in-app and email (if enabled).
+ * AC 21.4.5: Notification includes title name, stage reached, and link.
+ * AC 21.4.6: Respects author's stage-specific preferences.
+ *
+ * Uses adminDb for background job context (no HTTP auth required).
+ */
+export async function createProductionMilestoneNotification(
+  input: ProductionMilestoneNotificationInput,
+  options?: AuthorNotificationOptions,
+): Promise<string | null> {
+  const {
+    tenantId,
+    contactId,
+    titleId,
+    titleName,
+    projectId,
+    previousStage,
+    newStage,
+  } = input;
+
+  // Check author's stage-specific preferences
+  const prefs = await getEffectiveAuthorPreferences(contactId, tenantId);
+
+  // Check if notification is enabled for this stage
+  if (!shouldNotifyForStage(prefs, newStage)) {
+    return null;
+  }
+
+  const stageFriendlyName = WORKFLOW_STAGE_LABELS[newStage];
+  const type: NotificationType = "production_milestone";
+  const title = `${titleName} reached ${stageFriendlyName}`;
+  const description = `Your book has moved to the ${stageFriendlyName} stage`;
+  const link = "/portal#production-status";
+
+  const metadata = {
+    titleId,
+    titleName,
+    projectId,
+    previousStage,
+    newStage,
+  } satisfies ProductionMilestoneNotificationMetadata;
+
+  // Create in-app notification scoped to author's user account (AC 21.4.2)
+  // If no userId provided (author without portal access), notification won't be visible in-app
+  // but email will still be sent if enabled
+  const [notification] = await adminDb
+    .insert(notifications)
+    .values({
+      tenantId,
+      userId: options?.userId ?? null, // Scoped to author's user for AC 21.4.2
+      type,
+      title,
+      description,
+      link,
+      metadata: metadata as Record<string, unknown>,
+    })
+    .returning();
+
+  // Send email notification if enabled
+  if (prefs.emailEnabled && options?.userEmail) {
+    await sendNotificationEmail({
+      to: options.userEmail,
+      title,
+      description,
+      link: `${process.env.NEXT_PUBLIC_APP_URL || ""}${link}`,
+      linkText: "View Production Status",
+      recipientName: options.userName,
+    });
+  }
 
   return notification.id;
 }

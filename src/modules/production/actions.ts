@@ -20,8 +20,10 @@ import { adminDb, db } from "@/db";
 import { titles, users } from "@/db/schema";
 import { productionProjects } from "@/db/schema/production-projects";
 import { productionTasks } from "@/db/schema/production-tasks";
+import { titleAuthors } from "@/db/schema/title-authors";
 import { logAuditEvent } from "@/lib/audit";
 import { contactHasRole } from "@/modules/contacts/queries";
+import { createProductionMilestoneNotification } from "@/modules/notifications/service";
 import { sendProofCorrectionEmail } from "./proof-email-service";
 import {
   approveProofSchema,
@@ -855,6 +857,92 @@ export async function deleteProductionTask(
 // =============================================================================
 
 /**
+ * Notify all authors of a title when a production milestone is reached.
+ * Story 21.4 - AC 21.4.1, AC 21.4.2: Send notifications to credited authors.
+ *
+ * This is called asynchronously after stage transitions to avoid blocking.
+ * Errors are logged but never thrown to avoid affecting production operations.
+ */
+async function notifyAuthorsOfMilestone(
+  projectId: string,
+  titleId: string,
+  previousStage: WorkflowStage,
+  newStage: WorkflowStage,
+  tenantId: string,
+): Promise<void> {
+  try {
+    // Get title name for notification
+    const title = await adminDb.query.titles.findFirst({
+      where: eq(titles.id, titleId),
+    });
+
+    if (!title) {
+      console.warn(
+        `[Production] Title ${titleId} not found for milestone notification`,
+      );
+      return;
+    }
+
+    // Get all authors for this title via title_authors
+    const authorLinks = await adminDb.query.titleAuthors.findMany({
+      where: eq(titleAuthors.title_id, titleId),
+      with: {
+        contact: true,
+      },
+    });
+
+    // Notify each author
+    for (const link of authorLinks) {
+      const contact = link.contact;
+      if (!contact || contact.status !== "active") continue;
+
+      // Look up portal user for email and userId if author has portal access
+      let userEmail: string | undefined;
+      let portalUserId: string | undefined;
+
+      if (contact.portal_user_id) {
+        const portalUser = await adminDb.query.users.findFirst({
+          where: eq(users.clerk_user_id, contact.portal_user_id),
+        });
+        userEmail = portalUser?.email ?? undefined;
+        portalUserId = portalUser?.id; // AC 21.4.2: Scope notification to this author
+      }
+
+      // Fallback to contact email if no portal user email
+      if (!userEmail && contact.email) {
+        userEmail = contact.email;
+      }
+
+      const userName = `${contact.first_name} ${contact.last_name}`;
+
+      // Create notification for this author (scoped to their userId for AC 21.4.2)
+      await createProductionMilestoneNotification(
+        {
+          tenantId,
+          contactId: contact.id,
+          titleId,
+          titleName: title.title,
+          projectId,
+          previousStage,
+          newStage,
+        },
+        {
+          userEmail,
+          userName,
+          userId: portalUserId, // Scope notification to author's user account
+        },
+      );
+    }
+  } catch (error) {
+    // Log but never throw - notifications should not affect production operations
+    console.error(
+      `[Production] Failed to notify authors for project ${projectId}:`,
+      error,
+    );
+  }
+}
+
+/**
  * Update workflow stage via drag-drop on production board
  * AC-18.3.3: Validate adjacent stage transition (+-1 only)
  * AC-18.3.4: Log transition to audit_logs and workflow_stage_history
@@ -932,6 +1020,18 @@ export async function updateWorkflowStage(
         after: { workflow_stage: newStage },
       },
     });
+
+    // Story 21.4: Fire author notifications asynchronously (AC-21.4.1, AC-21.4.2)
+    // Don't await - notifications should not block the stage transition
+    notifyAuthorsOfMilestone(
+      projectId,
+      project.titleId,
+      currentStage,
+      newStage,
+      user.tenant_id,
+    ).catch((err) =>
+      console.error("[Production] Author notification failed:", err),
+    );
 
     revalidatePath("/production/board");
     revalidatePath(`/production/${projectId}`);

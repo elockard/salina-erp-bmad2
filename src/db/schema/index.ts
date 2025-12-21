@@ -1,5 +1,6 @@
 export * from "./api-keys";
 export * from "./audit-logs";
+export * from "./author-notification-preferences";
 export * from "./authors";
 export * from "./channel-credentials";
 export * from "./channel-feeds";
@@ -119,3 +120,7 @@ export type MarketingAsset = typeof marketingAssets.$inferSelect;
 
 import type { manuscriptSubmissions } from "./manuscript-submissions";
 export type ManuscriptSubmission = typeof manuscriptSubmissions.$inferSelect;
+
+import type { authorNotificationPreferences } from "./author-notification-preferences";
+export type AuthorNotificationPreference =
+  typeof authorNotificationPreferences.$inferSelect;

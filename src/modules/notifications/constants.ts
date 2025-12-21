@@ -79,6 +79,13 @@ export const DEFAULT_PREFERENCES: DefaultPreference[] = [
     defaultInApp: true,
     defaultEmail: true, // Action required - email default ON
   },
+  {
+    type: "production_milestone",
+    label: "Production Milestone",
+    description: "When your title reaches a production stage",
+    defaultInApp: true,
+    defaultEmail: true, // Story 21.4 - Important author notification
+  },
 ];
 
 /**

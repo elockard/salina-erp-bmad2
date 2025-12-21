@@ -16,6 +16,7 @@
 import { relations } from "drizzle-orm";
 import { apiKeys } from "./api-keys";
 import { auditLogs } from "./audit-logs";
+import { authorNotificationPreferences } from "./author-notification-preferences";
 import { authors } from "./authors";
 import { contactRoles, contacts } from "./contacts";
 import { contracts, contractTiers } from "./contracts";
@@ -428,6 +429,11 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
    * Story 21.3: Upload Manuscript Files
    */
   manuscriptSubmissions: many(manuscriptSubmissions),
+  /**
+   * Author Notification Preferences - milestone notification settings for this author
+   * Story 21.4: Production Milestone Notifications
+   */
+  notificationPreferences: many(authorNotificationPreferences),
 }));
 
 /**
@@ -448,6 +454,25 @@ export const contactRolesRelations = relations(contactRoles, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+/**
+ * Author Notification Preferences relations
+ * Each preference record belongs to one tenant and one contact
+ * Story 21.4: Production Milestone Notifications
+ */
+export const authorNotificationPreferencesRelations = relations(
+  authorNotificationPreferences,
+  ({ one }) => ({
+    tenant: one(tenants, {
+      fields: [authorNotificationPreferences.tenantId],
+      references: [tenants.id],
+    }),
+    contact: one(contacts, {
+      fields: [authorNotificationPreferences.contactId],
+      references: [contacts.id],
+    }),
+  }),
+);
 
 /**
  * Invoices relations

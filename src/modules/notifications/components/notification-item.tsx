@@ -9,6 +9,7 @@
 import {
   AlertCircle,
   CheckCircle,
+  Factory,
   FileText,
   Info,
   Megaphone,
@@ -37,6 +38,7 @@ const notificationIcons: Record<
   system_announcement: { icon: Megaphone, className: "text-blue-500" },
   import_complete: { icon: FileText, className: "text-green-500" },
   manuscript_submitted: { icon: FileText, className: "text-blue-500" }, // Story 21.3
+  production_milestone: { icon: Factory, className: "text-blue-500" }, // Story 21.4
 };
 
 // Format relative timestamp

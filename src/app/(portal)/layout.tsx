@@ -6,6 +6,7 @@ import { AnnouncementBannerWrapper } from "@/components/announcement-banner-wrap
 import { ImpersonationBannerWrapper } from "@/components/impersonation-banner-wrapper";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
+import { NotificationBell } from "@/modules/notifications/components/notification-bell";
 
 /**
  * Portal Layout - For Author Portal Users
@@ -77,6 +78,17 @@ export default async function PortalLayout({
               >
                 Manuscripts
               </Link>
+
+              {/* Settings link - Story 21.4 */}
+              <Link
+                href="/portal/settings"
+                className="text-sm font-medium text-slate-600 hover:text-slate-900 min-h-[44px] flex items-center px-2"
+              >
+                Settings
+              </Link>
+
+              {/* Notification Bell - Story 21.4 AC-21.4.4: In-app notification center */}
+              <NotificationBell />
 
               {/* Logout button */}
               <SignOutButton>
