@@ -24,6 +24,7 @@ import { csvImports } from "./csv-imports";
 import { invoiceLineItems, invoices, payments } from "./invoices";
 import { isbnPrefixes } from "./isbn-prefixes";
 import { isbns } from "./isbns";
+import { manuscriptSubmissions } from "./manuscript-submissions";
 import { marketingAssets } from "./marketing-assets";
 import { notificationPreferences } from "./notification-preferences";
 import { notifications } from "./notifications";
@@ -180,6 +181,11 @@ export const titlesRelations = relations(titles, ({ one, many }) => ({
    * Story 21.2: Access Marketing Asset Library
    */
   marketingAssets: many(marketingAssets),
+  /**
+   * Manuscript Submissions - manuscripts submitted for this title
+   * Story 21.3: Upload Manuscript Files
+   */
+  manuscriptSubmissions: many(manuscriptSubmissions),
 }));
 
 /**
@@ -417,6 +423,11 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
    * Story 18.2: Assign Production Tasks to Vendors
    */
   assignedTasks: many(productionTasks),
+  /**
+   * Manuscript Submissions - manuscripts submitted by this contact (author)
+   * Story 21.3: Upload Manuscript Files
+   */
+  manuscriptSubmissions: many(manuscriptSubmissions),
 }));
 
 /**
@@ -825,6 +836,37 @@ export const marketingAssetsRelations = relations(
       fields: [marketingAssets.deleted_by],
       references: [users.id],
       relationName: "marketingAssetDeletedBy",
+    }),
+  }),
+);
+
+/**
+ * Manuscript Submissions relations
+ * Each submission belongs to one contact (author) and optionally one title
+ * Each submission may have been reviewed by one user
+ * Each submission may be linked to one production project
+ * Story 21.3: Upload Manuscript Files
+ *
+ * Tenant isolation inherited via contact_id → contacts (which has RLS)
+ */
+export const manuscriptSubmissionsRelations = relations(
+  manuscriptSubmissions,
+  ({ one }) => ({
+    contact: one(contacts, {
+      fields: [manuscriptSubmissions.contact_id],
+      references: [contacts.id],
+    }),
+    title: one(titles, {
+      fields: [manuscriptSubmissions.title_id],
+      references: [titles.id],
+    }),
+    reviewedByUser: one(users, {
+      fields: [manuscriptSubmissions.reviewed_by],
+      references: [users.id],
+    }),
+    productionProject: one(productionProjects, {
+      fields: [manuscriptSubmissions.production_project_id],
+      references: [productionProjects.id],
     }),
   }),
 );

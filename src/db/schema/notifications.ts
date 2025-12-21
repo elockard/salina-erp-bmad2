@@ -28,6 +28,7 @@ export const NOTIFICATION_TYPES = [
   "action_low_isbn",
   "system_announcement",
   "import_complete",
+  "manuscript_submitted", // Story 21.3: Upload Manuscript Files
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

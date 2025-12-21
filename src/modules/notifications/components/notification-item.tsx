@@ -36,6 +36,7 @@ const notificationIcons: Record<
   action_low_isbn: { icon: AlertCircle, className: "text-amber-500" },
   system_announcement: { icon: Megaphone, className: "text-blue-500" },
   import_complete: { icon: FileText, className: "text-green-500" },
+  manuscript_submitted: { icon: FileText, className: "text-blue-500" }, // Story 21.3
 };
 
 // Format relative timestamp

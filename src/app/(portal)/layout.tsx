@@ -62,12 +62,20 @@ export default async function PortalLayout({
 
             {/* Navigation */}
             <nav className="flex items-center gap-4">
-              {/* My Statements link */}
+              {/* Dashboard link */}
               <Link
                 href="/portal"
                 className="text-sm font-medium text-slate-600 hover:text-slate-900 min-h-[44px] flex items-center px-2"
               >
-                My Statements
+                Dashboard
+              </Link>
+
+              {/* Manuscripts link - Story 21.3 */}
+              <Link
+                href="/portal/manuscripts"
+                className="text-sm font-medium text-slate-600 hover:text-slate-900 min-h-[44px] flex items-center px-2"
+              >
+                Manuscripts
               </Link>
 
               {/* Logout button */}

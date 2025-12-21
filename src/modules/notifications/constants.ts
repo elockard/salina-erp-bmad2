@@ -72,6 +72,13 @@ export const DEFAULT_PREFERENCES: DefaultPreference[] = [
     defaultInApp: true,
     defaultEmail: false,
   },
+  {
+    type: "manuscript_submitted",
+    label: "Manuscript Submitted",
+    description: "When an author submits a new manuscript",
+    defaultInApp: true,
+    defaultEmail: true, // Action required - email default ON
+  },
 ];
 
 /**
