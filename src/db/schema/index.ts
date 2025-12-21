@@ -20,6 +20,8 @@ export * from "./onix-imports";
 export * from "./platform-announcements";
 export * from "./platform-audit-logs";
 export * from "./production-projects";
+export * from "./production-tasks";
+export * from "./proof-files";
 export * from "./rate-limit-overrides";
 export * from "./relations";
 export * from "./returns";
@@ -103,3 +105,9 @@ export type NotificationPreference =
 
 import type { productionProjects } from "./production-projects";
 export type ProductionProject = typeof productionProjects.$inferSelect;
+
+import type { productionTasks } from "./production-tasks";
+export type ProductionTask = typeof productionTasks.$inferSelect;
+
+import type { proofFiles } from "./proof-files";
+export type ProofFile = typeof proofFiles.$inferSelect;

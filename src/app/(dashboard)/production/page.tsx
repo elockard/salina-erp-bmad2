@@ -38,7 +38,7 @@ export default async function ProductionPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
@@ -54,6 +54,6 @@ export default async function ProductionPage() {
         initialProjects={projects}
         availableTitles={availableTitles}
       />
-    </div>
+    </>
   );
 }

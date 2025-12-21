@@ -206,3 +206,148 @@ export function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+// =============================================================================
+// Proof File Storage (Story 18.4)
+// =============================================================================
+
+/**
+ * Maximum proof file size (100MB)
+ * AC-18.4.1: PDF files up to 100MB
+ */
+export const PROOF_MAX_SIZE = 100 * 1024 * 1024;
+
+/**
+ * Allowed proof MIME types (PDF only)
+ * AC-18.4.1: PDF only for proofs
+ */
+export const PROOF_ALLOWED_TYPES = ["application/pdf"];
+
+/**
+ * Allowed proof file extensions
+ */
+export const PROOF_ALLOWED_EXTENSIONS = [".pdf"];
+
+/**
+ * Validate proof file
+ *
+ * @param file - File to validate
+ * @throws Error if file is invalid
+ */
+export function validateProofFile(file: File): void {
+  if (!PROOF_ALLOWED_TYPES.includes(file.type)) {
+    throw new Error("Invalid file type. Only PDF files are allowed for proofs");
+  }
+
+  if (file.size > PROOF_MAX_SIZE) {
+    throw new Error("File too large. Maximum size for proofs is 100MB");
+  }
+}
+
+/**
+ * Generate S3 key for proof file
+ * Pattern: production/{tenant_id}/{project_id}/proofs/v{version}-{timestamp}-{filename}
+ *
+ * @param tenantId - Tenant UUID
+ * @param projectId - Production project UUID
+ * @param version - Version number
+ * @param fileName - Original filename
+ * @returns S3 object key
+ */
+export function generateProofS3Key(
+  tenantId: string,
+  projectId: string,
+  version: number,
+  fileName: string,
+): string {
+  const timestamp = Date.now();
+  const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
+  return `production/${tenantId}/${projectId}/proofs/v${version}-${timestamp}-${sanitizedName}`;
+}
+
+/**
+ * Upload proof file to S3
+ *
+ * @param buffer - File content as Buffer
+ * @param tenantId - Tenant UUID
+ * @param projectId - Production project UUID
+ * @param version - Version number
+ * @param fileName - Original filename
+ * @param contentType - MIME type
+ * @returns Object with S3 key, filename, and size
+ */
+export async function uploadProofToS3(
+  buffer: Buffer,
+  tenantId: string,
+  projectId: string,
+  version: number,
+  fileName: string,
+  contentType: string,
+): Promise<{ key: string; fileName: string; fileSize: number }> {
+  const s3Key = generateProofS3Key(tenantId, projectId, version, fileName);
+
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: s3Key,
+    Body: buffer,
+    ContentType: contentType,
+    Metadata: {
+      "tenant-id": tenantId,
+      "project-id": projectId,
+      version: String(version),
+      "original-name": fileName,
+      "uploaded-at": new Date().toISOString(),
+    },
+  });
+
+  try {
+    await s3Client.send(command);
+    return {
+      key: s3Key,
+      fileName,
+      fileSize: buffer.length,
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown S3 upload error";
+    console.error(
+      `[S3] Proof upload failed for project ${projectId} v${version}:`,
+      message,
+    );
+    throw new Error(`Failed to upload proof to S3: ${message}`);
+  }
+}
+
+/**
+ * Generate presigned download URL for proof file with custom filename
+ * AC-18.4.3: Download filename includes version number
+ *
+ * @param s3Key - S3 object key
+ * @param downloadFileName - Filename for Content-Disposition header
+ * @returns Presigned URL valid for 15 minutes
+ */
+export async function getProofDownloadUrl(
+  s3Key: string,
+  downloadFileName: string,
+): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: s3Key,
+    ResponseContentDisposition: `attachment; filename="${downloadFileName}"`,
+  });
+
+  try {
+    const url = await getSignedUrl(s3Client, command, {
+      expiresIn: PRESIGNED_URL_EXPIRY,
+    });
+    return url;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown presigned URL error";
+    console.error(
+      `[S3] Presigned URL generation failed for ${s3Key}:`,
+      message,
+    );
+    throw new Error(`Failed to generate download URL: ${message}`);
+  }
+}

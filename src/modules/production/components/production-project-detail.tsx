@@ -48,14 +48,18 @@ import {
   getValidNextStatuses,
   PRODUCTION_STATUS_LABELS,
   type ProductionStatus,
+  type WorkflowStage,
 } from "../schema";
 import type { ProductionProjectWithTitle, TitleOption } from "../types";
 import { ProductionProjectForm } from "./production-project-form";
+import { ProofSection } from "./proof-section";
 import { ProductionStatusBadge } from "./status-badge";
+import { TaskList } from "./task-list";
 
 interface ProductionProjectDetailProps {
-  project: ProductionProjectWithTitle;
+  project: ProductionProjectWithTitle & { workflowStage?: WorkflowStage };
   availableTitles: TitleOption[];
+  canDeleteProofs?: boolean;
   onUpdate: () => void;
   onDelete: () => void;
 }
@@ -63,6 +67,7 @@ interface ProductionProjectDetailProps {
 export function ProductionProjectDetail({
   project,
   availableTitles,
+  canDeleteProofs = false,
   onUpdate,
   onDelete,
 }: ProductionProjectDetailProps) {
@@ -258,6 +263,16 @@ export function ProductionProjectDetail({
             )}
           </CardContent>
         </Card>
+
+        {/* Tasks Section - Story 18.2 */}
+        <TaskList projectId={project.id} projectStatus={project.status} />
+
+        {/* Proofs Section - Story 18.4 */}
+        <ProofSection
+          projectId={project.id}
+          workflowStage={project.workflowStage}
+          canDelete={canDeleteProofs}
+        />
 
         {/* Timestamps */}
         <Card>

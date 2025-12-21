@@ -21,6 +21,7 @@
 import {
   date,
   index,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -53,6 +54,42 @@ export type ProductionStatus =
   | "cancelled";
 
 /**
+ * Workflow stage enum for production pipeline
+ * AC-18.3.2: Workflow stages for Kanban board
+ * Story: 18.3 - Track Production Workflow Stages
+ */
+export const workflowStageEnum = pgEnum("workflow_stage", [
+  "manuscript_received",
+  "editing",
+  "design",
+  "proof",
+  "print_ready",
+  "complete",
+]);
+
+/**
+ * Workflow stage type
+ */
+export type WorkflowStage =
+  | "manuscript_received"
+  | "editing"
+  | "design"
+  | "proof"
+  | "print_ready"
+  | "complete";
+
+/**
+ * Workflow stage history entry type for JSONB column
+ * AC-18.3.4: Track all stage transitions with timestamps
+ */
+export interface WorkflowStageHistoryEntry {
+  from: WorkflowStage;
+  to: WorkflowStage;
+  timestamp: string;
+  userId: string;
+}
+
+/**
  * Production Projects table
  * AC-18.1.1: Create production project by selecting title, setting target date
  * AC-18.1.3: Upload manuscript file (stored in S3)
@@ -79,6 +116,31 @@ export const productionProjects = pgTable(
 
     /** Current project status */
     status: productionStatusEnum("status").default("draft").notNull(),
+
+    /**
+     * Current workflow stage in production pipeline
+     * AC-18.3.2: Separate from status - tracks pipeline position
+     * Default: manuscript_received for new projects
+     */
+    workflowStage: workflowStageEnum("workflow_stage")
+      .default("manuscript_received")
+      .notNull(),
+
+    /**
+     * When project entered current workflow stage
+     * AC-18.3.6: Calculate days in stage from this timestamp
+     */
+    stageEnteredAt: timestamp("stage_entered_at", {
+      withTimezone: true,
+    }).defaultNow(),
+
+    /**
+     * History of workflow stage transitions
+     * AC-18.3.4: Track all transitions with timestamps for audit
+     */
+    workflowStageHistory: jsonb("workflow_stage_history")
+      .$type<WorkflowStageHistoryEntry[]>()
+      .default([]),
 
     /** Manuscript file S3 key */
     manuscriptFileKey: text("manuscript_file_key"),
@@ -133,6 +195,11 @@ export const productionProjects = pgTable(
     /** Index on target date for sorting */
     targetDateIdx: index("production_projects_target_date_idx").on(
       table.targetPublicationDate,
+    ),
+
+    /** Index on workflow_stage for board queries (AC-18.3.1) */
+    workflowStageIdx: index("production_projects_workflow_stage_idx").on(
+      table.workflowStage,
     ),
   }),
 );

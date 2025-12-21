@@ -50,6 +50,7 @@ export const auditActionTypeValues = [
   "APPROVE",
   "REJECT",
   "VIEW",
+  "STAGE_TRANSITION",
 ] as const;
 
 export type AuditActionType = (typeof auditActionTypeValues)[number];
@@ -73,6 +74,8 @@ export const auditResourceTypeValues = [
   "payment",
   "form_1099",
   "production_project",
+  "production_task",
+  "proof_file",
 ] as const;
 
 export type AuditResourceType = (typeof auditResourceTypeValues)[number];

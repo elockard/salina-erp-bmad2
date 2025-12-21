@@ -28,6 +28,8 @@ import { notificationPreferences } from "./notification-preferences";
 import { notifications } from "./notifications";
 import { onboardingProgress } from "./onboarding";
 import { productionProjects } from "./production-projects";
+import { productionTasks } from "./production-tasks";
+import { proofFiles } from "./proof-files";
 import { rateLimitOverrides } from "./rate-limit-overrides";
 import { returns } from "./returns";
 import { sales } from "./sales";
@@ -404,6 +406,11 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
   titleAuthors: many(titleAuthors),
   contracts: many(contracts),
   statements: many(statements),
+  /**
+   * Production Tasks - tasks assigned to this contact as vendor
+   * Story 18.2: Assign Production Tasks to Vendors
+   */
+  assignedTasks: many(productionTasks),
 }));
 
 /**
@@ -682,13 +689,15 @@ export const notificationPreferencesRelations = relations(
  * Production Projects relations
  * Each production project belongs to one tenant and one title
  * Each project may have been created/updated by users
+ * Each project can have many tasks
  * Story 18.1: Create Production Projects
+ * Story 18.2: Added tasks relation
  *
  * Soft delete pattern: Query with isNull(deletedAt) filter
  */
 export const productionProjectsRelations = relations(
   productionProjects,
-  ({ one }) => ({
+  ({ one, many }) => ({
     tenant: one(tenants, {
       fields: [productionProjects.tenantId],
       references: [tenants.id],
@@ -707,5 +716,80 @@ export const productionProjectsRelations = relations(
       references: [users.id],
       relationName: "productionProjectUpdatedBy",
     }),
+    /**
+     * Production Tasks - tasks within this project
+     * Story 18.2: Assign Production Tasks to Vendors
+     */
+    tasks: many(productionTasks),
+    /**
+     * Proof Files - proof versions for this project
+     * Story 18.4: Upload and Manage Proof Files
+     */
+    proofFiles: many(proofFiles),
   }),
 );
+
+/**
+ * Production Tasks relations
+ * Each task belongs to one tenant, one project, and optionally one vendor contact
+ * Each task may have been created/updated by users
+ * Story 18.2: Assign Production Tasks to Vendors
+ *
+ * Soft delete pattern: Query with isNull(deletedAt) filter
+ */
+export const productionTasksRelations = relations(
+  productionTasks,
+  ({ one }) => ({
+    tenant: one(tenants, {
+      fields: [productionTasks.tenantId],
+      references: [tenants.id],
+    }),
+    project: one(productionProjects, {
+      fields: [productionTasks.projectId],
+      references: [productionProjects.id],
+    }),
+    vendor: one(contacts, {
+      fields: [productionTasks.vendorId],
+      references: [contacts.id],
+    }),
+    createdByUser: one(users, {
+      fields: [productionTasks.createdBy],
+      references: [users.id],
+      relationName: "productionTaskCreatedBy",
+    }),
+    updatedByUser: one(users, {
+      fields: [productionTasks.updatedBy],
+      references: [users.id],
+      relationName: "productionTaskUpdatedBy",
+    }),
+  }),
+);
+
+/**
+ * Proof Files relations
+ * Each proof file belongs to one tenant, one project, and one user (uploader)
+ * Story 18.4: Upload and Manage Proof Files
+ *
+ * Soft delete pattern: Query with isNull(deletedAt) filter
+ * S3 files are NOT deleted for compliance (retained in storage)
+ */
+export const proofFilesRelations = relations(proofFiles, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [proofFiles.tenantId],
+    references: [tenants.id],
+  }),
+  project: one(productionProjects, {
+    fields: [proofFiles.projectId],
+    references: [productionProjects.id],
+  }),
+  uploadedByUser: one(users, {
+    fields: [proofFiles.uploadedBy],
+    references: [users.id],
+    relationName: "proofFileUploadedBy",
+  }),
+  deletedByUser: one(users, {
+    fields: [proofFiles.deletedBy],
+    references: [users.id],
+    relationName: "proofFileDeletedBy",
+  }),
+}));
