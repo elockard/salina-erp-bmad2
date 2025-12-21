@@ -15,6 +15,8 @@ import { getCurrentUser, getDb } from "@/lib/auth";
 import { PortalStatementList } from "@/modules/statements/components/portal-statement-list";
 import { getMyStatements } from "@/modules/statements/queries";
 import { AuthorAdvanceProgress } from "./components/author-advance-progress";
+import { AuthorAssetLibrary } from "./components/author-asset-library";
+import { AuthorAssetLibrarySkeleton } from "./components/author-asset-library-skeleton";
 import { AuthorBestTitles } from "./components/author-best-titles";
 import { AuthorEarningsTimeline } from "./components/author-earnings-timeline";
 import { AuthorMyTitles } from "./components/author-my-titles";
@@ -125,6 +127,11 @@ export default async function PortalPage() {
           authorId={author.id}
           tenantId={user.tenant_id}
         />
+      </Suspense>
+
+      {/* Marketing Assets - Story 21.2: AC-21.2.1 - Author sees marketing assets */}
+      <Suspense fallback={<AuthorAssetLibrarySkeleton />}>
+        <AuthorAssetLibrary authorId={author.id} tenantId={user.tenant_id} />
       </Suspense>
 
       {/* Statement list - AC-5.6.2 */}

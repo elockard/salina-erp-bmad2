@@ -12,6 +12,7 @@ export * from "./form-1099";
 export * from "./invoices";
 export * from "./isbn-prefixes";
 export * from "./isbns";
+export * from "./marketing-assets";
 export * from "./notification-preferences";
 export * from "./notifications";
 export * from "./onboarding";
@@ -111,3 +112,6 @@ export type ProductionTask = typeof productionTasks.$inferSelect;
 
 import type { proofFiles } from "./proof-files";
 export type ProofFile = typeof proofFiles.$inferSelect;
+
+import type { marketingAssets } from "./marketing-assets";
+export type MarketingAsset = typeof marketingAssets.$inferSelect;

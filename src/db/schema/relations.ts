@@ -24,6 +24,7 @@ import { csvImports } from "./csv-imports";
 import { invoiceLineItems, invoices, payments } from "./invoices";
 import { isbnPrefixes } from "./isbn-prefixes";
 import { isbns } from "./isbns";
+import { marketingAssets } from "./marketing-assets";
 import { notificationPreferences } from "./notification-preferences";
 import { notifications } from "./notifications";
 import { onboardingProgress } from "./onboarding";
@@ -174,6 +175,11 @@ export const titlesRelations = relations(titles, ({ one, many }) => ({
    * Story 18.1: Create Production Projects
    */
   productionProjects: many(productionProjects),
+  /**
+   * Marketing Assets - promotional materials for titles
+   * Story 21.2: Access Marketing Asset Library
+   */
+  marketingAssets: many(marketingAssets),
 }));
 
 /**
@@ -793,3 +799,32 @@ export const proofFilesRelations = relations(proofFiles, ({ one }) => ({
     relationName: "proofFileDeletedBy",
   }),
 }));
+
+/**
+ * Marketing Assets relations
+ * Each asset belongs to one title
+ * Each asset may have been uploaded/deleted by users
+ * Story 21.2: Access Marketing Asset Library
+ *
+ * Soft delete pattern: Query with isNull(deleted_at) filter
+ * S3 files are NOT deleted for compliance (retained in storage)
+ */
+export const marketingAssetsRelations = relations(
+  marketingAssets,
+  ({ one }) => ({
+    title: one(titles, {
+      fields: [marketingAssets.title_id],
+      references: [titles.id],
+    }),
+    uploadedByUser: one(users, {
+      fields: [marketingAssets.uploaded_by],
+      references: [users.id],
+      relationName: "marketingAssetUploadedBy",
+    }),
+    deletedByUser: one(users, {
+      fields: [marketingAssets.deleted_by],
+      references: [users.id],
+      relationName: "marketingAssetDeletedBy",
+    }),
+  }),
+);
