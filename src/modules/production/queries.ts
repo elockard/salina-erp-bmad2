@@ -28,15 +28,18 @@ import {
 } from "drizzle-orm";
 
 import { adminDb } from "@/db";
-import { titles, users } from "@/db/schema";
+import { contacts, tenants, titles, users } from "@/db/schema";
 import { productionProjects } from "@/db/schema/production-projects";
 import { productionTasks } from "@/db/schema/production-tasks";
+import { titleAuthors } from "@/db/schema/title-authors";
 // Import getContactsByRole for internal use and re-export for other modules
 import { getContactsByRole } from "@/modules/contacts/queries";
 import type { ProductionStatus, TaskStatus, WorkflowStage } from "./schema";
 import { formatFileSize, getManuscriptDownloadUrl } from "./storage";
 import type {
+  AuthorProductionProject,
   BoardProjectCard,
+  LabelData,
   ProductionBoardData,
   ProductionProjectWithTitle,
   ProductionTaskWithVendor,
@@ -783,4 +786,348 @@ export async function getProofFileSummary(
     latestVersion: result[0]?.latestVersion ?? null,
     latestUploadedAt: result[0]?.latestUploadedAt ?? null,
   };
+}
+
+// =============================================================================
+// Calendar Queries (Story 18.6)
+// =============================================================================
+
+import { isBefore, startOfDay } from "date-fns";
+import { isNotNull } from "drizzle-orm";
+import type { CalendarEvent, CalendarEventType } from "./types";
+
+/**
+ * Check if publication date is overdue
+ * Uses startOfDay for accurate comparison (today's items are NOT overdue)
+ * AC-18.6.3: Overdue highlighting
+ * @exported for unit testing
+ */
+export function isEventOverdue(
+  targetDate: string,
+  workflowStage: WorkflowStage,
+): boolean {
+  if (workflowStage === "complete") return false;
+  return isBefore(new Date(targetDate), startOfDay(new Date()));
+}
+
+/**
+ * Check if task is overdue
+ * Uses startOfDay for accurate comparison (today's items are NOT overdue)
+ * AC-18.6.3: Overdue highlighting
+ * @exported for unit testing
+ */
+export function isTaskOverdue(dueDate: string, status: TaskStatus): boolean {
+  if (status === "completed" || status === "cancelled") return false;
+  return isBefore(new Date(dueDate), startOfDay(new Date()));
+}
+
+/**
+ * Get calendar events for production calendar
+ * AC-18.6.1: Calendar view with milestone dates (publication + task due dates)
+ * AC-18.6.2: Filter by date range
+ * AC-18.6.3: Overdue calculation
+ *
+ * @param dateFrom - Optional start of date range filter
+ * @param dateTo - Optional end of date range filter
+ * @returns Array of calendar events from projects and tasks
+ */
+export async function getCalendarEvents(
+  dateFrom?: Date,
+  dateTo?: Date,
+): Promise<CalendarEvent[]> {
+  const user = await getCurrentUser();
+  if (!user?.tenant_id) return [];
+
+  // Build date filter conditions for projects
+  const projectConditions = [
+    eq(productionProjects.tenantId, user.tenant_id),
+    isNull(productionProjects.deletedAt),
+    isNotNull(productionProjects.targetPublicationDate),
+  ];
+
+  if (dateFrom) {
+    projectConditions.push(
+      gte(productionProjects.targetPublicationDate, dateFrom.toISOString()),
+    );
+  }
+  if (dateTo) {
+    projectConditions.push(
+      lte(productionProjects.targetPublicationDate, dateTo.toISOString()),
+    );
+  }
+
+  // Get projects with target dates - MUST include title relation for name
+  const projects = await adminDb.query.productionProjects.findMany({
+    where: and(...projectConditions),
+    with: {
+      title: {
+        columns: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+  });
+
+  // Build date filter conditions for tasks
+  const taskConditions = [
+    eq(productionTasks.tenantId, user.tenant_id),
+    isNull(productionTasks.deletedAt),
+    isNotNull(productionTasks.dueDate),
+  ];
+
+  if (dateFrom) {
+    taskConditions.push(gte(productionTasks.dueDate, dateFrom.toISOString()));
+  }
+  if (dateTo) {
+    taskConditions.push(lte(productionTasks.dueDate, dateTo.toISOString()));
+  }
+
+  // Get tasks with due dates - MUST include project+title and vendor relations
+  const tasks = await adminDb.query.productionTasks.findMany({
+    where: and(...taskConditions),
+    with: {
+      project: {
+        with: {
+          title: {
+            columns: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      },
+      vendor: {
+        columns: {
+          id: true,
+          first_name: true,
+          last_name: true,
+        },
+      },
+    },
+  });
+
+  // Transform projects to calendar events
+  const projectEvents: CalendarEvent[] = projects
+    .filter((p) => p.targetPublicationDate && p.title)
+    .map((p) => {
+      const pubDate = p.targetPublicationDate as string;
+      return {
+        id: `pub-${p.id}`,
+        title: `📅 Publication: ${p.title?.title ?? "Unknown"}`,
+        start: new Date(pubDate),
+        end: new Date(pubDate),
+        type: "publication_date" as CalendarEventType,
+        projectId: p.id,
+        projectTitle: p.title?.title ?? "Unknown Title",
+        workflowStage: p.workflowStage as WorkflowStage,
+        isOverdue: isEventOverdue(pubDate, p.workflowStage as WorkflowStage),
+      };
+    });
+
+  // Transform tasks to calendar events
+  const taskEvents: CalendarEvent[] = tasks
+    .filter((t) => t.dueDate && t.project)
+    .map((t) => {
+      const dueDate = t.dueDate as string;
+      const vendorName = t.vendor
+        ? `${t.vendor.first_name} ${t.vendor.last_name}`.trim()
+        : null;
+
+      return {
+        id: `task-${t.id}`,
+        title: `📋 ${t.name}`,
+        start: new Date(dueDate),
+        end: new Date(dueDate),
+        type: "task_due_date" as CalendarEventType,
+        projectId: t.projectId,
+        projectTitle: t.project?.title?.title ?? "Unknown Title",
+        workflowStage:
+          (t.project?.workflowStage as WorkflowStage) ?? "manuscript_received",
+        taskId: t.id,
+        vendorName,
+        isOverdue: isTaskOverdue(dueDate, t.status as TaskStatus),
+      };
+    });
+
+  // Combine and return all events
+  return [...projectEvents, ...taskEvents];
+}
+
+// =============================================================================
+// Label Data Queries (Story 18.7)
+// =============================================================================
+
+/**
+ * Get label data for a production project
+ * AC-18.7.5: Access from production project detail
+ * AC-18.7.6: Validation of ISBN existence
+ *
+ * Uses titleAuthors relation for multi-author support (Story 10.1)
+ * Falls back to deprecated contact_id if no titleAuthors entry exists
+ *
+ * @param projectId - Production project ID
+ * @returns Label data with ISBN, title, author, publisher or null if no ISBN
+ */
+export async function getLabelData(
+  projectId: string,
+): Promise<LabelData | null> {
+  const user = await getCurrentUser();
+  if (!user?.tenant_id) return null;
+
+  // Get project with title
+  const project = await adminDb.query.productionProjects.findFirst({
+    where: and(
+      eq(productionProjects.id, projectId),
+      eq(productionProjects.tenantId, user.tenant_id),
+      isNull(productionProjects.deletedAt),
+    ),
+    with: {
+      title: true,
+    },
+  });
+
+  // AC-18.7.6: Validate ISBN exists
+  if (!project?.title?.isbn) {
+    return null;
+  }
+
+  // Get primary author from titleAuthors (Story 10.1 pattern)
+  const primaryAuthor = await adminDb.query.titleAuthors.findFirst({
+    where: and(
+      eq(titleAuthors.title_id, project.titleId),
+      eq(titleAuthors.is_primary, true),
+    ),
+    with: {
+      contact: {
+        columns: { first_name: true, last_name: true },
+      },
+    },
+  });
+
+  // Determine author name with fallback
+  let authorName = "Unknown Author";
+  if (primaryAuthor?.contact) {
+    authorName =
+      `${primaryAuthor.contact.first_name} ${primaryAuthor.contact.last_name}`.trim();
+  } else {
+    // Fallback to deprecated contact_id field
+    if (project.title.contact_id) {
+      const contact = await adminDb.query.contacts.findFirst({
+        where: eq(contacts.id, project.title.contact_id),
+        columns: { first_name: true, last_name: true },
+      });
+      if (contact) {
+        authorName = `${contact.first_name} ${contact.last_name}`.trim();
+      }
+    }
+  }
+
+  // Get tenant name for publisher
+  const tenant = await adminDb.query.tenants.findFirst({
+    where: eq(tenants.id, user.tenant_id),
+    columns: { name: true },
+  });
+
+  return {
+    isbn: project.title.isbn,
+    title: project.title.title,
+    author: authorName,
+    publisher: tenant?.name ?? "Publisher",
+  };
+}
+
+// =============================================================================
+// Author Portal Queries (Story 21.1)
+// =============================================================================
+
+/**
+ * Get production projects for an author (by contact ID)
+ * Story 21.1: View Production Status in Author Portal
+ *
+ * AC-21.1.1: Author sees production status for their titles
+ * AC-21.1.4: Include stage history for timeline visualization
+ * AC-21.1.5: Calculate overdue status
+ * AC-21.1.6: Return empty for titles without production projects
+ *
+ * Security: Uses tenant-isolated queries for defense-in-depth
+ *
+ * @param contactId - The author's contact ID
+ * @param tenantId - The tenant ID for isolation
+ * @returns Array of production projects for titles where contact is an author
+ */
+export async function getAuthorProductionProjects(
+  contactId: string,
+  tenantId: string,
+): Promise<AuthorProductionProject[]> {
+  try {
+    // Step 1: Get all title IDs where this contact is an author
+    // Join through titles to enforce tenant isolation (defense-in-depth)
+    const authorTitleEntries = await adminDb
+      .select({ titleId: titleAuthors.title_id })
+      .from(titleAuthors)
+      .innerJoin(titles, eq(titleAuthors.title_id, titles.id))
+      .where(
+        and(
+          eq(titleAuthors.contact_id, contactId),
+          eq(titles.tenant_id, tenantId),
+        ),
+      );
+
+    if (authorTitleEntries.length === 0) {
+      return [];
+    }
+
+    const titleIds = authorTitleEntries.map((e) => e.titleId);
+
+    // Step 2: Get production projects for those titles
+    const projects = await adminDb.query.productionProjects.findMany({
+      where: and(
+        eq(productionProjects.tenantId, tenantId),
+        inArray(productionProjects.titleId, titleIds),
+        isNull(productionProjects.deletedAt),
+      ),
+      with: {
+        title: {
+          columns: {
+            id: true,
+            title: true,
+            isbn: true,
+          },
+        },
+      },
+      orderBy: [asc(productionProjects.targetPublicationDate)],
+    });
+
+    // Step 3: Map to AuthorProductionProject type with overdue calculation
+    const now = new Date();
+    const today = startOfDay(now);
+
+    return projects.map((p) => {
+      // Calculate overdue: past target date and not complete
+      const isOverdue =
+        p.targetPublicationDate !== null &&
+        p.workflowStage !== "complete" &&
+        isBefore(new Date(p.targetPublicationDate), today);
+
+      return {
+        projectId: p.id,
+        titleId: p.titleId,
+        titleName: p.title?.title ?? "Unknown Title",
+        isbn: p.title?.isbn ?? null,
+        workflowStage: p.workflowStage as WorkflowStage,
+        stageEnteredAt: p.stageEnteredAt,
+        targetPublicationDate: p.targetPublicationDate,
+        isOverdue,
+        stageHistory: p.workflowStageHistory ?? [],
+      };
+    });
+  } catch (error) {
+    console.error(
+      "[getAuthorProductionProjects] Failed to fetch production projects:",
+      error,
+    );
+    // Return empty array on error to gracefully degrade
+    return [];
+  }
 }

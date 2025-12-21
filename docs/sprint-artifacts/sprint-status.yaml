@@ -282,15 +282,15 @@ development_status:
   # Goal: Manuscript-to-print workflow, vendor management, proof tracking
   # FRs: FR161-FR169
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-18: in-progress
+  epic-18: done
   18-1-create-production-projects: done
   18-2-assign-production-tasks-to-vendors: done
   18-3-track-production-workflow-stages: done
   18-4-upload-and-manage-proof-files: done
   18-5-approve-or-request-corrections-on-proofs: done
-  18-6-view-production-calendar: backlog
-  18-7-generate-bisg-compliant-shipping-labels: backlog
-  epic-18-retrospective: optional
+  18-6-view-production-calendar: done
+  18-7-generate-bisg-compliant-shipping-labels: done
+  epic-18-retrospective: completed
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 19: Data Import/Export
@@ -310,21 +310,21 @@ development_status:
   # Goal: Onboarding wizard, notifications, mobile optimization, contextual help
   # FRs: FR176-FR181
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-20: in-progress
+  epic-20: done
   20-1-build-onboarding-wizard: done
   20-2-build-notifications-center: done
   20-3-configure-notification-preferences: done
   20-4-mobile-responsive-layout: complete
-  20-5-add-contextual-help-system: backlog
-  epic-20-retrospective: optional
+  20-5-add-contextual-help-system: done
+  epic-20-retrospective: completed
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 21: Author Portal Expansion
   # Goal: Production tracking, marketing assets, manuscript upload for authors
   # FRs: FR182-FR186
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-21: backlog
-  21-1-view-production-status-in-author-portal: backlog
+  epic-21: in-progress
+  21-1-view-production-status-in-author-portal: done
   21-2-access-marketing-asset-library: backlog
   21-3-upload-manuscript-files: backlog
   21-4-receive-production-milestone-notifications: backlog

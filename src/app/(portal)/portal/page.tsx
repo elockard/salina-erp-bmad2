@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { DashboardChartWrapper } from "@/components/charts/dashboard-chart-wrapper";
 import { RefreshButton } from "@/components/dashboard/refresh-button";
 import {
@@ -18,6 +19,8 @@ import { AuthorBestTitles } from "./components/author-best-titles";
 import { AuthorEarningsTimeline } from "./components/author-earnings-timeline";
 import { AuthorMyTitles } from "./components/author-my-titles";
 import { AuthorNextStatement } from "./components/author-next-statement";
+import { AuthorProductionStatus } from "./components/author-production-status";
+import { AuthorProductionStatusSkeleton } from "./components/author-production-status-skeleton";
 
 /**
  * Author Portal Landing Page
@@ -115,6 +118,14 @@ export default async function PortalPage() {
 
       {/* My Titles - Story 10.1: AC-10.1.7 - Author view of co-authored titles */}
       <AuthorMyTitles authorId={author.id} />
+
+      {/* Production Status - Story 21.1: AC-21.1.1 - Author sees production status */}
+      <Suspense fallback={<AuthorProductionStatusSkeleton />}>
+        <AuthorProductionStatus
+          authorId={author.id}
+          tenantId={user.tenant_id}
+        />
+      </Suspense>
 
       {/* Statement list - AC-5.6.2 */}
       <PortalStatementList statements={statements} />
