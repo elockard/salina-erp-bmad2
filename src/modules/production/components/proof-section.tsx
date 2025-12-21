@@ -4,10 +4,13 @@
  * Proof Section Component
  *
  * Combined component for proof file management in project detail view.
- * Includes upload form, version list, and latest proof preview.
+ * Includes upload form, version list, latest proof preview, and approval actions.
  *
  * Story: 18.4 - Upload and Manage Proof Files
  * AC-18.4.1-8: Complete proof file management UI
+ *
+ * Story: 18.5 - Approve or Request Corrections on Proofs
+ * AC-18.5.1-2: Approval action buttons with dialogs
  */
 
 import { ChevronDown, ChevronUp, FileCheck, Loader2 } from "lucide-react";
@@ -31,6 +34,7 @@ import {
 import { getLatestProof, getProofFileSummary, getProofFiles } from "../queries";
 import type { WorkflowStage } from "../schema";
 import type { ProofFileSummary, ProofFileWithUrl } from "../types";
+import { ProofApprovalActions } from "./proof-approval-actions";
 import { ProofPreview } from "./proof-preview";
 import { ProofUploadForm } from "./proof-upload-form";
 import { ProofVersionList } from "./proof-version-list";
@@ -147,8 +151,18 @@ export function ProofSection({
         onUploadSuccess={handleUploadSuccess}
       />
 
-      {/* Latest Proof Preview */}
-      {latestProof && <ProofPreview proof={latestProof} />}
+      {/* Latest Proof Preview with Approval Actions */}
+      {latestProof && (
+        <>
+          <ProofPreview proof={latestProof} />
+          {/* AC-18.5.1-2: Approval buttons shown when in proof stage */}
+          <ProofApprovalActions
+            proof={latestProof}
+            isProofStage={isProofStage}
+            onActionComplete={handleRefresh}
+          />
+        </>
+      )}
 
       {/* Version History (Collapsible) */}
       {proofs.length > 0 && (

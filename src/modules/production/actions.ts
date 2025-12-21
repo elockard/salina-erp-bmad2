@@ -22,14 +22,16 @@ import { productionProjects } from "@/db/schema/production-projects";
 import { productionTasks } from "@/db/schema/production-tasks";
 import { logAuditEvent } from "@/lib/audit";
 import { contactHasRole } from "@/modules/contacts/queries";
-
+import { sendProofCorrectionEmail } from "./proof-email-service";
 import {
+  approveProofSchema,
   createProductionProjectSchema,
   createProductionTaskSchema,
   isValidStatusTransition,
   isValidTaskStatusTransition,
   isValidWorkflowTransition,
   type ProductionStatus,
+  requestCorrectionsSchema,
   type TaskStatus,
   updateProductionProjectSchema,
   updateProductionTaskSchema,
@@ -1197,6 +1199,224 @@ export async function deleteProofFile(proofId: string): Promise<ActionResult> {
       success: false,
       message:
         error instanceof Error ? error.message : "Failed to delete proof",
+    };
+  }
+}
+
+// ============================================================================
+// Proof Approval Actions (Story 18.5)
+// ============================================================================
+
+/**
+ * Approve a proof and move project to print_ready stage
+ * AC-18.5.1: Approve proof, transition workflow stage
+ * AC-18.5.6: Audit logging for approval
+ */
+export async function approveProof(proofId: string): Promise<ActionResult> {
+  try {
+    const user = await getAuthenticatedUser();
+
+    // Validate input
+    const validation = approveProofSchema.safeParse({ proofId });
+    if (!validation.success) {
+      return { success: false, message: validation.error.message };
+    }
+
+    // Get proof and verify tenant
+    const proof = await adminDb.query.proofFiles.findFirst({
+      where: and(
+        eq(proofFiles.id, proofId),
+        eq(proofFiles.tenantId, user.tenant_id),
+        isNull(proofFiles.deletedAt),
+      ),
+    });
+
+    if (!proof) {
+      return { success: false, message: "Proof not found" };
+    }
+
+    // Get project and verify it's in proof stage
+    const project = await adminDb.query.productionProjects.findFirst({
+      where: eq(productionProjects.id, proof.projectId),
+    });
+
+    if (!project) {
+      return { success: false, message: "Project not found" };
+    }
+
+    if (project.workflowStage !== "proof") {
+      return {
+        success: false,
+        message: "Project must be in proof stage to approve",
+      };
+    }
+
+    // Update proof approval status
+    await db
+      .update(proofFiles)
+      .set({
+        approvalStatus: "approved",
+        approvedAt: new Date(),
+        approvedBy: user.id,
+      })
+      .where(eq(proofFiles.id, proofId));
+
+    // Transition project to print_ready stage (AC-18.5.1)
+    const currentHistory =
+      (project.workflowStageHistory as WorkflowStageHistoryEntry[]) || [];
+    const newHistory: WorkflowStageHistoryEntry[] = [
+      ...currentHistory,
+      {
+        from: "proof" as WorkflowStage,
+        to: "print_ready" as WorkflowStage,
+        timestamp: new Date().toISOString(),
+        userId: user.id,
+      },
+    ];
+
+    await db
+      .update(productionProjects)
+      .set({
+        workflowStage: "print_ready",
+        stageEnteredAt: new Date(),
+        workflowStageHistory: newHistory,
+      })
+      .where(eq(productionProjects.id, proof.projectId));
+
+    // Audit log (AC-18.5.6)
+    logAuditEvent({
+      tenantId: user.tenant_id,
+      userId: user.id,
+      actionType: "UPDATE",
+      resourceType: "proof_file",
+      resourceId: proofId,
+      changes: {
+        before: { approvalStatus: "pending", workflowStage: "proof" },
+        after: { approvalStatus: "approved", workflowStage: "print_ready" },
+      },
+    });
+
+    revalidatePath("/production");
+    revalidatePath("/production/board");
+    revalidatePath(`/production/${proof.projectId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("[Production] Approve proof failed:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to approve proof",
+    };
+  }
+}
+
+/**
+ * Request corrections on a proof
+ * AC-18.5.2: Request corrections with required notes
+ * AC-18.5.3: Vendor email notification (handled separately)
+ * AC-18.5.6: Audit logging for correction request
+ */
+export async function requestProofCorrections(
+  proofId: string,
+  notes: string,
+): Promise<ActionResult> {
+  try {
+    const user = await getAuthenticatedUser();
+
+    // Validate input
+    const validation = requestCorrectionsSchema.safeParse({ proofId, notes });
+    if (!validation.success) {
+      return { success: false, message: validation.error.issues[0]?.message };
+    }
+
+    // Get proof and verify tenant
+    const proof = await adminDb.query.proofFiles.findFirst({
+      where: and(
+        eq(proofFiles.id, proofId),
+        eq(proofFiles.tenantId, user.tenant_id),
+        isNull(proofFiles.deletedAt),
+      ),
+    });
+
+    if (!proof) {
+      return { success: false, message: "Proof not found" };
+    }
+
+    // Get project and verify it's in proof stage
+    const project = await adminDb.query.productionProjects.findFirst({
+      where: eq(productionProjects.id, proof.projectId),
+    });
+
+    if (!project) {
+      return { success: false, message: "Project not found" };
+    }
+
+    if (project.workflowStage !== "proof") {
+      return {
+        success: false,
+        message: "Project must be in proof stage to request corrections",
+      };
+    }
+
+    // Update proof approval status and notes
+    await db
+      .update(proofFiles)
+      .set({
+        approvalStatus: "corrections_requested",
+        approvalNotes: notes,
+        approvedAt: new Date(),
+        approvedBy: user.id,
+      })
+      .where(eq(proofFiles.id, proofId));
+
+    // Project stays in "proof" stage - no stage transition
+
+    // Audit log (AC-18.5.6)
+    logAuditEvent({
+      tenantId: user.tenant_id,
+      userId: user.id,
+      actionType: "UPDATE",
+      resourceType: "proof_file",
+      resourceId: proofId,
+      changes: {
+        before: { approvalStatus: "pending" },
+        after: {
+          approvalStatus: "corrections_requested",
+          approvalNotes: notes,
+        },
+      },
+    });
+
+    // Send vendor notification email (AC-18.5.3)
+    let emailSent = false;
+    let emailWarning: string | undefined;
+    try {
+      const emailResult = await sendProofCorrectionEmail({
+        proofId,
+        tenantId: user.tenant_id,
+        requestedByUserId: user.id,
+        correctionNotes: notes,
+      });
+      emailSent = emailResult.success && !emailResult.warning;
+      emailWarning = emailResult.warning;
+    } catch (emailError) {
+      // Log but don't fail the action if email fails
+      console.error("[Production] Correction email failed:", emailError);
+    }
+
+    revalidatePath("/production");
+    revalidatePath("/production/board");
+    revalidatePath(`/production/${proof.projectId}`);
+
+    return { success: true, id: proof.projectId, emailSent, emailWarning };
+  } catch (error) {
+    console.error("[Production] Request corrections failed:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to request corrections",
     };
   }
 }

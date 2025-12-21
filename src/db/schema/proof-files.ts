@@ -22,12 +22,25 @@
 import {
   index,
   integer,
+  pgEnum,
   pgTable,
   text,
   timestamp,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+
+/**
+ * Proof Approval Status Enum
+ * Story 18.5: Approve or Request Corrections on Proofs
+ * AC-18.5.4: Track approval status on each proof version
+ */
+export const proofApprovalStatusEnum = pgEnum("proof_approval_status", [
+  "pending",
+  "approved",
+  "corrections_requested",
+]);
+
 import { productionProjects } from "./production-projects";
 import { tenants } from "./tenants";
 import { users } from "./users";
@@ -85,6 +98,34 @@ export const proofFiles = pgTable(
     uploadedBy: uuid("uploaded_by")
       .notNull()
       .references(() => users.id, { onDelete: "set null" }),
+
+    /**
+     * Approval status for this proof version
+     * Story 18.5: AC-18.5.4 - Track approval status
+     */
+    approvalStatus: proofApprovalStatusEnum("approval_status")
+      .default("pending")
+      .notNull(),
+
+    /**
+     * Notes from correction request
+     * Story 18.5: AC-18.5.2 - Correction notes are required (min 10 chars)
+     */
+    approvalNotes: text("approval_notes"),
+
+    /**
+     * When proof was approved or corrections requested
+     * Story 18.5: AC-18.5.1 - Track approval timestamp
+     */
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+
+    /**
+     * User who approved or requested corrections
+     * Story 18.5: AC-18.5.6 - Track who took the action
+     */
+    approvedBy: uuid("approved_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
 
     /** Soft delete timestamp */
     deletedAt: timestamp("deleted_at", { withTimezone: true }),

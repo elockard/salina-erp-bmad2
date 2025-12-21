@@ -400,3 +400,43 @@ export const updateProofNotesSchema = z.object({
 });
 
 export type UpdateProofNotesInput = z.infer<typeof updateProofNotesSchema>;
+
+// ============================================================================
+// Proof Approval Schemas (Story 18.5)
+// ============================================================================
+
+/**
+ * Proof approval status values
+ * AC-18.5.4: Track approval status on each proof version
+ */
+export const PROOF_APPROVAL_STATUSES = [
+  "pending",
+  "approved",
+  "corrections_requested",
+] as const;
+
+export type ProofApprovalStatus = (typeof PROOF_APPROVAL_STATUSES)[number];
+
+/**
+ * Approve proof schema
+ * AC-18.5.1: Approve a proof to move project to print_ready stage
+ */
+export const approveProofSchema = z.object({
+  proofId: z.string().uuid("Invalid proof ID"),
+});
+
+export type ApproveProofInput = z.infer<typeof approveProofSchema>;
+
+/**
+ * Request corrections schema
+ * AC-18.5.2: Request corrections with required notes (min 10 chars)
+ */
+export const requestCorrectionsSchema = z.object({
+  proofId: z.string().uuid("Invalid proof ID"),
+  notes: z
+    .string()
+    .min(10, "Correction notes must be at least 10 characters")
+    .max(2000, "Notes too long"),
+});
+
+export type RequestCorrectionsInput = z.infer<typeof requestCorrectionsSchema>;

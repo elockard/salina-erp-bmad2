@@ -619,6 +619,11 @@ export async function getProofFiles(
       uploadedAt: proofFiles.uploadedAt,
       uploadedBy: proofFiles.uploadedBy,
       uploaderEmail: users.email,
+      // Story 18.5: Approval fields
+      approvalStatus: proofFiles.approvalStatus,
+      approvalNotes: proofFiles.approvalNotes,
+      approvedAt: proofFiles.approvedAt,
+      approvedBy: proofFiles.approvedBy,
     })
     .from(proofFiles)
     .innerJoin(users, eq(proofFiles.uploadedBy, users.id))
@@ -660,6 +665,11 @@ export async function getProofFiles(
         uploadedBy: proof.uploadedBy,
         uploaderName: proof.uploaderEmail,
         downloadUrl,
+        // Story 18.5: Approval fields
+        approvalStatus: proof.approvalStatus,
+        approvalNotes: proof.approvalNotes,
+        approvedAt: proof.approvedAt,
+        approvedBy: proof.approvedBy,
       };
     }),
   );
@@ -689,6 +699,11 @@ export async function getLatestProof(
       uploadedAt: proofFiles.uploadedAt,
       uploadedBy: proofFiles.uploadedBy,
       uploaderEmail: users.email,
+      // Story 18.5: Approval fields
+      approvalStatus: proofFiles.approvalStatus,
+      approvalNotes: proofFiles.approvalNotes,
+      approvedAt: proofFiles.approvedAt,
+      approvedBy: proofFiles.approvedBy,
     })
     .from(proofFiles)
     .innerJoin(users, eq(proofFiles.uploadedBy, users.id))
@@ -728,6 +743,11 @@ export async function getLatestProof(
     uploadedBy: p.uploadedBy,
     uploaderName: p.uploaderEmail,
     downloadUrl,
+    // Story 18.5: Approval fields
+    approvalStatus: p.approvalStatus,
+    approvalNotes: p.approvalNotes,
+    approvedAt: p.approvedAt,
+    approvedBy: p.approvedBy,
   };
 }
 

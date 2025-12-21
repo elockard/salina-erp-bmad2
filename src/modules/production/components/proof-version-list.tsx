@@ -4,16 +4,23 @@
  * Proof Version List Component
  *
  * Displays version history of proof files with download, edit, delete actions.
+ * Shows approval status for each version (Story 18.5).
  *
  * Story: 18.4 - Upload and Manage Proof Files
  * AC-18.4.2: Version history with version number, upload date, uploader, file size, notes
  * AC-18.4.3: Download with presigned URL and versioned filename
  * AC-18.4.5: Edit notes for a version
  * AC-18.4.6: Delete (soft delete, admin/owner only)
+ *
+ * Story: 18.5 - Approve or Request Corrections on Proofs
+ * AC-18.5.4: Display approval status on each proof version
  */
 
 import { format } from "date-fns";
 import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
   Download,
   Edit,
   FileText,
@@ -54,7 +61,42 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { deleteProofFile, updateProofNotes } from "../actions";
 import { formatFileSize } from "../queries";
+import type { ProofApprovalStatus } from "../schema";
 import type { ProofFileWithUrl } from "../types";
+
+/**
+ * Get approval status badge configuration
+ * AC-18.5.4: Visual indicator for each proof version
+ */
+function getApprovalStatusConfig(status: ProofApprovalStatus): {
+  label: string;
+  variant: "default" | "secondary" | "destructive" | "outline";
+  icon: typeof CheckCircle2;
+  className?: string;
+} {
+  switch (status) {
+    case "approved":
+      return {
+        label: "Approved",
+        variant: "default",
+        icon: CheckCircle2,
+        className: "bg-green-100 text-green-700 hover:bg-green-100",
+      };
+    case "corrections_requested":
+      return {
+        label: "Corrections Requested",
+        variant: "destructive",
+        icon: AlertTriangle,
+        className: "bg-orange-100 text-orange-700 hover:bg-orange-100",
+      };
+    default:
+      return {
+        label: "Pending Review",
+        variant: "secondary",
+        icon: Clock,
+      };
+  }
+}
 
 interface ProofVersionListProps {
   proofs: ProofFileWithUrl[];
@@ -173,7 +215,7 @@ export function ProofVersionList({
                 }`}
               />
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant={index === 0 ? "default" : "secondary"}>
                     v{proof.version}
                   </Badge>
@@ -182,6 +224,22 @@ export function ProofVersionList({
                       Latest
                     </span>
                   )}
+                  {/* AC-18.5.4: Approval status badge */}
+                  {(() => {
+                    const statusConfig = getApprovalStatusConfig(
+                      proof.approvalStatus,
+                    );
+                    const StatusIcon = statusConfig.icon;
+                    return (
+                      <Badge
+                        variant={statusConfig.variant}
+                        className={statusConfig.className}
+                      >
+                        <StatusIcon className="mr-1 h-3 w-3" />
+                        {statusConfig.label}
+                      </Badge>
+                    );
+                  })()}
                 </div>
                 <p className="text-sm">
                   <span className="font-medium">{proof.fileName}</span>
@@ -198,6 +256,18 @@ export function ProofVersionList({
                     &ldquo;{proof.notes}&rdquo;
                   </p>
                 )}
+                {/* AC-18.5.5: Display correction notes if requested */}
+                {proof.approvalStatus === "corrections_requested" &&
+                  proof.approvalNotes && (
+                    <div className="mt-2 p-2 bg-orange-50 rounded border border-orange-200">
+                      <p className="text-xs font-medium text-orange-700 mb-1">
+                        Corrections Requested:
+                      </p>
+                      <p className="text-sm text-orange-800">
+                        {proof.approvalNotes}
+                      </p>
+                    </div>
+                  )}
               </div>
             </div>
 

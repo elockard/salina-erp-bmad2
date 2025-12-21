@@ -5,6 +5,7 @@
  * Story: 18.2 - Assign Production Tasks to Vendors
  * Story: 18.3 - Track Production Workflow Stages
  * Story: 18.4 - Upload and Manage Proof Files
+ * Story: 18.5 - Approve or Request Corrections on Proofs
  */
 
 export { BoardColumn } from "./board-column";
@@ -14,6 +15,7 @@ export { ProductionProjectDetail } from "./production-project-detail";
 export { ProductionProjectForm } from "./production-project-form";
 export { ProductionProjectList } from "./production-project-list";
 export { ProductionSplitView } from "./production-split-view";
+export { ProofApprovalActions } from "./proof-approval-actions";
 export { ProofPreview } from "./proof-preview";
 export { ProofSection } from "./proof-section";
 export { ProofUploadForm } from "./proof-upload-form";

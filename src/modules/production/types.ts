@@ -8,6 +8,7 @@
 
 import type {
   ProductionStatus,
+  ProofApprovalStatus,
   TaskStatus,
   TaskType,
   WorkflowStage,
@@ -50,6 +51,8 @@ export interface ActionResult {
   message?: string;
   /** Whether vendor notification email was sent (only for task actions) */
   emailSent?: boolean;
+  /** Warning about email (e.g., no vendor assigned) */
+  emailWarning?: string;
   /** Version number for proof file uploads (Story 18.4) */
   version?: number;
 }
@@ -148,8 +151,9 @@ export interface ProductionProjectWithWorkflow
 // ============================================================================
 
 /**
- * Proof file with download URL
+ * Proof file with download URL and approval status
  * AC-18.4.2, AC-18.4.3: Version history with download capability
+ * AC-18.5.4: Approval status on each proof version
  */
 export interface ProofFileWithUrl {
   id: string;
@@ -162,6 +166,14 @@ export interface ProofFileWithUrl {
   uploadedBy: string;
   uploaderName: string;
   downloadUrl: string;
+  /** Approval status (Story 18.5) */
+  approvalStatus: ProofApprovalStatus;
+  /** Notes from correction request */
+  approvalNotes: string | null;
+  /** When approval action was taken */
+  approvedAt: Date | null;
+  /** User who took approval action */
+  approvedBy: string | null;
 }
 
 /**
